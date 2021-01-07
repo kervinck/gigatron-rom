@@ -14,8 +14,11 @@ musicPtr            EQU     register11
 
 
 %SUB                resetMidi
-resetMidi           LD      giga_frameCount
-                    ADDI    1
+                    ; adds 10*16.66667ms delay between giga_frameCount and midiDelay so that if there ; is substantial processing between resetMidi and playMidi giga_frameCount will
+                    ; not overflow past midiDelay and cause an extra initial 256*16.66667ms delay
+resetMidi           LDI     0      
+                    ST      giga_frameCount
+                    ADDI    10
                     STW     midiDelay                       ; instant MIDI startup
                     LDI     giga_soundChan1 >>8
                     ST      audioAddr + 1
@@ -54,8 +57,8 @@ playM_process       LDW     midiStream
                     LDW     midiStream
                     ADDI    0x01
                     STW     midiStream
-                    LDI     0xF0
-                    ANDW    midiCommand
+                    LDW     midiCommand
+                    ANDI    0xF0                    
                     XORI    0x90                            ; check for start note
                     BNE     playM_endnote
     
@@ -103,8 +106,8 @@ playMV_process      LDW     midiStream
                     LDW     midiStream
                     ADDI    0x01
                     STW     midiStream
-                    LDI     0xF0
-                    ANDW    midiCommand
+                    LDW     midiCommand
+                    ANDI    0xF0
                     XORI    0x90                            ; check for start note
                     BNE     playMV_endnote
     
@@ -138,11 +141,10 @@ playMV_exit1        POP
 %ENDS
 
 %SUB                midiStartNote
-midiStartNote       LDWI    giga_notesTable                 ; note table in ROM
+midiStartNote       LDWI    giga_notesTable - 22            ; giga_notesTable + (midi - 11)*2
                     STW     midiPtr
                     LDW     midiStream                      ; midi note
                     PEEK
-                    SUBI    11
                     LSLW
                     ADDW    midiPtr
                     STW     midiPtr
@@ -183,6 +185,23 @@ midiEndNote         LDW     midiCommand
                     RET
 %ENDS
 
+%SUB                midiGetNote
+midiGetNote         LDWI    giga_notesTable - 22            ; giga_notesTable + (midi - 11)*2
+                    STW     musicPtr
+                    LD      musicNote
+                    LSLW
+                    ADDW    musicPtr
+                    STW     musicPtr
+                    LUP     0x00                            ; get ROM note low byte
+                    ;LSLW                                    ; left shift low byte as SOUND command expects
+                    ST      musicNote                       ; a non system internal frequency
+                    LDW     musicPtr
+                    LUP     0x01                            ; get ROM note high byte
+                    ST      musicNote + 1
+                    LDW     musicNote                       ; this is needed for GET("MIDI_NOTE")
+                    RET
+%ENDS
+
 %SUB                resetMusic
 resetMusic          LDI     giga_soundChan1 >>8
                     ST      audioAddr + 1
@@ -218,7 +237,7 @@ playN_process       LDW     musicStream
                     INC     musicStream
                     PEEK                                    ; get music note
                     ST      musicNote
-                    LDWI    musicGetNote
+                    LDWI    midiGetNote
                     CALL    giga_vAC            			; start note
                     LDWI    musicPlayNote
                     CALL    giga_vAC
@@ -250,12 +269,9 @@ playN_delay         LDW     musicCommand
 %ENDS
 
 %SUB                musicGetNote
-musicGetNote        LDWI    giga_notesTable                 ; note table in ROM
-                    STW     musicPtr
-                    LD      musicNote
-                    SUBI    11
-                    LSLW
-                    ADDW    musicPtr
+musicGetNote        LDWI    giga_notesTable
+                    ADDW    musicNote
+                    ADDW    musicNote
                     STW     musicPtr
                     LUP     0x00                            ; get ROM note low byte
                     ST      musicNote

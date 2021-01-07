@@ -1,96 +1,96 @@
-_startAddress_                EQU                               0x0200
+_startAddress_                    EQU                               0x0200
 
 ; Internal Variables
-serialRawPrev                 EQU                               0x0081
-register0                     EQU                               0x0082
-register1                     EQU                               register0 + 0x02
-register2                     EQU                               register0 + 0x04
-register3                     EQU                               register0 + 0x06
-register4                     EQU                               register0 + 0x08
-register5                     EQU                               register0 + 0x0A
-register6                     EQU                               register0 + 0x0C
-register7                     EQU                               register0 + 0x0E
-register8                     EQU                               register0 + 0x10
-register9                     EQU                               register0 + 0x12
-register10                    EQU                               register0 + 0x14
-register11                    EQU                               register0 + 0x16
-register12                    EQU                               register0 + 0x18
-register13                    EQU                               register0 + 0x1A
-register14                    EQU                               register0 + 0x1C
-register15                    EQU                               register0 + 0x1E
-fgbgColour                    EQU                               register0 + 0x20
-cursorXY                      EQU                               register0 + 0x22
-midiStream                    EQU                               register0 + 0x24
-midiDelay                     EQU                               register0 + 0x26
-miscFlags                     EQU                               register0 + 0x28
-timerTick                     EQU                               register0 + 0x2A
-timerPrev                     EQU                               register0 + 0x2C
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
 
 ; Internal Constants
-ENABLE_SCROLL_BIT             EQU                               0x0001
-ON_BOTTOM_ROW_BIT             EQU                               0x0002
-ENABLE_SCROLL_MSK             EQU                               0xfffe
-ON_BOTTOM_ROW_MSK             EQU                               0xfffd
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
 
 ; Internal Buffers
-textWorkArea                  EQU                               0x26a0
+regsWorkArea                      EQU                               0x0000
+textWorkArea                      EQU                               0x26a0
 
 ; Includes
-%includePath                  "../runtime"
-%include                      util.i
-%include                      gigatron.i
-%include                      macros.i
+%includePath                      "../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros.i
 
 ; Labels
-_entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x0367
-_254                          EQU                               0x03df
-_253                          EQU                               0x03f1
-_191                          EQU                               0x0417
-_127                          EQU                               0x041e
-_calcPitch                    EQU                               0x0425
-_next_0x025c                  EQU                               0x024e
-_endif_0x029c                 EQU                               0x027c
-_else_0x02dc                  EQU                               0x02aa
-_endif_0x02e0                 EQU                               0x02ae
-_next_0x0317                  EQU                               0x02dd
-_page_0x0300                  EQU                               0x0300
-_else_0x0334                  EQU                               0x0304
-_endif_0x033c                 EQU                               0x030a
-_else_0x0357                  EQU                               0x031b
-_endif_0x035f                 EQU                               0x0321
-_next_0x03cf                  EQU                               0x038b
-_repeat_0x03fe                EQU                               0x03b0
-_else_0x045d                  EQU                               0x03ef
-_page_0x0400                  EQU                               0x0400
-_else_0x0479                  EQU                               0x0415
-_end_0x04a4                   EQU                               0x043c
+_entryPoint_                      EQU                               0x0200
+_loop                             EQU                               0x0361
+_254                              EQU                               0x03d9
+_253                              EQU                               0x03eb
+_191                              EQU                               0x0411
+_127                              EQU                               0x0418
+_calcPitch                        EQU                               0x041f
+_next_0x0257                      EQU                               0x0249
+_endif_0x0297                     EQU                               0x0277
+_else_0x02d7                      EQU                               0x02a5
+_endif_0x02db                     EQU                               0x02a9
+_next_0x0312                      EQU                               0x02d8
+_else_0x032f                      EQU                               0x02ef
+_page_0x0300                      EQU                               0x0300
+_endif_0x0337                     EQU                               0x0304
+_else_0x0352                      EQU                               0x0315
+_endif_0x035a                     EQU                               0x031b
+_next_0x03ca                      EQU                               0x0385
+_repeat_0x03f9                    EQU                               0x03aa
+_else_0x0458                      EQU                               0x03e9
+_page_0x0400                      EQU                               0x0400
+_else_0x0474                      EQU                               0x040f
 
 ; Global Variables
-_y                            EQU                               0x0030
-_x                            EQU                               0x0032
-_i                            EQU                               0x0034
-_j                            EQU                               0x0036
-_a                            EQU                               0x0038
-_pitch                        EQU                               0x003a
-_yy                           EQU                               0x003c
-_color1                       EQU                               0x003e
-_color2                       EQU                               0x0040
-_horizonY                     EQU                               0x0042
-_fade                         EQU                               0x0044
-_cIndex                       EQU                               0x0046
-_decay                        EQU                               0x0048
-_p                            EQU                               0x004a
-_v                            EQU                               0x004c
-_q                            EQU                               0x004e
+_y                                EQU                               0x0030
+_x                                EQU                               0x0032
+_i                                EQU                               0x0034
+_j                                EQU                               0x0036
+_a                                EQU                               0x0038
+_pitch                            EQU                               0x003a
+_yy                               EQU                               0x003c
+_color1                           EQU                               0x003e
+_color2                           EQU                               0x0040
+_horizonY                         EQU                               0x0042
+_fade                             EQU                               0x0044
+_cIndex                           EQU                               0x0046
+_decay                            EQU                               0x0048
+_p                                EQU                               0x004a
+_v                                EQU                               0x004c
+_q                                EQU                               0x004e
 
 ; Local Variables
 
 ; Arrays
-_c1_array                     EQU                               0x25f8
-_c1_array                     DW                                0x003f 0x002a 0x0015 0x0000 
-_c2_array                     EQU                               0x25f0
-_c2_array                     DW                                0x0003 0x0002 0x0001 0x0000 
+_c1_array                         EQU                               0x24f8
+_c1_array                         DW                                0x003f 0x002a 0x0015 0x0000 
+_c2_array                         EQU                               0x24f0
+_c2_array                         DW                                0x0003 0x0002 0x0001 0x0000 
 
 ; Strings
 
@@ -106,309 +106,310 @@ _c2_array                     DW                                0x0003 0x0002 0x
 
 ; Define Images
 
+; Define Loader Image Chunks
+
 ; Define Sprites
 
 ; Define Fonts
 
 ; Lookup Tables
-_lut_numericLabs              EQU                               0x25e6
-_lut_numericLabs              DW                                254 253 191 127 0x0000
-_lut_numericAddrs             EQU                               0x25de
-_lut_numericAddrs             DW                                0x03df 0x03f1 0x0417 0x041e 
+_lut_numericLabs                  EQU                               0x24e6
+_lut_numericLabs                  DW                                254 253 191 127 0x0000
+_lut_numericAddrs                 EQU                               0x24de
+_lut_numericAddrs                 DW                                0x03d9 0x03eb 0x0411 0x0418 
 
 ; Code
-_entryPoint_                  Initialise                        
-                              InitRealTimeStub                                                  ; INIT
+_entryPoint_                      Initialise                                                    ; Main: INIT
 
-                              ClearVertBlinds                                                   ; cls
+                                  ClearVertBlinds                                               ; Main: cls
 
-                              LDI                               0
-                              STW                               _y
-                              STW                               _x
-                              STW                               _i
-                              STW                               _j
-                              STW                               _a
-                              STW                               _pitch
-                              STW                               _yy                             ; y=0 : x=y : i=x : j=i : a=j : pitch=a : yy=pitch
+                                  LDI                               0
+                                  STW                               _y
+                                  STW                               _x
+                                  STW                               _i
+                                  STW                               _j
+                                  STW                               _a
+                                  STW                               _pitch
+                                  STW                               _yy                         ; Main: y=0 : x=y : i=x : j=i : a=j : pitch=a : yy=pitch
 
-                              LDI                               63
-                              STW                               _color1
-                              LDI                               3
-                              STW                               _color2
-                              LDI                               32
-                              STW                               _horizonY                       ; color1 = &h3F : color2 = &h03 : horizonY = 32
+                                  LDI                               63
+                                  STW                               _color1
+                                  LDI                               3
+                                  STW                               _color2
+                                  LDI                               32
+                                  STW                               _horizonY                   ; Main: color1 = &h3F : color2 = &h03 : horizonY = 32
 
-                              LDI                               0
-                              STW                               _fade
-                              STW                               _cIndex
-                              LDI                               54
-                              STW                               _decay                          ; fade=0 : cIndex=fade : decay = 54
+                                  LDI                               0
+                                  STW                               _fade
+                                  STW                               _cIndex
+                                  LDI                               54
+                                  STW                               _decay                      ; Main: fade=0 : cIndex=fade : decay = 54
 
-                              LDI                               119
-                              STW                               _y
-                              LDW                               _horizonY
-                              STW                               0xb0
-                              LDI                               1
-                              STW                               0xb2                            ; for y=119 downto horizonY
+                                  LDI                               119
+                                  STW                               _y
+                                  LDW                               _horizonY
+                                  STW                               0xb0
+                                  LDI                               1
+                                  STW                               0xb2                        ; Main: for y=119 downto horizonY
 
-_next_0x025c                  LDWI                              0x25f8
-                              ADDW                              _cIndex
-                              ADDW                              _cIndex
-                              DEEK                              
-                              STW                               _color1
-                              LDWI                              0x25f0
-                              ADDW                              _cIndex
-                              ADDW                              _cIndex
-                              DEEK                              
-                              STW                               _color2                         ; color1 = c1(cIndex) : color2 = c2(cIndex)
+_next_0x0257                      LDWI                              0x24f8
+                                  ADDW                              _cIndex
+                                  ADDW                              _cIndex
+                                  DEEK                              
+                                  STW                               _color1
+                                  LDWI                              0x24f0
+                                  ADDW                              _cIndex
+                                  ADDW                              _cIndex
+                                  DEEK                              
+                                  STW                               _color2                     ; Main: color1 = c1(cIndex) : color2 = c2(cIndex)
 
-                              INC                               _fade                           ; inc fade
+                                  INC                               _fade                       ; Main: inc fade
 
-                              LDW                               _fade
-                              XORW                              _decay
-                              BNE                               _endif_0x029c                   ; if fade &&= decay
+                                  LDW                               _fade
+                                  XORW                              _decay
+                                  BNE                               _endif_0x0297               ; Main: if fade &&= decay
 
-                              INC                               _cIndex                         ; inc cIndex
+                                  INC                               _cIndex                     ; Main: inc cIndex
 
-                              LDI                               0
-                              STW                               _fade                           ; fade = 0
+                                  LDI                               0
+                                  STW                               _fade                       ; Main: fade = 0
 
-                              LDW                               _decay
-                              STW                               mathShift
-                              ShiftRight1bit                    
-                              STW                               _decay                          ; decay = decay LSR 1
+                                  LDW                               _decay
+                                  STW                               mathShift
+                                  ShiftRight1bit                    
+                                  STW                               _decay                      ; Main: decay = decay LSR 1
 
-_endif_0x029c                 LDW                               _y
-                              STW                               _yy                             ; yy = y
+_endif_0x0297                     LDW                               _y
+                                  STW                               _yy                         ; Main: yy = y
 
-                              LDWI                              _calcPitch
-                              CALL                              giga_vAC                        ; gosub calcPitch
+                                  LDWI                              _calcPitch
+                                  CALL                              giga_vAC                    ; Main: gosub calcPitch
 
-                              LDW                               _y
-                              SUBW                              _horizonY
-                              ADDI                              40
-                              STW                               0xe8
-                              LDWI                              400
-                              STW                               mathX
-                              LDW                               0xe8
-                              STW                               mathY
-                              LDWI                              divide16bit
-                              CALL                              giga_vAC
-                              ANDI                              1
-                              XORI                              0
-                              BNE                               _else_0x02dc                    ; if((400 / (y-horizonY+40)) AND 1) &&= 0
+                                  LDW                               _y
+                                  SUBW                              _horizonY
+                                  ADDI                              40
+                                  STW                               0xe8
+                                  LDWI                              400
+                                  STW                               mathX
+                                  LDW                               0xe8
+                                  STW                               mathY
+                                  LDWI                              divide16bit
+                                  CALL                              giga_vAC
+                                  ANDI                              1
+                                  XORI                              0
+                                  BNE                               _else_0x02d7                ; Main: if((400 / (y-horizonY+40)) AND 1) &&= 0
 
-                              LDW                               _color1
-                              XORW                              _color2
-                              STW                               _j
-                              BRA                               _endif_0x02e0                   ; j = color1 XOR color2
+                                  LDW                               _color1
+                                  XORW                              _color2
+                                  STW                               _j
+                                  BRA                               _endif_0x02db               ; Main: j = color1 XOR color2
 
-_else_0x02dc                  LDI                               0
-                              STW                               _j                              ; j = 0
+_else_0x02d7                      LDI                               0
+                                  STW                               _j                          ; Main: j = 0
 
-_endif_0x02e0                 LDI                               80
-                              STW                               mathX
-                              LDW                               _pitch
-                              STW                               mathY
-                              LDWI                              divide16bit
-                              CALL                              giga_vAC
-                              LDW                               mathRem
-                              STW                               _i                              ; i = 80 % pitch
+_endif_0x02db                     LDI                               80
+                                  STW                               mathX
+                                  LDW                               _pitch
+                                  STW                               mathY
+                                  LDWI                              divide16bit
+                                  CALL                              giga_vAC
+                                  LDW                               mathRem
+                                  STW                               _i                          ; Main: i = 80 % pitch
 
-                              LDW                               _y
-                              ADDI                              8
-                              STW                               0xe8
-                              LD                                0xe8
-                              ST                                giga_vAC + 1
-                              ORI                               0xFF
-                              XORI                              0xFF
-                              STW                               _a                              ; a = ((y + 8) LSL 8)
+                                  LDW                               _y
+                                  ADDI                              8
+                                  STW                               0xe8
+                                  LD                                0xe8
+                                  ST                                giga_vAC + 1
+                                  ORI                               0xFF
+                                  XORI                              0xFF
+                                  STW                               _a                          ; Main: a = ((y + 8) LSL 8)
 
-                              LDI                               0
-                              STW                               _x
-                              LDW                               _pitch
-                              ADDI                              159
-                              STW                               0xb4
-                              LDI                               1
-                              STW                               0xb6                            ; for x=0 to pitch + 159
+                                  LDI                               0
+                                  STW                               _x
+                                  LDW                               _pitch
+                                  ADDI                              159
+                                  STW                               0xb4
+                                  LDI                               1
+                                  STW                               0xb6                        ; Main: for x=0 to pitch + 159
 
-_next_0x0317                  LDW                               _i
-                              XORI                              0
-                              JumpEQ                            _else_0x0334 3                  ; if i &= 0
+_next_0x0312                      LDW                               _i
+                                  XORI                              0
+                                  JumpEQ                            _else_0x032f 3              ; Main: if i &= 0
 
-                              LDW                               _pitch
-                              SUBI                              1
-                              STW                               _i
-                              LDWI                              _endif_0x033c
-                              STW                               0xc0
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xc0
-                              CALL                              giga_vAC                        ; i = pitch - 1
+                                  LDW                               _pitch
+                                  SUBI                              1
+                                  STW                               _i
+                                  LDWI                              _endif_0x0337
+                                  CALL                              giga_vAC                    ; Main: i = pitch - 1
 
-_else_0x0334                  LDW                               _i
-                              SUBI                              1
-                              STW                               _i                              ; i = i - 1
+_else_0x032f                      LDW                               _i
+                                  SUBI                              1
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0300
+                                  CALL                              giga_vAC
+_page_0x0300                      LDLW                              0xFE
+                                  STW                               _i                          ; Main: i = i - 1
 
-_endif_0x033c                 LDW                               _i
-                              ADDW                              _i
-                              SUBW                              _pitch
-                              BLT                               _else_0x0357                    ; if i+i &&>= pitch
+_endif_0x0337                     LDW                               _i
+                                  ADDW                              _i
+                                  SUBW                              _pitch
+                                  BLT                               _else_0x0352                ; Main: if i+i &&>= pitch
 
-                              LDW                               _color1
-                              XORW                              _j
-                              STW                               _p
-                              BRA                               _endif_0x035f                   ; p = color1 XOR j
+                                  LDW                               _color1
+                                  XORW                              _j
+                                  STW                               _p
+                                  BRA                               _endif_0x035a               ; Main: p = color1 XOR j
 
-_else_0x0357                  LDW                               _color2
-                              XORW                              _j
-                              STW                               _p                              ; p = color2 XOR j
+_else_0x0352                      LDW                               _color2
+                                  XORW                              _j
+                                  STW                               _p                          ; Main: p = color2 XOR j
 
-_endif_0x035f                 LDW                               _a
-                              ADDW                              _x
-                              STW                               0xe8
-                              LDW                               _p
-                              POKE                              0xe8                            ; poke a+x,p
+_endif_0x035a                     LDW                               _a
+                                  ADDW                              _x
+                                  STW                               0xe8
+                                  LDW                               _p
+                                  POKE                              0xe8                        ; Main: poke a+x,p
 
-                              ForNextFarVarAdd                  _x _next_0x0317 0xb4 0xb6       ; next x
+                                  ForNextFarVarAdd                  _x _next_0x0312 0xb4 0xb6   ; Main: next x
 
-                              LDWI                              giga_videoTop
-                              STW                               register0
-                              LDW                               _y
-                              ADDW                              _y
-                              POKE                              register0                       ; set VIDEO_TOP, y+y
+                                  LDWI                              giga_videoTop
+                                  STW                               register0
+                                  LDW                               _y
+                                  ADDW                              _y
+                                  POKE                              register0                   ; Main: set VIDEO_TOP, y+y
 
-                              ForNextFarVarSub                  _y _next_0x025c 0xb0 0xb2       ; next y
+                                  ForNextFarVarSub                  _y _next_0x0257 0xb0 0xb2   ; Main: next y
 
-                              LDWI                              giga_videoTop
-                              STW                               register0
-                              LDI                               0
-                              POKE                              register0                       ; set VIDEO_TOP, 0
+                                  LDWI                              giga_videoTop
+                                  STW                               register0
+                                  LDI                               0
+                                  POKE                              register0                   ; Main: set VIDEO_TOP, 0
 
-                              LDI                               0
-                              STW                               _x
-                              LDI                               8
-                              STW                               _v                              ; x=0 : v=8
+                                  LDI                               0
+                                  STW                               _x
+                                  LDI                               8
+                                  STW                               _v                          ; Main: x=0 : v=8
 
-_loop                         LDW                               _x
-                              ANDI                              255
-                              STW                               _i                              ; i = x AND 255
+_loop                             LDW                               _x
+                                  ANDI                              255
+                                  STW                               _i                          ; Main: i = x AND 255
 
-                              LDI                               0
-                              STW                               _j                              ; j = 0
+                                  LDI                               0
+                                  STW                               _j                          ; Main: j = 0
 
-                              LDWI                              496
-                              STW                               _q                              ; q = &h0100 + 240
+                                  LDWI                              496
+                                  STW                               _q                          ; Main: q = &h0100 + 240
 
-                              LDW                               _horizonY
-                              STW                               _yy                             ; yy = horizonY
+                                  LDW                               _horizonY
+                                  STW                               _yy                         ; Main: yy = horizonY
 
-                              LDWI                              _calcPitch
-                              CALL                              giga_vAC                        ; gosub calcPitch
+                                  LDWI                              _calcPitch
+                                  CALL                              giga_vAC                    ; Main: gosub calcPitch
 
-                              LDI                               0
-                              STW                               _y
-                              LDW                               _pitch
-                              STW                               0xb0
-                              LDI                               1
-                              STW                               0xb2                            ; for y=0 &to pitch
+                                  LDI                               0
+                                  STW                               _y
+                                  LDW                               _pitch
+                                  STW                               0xb0
+                                  LDI                               1
+                                  STW                               0xb2                        ; Main: for y=0 &to pitch
 
-_next_0x03cf                  LDW                               _j
-                              ADDW                              _i
-                              STW                               _j                              ; j = j + i
+_next_0x03ca                      LDW                               _j
+                                  ADDW                              _i
+                                  STW                               _j                          ; Main: j = j + i
 
-                              ForNextVarAdd                     _y _next_0x03cf 0xb0 0xb2       ; next y
+                                  ForNextVarAdd                     _y _next_0x03ca 0xb0 0xb2   ; Main: next y
 
-                              LDW                               _i
-                              ADDW                              _i
-                              STW                               _i                              ; i = i + i
+                                  LDW                               _i
+                                  ADDW                              _i
+                                  STW                               _i                          ; Main: i = i + i
 
-                              LDWI                              257
-                              ADDW                              _horizonY
-                              ADDW                              _horizonY
-                              STW                               _p                              ; p = &h0101 + horizonY + horizonY
+                                  LDWI                              257
+                                  ADDW                              _horizonY
+                                  ADDW                              _horizonY
+                                  STW                               _p                          ; Main: p = &h0101 + horizonY + horizonY
 
-                              WaitVBlank                                                        ; wait
+                                  WaitVBlank                                                    ; Main: wait
 
-_repeat_0x03fe                LD                                _j + 1
-                              POKE                              _p                              ; poke p, j LSR 8
+_repeat_0x03f9                    LD                                _j + 1
+                                  POKE                              _p                          ; Main: poke p, j LSR 8
 
-                              LDW                               _j
-                              ANDI                              255
-                              ADDW                              _i
-                              STW                               _j                              ; j = i + (j AND 255)
+                                  LDW                               _j
+                                  ANDI                              255
+                                  ADDW                              _i
+                                  STW                               _j                          ; Main: j = i + (j AND 255)
 
-                              LDW                               _p
-                              ADDI                              4
-                              STW                               _p
-                              SUBW                              _q
-                              BLT                               _repeat_0x03fe                  ; p = p + 4 : until p &&>= q
+                                  LDW                               _p
+                                  ADDI                              4
+                                  STW                               _p
+                                  SUBW                              _q
+                                  BLT                               _repeat_0x03f9              ; Main: p = p + 4 : until p &&>= q
 
-                              LD                                giga_buttonState
-                              STW                               numericLabel
-                              LDI                               0
-                              STW                               defaultLabel
-                              GosubNumeric                                                      ; gosub get("BUTTON_STATE")
+                                  LD                                giga_buttonState
+                                  STW                               numericLabel
+                                  LDI                               0
+                                  STW                               defaultLabel
+                                  GosubNumeric                                                  ; Main: gosub get("BUTTON_STATE")
 
-                              LDW                               _x
-                              ADDW                              _v
-                              STW                               _x                              ; x = x + v
+                                  LDW                               _x
+                                  ADDW                              _v
+                                  STW                               _x                          ; Main: x = x + v
 
-                              LDWI                              _loop
-                              CALL                              giga_vAC                        ; goto loop
+                                  LDWI                              _loop
+                                  CALL                              giga_vAC                    ; Main: goto loop
 
-_254                          PUSH                              
-                              LDW                               _v
-                              ADDI                              1
-                              STW                               _v
-                              SUBI                              32
-                              BLE                               _else_0x045d
-                              LDI                               32
-                              STW                               _v                              ; v = v + 1 : if v &&> 32 then v = 32
+_254                              PUSH                              
+                                  LDW                               _v
+                                  ADDI                              1
+                                  STW                               _v
+                                  SUBI                              32
+                                  BLE                               _else_0x0458
+                                  LDI                               32
+                                  STW                               _v                          ; Main: v = v + 1 : if v &&> 32 then v = 32
 
-_else_0x045d                  Return                                                            ; return
+_else_0x0458                      Return                                                        ; Main: return
 
-_253                          PUSH                              
-                              STW                               0xc0
-                              LDWI                              _page_0x0400
-                              CALL                              giga_vAC
-_page_0x0400                  LDW                               0xc0
-                              LDW                               _v
-                              SUBI                              1
-                              STW                               _v
-                              LDWI                              -32
-                              SUBW                              _v
-                              BLT                               _else_0x0479
-                              LDWI                              -32
-                              STW                               _v                              ; v = v - 1 : if v &&< -32 then v = -32
+_253                              PUSH                              
+                                  LDW                               _v
+                                  SUBI                              1
+                                  STW                               _v
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0400
+                                  CALL                              giga_vAC
+_page_0x0400                      LDLW                              0xFE
+                                  LDWI                              -32
+                                  SUBW                              _v
+                                  BLT                               _else_0x0474
+                                  LDWI                              -32
+                                  STW                               _v                          ; Main: v = v - 1 : if v &&< -32 then v = -32
 
-_else_0x0479                  Return                                                            ; return
+_else_0x0474                      Return                                                        ; Main: return
 
-_191                          PUSH                              
-                              LDI                               0
-                              STW                               _v
-                              Return                                                            ; v = 0 : return
+_191                              PUSH                              
+                                  LDI                               0
+                                  STW                               _v
+                                  Return                                                        ; Main: v = 0 : return
 
-_127                          PUSH                              
-                              LDI                               0
-                              STW                               _v
-                              Return                                                            ; v = 0 : return
+_127                              PUSH                              
+                                  LDI                               0
+                                  STW                               _v
+                                  Return                                                        ; Main: v = 0 : return
 
-_calcPitch                    PUSH                              
-                              LDWI                              -23
-                              ADDW                              _yy
-                              STW                               _pitch                          ; pitch = yy + (96 - 120 + 1)
+_calcPitch                        PUSH                              
+                                  LDWI                              -23
+                                  ADDW                              _yy
+                                  STW                               _pitch                      ; Main: pitch = yy + (96 - 120 + 1)
 
-                              LDW                               _pitch
-                              ADDI                              1
-                              STW                               0xe8
-                              LDWI                              0xfffe
-                              ANDW                              0xe8
-                              STW                               _pitch                          ; pitch = (pitch + 1) AND &hfffe
+                                  LDW                               _pitch
+                                  ADDI                              1
+                                  STW                               0xe8
+                                  LDWI                              0xfffe
+                                  ANDW                              0xe8
+                                  STW                               _pitch                      ; Main: pitch = (pitch + 1) AND &hfffe
 
-                              Return                                                            ; return
+                                  Return                                                        ; Main: return
 
-_end_0x04a4                   BRA                               _end_0x04a4                     ; END
+                                  HALT                                                          ; Main: END
 
 
 
@@ -418,57 +419,24 @@ _end_0x04a4                   BRA                               _end_0x04a4     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x23a4
-divide16bit                   EQU     0x24a8
-shiftRight1bit                EQU     0x22dd
-gosubNumericLabel             EQU     0x23cd
-waitVBlank                    EQU     0x22f3
-resetVideoFlags               EQU     0x22e7
-initClearFuncs                EQU     0x23b6
-clearVertBlinds               EQU     0x25a4
-convertEqOpAddr               EQU     0x00c2
-convertNeOpAddr               EQU     0x00c4
-convertLeOpAddr               EQU     0x00c6
-convertGeOpAddr               EQU     0x00c8
-convertLtOpAddr               EQU     0x00ca
-convertGtOpAddr               EQU     0x00cc
-convert8Arr2dAddr             EQU     0x00ce
-convert8Arr3dAddr             EQU     0x00d0
-convert16Arr2dAddr            EQU     0x00d2
-convert16Arr3dAddr            EQU     0x00d4
-realTimeStubAddr              EQU     0x00d6
-
-
-; do *NOT* use register4 to register7 during time slicing
-realTimeAddr        EQU     register0
-realTimeProc0       EQU     register1
-realTimeProc1       EQU     register2
-realTimeProc2       EQU     register3
-numericLabel        EQU     register0
-defaultLabel        EQU     register1
-lutLabs             EQU     register2
-lutAddrs            EQU     register3
-lutIndex            EQU     register8
-romType             EQU     register0
-romErrAddr          EQU     register1
-romErrPixel         EQU     register2
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-                    ; self modifying code allows for timer, midi and user procs
-realTimeStub        RET                                     ; RET gets replaced by PUSH
-                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
-                    CALL    giga_vAC
-realTimeStub1       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
-                    CALL    giga_vAC
-realTimeStub2       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
-                    CALL    giga_vAC
-                    POP
-                    RET
+divide16bit                       EQU     0x23a8
+shiftRight1bit                    EQU     0x22a0
+gosubNumericLabel                 EQU     0x22cd
+waitVBlank                        EQU     0x22aa
+resetVideoFlags                   EQU     0x21f3
+initClearFuncs                    EQU     0x22b6
+clearVertBlinds                   EQU     0x24a2
+convertEqOpAddr                   EQU     0x00c0
+convertNeOpAddr                   EQU     0x00c2
+convertLeOpAddr                   EQU     0x00c4
+convertGeOpAddr                   EQU     0x00c6
+convertLtOpAddr                   EQU     0x00c8
+convertGtOpAddr                   EQU     0x00ca
+convert8Arr2dAddr                 EQU     0x00cc
+convert8Arr3dAddr                 EQU     0x00ce
+convert16Arr2dAddr                EQU     0x00d0
+convert16Arr3dAddr                EQU     0x00d2
+realTimeStubAddr                  EQU     0x00d4
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -525,9 +493,11 @@ divide16_incr       LDW     mathX
 divide16_incx       LDW     mathMask
                     LSLW
                     BNE     divide16_loop
+%if TIME_SLICING
                     PUSH
                     CALL    realTimeStubAddr
                     POP
+%endif
                     LDW     mathSign
                     BGE     divide16_exit
                     LDI     0
@@ -543,6 +513,21 @@ shiftRight1bit      LDWI    SYS_LSRW1_48
                     LDW     mathShift
                     SYS     48
                     RET
+
+
+; do *NOT* use register4 to register7 during time slicing
+realTimeAddr        EQU     register0
+realTimeProc0       EQU     register1
+realTimeProc1       EQU     register2
+realTimeProc2       EQU     register3
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register8
+romType             EQU     register0
+romErrAddr          EQU     register1
+romErrPixel         EQU     register2
 
 
                     ; find numeric label and call it, (it had better return or welcome to lala land)
@@ -656,9 +641,11 @@ drawPoly_addr       EQU     register15
 waitVBlank          LD      giga_videoY
                     XORI    179
                     BNE     waitVBlank
+%if TIME_SLICING
                     PUSH
                     CALL    realTimeStubAddr
                     POP
+%endif
                     RET
 
 
@@ -716,9 +703,13 @@ clearVertBlinds     PUSH
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top
-    
+
+%if TIME_SLICING
 clearVB_loop        CALL    realTimeStubAddr
                     LD      top
+%else
+clearVB_loop        LD      top
+%endif
                     ST      giga_sysArg4 + 1                    ; top line
                     SYS     30
     

@@ -1,0 +1,111 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &h7FFF
+_codeRomType_ ROMv1
+
+CONST N1 = 35
+CONST N2 = 6
+CONST N3 = 111
+CONST YOU_IDX = 12
+CONST YOUR_IDX = 28
+
+module "ElizaData.m"
+
+TYPE dum = {a%,
+            b,
+            DIM c(2,2),
+            d$,
+            DIM e$(5),
+            f$="dog"}
+
+DIM TEST(2, 2) = 0, 1, 2, 3, 4, 5
+
+DIM R(N1)
+DIM N(N1)
+
+P$ = ""
+
+const gobber$ = "123"
+
+gobber$ = "45678"
+
+CLS
+FOR X=0 TO N1
+    R(X) = S(X)
+    N(X) = S(X) + T(X) - 1
+NEXT X
+
+PRINT "HI! IM ELIZA, WHAT IS YOURPROBLEM?"
+
+
+restart:
+    set FG_COLOUR, 0x3F : INPUT I$ : set FG_COLOUR, 0x0F : print
+    I$ = "  " + UPPER$(I$) + "  "
+
+input:
+    FOR L=0 TO LEN(I$)-1
+input0:
+        IF MID$(I$,L,1) = "'" then I$ = LEFT$(I$,L) + RIGHT$(I$,LEN(I$)-L-1) : goto input0
+        IF L+4 > LEN(I$)-1 THEN goto input1
+        IF MID$(I$,L,4) <> "SHUT" THEN goto input1
+        PRINT "OK, IF THAT'S HOW YOU FEELTHEN I'LL SHUT UP...BYE..."
+        END
+input1:
+    NEXT L
+        
+    'an example of how to use gprintf
+    dim tt(2, 1) = 0, 1, 2, 5, 4, 3 : ll = 1
+    gprintf "L=%d L+1=%d : S(L)=%d : I$=%s : R$=%s : tt(1, 1)=%d : @L=0x%4x : @S(L)=0x%4x : @I$=0x%4x : @R$=0x%4x", L, L+1, S(L), I$, REPLIES$(L), tt(1, 1), @L, addr(S(L)), @I$, addr(REPLIES$(L))
+        
+    IF I$=P$ THEN PRINT "PLEASE DON'T REPEAT YOURSELF!" : GOTO restart
+    
+    
+keywords:    
+    FOR K=0 TO N1
+        FOR L=0 TO LEN(I$) - LEN(KEYWORD$(K))
+            IF MID$(I$,L,LEN(KEYWORD$(K))) <> KEYWORD$(K) THEN goto keywords1
+            IF K <> YOU_IDX THEN goto keywords0
+            IF MID$(I$,L,LEN(KEYWORD$(YOUR_IDX))) = KEYWORD$(YOUR_IDX) THEN K = YOUR_IDX
+keywords0:
+            F$ = KEYWORD$(K): GOTO conjugate
+keywords1:
+        NEXT L
+    NEXT K
+    K=N1 : GOTO reply
+
+
+conjugate:
+    C$ = " " + RIGHT$(I$,LEN(I$)-LEN(F$)-L+1) + " "
+    FOR X=0 TO N2
+        FOR L=0 TO LEN(C$)-1
+            IF L+1 + LEN(WORDIN$(X)) > LEN(C$) THEN conjugate0
+            IF MID$(C$,L,LEN(WORDIN$(X))) <> WORDIN$(X) THEN conjugate0
+            C$ = LEFT$(C$,L) + WORDOUT$(X) + RIGHT$(C$,LEN(C$)-L-LEN(WORDIN$(X)))
+            L = L + LEN(WORDOUT$(X))
+            GOTO conjugate1
+conjugate0:
+            IF L+1 + LEN(WORDOUT$(X)) > LEN(C$) THEN conjugate1
+            IF MID$(C$,L,LEN(WORDOUT$(X))) <> WORDOUT$(X) THEN conjugate1
+            C$ = LEFT$(C$,L) + WORDIN$(X) + RIGHT$(C$,LEN(C$)-L-LEN(WORDOUT$(X)))
+            L = L + LEN(WORDIN$(X))
+conjugate1:
+        NEXT L
+    NEXT X
+    
+    IF MID$(C$,1,1) = " " THEN C$ = RIGHT$(C$,LEN(C$)-1)
+    FOR L=0 TO LEN(C$)-1
+conjugate2:
+        IF MID$(C$,L,1) = "!" THEN C$ = LEFT$(C$,L) + RIGHT$(C$,LEN(C$)-L-1) : GOTO conjugate2
+    NEXT L
+    
+    
+reply:
+    F$ = REPLIES$(R(K))
+    R(K) = R(K)+1 : IF R(K)>N(K) THEN R(K) = S(K)
+    IF RIGHT$(F$,1) <> "*" THEN PRINT F$ : P$ = I$ : GOTO restart
+    IF C$<>"   " THEN reply0
+    PRINT "YOU WILL HAVE TO ELABORATE MORE FOR ME TO HELP YOU"
+    GOTO restart
+    
+reply0:
+    PRINT LEFT$(F$,LEN(F$)-1);C$
+    P$ = I$ : GOTO restart

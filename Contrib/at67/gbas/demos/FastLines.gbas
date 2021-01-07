@@ -40,13 +40,13 @@ goto loop
 
 ' x = i*8 + 4 : y = i*6 + 3
 math: 
-    i2 = (i<<1) : i6 = i2 + i2 + i2
+    i2 = i LSL 1 : i6 = i2 + i2 + i2
     x = i6 + i2 + 4
     y = i6 + 3
 return
 
 
-def byte(&h10a0) =  &h1e, &h90, &h4a, &h91, &h45, &h3d, &h80, &h81, &h1f, &h91, &h4a, &h90, &h45, &h3d, &h80, &h81,
+def byte(&h10a0) =  &h90, &h4a, &h91, &h45, &h3d, &h80, &h81, &h1f, &h91, &h4a, &h90, &h45, &h3d, &h80, &h81,
 def byte         =  &h3d, &h90, &h4a, &h91, &h45, &h3d, &h91, &h48, &h80, &h74, &h91, &h47, &h03, &h90, &h46, &h03,
 def byte         =  &h90, &h45, &h81, &h3d, &h90, &h4a, &h91, &h45, &h3d, &h80, &h81, &h3d, &h91, &h4a, &h90, &h45,
 def byte         =  &h2e, &h80, &h81, &h4c, &h90, &h4a, &h91, &h45, &h3d, &h91, &h48, &h80, &h3d, &h91, &h45, &h37,

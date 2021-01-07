@@ -51,40 +51,40 @@
 %ENDM
 
 %MACRO  ForNextDec _var _label _end
-        LD      _var
+        LDW     _var
         SUBI    1
-        ST      _var
+        STW     _var
         SUBI    _end
         BGE     _label
 %ENDM
 
 %MACRO  ForNextDecZero _var _label
-        LD      _var
+        LDW     _var
         SUBI    1
-        ST      _var
+        STW     _var
         BGE     _label
 %ENDM
 
 %MACRO  ForNextFarDecZero _var _label
-        LD      _var
+        LDW     _var
         SUBI    1
-        ST      _var
+        STW     _var
         BLT     _label_ + 3
 _label_ CALLI   _label
 %ENDM
 
 %MACRO  ForNextAdd _var _label _end _step
-        LD      _var
+        LDW     _var
         ADDI    _step
-        ST      _var
+        STW     _var
         SUBI    _end
         BLE     _label
 %ENDM
 
 %MACRO  ForNextSub _var _label _end _step
-        LD      _var
+        LDW     _var
         SUBI    _step
-        ST      _var
+        STW     _var
         SUBI    _end
         BGE     _label
 %ENDM
@@ -114,27 +114,27 @@ _label_ CALLI   _label
 %ENDM
 
 %MACRO  ForNextFarDec _var _label _end
-        LD      _var
+        LDW     _var
         SUBI    1
-        ST      _var
+        STW     _var
         SUBI    _end
         BLT     _label_ + 3
 _label_ CALLI   _label
 %ENDM
 
 %MACRO  ForNextFarAdd _var _label _end _step
-        LD      _var
+        LDW     _var
         ADDI    _step
-        ST      _var
+        STW     _var
         SUBI    _end
         BGT     _label_ + 3
 _label_ CALLI   _label
 %ENDM
 
 %MACRO  ForNextFarSub _var _label _end _step
-        LD      _var
+        LDW     _var
         SUBI    _step
-        ST      _var
+        STW     _var
         SUBI    _end
         BLT     _label_ + 3
 _label_ CALLI   _label
@@ -217,22 +217,8 @@ _label_ CALLI   _label
         CALLI   printChr
 %ENDM
 
-%MACRO  PrintAcHexByte
-        CALLI   printHexByte
-%ENDM
-
-%MACRO  PrintVarHexByte _var
-        LD      _var
-        CALLI   printHexByte
-%ENDM
-
-%MACRO  PrintAcHexWord
-        CALLI   printHexWord
-%ENDM
-
-%MACRO  PrintVarHexWord _var
-        LDW     _var
-        CALLI   printHexWord
+%MACRO  PrintHex
+        CALLI   printHex
 %ENDM
 
 %MACRO  PrintString _str
@@ -259,6 +245,14 @@ _label_ CALLI   _label
 
 %MACRO  PrintAcMid
         CALLI   printMid
+%ENDM
+
+%MACRO  PrintAcLower
+        CALLI   printLower
+%ENDM
+
+%MACRO  PrintAcUpper
+        CALLI   printUpper
 %ENDM
 
 %MACRO  PrintInt16 _int
@@ -288,11 +282,8 @@ _label_ CALLI   _label
 %ENDM
 
 %MACRO  StringHex
+        STW     strAddr
         CALLI   stringHex
-%ENDM
-
-%MACRO  StringHexw
-        CALLI   stringHexw
 %ENDM
 
 %MACRO  StringCopy
@@ -307,6 +298,10 @@ _label_ CALLI   _label
         CALLI   stringConcat
 %ENDM
 
+%MACRO  StringConcatLut
+        CALLI   stringConcatLut
+%ENDM
+
 %MACRO  StringLeft
         CALLI   stringLeft
 %ENDM
@@ -317,6 +312,16 @@ _label_ CALLI   _label
 
 %MACRO  StringMid
         CALLI   stringMid
+%ENDM
+
+%MACRO  StringLower
+        STW     strDstAddr
+        CALLI   stringLower
+%ENDM
+
+%MACRO  StringUpper
+        STW     strDstAddr
+        CALLI   stringUpper
 %ENDM
 
 %MACRO  StringInt
@@ -512,6 +517,10 @@ _label_ CALLI   _label
         CALLI   resetMidi
 %ENDM
 
+%MACRO  GetMidiNote
+        CALLI   midiGetNote
+%ENDM
+
 %MACRO  PlayMusic
         STW     musicStream
         CALLI   resetMusic
@@ -625,12 +634,22 @@ _id_    CALLI   _label
 _id_    CALLI   _label
 %ENDM
 
+%MACRO  CopyBytes
+        CALLI   copyBytes
+%ENDM
+
+%MACRO  CopyWords
+        CALLI   copyWords
+%ENDM
+
 %MACRO  ResetVars
         CALLI   resetVars
 %ENDM
 
+; Can't use CALLI as this code can be run on ROM's < ROMv5a
 %MACRO  RomCheck
-        CALLI   romCheck
+        LDWI    romCheck
+        CALL    giga_vAC
 %ENDM
 
 %MACRO  Initialise

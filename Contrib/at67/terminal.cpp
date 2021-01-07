@@ -218,11 +218,11 @@ namespace Terminal
             _commandCharIndex = int(commandLine.size());
             commandLine += char(32);
         }
-        else
-        {
-            commandLine[_commandCharIndex] = char(32);
-        } 
-        Graphics::drawText(commandLine, FONT_WIDTH, _screenMaxIndex*(FONT_HEIGHT+2)+1, 0xFFFFFFFF, true, 1, _commandCharIndex);
+
+        // Flash cursor
+        static uint8_t toggle = 0;
+        bool invert = ((toggle++) >>4) & 1;
+        Graphics::drawText(commandLine, FONT_WIDTH, _screenMaxIndex*(FONT_HEIGHT+2)+1, 0xFFFFFFFF, invert, 1, _commandCharIndex);
     }
 
 

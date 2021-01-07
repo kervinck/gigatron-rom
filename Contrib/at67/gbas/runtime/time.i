@@ -18,8 +18,8 @@ tickTime            LD      giga_frameCount
                     ST      timerPrev
                     INC     timerPrev + 1                       ; 1/60 internal counter
                     LD      timerPrev + 1
-                    SUBI    60
-                    BLT     tickT_exit
+                    XORI    60
+                    BNE     tickT_exit
                     LDI     0
                     ST      timerPrev + 1
                     PUSH
@@ -36,8 +36,8 @@ handleTime          LDWI    _timeArray_
                     PEEK
                     ADDI    1
                     POKE    timeArrAddr                         ; seconds
-                    SUBI    60
-                    BLT     handleT_exit
+                    XORI    60
+                    BNE     handleT_exit
                     LDI     0
                     POKE    timeArrAddr                         ; reset seconds
                     
@@ -46,8 +46,8 @@ handleTime          LDWI    _timeArray_
                     PEEK
                     ADDI    1
                     POKE    timeArrAddr                         ; minutes
-                    SUBI    60
-                    BLT     handleT_exit
+                    XORI    60
+                    BNE     handleT_exit
                     LDI     0
                     POKE    timeArrAddr                         ; reset minutes
                     
@@ -56,8 +56,8 @@ handleTime          LDWI    _timeArray_
                     PEEK
                     ADDI    1
                     POKE    timeArrAddr                         ; hours
-handleT_mode        SUBI    24                                  ; [handleT_mode + 1] = 12 hour/24 hour
-                    BLT     handleT_exit
+handleT_mode        XORI    24                                  ; [handleT_mode + 1] = 12 hour/24 hour
+                    BNE     handleT_exit
 handleT_epoch       LDI     0                                   ; [handleT_epoch + 1] = start hour
                     POKE    timeArrAddr                         ; reset hours
 

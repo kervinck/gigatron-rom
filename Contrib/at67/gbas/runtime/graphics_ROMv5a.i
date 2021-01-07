@@ -108,7 +108,7 @@ waitVBlank          LD      giga_videoY
 
 %SUB                readPixel
 readPixel           STW     readPixel_xy
-                    LD      readPixel_xy + 1    ; xy = peek(256+2*y)*256 + x
+                    LD      readPixel_xy + 1    ; pixel = peek(peek(256 + 2*y)*256 + x)
                     LSLW
                     INC     giga_vAC + 1
                     PEEK
@@ -120,7 +120,7 @@ readPixel           STW     readPixel_xy
 
 %SUB                drawPixel
 drawPixel           STW     drawPixel_xy
-                    LD      drawPixel_xy + 1    ; xy = peek(256+2*y)*256 + x
+                    LD      drawPixel_xy + 1    ; poke peek(256 + 2*y)*256 + x, fg_colour
                     LSLW
                     INC     giga_vAC + 1
                     PEEK
@@ -411,7 +411,6 @@ drawLineSlowLoop    LD      fgbgColour + 1
 drawLLS_xy          LDW     drawLine_addr
                     ADDW    drawLine_u
                     STW     drawLine_addr
-                    CALLI   realTimeStub
                     LDW     drawLine_cnt
                     ADDI    1
                     STW     drawLine_cnt

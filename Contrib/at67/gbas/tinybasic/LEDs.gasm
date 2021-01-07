@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,8 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
+regsWorkArea                  EQU                               0x0000
 textWorkArea                  EQU                               0x7fa0
 
 ; Includes
@@ -57,8 +58,10 @@ _80                           EQU                               0x0225
 _90                           EQU                               0x0256
 _end_0x025d                   EQU                               0x025a
 
-; Variables
+; Global Variables
 _N                            EQU                               0x0030
+
+; Local Variables
 
 ; Arrays
 
@@ -88,33 +91,33 @@ _entryPoint_                  LDI                               0x20
                               RomCheck                          
                               Initialise                        
                               InitLtOp                        
-                              InitRealTimeStub                                                  ; INIT
+                              InitRealTimeStub                                                  ; Main: INIT
 
 _20                           LDI                               1
-                              ST                                giga_ledState                   ; set LED_STATE,1
+                              ST                                giga_ledState                   ; Main: set LED_STATE,1
 
 _30                           LDI                               0
-                              STW                               _N                              ; FOR N=0 TO 15
+                              STW                               _N                              ; Main: FOR N=0 TO 15
 
 _40                           LDW                               _N
-                              ST                                giga_xoutMask                   ; set XOUT_MASK,N
+                              ST                                giga_xoutMask                   ; Main: set XOUT_MASK,N
 
 _50                           LDI                               0
-                              ST                                giga_frameCount                 ; set FRAME_COUNT,0
+                              ST                                giga_frameCount                 ; Main: set FRAME_COUNT,0
 
 _60                           LD                                giga_frameCount
                               SUBI                              30
                               CALL                              convertLtOpAddr
                               JumpFalse                         _70 0
                               LDWI                              _60
-                              CALL                              giga_vAC                        ; IF get("FRAME_COUNT")<30 THEN GOTO 60
+                              CALL                              giga_vAC                        ; Main: IF get("FRAME_COUNT")<30 THEN GOTO 60
 
-_70                           ForNextFarInc                     _N _40 15                       ; NEXT N
+_70                           ForNextFarInc                     _N _40 15                       ; Main: NEXT N
 
 _90                           LDI                               0
-                              ST                                giga_ledState                   ; set LED_STATE,0
+                              ST                                giga_ledState                   ; Main: set LED_STATE,0
 
-_end_0x025d                   BRA                               _end_0x025d                     ; END
+_end_0x025d                   BRA                               _end_0x025d                     ; Main: END
 
 
 
@@ -124,21 +127,21 @@ _end_0x025d                   BRA                               _end_0x025d     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7ee8
-realTimeStub                  EQU     0x7ed6
-convertLtOp                   EQU     0x7ec1
-resetVideoFlags               EQU     0x7eca
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+romCheck                      EQU     0x7de8
+realTimeStub                  EQU     0x7dd6
+convertLtOp                   EQU     0x7dc1
+resetVideoFlags               EQU     0x7dca
+convertEqOpAddr               EQU     0x00c0
+convertNeOpAddr               EQU     0x00c2
+convertLeOpAddr               EQU     0x00c4
+convertGeOpAddr               EQU     0x00c6
+convertLtOpAddr               EQU     0x00c8
+convertGtOpAddr               EQU     0x00ca
+convert8Arr2dAddr             EQU     0x00cc
+convert8Arr3dAddr             EQU     0x00ce
+convert16Arr2dAddr            EQU     0x00d0
+convert16Arr3dAddr            EQU     0x00d2
+realTimeStubAddr              EQU     0x00d4
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -209,12 +212,15 @@ evenAddr            EQU     register12
 clsAddress          EQU     register13
 clsLines            EQU     register14
 varAddress          EQU     register13
+clrAddress          EQU     register13
+clrLines            EQU     register14
+clrWidth            EQU     register15
     
 
-resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+resetVideoFlags     LDI     giga_CursorX                    ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
+                    STW     miscFlags                       ; reset on bottom row flag
                     RET
 

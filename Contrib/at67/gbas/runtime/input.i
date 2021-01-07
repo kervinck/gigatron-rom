@@ -3,18 +3,14 @@ inpLutAddr          EQU     register0
 inpKeyBak           EQU     register0
 inpVarsAddr         EQU     register1
 inpStrsAddr         EQU     register2
-inpTypesAddr        EQU     register4
-inpTextAddr         EQU     register5
-inpTextOfs          EQU     register6
-inpTypeData         EQU     register7
-inpTextEnd          EQU     register8
-printXYBak          EQU     register11
-cursXYBak           EQU     register12
-cursFlash           EQU     register13
-cursorChr           EQU     register14
-cursXYOfs           EQU     register15
-
-cursorDelay         EQU     30
+inpTypesAddr        EQU     register3
+inpTextAddr         EQU     register8
+inpTextOfs          EQU     register9
+inpTypeData         EQU     register10
+inpPrnXYBak         EQU     register11
+inpCursXYBak        EQU     register12
+inpCursXYOfs        EQU     register13
+inpTextEnd          EQU     register14
 
     
 %SUB                input
@@ -32,13 +28,12 @@ input               PUSH
                     DEEK
                     STW     inpTypesAddr        ; types LUT address
 
+                    LDWI    ENABLE_SCROLL_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags           ; disable text scrolling
+                    
                     LD      giga_serialRaw
                     ST      serialRawPrev       ; initialise previous keystroke
-                    LD      giga_frameCount
-                    ADDI    cursorDelay
-                    STW     cursFlash           ; delay for cursor flash
-                    LDI     127
-                    STW     cursorChr           ; cursor char
                     LDWI    inputExt1
                     CALL    giga_vAC            ; doesn't return to here
 %ENDS
@@ -51,18 +46,22 @@ inputExt1           LDW     inpTypesAddr
                     STW     inpTypeData         ; high byte is max string length, 8th and 7th bits of low byte are newlines, last 6 bits of low byte is type
                     ANDI    0x40
                     BEQ     inputE1_print       ; check for prefix newline
-                    LDWI    inputNewline
+                    LDWI    inputNewline        ; registers don't need to be saved yet
                     CALL    giga_vAC
                     
 inputE1_print       LDW     inpStrsAddr
                     DEEK
                     STW     textStr
+                    LDWI    saveRegs
+                    CALL    giga_vAC
                     LDWI    printText           ; print strings LUT
+                    CALL    giga_vAC
+                    LDWI    loadRegs
                     CALL    giga_vAC
                     LD      inpTypeData
                     ANDI    0x80
                     BEQ     inputE1_skip        ; check for suffix newline
-                    LDWI    inputNewline
+                    LDWI    inputNewline        ; registers don't need to be saved yet
                     CALL    giga_vAC
                     
 inputE1_skip        LDWI    textWorkArea + 1
@@ -76,8 +75,8 @@ inputE1_skip        LDWI    textWorkArea + 1
                     STW     inpTextEnd          ; text max = textWorkArea + (highByte(inpTypeData) >> 8)
                     
                     LDW     cursorXY
-                    STW     cursXYBak
-                    STW     printXYBak
+                    STW     inpCursXYBak
+                    STW     inpPrnXYBak
                     LDWI    inputExt2
                     CALL    giga_vAC            ; doesn't return to here
                     
@@ -90,7 +89,13 @@ inputE1_exit        LDI     ENABLE_SCROLL_BIT
 
 %SUB                inputExt2
                     ; input extended 2
-inputExt2           LDWI    inputCursor
+inputExt2           LDWI    saveRegs
+                    CALL    giga_vAC
+                    LDI     127
+                    STW     textChr
+                    LDWI    inputCursor
+                    CALL    giga_vAC
+                    LDWI    loadRegs
                     CALL    giga_vAC
                     LDWI    inputKeys
                     CALL    giga_vAC
@@ -107,21 +112,18 @@ inputExt2           LDWI    inputCursor
 %ENDS
 
 %SUB                inputCursor
-                    ; flashes cursor
-inputCursor         LD      giga_frameCount
-                    SUBW    cursFlash
-                    BEQ     inputC_toggle
-                    RET
+                    ; draws cursor
+inputCursor         PUSH
+                    LDW     textChr
+                    XORI    127
+                    BNE     inputC_skip         ; don't flash cursor if char != 127
+                    LD      giga_ledState
+                    ANDI    2
+                    BNE     inputC_skip         ; use ledState as a hack timer
+                    LDI     32
+                    STW     textChr             ; alternate between 32 and 127
                     
-inputC_toggle       PUSH
-                    LD      giga_frameCount
-                    ADDI    cursorDelay
-                    ST      cursFlash           ; delay for cursor flash
-                    LD      cursorChr
-                    ST      textChr
-                    XORI    0xDF
-                    ST      cursorChr           ; toggle between 127 and 32 for cursor char
-                    LDW     cursXYBak
+inputC_skip         LDW     inpCursXYBak
                     STW     cursorXY            ; restore cursor position after the printChr
                     LDWI    printChr
                     CALL    giga_vAC
@@ -162,7 +164,7 @@ inputK_char         LDW     inpTextEnd
                     INC     inpTextAddr
                     LDI     0
                     POKE    inpTextAddr         ; set new end of text string
-                    LD      cursXYBak
+                    LD      inpCursXYBak
                     SUBI    giga_xres - 11
                     BLT     inputK_advance      ; cursor max bounds
                     INC     inpTextOfs
@@ -171,7 +173,7 @@ inputK_char         LDW     inpTextEnd
                     
 inputK_advance      LDI     6
                     
-inputK_print        STW     cursXYOfs           ; advance cursor
+inputK_print        STW     inpCursXYOfs        ; advance cursor
                     LDWI    inputPrint
                     CALL    giga_vAC            ; doesn't return to here
                     
@@ -211,11 +213,14 @@ inputS_copy         LDW     register11
 %ENDS                    
 
 %SUB                inputReturn
-inputReturn         LDI     32
-                    STW     cursorChr
-                    LDWI    inputC_toggle
-                    CALL    giga_vAC            ; erase cursor
-                    
+inputReturn         LDWI    saveRegs
+                    CALL    giga_vAC
+                    LDI     32
+                    STW     textChr
+                    LDWI    inputCursor
+                    CALL    giga_vAC
+                    LDWI    loadRegs
+                    CALL    giga_vAC
                     LDWI    textWorkArea
                     STW     register0
                     LDW     inpTextAddr
@@ -249,7 +254,7 @@ inputDelete         LD      inpTextOfs
                     SUBI    1
                     STW     inpTextOfs          ; decrement print text offset
                     LDI     0
-                    STW     cursXYOfs           ; stationary cursor
+                    STW     inpCursXYOfs        ; stationary cursor
                     LDI     0
                     POKE    inpTextAddr         ; delimiter
                     LDW     inpTextAddr
@@ -259,11 +264,11 @@ inputDelete         LD      inpTextOfs
                     POKE    inpTextAddr         ; delete char
                     BRA     inputD_print
 
-inputD_bounds       LDW     printXYBak
-                    SUBW    cursXYBak
+inputD_bounds       LDW     inpPrnXYBak
+                    SUBW    inpCursXYBak
                     BGE     inputD_exit         ; cursor min bounds
                     LDWI    -6
-                    STW     cursXYOfs           ; retreat cursor
+                    STW     inpCursXYOfs        ; retreat cursor
                     LDI     32                  
                     POKE    inpTextAddr         ; delete cursor
                     INC     inpTextAddr
@@ -284,18 +289,20 @@ inputD_exit         LDI     0                   ; keep looping on current var
 %ENDS
 
 %SUB                inputPrint
-inputPrint          LDWI    inputCursor
-                    CALL    giga_vAC            ; call cursor flash frequently
-                    LDWI    textWorkArea
+inputPrint          LDWI    textWorkArea
                     ADDW    inpTextOfs
                     STW     textStr
-                    LDW     printXYBak
+                    LDW     inpPrnXYBak
                     STW     cursorXY            ; restore cursor position after the printText
+                    LDWI    saveRegs
+                    CALL    giga_vAC
                     LDWI    printText
                     CALL    giga_vAC
-                    LDW     cursXYBak           ; new cursor position
-                    ADDW    cursXYOfs
-                    STW     cursXYBak
+                    LDWI    loadRegs
+                    CALL    giga_vAC
+                    LDW     inpCursXYBak        ; new cursor position
+                    ADDW    inpCursXYOfs
+                    STW     inpCursXYBak
                     LDI     0                   ; keep looping on current var
                     POP
                     RET

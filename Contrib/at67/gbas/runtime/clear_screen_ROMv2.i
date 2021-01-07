@@ -43,9 +43,13 @@ resetVideoTable     PUSH
                     STW     vramAddr
                     LDWI    giga_videoTable
                     STW     evenAddr
-    
+
+%if TIME_SLICING
 resetVT_loop        CALL    realTimeStubAddr
                     LDW     vramAddr
+%else
+resetVT_loop        LDW     vramAddr
+%endif
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
@@ -91,7 +95,9 @@ clearCS_loopy       ST      clsLines
                     LD      clsLines
                     SUBI    1
                     BNE     clearCS_loopy
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     POP
                     RET
 %ENDS   
@@ -115,7 +121,9 @@ clearR_loop         ST      clrLines
                     LD      clrLines
                     SUBI    1
                     BNE     clearR_loop
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     POP
                     RET
 %ENDS
@@ -145,7 +153,9 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                    ; bottom line
                     SYS     54                              ; fill memory
                     INC     top                             ; next top line
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      top
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loopy

@@ -6,7 +6,7 @@ yup$ = "dog"
 cls
 
 point = point(0, 0)
-print hex$(point)
+print hex$(point, 2)
 dokee = 3
 deeke = 3
 

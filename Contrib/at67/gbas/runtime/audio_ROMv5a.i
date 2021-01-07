@@ -14,8 +14,7 @@ musicPtr            EQU     register11
 
 
 %SUB                resetMidi
-resetMidi           LD      giga_frameCount
-                    ADDI    1
+resetMidi           LDI     1      
                     STW     midiDelay                       ; instant MIDI startup
                     LDI     giga_soundChan1 >>8
                     ST      audioAddr + 1
@@ -42,9 +41,9 @@ playMidi            LDW     midiStream
                     BEQ     playM_exit0                     ; 0x0000 = stop
                     LDI     5                               ; keep pumping soundTimer
                     ST      giga_soundTimer
-                    LD      midiDelay
+                    LDW     midiDelay
                     SUBI    1
-                    ST      midiDelay
+                    STW     midiDelay
                     BLE     playM_start
                     
 playM_exit0         RET
@@ -57,8 +56,8 @@ playM_process       LDW     midiStream
                     LDW     midiStream
                     ADDI    0x01
                     STW     midiStream
-                    LDI     0xF0
-                    ANDW    midiCommand
+                    LDW     midiCommand
+                    ANDI    0xF0                    
                     XORI    0x90                            ; check for start note
                     BNE     playM_endnote
     
@@ -81,7 +80,7 @@ playM_segment       XORI    0x50                            ; check for new segm
                     BRA     playM_process
     
 playM_delay         LD      midiCommand
-                    ST      midiDelay
+                    STW     midiDelay
                     
 playM_exit1         POP
                     RET
@@ -92,9 +91,9 @@ playMidiVol         LDW     midiStream
                     BEQ     playMV_exit0                    ; 0x0000 = stop
                     LDI     5                               ; keep pumping soundTimer
                     ST      giga_soundTimer
-                    LD      midiDelay
+                    LDW     midiDelay
                     SUBI    1
-                    ST      midiDelay
+                    STW     midiDelay
                     BLE     playMV_start
 
 playMV_exit0        RET
@@ -107,8 +106,8 @@ playMV_process      LDW     midiStream
                     LDW     midiStream
                     ADDI    0x01
                     STW     midiStream
-                    LDI     0xF0
-                    ANDW    midiCommand
+                    LDW     midiCommand
+                    ANDI    0xF0
                     XORI    0x90                            ; check for start note
                     BNE     playMV_endnote
     
@@ -132,18 +131,17 @@ playMV_segment      XORI    0x50                            ; check for new segm
                     BRA     playMV_process
     
 playMV_delay        LD      midiCommand
-                    ST      midiDelay
+                    STW     midiDelay
 
 playMV_exit1        POP
                     RET
 %ENDS
 
 %SUB                midiStartNote
-midiStartNote       LDWI    giga_notesTable                 ; note table in ROM
+midiStartNote       LDWI    giga_notesTable - 22            ; giga_notesTable + (midi - 11)*2
                     STW     midiPtr
                     LDW     midiStream                      ; midi note
                     PEEK
-                    SUBI    11
                     LSLW
                     ADDW    midiPtr
                     STW     midiPtr
@@ -184,6 +182,23 @@ midiEndNote         LDW     midiCommand
                     RET
 %ENDS
 
+%SUB                midiGetNote
+midiGetNote         LDWI    giga_notesTable - 22            ; giga_notesTable + (midi - 11)*2
+                    STW     musicPtr
+                    LD      musicNote
+                    LSLW
+                    ADDW    musicPtr
+                    STW     musicPtr
+                    LUP     0x00                            ; get ROM note low byte
+                    ;LSLW                                    ; left shift low byte as SOUND command expects
+                    ST      musicNote                       ; a non system internal frequency
+                    LDW     musicPtr
+                    LUP     0x01                            ; get ROM note high byte
+                    ST      musicNote + 1
+                    LDW     musicNote                       ; this is needed for GET("MIDI_NOTE")
+                    RET
+%ENDS
+
 %SUB                resetMusic
 resetMusic          LDI     giga_soundChan1 >>8
                     ST      audioAddr + 1
@@ -219,7 +234,7 @@ playN_process       LDW     musicStream
                     INC     musicStream
                     PEEK                                    ; get music note
                     ST      musicNote
-                    CALLI   musicGetNote                    ; get note from ROM
+                    CALLI   midiGetNote                     ; get midi note from ROM
                     CALLI   musicPlayNote
                     BRA     playN_process
                     
@@ -247,12 +262,9 @@ playN_delay         LDW     musicCommand
 %ENDS
 
 %SUB                musicGetNote
-musicGetNote        LDWI    giga_notesTable                 ; note table in ROM
-                    STW     musicPtr
-                    LD      musicNote
-                    SUBI    11
-                    LSLW
-                    ADDW    musicPtr
+musicGetNote        LDWI    giga_notesTable
+                    ADDW    musicNote
+                    ADDW    musicNote
                     STW     musicPtr
                     LUP     0x00                            ; get ROM note low byte
                     ST      musicNote

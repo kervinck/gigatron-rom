@@ -2,9 +2,10 @@
 #define AUDIO_H
 
 
-#define GIGA_SOUND_TIMER     0x002C
-#define GIGA_SOUND_CHANNELS  4
+#define GIGA_NUM_CHANNELS    4
+#define GIGA_CHANNELS_MASK   3
 #define GIGA_CHANNEL_OFFSET  0x0100
+#define GIGA_SOUND_TIMER     0x002C
 
 #define GIGA_CH0_WAV_A  0x01FA
 #define GIGA_CH0_WAV_X  0x01FB
@@ -43,7 +44,9 @@ namespace Audio
     bool getRealTimeAudio(void);
 
     void initialise(void);
-    void initialiseChannels(bool coldBoot=false);
+    void initialiseChannels(void);
+    void saveWaveTables(void);
+    void restoreWaveTables(void);
     void initialiseEditor(void);
 
     void fillCallbackBuffer(void);

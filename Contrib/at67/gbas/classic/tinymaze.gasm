@@ -1,58 +1,58 @@
-_startAddress_                EQU                               0x0200
+_startAddress_                    EQU                               0x0200
 
 ; Internal Variables
-serialRawPrev                 EQU                               0x0081
-register0                     EQU                               0x0082
-register1                     EQU                               register0 + 0x02
-register2                     EQU                               register0 + 0x04
-register3                     EQU                               register0 + 0x06
-register4                     EQU                               register0 + 0x08
-register5                     EQU                               register0 + 0x0A
-register6                     EQU                               register0 + 0x0C
-register7                     EQU                               register0 + 0x0E
-register8                     EQU                               register0 + 0x10
-register9                     EQU                               register0 + 0x12
-register10                    EQU                               register0 + 0x14
-register11                    EQU                               register0 + 0x16
-register12                    EQU                               register0 + 0x18
-register13                    EQU                               register0 + 0x1A
-register14                    EQU                               register0 + 0x1C
-register15                    EQU                               register0 + 0x1E
-fgbgColour                    EQU                               register0 + 0x20
-cursorXY                      EQU                               register0 + 0x22
-midiStream                    EQU                               register0 + 0x24
-midiDelay                     EQU                               register0 + 0x26
-miscFlags                     EQU                               register0 + 0x28
-timerTick                     EQU                               register0 + 0x2A
-timerPrev                     EQU                               register0 + 0x2C
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
 
 ; Internal Constants
-ENABLE_SCROLL_BIT             EQU                               0x0001
-ON_BOTTOM_ROW_BIT             EQU                               0x0002
-ENABLE_SCROLL_MSK             EQU                               0xfffe
-ON_BOTTOM_ROW_MSK             EQU                               0xfffd
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
 
 ; Internal Buffers
-textWorkArea                  EQU                               0x7fa0
+regsWorkArea                      EQU                               0x0000
+textWorkArea                      EQU                               0x7fa0
 
 ; Includes
-%includePath                  "../runtime"
-%include                      util.i
-%include                      gigatron.i
-%include                      macros.i
+%includePath                      "../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros.i
 
 ; Labels
-_entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x023b
-_elseif_0x0298                EQU                               0x027a
-_endif_0x02c0                 EQU                               0x029a
-_endif_0x02f3                 EQU                               0x02c1
-_end_0x02f5                   EQU                               0x02c3
+_entryPoint_                      EQU                               0x0200
+_loop                             EQU                               0x0236
+_elseif_0x0293                    EQU                               0x0275
+_endif_0x02bb                     EQU                               0x0295
+_endif_0x02ee                     EQU                               0x02bc
 
 ; Global Variables
-_xy                           EQU                               0x0030
-_colour                       EQU                               0x0032
-_r                            EQU                               0x0034
+_xy                               EQU                               0x0030
+_colour                           EQU                               0x0032
+_r                                EQU                               0x0034
 
 ; Local Variables
 
@@ -67,12 +67,14 @@ _r                            EQU                               0x0034
 ; Time
 
 ; Define Bytes
-def_bytes_0x06f8              EQU                               0x06f8
-def_bytes_0x06f8              DB                                1 2 4 8 16 32 64 63 
+def_bytes_0x06f8                  EQU                               0x06f8
+def_bytes_0x06f8                  DB                                1 2 4 8 16 32 64 63 
 
 ; Define Words
 
 ; Define Images
+
+; Define Loader Image Chunks
 
 ; Define Sprites
 
@@ -81,97 +83,96 @@ def_bytes_0x06f8              DB                                1 2 4 8 16 32 64
 ; Lookup Tables
 
 ; Code
-_entryPoint_                  LDI                               0x20
-                              STW                               romType
-                              RomCheck                          
-                              Initialise                        
-                              InitRealTimeStub                                                  ; INIT
+_entryPoint_                      LDI                               0x20
+                                  STW                               romType
+                                  RomCheck                          
+                                  Initialise                                                    ; Main: INIT
 
-                              LDI                               1
-                              STW                               graphicsMode
-                              ScanlineMode                      
-                              ClearVertBlinds                                                   ; mode 1 : cls
+                                  LDI                               1
+                                  STW                               graphicsMode
+                                  ScanlineMode                      
+                                  ClearVertBlinds                                               ; Main: mode 1 : cls
 
-                              LDI                               0
-                              STW                               _xy                             ; xy = 0
+                                  LDI                               0
+                                  STW                               _xy                         ; Main: xy = 0
 
-                              Rand                              
-                              ANDI                              63
-                              STW                               _colour                         ; colour = rnd(0) AND 63
+                                  Rand                              
+                                  ANDI                              63
+                                  STW                               _colour                     ; Main: colour = rnd(0) AND 63
 
-_loop                         Rand                              
-                              ANDI                              7
-                              STW                               0xe8
-                              LDWI                              1784
-                              ADDW                              0xe8
-                              PEEK                              
-                              XORW                              _colour
-                              STW                               _colour                         ; colour = colour XOR peek(colourBits + (rnd(0) AND 7))
+_loop                             Rand                              
+                                  ANDI                              7
+                                  STW                               0xe8
+                                  LDWI                              1784
+                                  ADDW                              0xe8
+                                  PEEK                              
+                                  XORW                              _colour
+                                  STW                               _colour                     ; Main: colour = colour XOR peek(colourBits + (rnd(0) AND 7))
 
-                              LDW                               _colour
-                              ST                                fgbgColour + 1                  ; set FG_COLOUR, colour
+                                  LDW                               _colour
+                                  ST                                fgbgColour + 1              ; Main: set FG_COLOUR, colour
 
-                              Rand                              
-                              ANDI                              1
-                              STW                               _r                              ; r = rnd(0) AND 1
+                                  Rand                              
+                                  ANDI                              1
+                                  STW                               _r                          ; Main: r = rnd(0) AND 1
 
-                              LDW                               _r
-                              XORI                              0
-                              BNE                               _elseif_0x0298                  ; if r &&= 0
+                                  LDW                               _r
+                                  XORI                              0
+                                  BNE                               _elseif_0x0293              ; Main: if r &&= 0
 
-                              LDW                               _xy
-                              STW                               cursorXY                        ; set CURSOR_XY, xy
+                                  LDW                               _xy
+                                  STW                               cursorXY                    ; Main: set CURSOR_XY, xy
 
-                              LDI                               7
-                              STW                               drawLine_x2
-                              LDI                               7
-                              STW                               drawLine_y2
-                              AtLineCursor                      
-                              DrawVTLine                        
-                              BRA                               _endif_0x02c0                   ; line 7, 7
+                                  LDI                               7
+                                  STW                               drawLine_x2
+                                  LDI                               7
+                                  STW                               drawLine_y2
+                                  AtLineCursor                      
+                                  DrawVTLine                        
+                                  BRA                               _endif_0x02bb               ; Main: line 7, 7
 
-_elseif_0x0298                LDW                               _r
-                              XORI                              1
-                              BNE                               _endif_0x02c0                   ; elseif r &&= 1
+_elseif_0x0293                    LDW                               _r
+                                  XORI                              1
+                                  BNE                               _endif_0x02bb               ; Main: elseif r &&= 1
 
-                              LDW                               _xy
-                              ADDI                              7
-                              STW                               cursorXY                        ; set CURSOR_XY, xy + 7
+                                  LDW                               _xy
+                                  ADDI                              7
+                                  STW                               cursorXY                    ; Main: set CURSOR_XY, xy + 7
 
-                              LDWI                              -7
-                              STW                               drawLine_x2
-                              LDI                               7
-                              STW                               drawLine_y2
-                              AtLineCursor                      
-                              DrawVTLine                                                        ; line -7, 7
+                                  LDWI                              -7
+                                  STW                               drawLine_x2
+                                  LDI                               7
+                                  STW                               drawLine_y2
+                                  AtLineCursor                      
+                                  DrawVTLine                                                    ; Main: line -7, 7
 
-_endif_0x02c0                 LD                                _xy
-                              ADDI                              8
-                              ST                                _xy                             ; xy.lo = xy.lo + 8
+_endif_0x02bb                     LD                                _xy
+                                  ADDI                              8
+                                  ST                                _xy                         ; Main: xy.lo = xy.lo + 8
 
-                              LD                                _xy
-                              SUBI                              160
-                              BLT                               _endif_0x02f3                   ; if xy.lo &&>= 160
+                                  LD                                _xy
+                                  SUBI                              160
+                                  BLT                               _endif_0x02ee               ; Main: if xy.lo &&>= 160
 
-                              LDI                               0
-                              ST                                _xy                             ; xy.lo = 0
+                                  LDI                               0
+                                  ST                                _xy                         ; Main: xy.lo = 0
 
-                              LD                                _xy + 1
-                              ADDI                              8
-                              ST                                _xy + 1                         ; xy.hi = xy.hi + 8
+                                  LD                                _xy + 1
+                                  ADDI                              8
+                                  ST                                _xy + 1                     ; Main: xy.hi = xy.hi + 8
 
-                              LD                                _xy + 1
-                              SUBI                              120
-                              BLT                               _endif_0x02f3                   ; if xy.hi &&>= 120
+                                  LD                                _xy + 1
+                                  SUBI                              120
+                                  BLT                               _endif_0x02ee               ; Main: if xy.hi &&>= 120
 
-                              LDI                               112
-                              ST                                _xy + 1                         ; xy.hi = 112
+                                  LDI                               112
+                                  ST                                _xy + 1                     ; Main: xy.hi = 112
 
-                              NewLine                                                           ; print
+                                  NewLine                                                       ; Main: print
 
-_endif_0x02f3                 BRA                               _loop                           ; goto &loop
+_endif_0x02ee                     BRA                               _loop                       ; Main: goto &loop
 
-_end_0x02f5                   BRA                               _end_0x02f5                     ; END
+                                  HALT                                                          ; Main: END
 
 
 
@@ -181,33 +182,32 @@ _end_0x02f5                   BRA                               _end_0x02f5     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7ca2
-realTimeStub                  EQU     0x7ab3
-rand16bit                     EQU     0x7ba2
-scanlineMode                  EQU     0x7da0
-resetVideoFlags               EQU     0x79ad
-initClearFuncs                EQU     0x7aa6
-clearVertBlinds               EQU     0x7ac5
-clearCursorRow                EQU     0x78cf
-drawPixel                     EQU     0x79b9
-drawVTLine                    EQU     0x7daa
-drawVTLineExt                 EQU     0x79c6
-drawVTLineLoop                EQU     0x7cb9
-drawVTLineLoadXY              EQU     0x78a8
-atLineCursor                  EQU     0x7bc0
-printInit                     EQU     0x7baa
-newLineScroll                 EQU     0x7ea4
-convertEqOpAddr               EQU     0x00c2
-convertNeOpAddr               EQU     0x00c4
-convertLeOpAddr               EQU     0x00c6
-convertGeOpAddr               EQU     0x00c8
-convertLtOpAddr               EQU     0x00ca
-convertGtOpAddr               EQU     0x00cc
-convert8Arr2dAddr             EQU     0x00ce
-convert8Arr3dAddr             EQU     0x00d0
-convert16Arr2dAddr            EQU     0x00d2
-convert16Arr3dAddr            EQU     0x00d4
-realTimeStubAddr              EQU     0x00d6
+romCheck                          EQU     0x7ba0
+rand16bit                         EQU     0x7aa2
+scanlineMode                      EQU     0x7ca0
+resetVideoFlags                   EQU     0x77c3
+initClearFuncs                    EQU     0x79b5
+clearVertBlinds                   EQU     0x78c9
+clearCursorRow                    EQU     0x77cf
+drawPixel                         EQU     0x79a8
+drawVTLine                        EQU     0x7caa
+drawVTLineExt                     EQU     0x79c6
+drawVTLineLoop                    EQU     0x7bb7
+drawVTLineLoadXY                  EQU     0x78a2
+atLineCursor                      EQU     0x7ac0
+printInit                         EQU     0x7aaa
+newLineScroll                     EQU     0x7da2
+convertEqOpAddr                   EQU     0x00c0
+convertNeOpAddr                   EQU     0x00c2
+convertLeOpAddr                   EQU     0x00c4
+convertGeOpAddr                   EQU     0x00c6
+convertLtOpAddr                   EQU     0x00c8
+convertGtOpAddr                   EQU     0x00ca
+convert8Arr2dAddr                 EQU     0x00cc
+convert8Arr3dAddr                 EQU     0x00ce
+convert16Arr2dAddr                EQU     0x00d0
+convert16Arr3dAddr                EQU     0x00d2
+realTimeStubAddr                  EQU     0x00d4
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -238,23 +238,6 @@ romC_loop           LD      romErrPixel
                     BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
                     
 romC_return         RET                    
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-                    ; self modifying code allows for timer, midi and user procs
-realTimeStub        RET                                     ; RET gets replaced by PUSH
-                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
-                    CALL    giga_vAC
-realTimeStub1       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
-                    CALL    giga_vAC
-realTimeStub2       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
-                    CALL    giga_vAC
-                    POP
-                    RET
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -378,11 +361,11 @@ clrLines            EQU     register14
 clrWidth            EQU     register15
     
 
-resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+resetVideoFlags     LDI     giga_CursorX                    ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
+                    STW     miscFlags                       ; reset on bottom row flag
                     RET
 
 
@@ -390,9 +373,10 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 initClearFuncs      PUSH
                     LDWI    resetVideoFlags
                     CALL    giga_vAC
-    
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    LDWI    SYS_SetMemory_v2_54             ; setup fill memory SYS routine
                     STW     giga_sysFn
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value
                     POP
                     RET
 
@@ -401,29 +385,29 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-                    LD      fgbgColour
-                    ST      giga_sysArg1                        ; fill value
                     LDI     giga_vram >> 8
                     STW     top  
                     
 clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LD      top
-                    ST      giga_sysArg3                        ; top line
-                    SYS     54                                  ; fill memory
+                    ST      giga_sysArg3                    ; top line
+                    SYS     54                              ; fill memory
     
                     LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg3                        ; bottom line
-                    SYS     54                                  ; fill memory
-                    INC     top                                 ; next top line
+                    ST      giga_sysArg3                    ; bottom line
+                    SYS     54                              ; fill memory
+                    INC     top                             ; next top line
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      top
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loopy
@@ -511,7 +495,7 @@ drawVTL_num         LDWI    SYS_LSRW1_48
 
 
 
-drawPixel           LD      drawPixel_xy + 1                ; xy = peek(256+2*y)*256 + x
+drawPixel           LD      drawPixel_xy + 1                ; poke peek(256 + 2*y)*256 + x, fg_colour
                     LSLW
                     INC     giga_vAC + 1
                     PEEK
@@ -554,9 +538,13 @@ drawVTL_flip        LDW     drawLine_xy1
                     LDW     drawLine_xy2        
                     SUBW    drawLine_dxy2
                     STW     drawLine_xy2                    ;xy2 -= dxy2
-                    
+
+%if TIME_SLICING
 drawVTL_count       CALL    realTimeStubAddr
                     LDW     drawLine_count
+%else
+drawVTL_count       LDW     drawLine_count
+%endif
                     SUBI    0x01
                     STW     drawLine_count
                     BGT     drawVTLineLoop
@@ -631,10 +619,10 @@ atLC_y2good         ADDI    giga_yres
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
-textLen             EQU     register1
-textOfs             EQU     register2
-textChr             EQU     register3
-textHex             EQU     register8
+textHex             EQU     register1
+textLen             EQU     register2
+textOfs             EQU     register3
+textChr             EQU     register8
 textFont            EQU     register9
 textSlice           EQU     register10
 scanLine            EQU     register11
@@ -664,7 +652,9 @@ clearCR_loopy       ST      clearLoop
                     LD      clearLoop
                     SUBI    1
                     BNE     clearCR_loopy
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LDWI    printInit
                     CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP
@@ -710,9 +700,13 @@ newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
                     LDWI    giga_videoTable
                     STW     scanLine
-    
+
+%if TIME_SLICING
 newLS_scroll        CALL    realTimeStubAddr
                     LDW     scanLine
+%else
+newLS_scroll        LDW     scanLine
+%endif
                     PEEK
                     ADDI    giga_yfont
                     ANDI    0x7F

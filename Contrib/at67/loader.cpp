@@ -248,7 +248,7 @@ namespace Loader
     {
         size_t nameSuffix = filename.find_last_of(".");
         std::string output = filename.substr(0, nameSuffix) + ".gt1";
-        fprintf(stderr, "\nOutput : %s\n", output.c_str());
+        fprintf(stderr, "\nOutput : %s\n\n", output.c_str());
 
         // Header
         uint16_t totalSize = 0;
@@ -463,12 +463,12 @@ namespace Loader
 
                             // ROM name
                             std::string romName = "RomName" + std::to_string(index);
-                            if(getKeyAsString(_configIniReader, sectionString, romName, "", result, false) == false) break;
+                            if(!getKeyAsString(_configIniReader, sectionString, romName, "", result, false)) break;
                             configRom._name = result;
 
                             // ROM type
                             std::string romVer = "RomType" + std::to_string(index);
-                            if(getKeyAsString(_configIniReader, sectionString, romVer, "", result) == false) break;
+                            if(!getKeyAsString(_configIniReader, sectionString, romVer, "", result)) break;
                             configRom._type = uint8_t(std::stoul(result, nullptr, 16));
 
                             _configRoms.push_back(configRom);
@@ -1189,6 +1189,44 @@ namespace Loader
         return true;
     }
 
+    void setMemoryModel64k(void)
+    {
+        if(Memory::getSizeRAM() == RAM_SIZE_LO)
+        {
+            Memory::setSizeRAM(RAM_SIZE_HI);
+            Memory::initialise();
+            Cpu::setSizeRAM(Memory::getSizeRAM());
+            Cpu::setRAM(0x0001, 0x00); // inform system that RAM is 64k
+        }
+    }
+
+    void uploadToEmulatorRAM(const Gt1File& gt1File)
+    {
+        // Set 64k memory model based on any segment address being >= 0x8000
+        for(int i=0; i<int(gt1File._segments.size()); i++)
+        {
+            if(gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8) >= RAM_EXPANSION_START)
+            {
+                setMemoryModel64k();
+                break;
+            }
+        }
+
+        for(int j=0; j<int(gt1File._segments.size()); j++)
+        {
+            // Ignore if address will not fit in current RAM
+            uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
+            if((address + int(gt1File._segments[j]._dataBytes.size()) - 1) < Memory::getSizeRAM())
+            {
+                for(int i=0; i<int(gt1File._segments[j]._dataBytes.size()); i++)
+                {
+                    Cpu::setRAM(uint16_t(address + i), gt1File._segments[j]._dataBytes[i]);
+                }
+            }
+        }
+    }
+
+    // Uploads directly into the emulator's RAM/ROM or to real Gigatron hardware if available
     void uploadDirect(UploadTarget uploadTarget, const std::string& name)
     {
         Gt1File gt1File;
@@ -1218,16 +1256,16 @@ namespace Loader
             return;
         }
 
-        // Choose memory model
-        if(_autoSet64k  &&  (filename.find("64k") != std::string::npos  ||  filename.find("64K") != std::string::npos))
+        // Set 64k memory model based on .INI file or filename
+        if(_autoSet64k  &&  Expression::strUpper(filename).find("64K") != std::string::npos)
         {
-            if(Memory::getSizeRAM() == RAM_SIZE_LO)
-            {
-                Memory::setSizeRAM(RAM_SIZE_HI);
-                Memory::initialise();
-                Cpu::setSizeRAM(Memory::getSizeRAM());
-                Cpu::setRAM(0x0001, 0x00); // inform system that RAM is 64k
-            }
+            setMemoryModel64k();
+        }
+
+        if(uploadTarget == Emulator)
+        {
+            Audio::restoreWaveTables();
+            Audio::initialiseChannels();
         }
 
         // Compile gbas to gasm
@@ -1302,29 +1340,16 @@ namespace Loader
         // Upload gt1
         if(filename.find(".gt1") != filename.npos)
         {
-            Assembler::clearAssembler();
+            Assembler::clearAssembler(true);
 
             if(!loadGt1File(filepath, gt1File)) return;
             executeAddress = gt1File._loStart + (gt1File._hiStart <<8);
             Editor::setLoadBaseAddress(executeAddress);
 
+            // Changes memory model if needed then uploads to emulator
             if(uploadTarget == Emulator)
             {
-                // Rebuild audio wave tables, (including right shift LUT)
-                Audio::initialiseChannels();
-
-                for(int j=0; j<int(gt1File._segments.size()); j++)
-                {
-                    // Ignore if address will not fit in current RAM
-                    uint16_t address = gt1File._segments[j]._loAddress + (gt1File._segments[j]._hiAddress <<8);
-                    if((address + int(gt1File._segments[j]._dataBytes.size()) - 1) < Memory::getSizeRAM())
-                    {
-                        for(int i=0; i<int(gt1File._segments[j]._dataBytes.size()); i++)
-                        {
-                            Cpu::setRAM(uint16_t(address+i), gt1File._segments[j]._dataBytes[i]);
-                        }
-                    }
-                }
+                uploadToEmulatorRAM(gt1File);
             }
 
             isGt1File = true;
@@ -1335,18 +1360,13 @@ namespace Loader
         // Upload vCPU assembly code
         else if(filename.find(".gasm") != filename.npos  ||  filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
         {
-            if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS)) return;
-
-            if(uploadTarget == Emulator)
-            {
-                // Rebuild audio wave tables, (including right shift LUT)
-                Audio::initialiseChannels();
-            }
+            if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS, isGbasFile)) return;
 
             // Found a breakpoint in source code
             if(Editor::getVpcBreakPointsSize())
             {
                 Editor::startDebugger();
+                Editor::runToBreakpoint();
                 Editor::setEditorMode(Editor::Dasm);
             }
 
@@ -1362,6 +1382,7 @@ namespace Loader
             gt1Segment._loAddress = LO_BYTE(address);
             gt1Segment._hiAddress = HI_BYTE(address);
 
+            // Generate gt1File
             Assembler::ByteCode byteCode;
             while(!Assembler::getNextAssembledByte(byteCode))
             {
@@ -1385,17 +1406,12 @@ namespace Loader
                     gt1Segment._hiAddress = HI_BYTE(address);
                 }
 
-                if(uploadTarget == Emulator  &&  !_disableUploads)
+                // Upload any ROM code to emulator ROM
+                if(byteCode._isRomAddress  &&  !_disableUploads  &&  uploadTarget == Emulator)
                 {
-                    if(byteCode._isRomAddress)
-                    {
-                        Cpu::setROM(customAddress, address++, byteCode._data);
-                    }
-                    else
-                    {
-                        if(address < Memory::getSizeRAM()) Cpu::setRAM(address++, byteCode._data);
-                    }
+                    Cpu::setROM(customAddress, address++, byteCode._data);
                 }
+
                 gt1Segment._dataBytes.push_back(byteCode._data);
             }
 
@@ -1404,6 +1420,12 @@ namespace Loader
             {
                 gt1Segment._segmentSize = uint8_t(gt1Segment._dataBytes.size());
                 gt1File._segments.push_back(gt1Segment);
+            }
+
+            // Changes memory model if needed then uploads to emulator RAM
+            if(uploadTarget == Emulator)
+            {
+                uploadToEmulatorRAM(gt1File);
             }
 
             // Don't save gt1 file for any asm files that contain native rom code
@@ -1470,8 +1492,6 @@ namespace Loader
                 // Reset video table and reset single step watch address to video line counter
                 Graphics::resetVTable();
             }
-
-            //Editor::startDebugger();
         }
         else if(uploadTarget == Hardware)
         {

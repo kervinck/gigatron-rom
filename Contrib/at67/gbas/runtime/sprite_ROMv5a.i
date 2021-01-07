@@ -4,16 +4,16 @@ spriteXY            EQU     register1
 spriteAddrs         EQU     register2
 
     
-%SUB                draw_sprite
-draw_sprite         LDWI    _spritesLut_
+%SUB                drawSprite_
+drawSprite_         LDWI    _spritesLut_
                     ADDW    spriteId
                     ADDW    spriteId
                     DEEK
                     STW     spriteAddrs                     ; get sprite address table
                     
-draw_s_loop         LDW     spriteAddrs
+drawS_loop          LDW     spriteAddrs
                     DEEK
-                    BEQ     draw_s_exit
+                    BEQ     drawS_exit
                     STW     giga_sysArg0
                     INC     spriteAddrs
                     INC     spriteAddrs
@@ -23,16 +23,16 @@ draw_s_loop         LDW     spriteAddrs
                     SYS     64
                     INC     spriteAddrs
                     INC     spriteAddrs
-                    BRA     draw_s_loop
+                    BRA     drawS_loop
                     
-draw_s_exit         RET
+drawS_exit          RET
 %ENDS
 
 %SUB                drawSprite
 drawSprite          PUSH
                     LDWI    SYS_Sprite6_v3_64
                     STW     giga_sysFn
-                    CALLI   draw_sprite
+                    CALLI   drawSprite_
                     POP
                     RET
 %ENDS
@@ -41,7 +41,7 @@ drawSprite          PUSH
 drawSpriteX         PUSH
                     LDWI    SYS_Sprite6x_v3_64
                     STW     giga_sysFn
-                    CALLI   draw_sprite
+                    CALLI   drawSprite_
                     POP
                     RET
 %ENDS
@@ -50,7 +50,7 @@ drawSpriteX         PUSH
 drawSpriteY         PUSH
                     LDWI    SYS_Sprite6y_v3_64
                     STW     giga_sysFn
-                    CALLI   draw_sprite
+                    CALLI   drawSprite_
                     POP
                     RET
 %ENDS
@@ -59,7 +59,7 @@ drawSpriteY         PUSH
 drawSpriteXY        PUSH
                     LDWI    SYS_Sprite6xy_v3_64
                     STW     giga_sysFn
-                    CALLI   draw_sprite
+                    CALLI   drawSprite_
                     POP
                     RET
 %ENDS

@@ -8,8 +8,8 @@
 #include "../../expression.h"
 
 
-#define GTASM_MAJOR_VERSION "0.1"
-#define GTASM_MINOR_VERSION "5"
+#define GTASM_MAJOR_VERSION "1.0"
+#define GTASM_MINOR_VERSION "6R"
 #define GTASM_VERSION_STR "gtasm v" GTASM_MAJOR_VERSION "." GTASM_MINOR_VERSION
 
 

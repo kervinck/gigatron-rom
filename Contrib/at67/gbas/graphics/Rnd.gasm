@@ -1,65 +1,64 @@
-_startAddress_                EQU                               0x0200
+_startAddress_                    EQU                               0x0200
 
 ; Internal Variables
-serialRawPrev                 EQU                               0x0081
-register0                     EQU                               0x0082
-register1                     EQU                               register0 + 0x02
-register2                     EQU                               register0 + 0x04
-register3                     EQU                               register0 + 0x06
-register4                     EQU                               register0 + 0x08
-register5                     EQU                               register0 + 0x0A
-register6                     EQU                               register0 + 0x0C
-register7                     EQU                               register0 + 0x0E
-register8                     EQU                               register0 + 0x10
-register9                     EQU                               register0 + 0x12
-register10                    EQU                               register0 + 0x14
-register11                    EQU                               register0 + 0x16
-register12                    EQU                               register0 + 0x18
-register13                    EQU                               register0 + 0x1A
-register14                    EQU                               register0 + 0x1C
-register15                    EQU                               register0 + 0x1E
-fgbgColour                    EQU                               register0 + 0x20
-cursorXY                      EQU                               register0 + 0x22
-midiStream                    EQU                               register0 + 0x24
-midiDelay                     EQU                               register0 + 0x26
-miscFlags                     EQU                               register0 + 0x28
-timerTick                     EQU                               register0 + 0x2A
-timerPrev                     EQU                               register0 + 0x2C
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
 
 ; Internal Constants
-ENABLE_SCROLL_BIT             EQU                               0x0001
-ON_BOTTOM_ROW_BIT             EQU                               0x0002
-ENABLE_SCROLL_MSK             EQU                               0xfffe
-ON_BOTTOM_ROW_MSK             EQU                               0xfffd
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
 
 ; Internal Buffers
-textWorkArea                  EQU                               0x7fa0
+regsWorkArea                      EQU                               0x0000
+textWorkArea                      EQU                               0x7fa0
 
 ; Includes
-%includePath                  "../runtime"
-%include                      util.i
-%include                      gigatron.i
-%include                      macros.i
+%includePath                      "../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros.i
 
 ; Labels
-_entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x0260
-_rand                         EQU                               0x02bd
-_next_0x022d                  EQU                               0x0232
-_else_0x02ec                  EQU                               0x02b9
-_end_0x02ee                   EQU                               0x02bb
-_end_0x032a                   EQU                               0x02e5
+_entryPoint_                      EQU                               0x0200
+_loop                             EQU                               0x0251
+_rand                             EQU                               0x02ae
+_next_0x0220                      EQU                               0x0225
+_else_0x02dd                      EQU                               0x02aa
 
 ; Global Variables
-_seed                         EQU                               0x0030
-_i                            EQU                               0x0032
-_r                            EQU                               0x0034
+_seed                             EQU                               0x0030
+_i                                EQU                               0x0032
+_r                                EQU                               0x0034
 
 ; Local Variables
 
 ; Arrays
-_a_array                      EQU                               0x0680
-_a_array                      DB                                0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 
+_a_array                          EQU                               0x0680
+_a_array                          DB                                0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 
 
 ; Strings
 
@@ -75,6 +74,8 @@ _a_array                      DB                                0x00 0x00 0x00 0
 
 ; Define Images
 
+; Define Loader Image Chunks
+
 ; Define Sprites
 
 ; Define Fonts
@@ -82,113 +83,108 @@ _a_array                      DB                                0x00 0x00 0x00 0
 ; Lookup Tables
 
 ; Code
-_entryPoint_                  Initialise                        
-                              InitEqOp                        
-                              InitRealTimeStub                                                  ; INIT
+_entryPoint_                      Initialise                        
+                                  InitEqOp                                                      ; Main: INIT
 
-                              LDWI                              12345
-                              STW                               _seed                           ; seed = 12345
+                                  LDWI                              12345
+                                  STW                               _seed                       ; Main: seed = 12345
 
-                              ClearVertBlinds                                                   ; cls
+                                  ClearVertBlinds                                               ; Main: cls
 
-                              LDI                               0
-                              STW                               _i
-                              LDW                               0xe8
-                              STW                               0xb0
-                              LDI                               1
-                              STW                               0xb2                            ; for i=0 to max
+                                  LDI                               0
+                                  STW                               _i                          ; Main: for i=0 to RND_MAX
 
-_next_0x022d                  LDWI                              0x0680
-                              ADDW                              _i
-                              PEEK                              
-                              STW                               0xe8
-                              LDI                               127
-                              SUBW                              0xe8
-                              STW                               0xe8
-                              LD                                0xe8
-                              ST                                giga_vAC + 1
-                              ORI                               0xFF
-                              XORI                              0xFF
-                              ADDW                              _i
-                              STW                               0xec
-                              LDI                               63
-                              POKE                              0xec                            ; poke (127 - a(i) LSL 8) + i, &h3F
+_next_0x0220                      LDWI                              0x0680
+                                  ADDW                              _i
+                                  PEEK                              
+                                  STW                               0xe8
+                                  LDI                               127
+                                  SUBW                              0xe8
+                                  STW                               0xe8
+                                  LD                                0xe8
+                                  ST                                giga_vAC + 1
+                                  ORI                               0xFF
+                                  XORI                              0xFF
+                                  ADDW                              _i
+                                  STW                               0xec
+                                  LDI                               63
+                                  POKE                              0xec                        ; Main: poke (127 - a(i) LSL 8) + i, &h3F
 
-                              ForNextFarVarAdd                  _i _next_0x022d 0xb0 0xb2       ; next i
+                                  ForNextFarInc                     _i _next_0x0220 127         ; Main: next i
 
-_loop                         Rand                              
-                              ANDI                              127
-                              STW                               _r                              ; r = rnd(0) AND max
+_loop                             Rand                              
+                                  ANDI                              127
+                                  STW                               _r                          ; Main: r = rnd(0) AND RND_MAX
 
-                              LDWI                              0x0680
-                              ADDW                              _r
-                              PEEK                              
-                              STW                               0xe8
-                              LDI                               127
-                              SUBW                              0xe8
-                              STW                               0xe8
-                              LD                                0xe8
-                              ST                                giga_vAC + 1
-                              ORI                               0xFF
-                              XORI                              0xFF
-                              ADDW                              _r
-                              STW                               0xec
-                              LDI                               63
-                              POKE                              0xec                            ; poke (127 - a(r) LSL 8) + r, &h3F
+                                  LDWI                              0x0680
+                                  ADDW                              _r
+                                  PEEK                              
+                                  STW                               0xe8
+                                  LDI                               127
+                                  SUBW                              0xe8
+                                  STW                               0xe8
+                                  LD                                0xe8
+                                  ST                                giga_vAC + 1
+                                  ORI                               0xFF
+                                  XORI                              0xFF
+                                  ADDW                              _r
+                                  STW                               0xec
+                                  LDI                               63
+                                  POKE                              0xec                        ; Main: poke (127 - a(r) LSL 8) + r, &h3F
 
-                              LDWI                              0x0680
-                              ADDW                              _r
-                              PEEK                              
-                              ADDI                              1
-                              STW                               memValue
-                              LDWI                              0x0680
-                              ADDW                              _r
-                              STW                               memAddr
-                              LDW                               memValue
-                              POKE                              memAddr
-                              LDWI                              0x0680
-                              ADDW                              _r
-                              PEEK                              
-                              XORI                              120
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _else_0x02ec 0
-                              LDWI                              0x0680
-                              ADDW                              _r
-                              STW                               memAddr
-                              LDI                               119
-                              POKE                              memAddr                         ; a(r) = a(r) + 1 : if a(r) = 120 then a(r) = 119
+                                  LDWI                              0x0680
+                                  ADDW                              _r
+                                  PEEK                              
+                                  ADDI                              1
+                                  STW                               memValue
+                                  LDWI                              0x0680
+                                  ADDW                              _r
+                                  STW                               memAddr
+                                  LDW                               memValue
+                                  POKE                              memAddr
+                                  LDWI                              0x0680
+                                  ADDW                              _r
+                                  PEEK                              
+                                  XORI                              120
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _else_0x02dd 0
+                                  LDWI                              0x0680
+                                  ADDW                              _r
+                                  STW                               memAddr
+                                  LDI                               119
+                                  POKE                              memAddr                     ; Main: a(r) = a(r) + 1 : if a(r) = 120 then a(r) = 119
 
-_else_0x02ec                  BRA                               _loop                           ; goto &loop
+_else_0x02dd                      BRA                               _loop                       ; Main: goto &loop
 
-_end_0x02ee                   BRA                               _end_0x02ee                     ; end
+                                  HALT                                                          ; Main: end
 
-_rand                         LDW                               _seed
-                              LSLW                              
-                              LSLW                              
-                              LSLW                              
-                              LSLW                              
-                              LSLW                              
-                              LSLW                              
-                              LSLW                              
-                              XORW                              _seed
-                              STW                               _seed                           ; seed = seed XOR (seed <<7)
+_rand                             LDW                               _seed
+                                  LSLW                              
+                                  LSLW                              
+                                  LSLW                              
+                                  LSLW                              
+                                  LSLW                              
+                                  LSLW                              
+                                  LSLW                              
+                                  XORW                              _seed
+                                  STW                               _seed                       ; Main: seed = seed XOR (seed LSL 7)
 
-                              LD                                _seed + 1
-                              STW                               mathShift
-                              ShiftRight1bit                    
-                              XORW                              _seed
-                              STW                               _seed                           ; seed = seed XOR (seed.hi >>1) 'seed = seed XOR (seed >>9)
+                                  LD                                _seed + 1
+                                  STW                               mathShift
+                                  ShiftRight1bit                    
+                                  XORW                              _seed
+                                  STW                               _seed                       ; Main: seed = seed XOR (seed.hi LSR 1) 'seed = seed XOR (seed >>9)
 
-                              LD                                _seed
-                              ST                                giga_vAC + 1
-                              ORI                               0xFF
-                              XORI                              0xFF
-                              XORW                              _seed
-                              STW                               _seed                           ; seed = seed XOR (seed <<8)
+                                  LD                                _seed
+                                  ST                                giga_vAC + 1
+                                  ORI                               0xFF
+                                  XORI                              0xFF
+                                  XORW                              _seed
+                                  STW                               _seed                       ; Main: seed = seed XOR (seed LSL 8)
 
-                              Return                                                            ; return
+                                  Return                                                        ; Main: return
 
-_end_0x032a                   BRA                               _end_0x032a                     ; END
+                                  HALT                                                          ; Main: END
 
 
 
@@ -198,56 +194,23 @@ _end_0x032a                   BRA                               _end_0x032a     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7ded
-convertEqOp                   EQU     0x7dda
-rand16bit                     EQU     0x7dd2
-shiftRight1bit                EQU     0x7de3
-resetVideoFlags               EQU     0x7ea2
-initClearFuncs                EQU     0x7eae
-clearVertBlinds               EQU     0x7ec5
-convertEqOpAddr               EQU     0x00c2
-convertNeOpAddr               EQU     0x00c4
-convertLeOpAddr               EQU     0x00c6
-convertGeOpAddr               EQU     0x00c8
-convertLtOpAddr               EQU     0x00ca
-convertGtOpAddr               EQU     0x00cc
-convert8Arr2dAddr             EQU     0x00ce
-convert8Arr3dAddr             EQU     0x00d0
-convert16Arr2dAddr            EQU     0x00d2
-convert16Arr3dAddr            EQU     0x00d4
-realTimeStubAddr              EQU     0x00d6
-
-
-; do *NOT* use register4 to register7 during time slicing
-realTimeAddr        EQU     register0
-realTimeProc0       EQU     register1
-realTimeProc1       EQU     register2
-realTimeProc2       EQU     register3
-numericLabel        EQU     register0
-defaultLabel        EQU     register1
-lutLabs             EQU     register2
-lutAddrs            EQU     register3
-lutIndex            EQU     register8
-romType             EQU     register0
-romErrAddr          EQU     register1
-romErrPixel         EQU     register2
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-                    ; self modifying code allows for timer, midi and user procs
-realTimeStub        RET                                     ; RET gets replaced by PUSH
-                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
-                    CALL    giga_vAC
-realTimeStub1       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
-                    CALL    giga_vAC
-realTimeStub2       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
-                    CALL    giga_vAC
-                    POP
-                    RET
+convertEqOp                       EQU     0x7cec
+rand16bit                         EQU     0x7ce4
+shiftRight1bit                    EQU     0x7cf5
+resetVideoFlags                   EQU     0x7da0
+initClearFuncs                    EQU     0x7dac
+clearVertBlinds                   EQU     0x7dc3
+convertEqOpAddr                   EQU     0x00c0
+convertNeOpAddr                   EQU     0x00c2
+convertLeOpAddr                   EQU     0x00c4
+convertGeOpAddr                   EQU     0x00c6
+convertLtOpAddr                   EQU     0x00c8
+convertGtOpAddr                   EQU     0x00ca
+convert8Arr2dAddr                 EQU     0x00cc
+convert8Arr3dAddr                 EQU     0x00ce
+convert16Arr2dAddr                EQU     0x00d0
+convert16Arr3dAddr                EQU     0x00d2
+realTimeStubAddr                  EQU     0x00d4
 
 
                     ; convert equal to into a boolean
@@ -339,9 +302,13 @@ clearVertBlinds     PUSH
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top
-    
+
+%if TIME_SLICING
 clearVB_loop        CALL    realTimeStubAddr
                     LD      top
+%else
+clearVB_loop        LD      top
+%endif
                     ST      giga_sysArg4 + 1                    ; top line
                     SYS     30
     

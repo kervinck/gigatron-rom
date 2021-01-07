@@ -17,7 +17,7 @@ loop:
     out16.hi = peek(START + in16.lo)
     out16.lo = peek(START + in16.hi)
 
-    print hexw$(out16)
+    print hex$(out16, 4)
     goto loop
 end
 

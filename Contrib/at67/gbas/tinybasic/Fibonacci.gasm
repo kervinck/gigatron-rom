@@ -1,6 +1,6 @@
 _startAddress_                EQU                               0x0200
 
-; Internal variables
+; Internal Variables
 serialRawPrev                 EQU                               0x0081
 register0                     EQU                               0x0082
 register1                     EQU                               register0 + 0x02
@@ -32,7 +32,8 @@ ON_BOTTOM_ROW_BIT             EQU                               0x0002
 ENABLE_SCROLL_MSK             EQU                               0xfffe
 ON_BOTTOM_ROW_MSK             EQU                               0xfffd
 
-; Internal buffers
+; Internal Buffers
+regsWorkArea                  EQU                               0x0000
 textWorkArea                  EQU                               0x7fa0
 
 ; Includes
@@ -60,11 +61,13 @@ _page_0x0300                  EQU                               0x0300
 _end_0x0361                   EQU                               0x0326
 _end_0x0392                   EQU                               0x0347
 
-; Variables
+; Global Variables
 _n                            EQU                               0x0030
 _j                            EQU                               0x0032
 _c                            EQU                               0x0034
 _i                            EQU                               0x0036
+
+; Local Variables
 
 ; Arrays
 _a_array                      EQU                               0x069a
@@ -75,8 +78,8 @@ _b_array                      DW                                0x0000 0x0000 0x
 ; Strings
 
 ; Constant Strings
-_str_0x7efc                   EQU                               0x7efc
-_str_0x7efc                   DB                                2 ': ' 0
+_str_0x7dfc                   EQU                               0x7dfc
+_str_0x7dfc                   DB                                2 ': ' 0
 
 ; Data
 
@@ -96,24 +99,24 @@ _str_0x7efc                   DB                                2 ': ' 0
 
 ; Code
 _entryPoint_                  Initialise                        
-                              InitRealTimeStub                                                  ; INIT
+                              InitRealTimeStub                                                  ; Main: INIT
 
                               LDI                               0
                               STW                               _n
                               STW                               _j
                               STW                               _c
-                              ClearVertBlinds                                                   ; n=0 : j=n : c=j : cls
+                              ClearVertBlinds                                                   ; Main: n=0 : j=n : c=j : cls
 
 _2                            LDWI                              0x0634
                               STW                               memAddr
                               LDI                               1
-                              DOKE                              memAddr                         ; dim a(50)=0 : dim b(50)=0 : b(0)=1
+                              DOKE                              memAddr                         ; Main: dim a(50)=0 : dim b(50)=0 : b(0)=1
 
 _3                            LDW                               _n
                               ADDI                              1
                               STW                               _n
                               PrintAcInt16                      
-                              PrintString                       _str_0x7efc                     ; n=n+1 : print n;": ";
+                              PrintString                       _str_0x7dfc                     ; Main: n=n+1 : print n;": ";
 
 _4                            LDI                               0
                               STW                               _i
@@ -129,7 +132,7 @@ _next_0x025c                  LDW                               _j
                               ADDW                              memIndex0
                               DEEK                              
                               ADDI                              48
-                              PrintAcChar                                                       ; for i=0 to j : put b(j-i)+48
+                              PrintAcChar                                                       ; Main: for i=0 to j : put b(j-i)+48
 
 _5                            ForNextFarVarAdd                  _i _next_0x025c 0xb0 0xb2
                               NewLine                           
@@ -138,18 +141,18 @@ _5                            ForNextFarVarAdd                  _i _next_0x025c 
                               LDW                               _j
                               STW                               0xb0
                               LDI                               1
-                              STW                               0xb2                            ; next i : print : for i=0 to j
+                              STW                               0xb2                            ; Main: next i : print : for i=0 to j
 
 _6                            LDWI                              0x069a
                               ADDW                              _i
                               ADDW                              _i
                               DEEK                              
-                              STW                               0xc0
+                              STW                               0xe8
                               LDWI                              0x0634
                               ADDW                              _i
                               ADDW                              _i
                               DEEK                              
-                              ADDW                              0xc0
+                              ADDW                              0xe8
                               ADDW                              _c
                               STW                               _c
                               LDWI                              0x0634
@@ -162,7 +165,7 @@ _6                            LDWI                              0x069a
                               ADDW                              _i
                               STW                               memAddr
                               LDW                               memValue
-                              DOKE                              memAddr                         ; c=a(i)+b(i)+c : a(i)=b(i)
+                              DOKE                              memAddr                         ; Main: c=a(i)+b(i)+c : a(i)=b(i)
 
 _7                            LDWI                              0x0634
                               ADDW                              _i
@@ -175,7 +178,7 @@ _7                            LDWI                              0x0634
                               LDI                               0
                               STW                               _c
                               LDWI                              _9
-                              CALL                              giga_vAC                        ; b(i)=c : if c &&< 10 then c=0 : goto 9
+                              CALL                              giga_vAC                        ; Main: b(i)=c : if c &&< 10 then c=0 : goto 9
 
 _8                            LDW                               _c
                               SUBI                              10
@@ -187,24 +190,24 @@ _8                            LDW                               _c
                               LDW                               memValue
                               DOKE                              memAddr
                               LDI                               1
-                              STW                               _c                              ; b(i)=c-10 : c=1
+                              STW                               _c                              ; Main: b(i)=c-10 : c=1
 
-                              STW                               0xde
+                              STLW                              0xFE
                               LDWI                              _page_0x0300
                               CALL                              giga_vAC
-_page_0x0300                  LDW                               0xde
+_page_0x0300                  LDLW                              0xFE
 _9                            ForNextFarVarAdd                  _i _6 0xb0 0xb2
                               LDW                               _c
                               XORI                              0
                               BNE                               _10
-                              BRA                               _12                             ; next i : if c &&= 0 then goto &12
+                              BRA                               _12                             ; Main: next i : if c &&= 0 then goto &12
 
 _10                           LDW                               _j
                               ADDI                              1
                               STW                               _j
                               XORI                              50
                               BNE                               _11
-_end_0x0361                   BRA                               _end_0x0361                     ; j=j+1 : if j &&= 50 then END
+_end_0x0361                   BRA                               _end_0x0361                     ; Main: j=j+1 : if j &&= 50 then END
 
 _11                           LDWI                              0x069a
                               ADDW                              _j
@@ -217,12 +220,12 @@ _11                           LDWI                              0x069a
                               ADDW                              _j
                               STW                               memAddr
                               LDW                               _c
-                              DOKE                              memAddr                         ; a(j)=0 : b(j)=c
+                              DOKE                              memAddr                         ; Main: a(j)=0 : b(j)=c
 
 _12                           LDWI                              _3
-                              CALL                              giga_vAC                        ; goto 3
+                              CALL                              giga_vAC                        ; Main: goto 3
 
-_end_0x0392                   BRA                               _end_0x0392                     ; END
+_end_0x0392                   BRA                               _end_0x0392                     ; Main: END
 
 
 
@@ -232,30 +235,29 @@ _end_0x0392                   BRA                               _end_0x0392     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x78ed
-resetVideoFlags               EQU     0x79a1
-resetVideoTable               EQU     0x7aa1
-initClearFuncs                EQU     0x79ad
-clearVertBlinds               EQU     0x7ac5
-clearCursorRow                EQU     0x7bb6
-printInit                     EQU     0x7ba0
-printText                     EQU     0x79c4
-printDigit                    EQU     0x79dd
-printInt16                    EQU     0x7cae
-printChr                      EQU     0x7ca1
-printChar                     EQU     0x7da7
-newLineScroll                 EQU     0x7ea1
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
+realTimeStub                  EQU     0x78bd
+resetVideoFlags               EQU     0x78b1
+initClearFuncs                EQU     0x78cf
+clearVertBlinds               EQU     0x79c3
+clearCursorRow                EQU     0x7ab6
+printInit                     EQU     0x7aa0
+printText                     EQU     0x78e6
+printDigit                    EQU     0x79a1
+printInt16                    EQU     0x7bae
+printChr                      EQU     0x7ba1
+printChar                     EQU     0x7da4
+newLineScroll                 EQU     0x7ca2
+convertEqOpAddr               EQU     0x00c0
+convertNeOpAddr               EQU     0x00c2
+convertLeOpAddr               EQU     0x00c4
+convertGeOpAddr               EQU     0x00c6
+convertLtOpAddr               EQU     0x00c8
+convertGtOpAddr               EQU     0x00ca
+convert8Arr2dAddr             EQU     0x00cc
+convert8Arr3dAddr             EQU     0x00ce
+convert16Arr2dAddr            EQU     0x00d0
+convert16Arr3dAddr            EQU     0x00d2
+realTimeStubAddr              EQU     0x00d4
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -302,7 +304,13 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
 varAddress          EQU     register13
-    
+clrAddress          EQU     register10
+clrLines            EQU     register11
+clrWidth            EQU     register12
+clrStart            EQU     register13
+clrEnd              EQU     register14
+clrRem              EQU     register15
+
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
                     STW     cursorXY
@@ -313,39 +321,15 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 
 
 
-
-                    ; resets video table pointers
-resetVideoTable     PUSH
-                    LDI     8
-                    STW     vramAddr
-                    LDWI    giga_videoTable
-                    STW     evenAddr
-    
-resetVT_loop        CALL    realTimeStubAddr
-                    LDW     vramAddr
-                    DOKE    evenAddr
-                    INC     evenAddr
-                    INC     evenAddr
-                    INC     vramAddr
-                    LD      vramAddr
-                    SUBI    giga_yres + 8
-                    BLT     resetVT_loop
-                    
-                    LDWI    resetVideoFlags
-                    CALL    giga_vAC                    
-                    POP
-                    RET
-
-
 initClearFuncs      PUSH
-                    LDWI    resetVideoTable
+                    LDWI    resetVideoFlags
                     CALL    giga_vAC
             
                     LD      fgbgColour
                     ST      giga_sysArg0
                     ST      giga_sysArg0 + 1
                     ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of bg colour
     
                     LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
                     STW     giga_sysFn
@@ -362,9 +346,13 @@ clearVertBlinds     PUSH
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top
-    
+
+%if TIME_SLICING
 clearVB_loop        CALL    realTimeStubAddr
                     LD      top
+%else
+clearVB_loop        LD      top
+%endif
                     ST      giga_sysArg4 + 1                    ; top line
                     SYS     30
     
@@ -394,10 +382,10 @@ clearVB_loop        CALL    realTimeStubAddr
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
-textLen             EQU     register1
-textOfs             EQU     register2
-textChr             EQU     register3
-textHex             EQU     register8
+textHex             EQU     register1
+textLen             EQU     register2
+textOfs             EQU     register3
+textChr             EQU     register8
 textFont            EQU     register9
 textSlice           EQU     register10
 scanLine            EQU     register11
@@ -552,7 +540,9 @@ printC_slice        ST      textSlice
                     INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     
                     PUSH
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      cursorXY
                     ADDI    giga_xfont
                     ST      cursorXY
@@ -584,7 +574,9 @@ clearCursorRow      PUSH
                     LDI     giga_yfont
 
 clearCR_loopy       ST      clearLoop
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
@@ -637,9 +629,13 @@ newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
                     LDWI    giga_videoTable
                     STW     scanLine
-    
+
+%if TIME_SLICING
 newLS_scroll        CALL    realTimeStubAddr
                     LDW     scanLine
+%else
+newLS_scroll        LDW     scanLine
+%endif
                     PEEK
                     ADDI    giga_yfont
                     ANDI    0x7F

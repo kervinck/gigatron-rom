@@ -11,8 +11,8 @@ tickTime            LDW     timerTick
                     STW     timerTick                           ; 1/60 user timer, (max time = 546.116 seconds)
                     INC     timerPrev                           ; 1/60 internal counter
                     LD      timerPrev
-                    SUBI    60
-                    BLT     tickT_exit
+                    XORI    60
+                    BNE     tickT_exit
                     LDI     0
                     ST      timerPrev
                     PUSH
@@ -28,8 +28,8 @@ handleTime          LDWI    _timeArray_
                     PEEK
                     ADDI    1
                     POKE    timeArrayInt                        ; seconds
-                    SUBI    60
-                    BLT     handleT_exit
+                    XORI    60
+                    BNE     handleT_exit
                     LDI     0
                     POKE    timeArrayInt                        ; reset seconds
                     
@@ -38,8 +38,8 @@ handleTime          LDWI    _timeArray_
                     PEEK
                     ADDI    1
                     POKE    timeArrayInt                        ; minutes
-                    SUBI    60
-                    BLT     handleT_exit
+                    XORI    60
+                    BNE     handleT_exit
                     LDI     0
                     POKE    timeArrayInt                        ; reset minutes
                     
@@ -48,8 +48,8 @@ handleTime          LDWI    _timeArray_
                     PEEK
                     ADDI    1
                     POKE    timeArrayInt                        ; hours
-handleT_mode        SUBI    24                                  ; [handleT_mode + 1] = 12 hour/24 hour
-                    BLT     handleT_exit
+handleT_mode        XORI    24                                  ; [handleT_mode + 1] = 12 hour/24 hour
+                    BNE     handleT_exit
 handleT_epoch       LDI     0                                   ; [handleT_epoch + 1] = start hour
                     POKE    timeArrayInt                        ; reset hours
 

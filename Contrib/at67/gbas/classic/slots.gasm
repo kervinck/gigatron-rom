@@ -1,270 +1,270 @@
-_startAddress_                EQU                               0x0200
+_startAddress_                    EQU                               0x0200
 
 ; Internal Variables
-serialRawPrev                 EQU                               0x0081
-register0                     EQU                               0x0082
-register1                     EQU                               register0 + 0x02
-register2                     EQU                               register0 + 0x04
-register3                     EQU                               register0 + 0x06
-register4                     EQU                               register0 + 0x08
-register5                     EQU                               register0 + 0x0A
-register6                     EQU                               register0 + 0x0C
-register7                     EQU                               register0 + 0x0E
-register8                     EQU                               register0 + 0x10
-register9                     EQU                               register0 + 0x12
-register10                    EQU                               register0 + 0x14
-register11                    EQU                               register0 + 0x16
-register12                    EQU                               register0 + 0x18
-register13                    EQU                               register0 + 0x1A
-register14                    EQU                               register0 + 0x1C
-register15                    EQU                               register0 + 0x1E
-fgbgColour                    EQU                               register0 + 0x20
-cursorXY                      EQU                               register0 + 0x22
-midiStream                    EQU                               register0 + 0x24
-midiDelay                     EQU                               register0 + 0x26
-miscFlags                     EQU                               register0 + 0x28
-timerTick                     EQU                               register0 + 0x2A
-timerPrev                     EQU                               register0 + 0x2C
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
 
 ; Internal Constants
-ENABLE_SCROLL_BIT             EQU                               0x0001
-ON_BOTTOM_ROW_BIT             EQU                               0x0002
-ENABLE_SCROLL_MSK             EQU                               0xfffe
-ON_BOTTOM_ROW_MSK             EQU                               0xfffd
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
 
 ; Internal Buffers
-textWorkArea                  EQU                               0xffa0
+regsWorkArea                      EQU                               0xff30
+textWorkArea                      EQU                               0xff40
 
 ; Includes
-%includePath                  "../runtime"
-%include                      util.i
-%include                      gigatron.i
-%include                      macros.i
+%includePath                      "../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros.i
 
 ; Labels
-_entryPoint_                  EQU                               0x0200
-_30                           EQU                               0x0241
-_100                          EQU                               0x022f
-_110                          EQU                               0x022f
-_120                          EQU                               0x0250
-_130                          EQU                               0x025f
-_140                          EQU                               0x026e
-_150                          EQU                               0x027d
-_160                          EQU                               0x0281
-_170                          EQU                               0x0290
-_180                          EQU                               0x029a
-_190                          EQU                               0x02ad
-_200                          EQU                               0x02c0
-_210                          EQU                               0x02c4
-_220                          EQU                               0x02c9
-_230                          EQU                               0x02ce
-_240                          EQU                               0x02db
-_250                          EQU                               0x02e8
-_260                          EQU                               0x0304
-_270                          EQU                               0x0309
-_280                          EQU                               0x031c
-_290                          EQU                               0x032f
-_300                          EQU                               0x0342
-_310                          EQU                               0x0355
-_320                          EQU                               0x0368
-_330                          EQU                               0x037b
-_340                          EQU                               0x038e
-_350                          EQU                               0x03a1
-_360                          EQU                               0x03b4
-_370                          EQU                               0x03c7
-_380                          EQU                               0x03da
-_390                          EQU                               0x03ed
-_400                          EQU                               0x040f
-_410                          EQU                               0x0422
-_420                          EQU                               0x0435
-_430                          EQU                               0x0448
-_440                          EQU                               0x045b
-_450                          EQU                               0x046e
-_460                          EQU                               0x0481
-_470                          EQU                               0x0494
-_480                          EQU                               0x04a7
-_490                          EQU                               0x04ac
-_500                          EQU                               0x04bb
-_510                          EQU                               0x04c1
-_520                          EQU                               0x04cf
-_530                          EQU                               0x04d9
-_540                          EQU                               0x04e3
-_550                          EQU                               0x0507
-_560                          EQU                               0x050c
-_570                          EQU                               0x051d
-_580                          EQU                               0x0530
-_590                          EQU                               0x0541
-_600                          EQU                               0x0546
-_610                          EQU                               0x0559
-_620                          EQU                               0x056c
-_630                          EQU                               0x0571
-_640                          EQU                               0x0584
-_650                          EQU                               0x0589
-_660                          EQU                               0x059c
-_670                          EQU                               0x05a1
-_680                          EQU                               0x05b0
-_690                          EQU                               0x05b5
-_700                          EQU                               0x05c4
-_710                          EQU                               0x05c9
-_720                          EQU                               0x05d8
-_730                          EQU                               0x05dd
-_740                          EQU                               0x05f0
-_750                          EQU                               0x0611
-_760                          EQU                               0x0620
-_770                          EQU                               0x0633
-_780                          EQU                               0x0638
-_790                          EQU                               0x064c
-_800                          EQU                               0x065b
-_810                          EQU                               0x066e
-_820                          EQU                               0x0673
-_830                          EQU                               0x0687
-_840                          EQU                               0x0696
-_850                          EQU                               0x06a9
-_860                          EQU                               0x06ae
-_870                          EQU                               0x06bd
-_880                          EQU                               0x06c2
-_890                          EQU                               0x06d1
-_900                          EQU                               0x06d6
-_910                          EQU                               0x06db
-_920                          EQU                               0x06ea
-_930                          EQU                               0x08a2
-_940                          EQU                               0x08b1
-_950                          EQU                               0x08b6
-_960                          EQU                               0x08c5
-_970                          EQU                               0x08ca
-_980                          EQU                               0x08d9
-_990                          EQU                               0x08de
-_1000                         EQU                               0x08ed
-_1010                         EQU                               0x09a2
-_1020                         EQU                               0x09b1
-_1030                         EQU                               0x09b6
-_1040                         EQU                               0x09c5
-_1050                         EQU                               0x09ca
-_1060                         EQU                               0x09d9
-_1070                         EQU                               0x09de
-_1080                         EQU                               0x09ed
-_1090                         EQU                               0x0aa2
-_1100                         EQU                               0x0ab1
-_1110                         EQU                               0x0ab6
-_1120                         EQU                               0x0ac5
-_1130                         EQU                               0x0aca
-_1140                         EQU                               0x0ad9
-_1150                         EQU                               0x0ade
-_1160                         EQU                               0x0aed
-_1170                         EQU                               0x0ba2
-_1180                         EQU                               0x0bb1
-_1190                         EQU                               0x0bb6
-_1200                         EQU                               0x0bc5
-_1210                         EQU                               0x0bca
-_1220                         EQU                               0x0bd9
-_1230                         EQU                               0x0bde
-_1240                         EQU                               0x0bed
-_1250                         EQU                               0x0ca2
-_1260                         EQU                               0x0cb1
-_1270                         EQU                               0x0cb6
-_1280                         EQU                               0x0cbb
-_1290                         EQU                               0x0cc4
-_1300                         EQU                               0x0cd2
-_1310                         EQU                               0x0cd4
-_1320                         EQU                               0x0cd9
-_1330                         EQU                               0x0ce2
-_1340                         EQU                               0x0cf0
-_1341                         EQU                               0x0cf2
-_1342                         EQU                               0x0db1
-_1343                         EQU                               0x0dc0
-_1344                         EQU                               0x0dd3
-_1350                         EQU                               0x0dd8
-_9999                         EQU                               0x0dda
-_page_0x0300                  EQU                               0x0300
-_page_0x0400                  EQU                               0x0400
-_page_0x0500                  EQU                               0x0500
-_page_0x0600                  EQU                               0x0600
-_page_0x08a0                  EQU                               0x08a0
-_page_0x09a0                  EQU                               0x09a0
-_page_0x0aa0                  EQU                               0x0aa0
-_page_0x0ba0                  EQU                               0x0ba0
-_page_0x0ca0                  EQU                               0x0ca0
-_page_0x0da0                  EQU                               0x0da0
-_end_0x092b                   EQU                               0x0dd8
-_end_0x092d                   EQU                               0x0dda
-_end_0x092f                   EQU                               0x0ddc
+_entryPoint_                      EQU                               0x0200
+_30                               EQU                               0x023c
+_100                              EQU                               0x022a
+_110                              EQU                               0x022a
+_120                              EQU                               0x024b
+_130                              EQU                               0x025a
+_140                              EQU                               0x0269
+_150                              EQU                               0x0278
+_160                              EQU                               0x027c
+_170                              EQU                               0x028b
+_180                              EQU                               0x0295
+_190                              EQU                               0x02a8
+_200                              EQU                               0x02bb
+_210                              EQU                               0x02bf
+_220                              EQU                               0x02c4
+_230                              EQU                               0x02c9
+_240                              EQU                               0x02d6
+_250                              EQU                               0x02e3
+_260                              EQU                               0x0302
+_270                              EQU                               0x0307
+_280                              EQU                               0x031a
+_290                              EQU                               0x032d
+_300                              EQU                               0x0340
+_310                              EQU                               0x0353
+_320                              EQU                               0x0366
+_330                              EQU                               0x0379
+_340                              EQU                               0x038c
+_350                              EQU                               0x039f
+_360                              EQU                               0x03b2
+_370                              EQU                               0x03c5
+_380                              EQU                               0x03d8
+_390                              EQU                               0x03eb
+_400                              EQU                               0x040f
+_410                              EQU                               0x0422
+_420                              EQU                               0x0435
+_430                              EQU                               0x0448
+_440                              EQU                               0x045b
+_450                              EQU                               0x046e
+_460                              EQU                               0x0481
+_470                              EQU                               0x0494
+_480                              EQU                               0x04a7
+_490                              EQU                               0x04ac
+_500                              EQU                               0x04bb
+_510                              EQU                               0x04c1
+_520                              EQU                               0x04cf
+_530                              EQU                               0x04d9
+_540                              EQU                               0x04e3
+_550                              EQU                               0x0520
+_560                              EQU                               0x0525
+_570                              EQU                               0x0536
+_580                              EQU                               0x0549
+_590                              EQU                               0x055a
+_600                              EQU                               0x055f
+_610                              EQU                               0x0572
+_620                              EQU                               0x0585
+_630                              EQU                               0x058a
+_640                              EQU                               0x059d
+_650                              EQU                               0x05a2
+_660                              EQU                               0x05b5
+_670                              EQU                               0x05ba
+_680                              EQU                               0x05c9
+_690                              EQU                               0x05ce
+_700                              EQU                               0x05dd
+_710                              EQU                               0x05e2
+_720                              EQU                               0x05f1
+_730                              EQU                               0x05f6
+_740                              EQU                               0x0613
+_750                              EQU                               0x0627
+_760                              EQU                               0x0636
+_770                              EQU                               0x0649
+_780                              EQU                               0x064e
+_790                              EQU                               0x0662
+_800                              EQU                               0x0671
+_810                              EQU                               0x0684
+_820                              EQU                               0x0689
+_830                              EQU                               0x069d
+_840                              EQU                               0x06ac
+_850                              EQU                               0x06bf
+_860                              EQU                               0x06c4
+_870                              EQU                               0x06d3
+_880                              EQU                               0x06d8
+_890                              EQU                               0x06e7
+_900                              EQU                               0x06ec
+_910                              EQU                               0x08a2
+_920                              EQU                               0x08b1
+_930                              EQU                               0x08b6
+_940                              EQU                               0x08c5
+_950                              EQU                               0x08ca
+_960                              EQU                               0x08d9
+_970                              EQU                               0x08de
+_980                              EQU                               0x08ed
+_990                              EQU                               0x09a2
+_1000                             EQU                               0x09b1
+_1010                             EQU                               0x09b6
+_1020                             EQU                               0x09c5
+_1030                             EQU                               0x09ca
+_1040                             EQU                               0x09d9
+_1050                             EQU                               0x09de
+_1060                             EQU                               0x09ed
+_1070                             EQU                               0x0aa2
+_1080                             EQU                               0x0ab1
+_1090                             EQU                               0x0ab6
+_1100                             EQU                               0x0ac5
+_1110                             EQU                               0x0aca
+_1120                             EQU                               0x0ad9
+_1130                             EQU                               0x0ade
+_1140                             EQU                               0x0aed
+_1150                             EQU                               0x0ba2
+_1160                             EQU                               0x0bb1
+_1170                             EQU                               0x0bb6
+_1180                             EQU                               0x0bc5
+_1190                             EQU                               0x0bca
+_1200                             EQU                               0x0bd9
+_1210                             EQU                               0x0bde
+_1220                             EQU                               0x0bed
+_1230                             EQU                               0x0ca2
+_1240                             EQU                               0x0cb1
+_1250                             EQU                               0x0cb6
+_1260                             EQU                               0x0cc5
+_1270                             EQU                               0x0cca
+_1280                             EQU                               0x0ccf
+_1290                             EQU                               0x0cd8
+_1300                             EQU                               0x0ce6
+_1310                             EQU                               0x0ce8
+_1320                             EQU                               0x0ced
+_1330                             EQU                               0x0da2
+_1340                             EQU                               0x0db0
+_1341                             EQU                               0x0db2
+_1342                             EQU                               0x0dc6
+_1343                             EQU                               0x0dd5
+_1344                             EQU                               0x0de8
+_1350                             EQU                               0x0ded
+_9999                             EQU                               0x0def
+_page_0x0300                      EQU                               0x0300
+_page_0x0400                      EQU                               0x0400
+_page_0x0500                      EQU                               0x0500
+_page_0x0600                      EQU                               0x0600
+_page_0x08a0                      EQU                               0x08a0
+_page_0x09a0                      EQU                               0x09a0
+_page_0x0aa0                      EQU                               0x0aa0
+_page_0x0ba0                      EQU                               0x0ba0
+_page_0x0ca0                      EQU                               0x0ca0
+_page_0x0da0                      EQU                               0x0da0
 
 ; Global Variables
-_M                            EQU                               0x0030
-_P                            EQU                               0x0032
-_X                            EQU                               0x0034
-_Y                            EQU                               0x0036
-_Z                            EQU                               0x0038
-_Q4                           EQU                               0x003a
-_T8                           EQU                               0x003c
+_M                                EQU                               0x0030
+_P                                EQU                               0x0032
+_X                                EQU                               0x0034
+_Y                                EQU                               0x0036
+_Z                                EQU                               0x0038
+_Q4                               EQU                               0x003a
+_T8                               EQU                               0x003c
 
 ; Local Variables
 
 ; Arrays
 
 ; Strings
-_A$                           EQU                               0x7da0
-_A$                           DB                                0 '' 0
+_A$                               EQU                               0x7da0
+_A$                               DB                                0 '' 0
 
 ; Constant Strings
-_str_0x7fce                   EQU                               0x7fce
-_str_0x7fce                   DB                                48 'YOU ARE IN THE H&M CASINO,IN FRONT OF ONE OF OUR' 0
-_str_0x7fa7                   EQU                               0x7fa7
-_str_0x7fa7                   DB                                37 'ONE-ARM BANDITS. BET FROM $1 TO $100.' 0
-_str_0x7ec2                   EQU                               0x7ec2
-_str_0x7ec2                   DB                                60 'TO PULL THE ARM, PUNCH THE RETURN KEY AFTER MAKING YOUR BET.' 0
-_str_0x7eb8                   EQU                               0x7eb8
-_str_0x7eb8                   DB                                8 'YOUR BET' 0
-_str_0x7fa4                   EQU                               0x7fa4
-_str_0x7fa4                   DB                                1 '?' 0
-_str_0x7ead                   EQU                               0x7ead
-_str_0x7ead                   DB                                9 'YOU LOST.' 0
-_str_0x7ea6                   EQU                               0x7ea6
-_str_0x7ea6                   DB                                5 'AGAIN' 0
-_str_0x7ccd                   EQU                               0x7ccd
-_str_0x7ccd                   DB                                49 'PAY UP!  PLEASE LEAVE YOUR MONEY ON THE TERMINAL.' 0
-_str_0x7cb7                   EQU                               0x7cb7
-_str_0x7cb7                   DB                                20 'HEY, YOU BROKE EVEN.' 0
-_str_0x7bd3                   EQU                               0x7bd3
-_str_0x7bd3                   DB                                43 'COLLECT YOUR WINNINGS FROM THE H&M CASHIER.' 0
-_str_0x7ca7                   EQU                               0x7ca7
-_str_0x7ca7                   DB                                14 '**TOP DOLLAR**' 0
-_str_0x7bc9                   EQU                               0x7bc9
-_str_0x7bc9                   DB                                8 'YOU WON!' 0
-_str_0x7bba                   EQU                               0x7bba
-_str_0x7bba                   DB                                13 '***JACKPOT***' 0
-_str_0x7bac                   EQU                               0x7bac
-_str_0x7bac                   DB                                12 '*DOUBLE BAR*' 0
-_str_0x7ae9                   EQU                               0x7ae9
-_str_0x7ae9                   DB                                21 'HOUSE LIMITS ARE $100' 0
-_str_0x7ad6                   EQU                               0x7ad6
-_str_0x7ad6                   DB                                17 'MINIMUM BET IS $1' 0
-_str_0x7ea1                   EQU                               0x7ea1
-_str_0x7ea1                   DB                                3 'BAR' 0
-_str_0x7ca1                   EQU                               0x7ca1
-_str_0x7ca1                   DB                                4 'BELL' 0
-_str_0x7ba4                   EQU                               0x7ba4
-_str_0x7ba4                   DB                                6 'ORANGE' 0
-_str_0x7acf                   EQU                               0x7acf
-_str_0x7acf                   DB                                5 'LEMON' 0
-_str_0x7ac9                   EQU                               0x7ac9
-_str_0x7ac9                   DB                                4 'PLUM' 0
-_str_0x7ac1                   EQU                               0x7ac1
-_str_0x7ac1                   DB                                6 'CHERRY' 0
-_str_0x7abb                   EQU                               0x7abb
-_str_0x7abb                   DB                                4 ' BAR' 0
-_str_0x7ab4                   EQU                               0x7ab4
-_str_0x7ab4                   DB                                5 ' BELL' 0
-_str_0x7aab                   EQU                               0x7aab
-_str_0x7aab                   DB                                7 ' ORANGE' 0
-_str_0x7aa3                   EQU                               0x7aa3
-_str_0x7aa3                   DB                                6 ' LEMON' 0
-_str_0x79f9                   EQU                               0x79f9
-_str_0x79f9                   DB                                5 ' PLUM' 0
-_str_0x79f0                   EQU                               0x79f0
-_str_0x79f0                   DB                                7 ' CHERRY' 0
-_str_0x79e6                   EQU                               0x79e6
-_str_0x79e6                   DB                                8 'DOUBLE!!' 0
+_str_0x7fce                       EQU                               0x7fce
+_str_0x7fce                       DB                                48 'YOU ARE IN THE H&M CASINO,IN FRONT OF ONE OF OUR' 0
+_str_0x7fa7                       EQU                               0x7fa7
+_str_0x7fa7                       DB                                37 'ONE-ARM BANDITS. BET FROM $1 TO $100.' 0
+_str_0x7ec2                       EQU                               0x7ec2
+_str_0x7ec2                       DB                                60 'TO PULL THE ARM, PUNCH THE RETURN KEY AFTER MAKING YOUR BET.' 0
+_str_0x7eb8                       EQU                               0x7eb8
+_str_0x7eb8                       DB                                8 'YOUR BET' 0
+_str_0x7fa4                       EQU                               0x7fa4
+_str_0x7fa4                       DB                                1 '?' 0
+_str_0x7ead                       EQU                               0x7ead
+_str_0x7ead                       DB                                9 'YOU LOST.' 0
+_str_0x7ea6                       EQU                               0x7ea6
+_str_0x7ea6                       DB                                5 'AGAIN' 0
+_str_0x7fa1                       EQU                               0x7fa1
+_str_0x7fa1                       DB                                1 'Y' 0
+_str_0x7ccd                       EQU                               0x7ccd
+_str_0x7ccd                       DB                                49 'PAY UP!  PLEASE LEAVE YOUR MONEY ON THE TERMINAL.' 0
+_str_0x7cb7                       EQU                               0x7cb7
+_str_0x7cb7                       DB                                20 'HEY, YOU BROKE EVEN.' 0
+_str_0x7bd3                       EQU                               0x7bd3
+_str_0x7bd3                       DB                                43 'COLLECT YOUR WINNINGS FROM THE H&M CASHIER.' 0
+_str_0x7ca7                       EQU                               0x7ca7
+_str_0x7ca7                       DB                                14 '**TOP DOLLAR**' 0
+_str_0x7bc9                       EQU                               0x7bc9
+_str_0x7bc9                       DB                                8 'YOU WON!' 0
+_str_0x7bba                       EQU                               0x7bba
+_str_0x7bba                       DB                                13 '***JACKPOT***' 0
+_str_0x7bac                       EQU                               0x7bac
+_str_0x7bac                       DB                                12 '*DOUBLE BAR*' 0
+_str_0x7ae9                       EQU                               0x7ae9
+_str_0x7ae9                       DB                                21 'HOUSE LIMITS ARE $100' 0
+_str_0x7ad6                       EQU                               0x7ad6
+_str_0x7ad6                       DB                                17 'MINIMUM BET IS $1' 0
+_str_0x7ea1                       EQU                               0x7ea1
+_str_0x7ea1                       DB                                3 'BAR' 0
+_str_0x7ca1                       EQU                               0x7ca1
+_str_0x7ca1                       DB                                4 'BELL' 0
+_str_0x7ba4                       EQU                               0x7ba4
+_str_0x7ba4                       DB                                6 'ORANGE' 0
+_str_0x7acf                       EQU                               0x7acf
+_str_0x7acf                       DB                                5 'LEMON' 0
+_str_0x7ac9                       EQU                               0x7ac9
+_str_0x7ac9                       DB                                4 'PLUM' 0
+_str_0x7ac1                       EQU                               0x7ac1
+_str_0x7ac1                       DB                                6 'CHERRY' 0
+_str_0x7abb                       EQU                               0x7abb
+_str_0x7abb                       DB                                4 ' BAR' 0
+_str_0x7ab4                       EQU                               0x7ab4
+_str_0x7ab4                       DB                                5 ' BELL' 0
+_str_0x7aab                       EQU                               0x7aab
+_str_0x7aab                       DB                                7 ' ORANGE' 0
+_str_0x7aa3                       EQU                               0x7aa3
+_str_0x7aa3                       DB                                6 ' LEMON' 0
+_str_0x79f9                       EQU                               0x79f9
+_str_0x79f9                       DB                                5 ' PLUM' 0
+_str_0x79f0                       EQU                               0x79f0
+_str_0x79f0                       DB                                7 ' CHERRY' 0
+_str_0x79e6                       EQU                               0x79e6
+_str_0x79e6                       DB                                8 'DOUBLE!!' 0
 
 ; Data
 
@@ -276,648 +276,655 @@ _str_0x79e6                   DB                                8 'DOUBLE!!' 0
 
 ; Define Images
 
+; Define Loader Image Chunks
+
 ; Define Sprites
 
 ; Define Fonts
 
 ; Lookup Tables
-_inputVars_0xff98             EQU                               0xff98
-_inputVars_0xff98             DW                                0x0030 
-_inputStrs_0xff96             EQU                               0xff96
-_inputStrs_0xff96             DW                                0x7fa4 
-_inputTypes_0xff92            EQU                               0xff92
-_inputTypes_0xff92            DW                                0x5f03 0x0000 
-_input_0xff9a                 EQU                               0xff9a
-_input_0xff9a                 DW                                0xff98 0xff96 0xff92 
-_inputVars_0xff8a             EQU                               0xff8a
-_inputVars_0xff8a             DW                                0x7da0 
-_inputStrs_0xff88             EQU                               0xff88
-_inputStrs_0xff88             DW                                0x7fa4 
-_inputTypes_0xff84            EQU                               0xff84
-_inputTypes_0xff84            DW                                0x5f05 0x0000 
-_input_0xff8c                 EQU                               0xff8c
-_input_0xff8c                 DW                                0xff8a 0xff88 0xff84 
+_inputVars_0xff28                 EQU                               0xff28
+_inputVars_0xff28                 DW                                0x0030 
+_inputStrs_0xff26                 EQU                               0xff26
+_inputStrs_0xff26                 DW                                0x7fa4 
+_inputTypes_0xff22                EQU                               0xff22
+_inputTypes_0xff22                DW                                0x5f03 0x0000 
+_input_0xff2a                     EQU                               0xff2a
+_input_0xff2a                     DW                                0xff28 0xff26 0xff22 
+_inputVars_0xff1a                 EQU                               0xff1a
+_inputVars_0xff1a                 DW                                0x7da0 
+_inputStrs_0xff18                 EQU                               0xff18
+_inputStrs_0xff18                 DW                                0x7fa4 
+_inputTypes_0xff14                EQU                               0xff14
+_inputTypes_0xff14                DW                                0x5f05 0x0000 
+_input_0xff1c                     EQU                               0xff1c
+_input_0xff1c                     DW                                0xff1a 0xff18 0xff14 
 
 ; Code
-_entryPoint_                  LDI                               0x28
-                              STW                               romType
-                              RomCheck                          
-                              Initialise                        
-                              InitEqOp                        
-                              InitLtOp                        
-                              InitGtOp                        
-                              InitRealTimeStub                                                  ; INIT
-
-                              LDI                               2
-                              STW                               graphicsMode
-                              ScanlineMode                                                      ; mode 2
-
-                              ClearVertBlinds                                                   ; cls
-
-                              LDI                               0
-                              STW                               _M                              ; M = 0
-
-_30                           NewLine                           
-                              NewLine                           
-                              NewLine                                                           ; PRINT: PRINT: PRINT
-
-_120                          PrintString                       _str_0x7fce
-                              NewLine                                                           ; PRINT "YOU ARE IN THE H&M CASINO,IN FRONT OF ONE OF OUR"
-
-_130                          PrintString                       _str_0x7fa7
-                              NewLine                                                           ; PRINT "ONE-ARM BANDITS. BET FROM $1 TO $100."
-
-_140                          PrintString                       _str_0x7ec2
-                              NewLine                                                           ; PRINT "TO PULL THE ARM, PUNCH THE RETURN KEY AFTER MAKING YOUR BET."
-
-_150                          LDI                               0
-                              STW                               _P                              ; P=0
-
-_160                          NewLine                           
-                              PrintString                       _str_0x7eb8                     ; PRINT: PRINT "YOUR BET";
-
-_170                          LDWI                              0xff9a
-                              Input                                                             ; INPUT M
-
-_180                          LDW                               _M
-                              SUBI                              100
-                              CALL                              convertGtOpAddr
-                              JumpFalse                         _190 0
-                              LDWI                              _860
-                              CALL                              giga_vAC                        ; IF M>100 THEN 860
-
-_190                          LDW                               _M
-                              SUBI                              1
-                              CALL                              convertLtOpAddr
-                              JumpFalse                         _200 1
-                              LDWI                              _880
-                              CALL                              giga_vAC                        ; IF M<1 THEN 880
-
-_200                          LDW                               _M
-                              STW                               _M                              ; M=(M)
-
-_210                          LDWI                              _1270
-                              CALL                              giga_vAC                        ; GOSUB 1270
-
-_220                          NewLine                                                           ; PRINT
-
-_230                          LDI                               0x06
-                              RandMod                           
-                              ADDI                              1
-                              STW                               _X                              ; X=(RND(6)+1)
-
-_240                          LDI                               0x06
-                              RandMod                           
-                              ADDI                              1
-                              STW                               _Y                              ; Y=(RND(6)+1)
-
-_250                          LDI                               0x06
-                              RandMod                           
-                              ADDI                              1
-                              STW                               0xc0
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xc0
-                              STW                               _Z                              ; Z=(RND(6)+1)
-
-_260                          NewLine                                                           ; PRINT
-
-_270                          LDW                               _X
-                              XORI                              1
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _280 2
-                              LDWI                              _910
-                              CALL                              giga_vAC                        ; IF X=1 THEN 910
-
-_280                          LDW                               _X
-                              XORI                              2
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _290 3
-                              LDWI                              _930
-                              CALL                              giga_vAC                        ; IF X=2 THEN 930
-
-_290                          LDW                               _X
-                              XORI                              3
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _300 4
-                              LDWI                              _950
-                              CALL                              giga_vAC                        ; IF X=3 THEN 950
-
-_300                          LDW                               _X
-                              XORI                              4
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _310 5
-                              LDWI                              _970
-                              CALL                              giga_vAC                        ; IF X=4 THEN 970
-
-_310                          LDW                               _X
-                              XORI                              5
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _320 6
-                              LDWI                              _990
-                              CALL                              giga_vAC                        ; IF X=5 THEN 990
-
-_320                          LDW                               _X
-                              XORI                              6
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _330 7
-                              LDWI                              _1010
-                              CALL                              giga_vAC                        ; IF X=6 THEN 1010
-
-_330                          LDW                               _Y
-                              XORI                              1
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _340 8
-                              LDWI                              _1030
-                              CALL                              giga_vAC                        ; IF Y=1 THEN 1030
-
-_340                          LDW                               _Y
-                              XORI                              2
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _350 9
-                              LDWI                              _1050
-                              CALL                              giga_vAC                        ; IF Y=2 THEN 1050
-
-_350                          LDW                               _Y
-                              XORI                              3
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _360 10
-                              LDWI                              _1070
-                              CALL                              giga_vAC                        ; IF Y=3 THEN 1070
-
-_360                          LDW                               _Y
-                              XORI                              4
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _370 11
-                              LDWI                              _1090
-                              CALL                              giga_vAC                        ; IF Y=4 THEN 1090
-
-_370                          LDW                               _Y
-                              XORI                              5
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _380 12
-                              LDWI                              _1110
-                              CALL                              giga_vAC                        ; IF Y=5 THEN 1110
-
-_380                          LDW                               _Y
-                              XORI                              6
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _390 13
-                              LDWI                              _1130
-                              CALL                              giga_vAC                        ; IF Y=6 THEN 1130
-
-_390                          LDW                               _Z
-                              XORI                              1
-                              CALL                              convertEqOpAddr
-                              STW                               0xc0
-                              LDWI                              _page_0x0400
-                              CALL                              giga_vAC
-_page_0x0400                  LDW                               0xc0
-                              JumpFalse                         _400 14
-                              LDWI                              _1150
-                              CALL                              giga_vAC                        ; IF Z=1 THEN 1150
-
-_400                          LDW                               _Z
-                              XORI                              2
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _410 15
-                              LDWI                              _1170
-                              CALL                              giga_vAC                        ; IF Z=2 THEN 1170
-
-_410                          LDW                               _Z
-                              XORI                              3
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _420 16
-                              LDWI                              _1190
-                              CALL                              giga_vAC                        ; IF Z=3 THEN 1190
-
-_420                          LDW                               _Z
-                              XORI                              4
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _430 17
-                              LDWI                              _1210
-                              CALL                              giga_vAC                        ; IF Z=4 THEN 1210
-
-_430                          LDW                               _Z
-                              XORI                              5
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _440 18
-                              LDWI                              _1230
-                              CALL                              giga_vAC                        ; IF Z=5 THEN 1230
-
-_440                          LDW                               _Z
-                              XORI                              6
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _450 19
-                              LDWI                              _1250
-                              CALL                              giga_vAC                        ; IF Z=6 THEN 1250
-
-_450                          LDW                               _X
-                              XORW                              _Y
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _460 20
-                              LDWI                              _600
-                              CALL                              giga_vAC                        ; IF X=Y THEN 600
-
-_460                          LDW                               _X
-                              XORW                              _Z
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _470 21
-                              LDWI                              _630
-                              CALL                              giga_vAC                        ; IF X=Z THEN 630
-
-_470                          LDW                               _Y
-                              XORW                              _Z
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _480 22
-                              LDWI                              _650
-                              CALL                              giga_vAC                        ; IF Y=Z THEN 650
-
-_480                          NewLine                                                           ; PRINT
-
-_490                          PrintString                       _str_0x7ead
-                              NewLine                                                           ; PRINT "YOU LOST."
-
-_500                          LDW                               _P
-                              SUBW                              _M
-                              STW                               _P                              ; P=P-M
-
-_510                          LDW                               _P
-                              PrintAcInt16                      
-                              NewLine                                                           ; PRINT "YOUR STANDINGS ARE $"P
-
-_520                          PrintString                       _str_0x7ea6                     ; PRINT "AGAIN";
-
-_530                          LDWI                              0xff8c
-                              Input                                                             ; INPUT A$
-
-_540                          CALL                              convertEqOpAddr
-                              STW                               0xe8
-                              LDI                               232
-                              JumpFalse                         _550 23
-                              STW                               0xc0
-                              LDWI                              _page_0x0500
-                              CALL                              giga_vAC
-_page_0x0500                  LDW                               0xc0
-                              LDWI                              _160
-                              CALL                              giga_vAC                        ; IF A$="Y" THEN 160
-
-_550                          NewLine                                                           ; PRINT
-
-_560                          LDW                               _P
-                              CALL                              convertLtOpAddr
-                              JumpFalse                         _570 24
-                              LDWI                              _670
-                              CALL                              giga_vAC                        ; IF P<0 THEN 670
-
-_570                          LDW                               _P
-                              XORI                              0
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _580 25
-                              LDWI                              _690
-                              CALL                              giga_vAC                        ; IF P=0 THEN 690
-
-_580                          LDW                               _P
-                              CALL                              convertGtOpAddr
-                              JumpFalse                         _590 26
-                              LDWI                              _710
-                              CALL                              giga_vAC                        ; IF P>0 THEN 710
-
-_590                          LDWI                              _1350
-                              CALL                              giga_vAC                        ; GOTO 1350
-
-_600                          LDW                               _Y
-                              XORW                              _Z
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _610 27
-                              LDWI                              _730
-                              CALL                              giga_vAC                        ; IF Y=Z THEN 730
-
-_610                          LDW                               _Y
-                              XORI                              1
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _620 28
-                              LDWI                              _820
-                              CALL                              giga_vAC                        ; IF Y=1 THEN 820
-
-_620                          LDWI                              _1341
-                              CALL                              giga_vAC                        ; GOTO 1341
-
-_630                          LDW                               _Z
-                              XORI                              1
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _640 29
-                              LDWI                              _820
-                              CALL                              giga_vAC                        ; IF Z=1 THEN 820
-
-_640                          LDWI                              _470
-                              CALL                              giga_vAC                        ; GOTO 470
-
-_650                          LDW                               _Z
-                              XORI                              1
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _660 30
-                              LDWI                              _820
-                              CALL                              giga_vAC                        ; IF Z=1 THEN 820
-
-_660                          LDWI                              _1341
-                              CALL                              giga_vAC                        ; GOTO 1341
-
-_670                          PrintString                       _str_0x7ccd
-                              NewLine                                                           ; PRINT "PAY UP!  PLEASE LEAVE YOUR MONEY ON THE TERMINAL."
-
-_680                          LDWI                              _1350
-                              CALL                              giga_vAC                        ; GOTO 1350
-
-_690                          PrintString                       _str_0x7cb7
-                              NewLine                                                           ; PRINT "HEY, YOU BROKE EVEN."
-
-_700                          LDWI                              _1350
-                              CALL                              giga_vAC                        ; GOTO 1350
-
-_710                          PrintString                       _str_0x7bd3
-                              NewLine                                                           ; PRINT "COLLECT YOUR WINNINGS FROM THE H&M CASHIER."
-
-_720                          LDWI                              _1350
-                              CALL                              giga_vAC                        ; GOTO 1350
-
-_730                          LDW                               _Z
-                              XORI                              1
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _740 31
-                              LDWI                              _780
-                              CALL                              giga_vAC                        ; IF Z=1 THEN 780
-
-_740                          NewLine                           
-                              STW                               0xc0
-                              LDWI                              _page_0x0600
-                              CALL                              giga_vAC
-_page_0x0600                  LDW                               0xc0
-                              PrintString                       _str_0x7ca7
-                              NewLine                                                           ; PRINT: PRINT "**TOP DOLLAR**"
-
-_750                          PrintString                       _str_0x7bc9
-                              NewLine                                                           ; PRINT "YOU WON!"
-
-_760                          LDI                               10
-                              STW                               mathX
-                              LDW                               _M
-                              STW                               mathY
-                              LDWI                              multiply16bit
-                              CALL                              giga_vAC
-                              ADDW                              _M
-                              ADDW                              _P
-                              STW                               _P                              ; P=(((10*M)+M)+P)
-
-_770                          LDWI                              _510
-                              CALL                              giga_vAC                        ; GOTO 510
-
-_780                          NewLine                           
-                              PrintString                       _str_0x7bba
-                              NewLine                                                           ; PRINT:PRINT "***JACKPOT***"
-
-_790                          PrintString                       _str_0x7bc9
-                              NewLine                                                           ; PRINT "YOU WON!"
-
-_800                          LDI                               100
-                              STW                               mathX
-                              LDW                               _M
-                              STW                               mathY
-                              LDWI                              multiply16bit
-                              CALL                              giga_vAC
-                              ADDW                              _M
-                              ADDW                              _P
-                              STW                               _P                              ; P=(((100*M)+M)+P)
-
-_810                          LDWI                              _510
-                              CALL                              giga_vAC                        ; GOTO 510
-
-_820                          NewLine                           
-                              PrintString                       _str_0x7bac
-                              NewLine                                                           ; PRINT:PRINT "*DOUBLE BAR*"
-
-_830                          PrintString                       _str_0x7bc9
-                              NewLine                                                           ; PRINT "YOU WON!"
-
-_840                          LDI                               5
-                              STW                               mathX
-                              LDW                               _M
-                              STW                               mathY
-                              LDWI                              multiply16bit
-                              CALL                              giga_vAC
-                              ADDW                              _M
-                              ADDW                              _P
-                              STW                               _P                              ; P=(((5*M)+M)+P)
-
-_850                          LDWI                              _510
-                              CALL                              giga_vAC                        ; GOTO 510
-
-_860                          PrintString                       _str_0x7ae9
-                              NewLine                                                           ; PRINT "HOUSE LIMITS ARE $100"
-
-_870                          LDWI                              _160
-                              CALL                              giga_vAC                        ; GOTO 160
-
-_880                          PrintString                       _str_0x7ad6
-                              NewLine                                                           ; PRINT "MINIMUM BET IS $1"
-
-_890                          LDWI                              _160
-                              CALL                              giga_vAC                        ; GOTO 160
-
-_900                          LDWI                              _220
-                              CALL                              giga_vAC                        ; GOTO 220
-
-_910                          PrintString                       _str_0x7ea1
-                              LDWI                              _1310
-                              CALL                              giga_vAC                        ; PRINT "BAR";:GOSUB 1310
-
-_920                          LDWI                              _330
-                              CALL                              giga_vAC                        ; GOTO 330
-
-                              STW                               0xc0
-                              LDWI                              _page_0x08a0
-                              CALL                              giga_vAC
-_page_0x08a0                  LDW                               0xc0
-_930                          PrintString                       _str_0x7ca1
-                              LDWI                              _1310
-                              CALL                              giga_vAC                        ; PRINT "BELL";:GOSUB 1310
-
-_940                          LDWI                              _330
-                              CALL                              giga_vAC                        ; GOTO 330
-
-_950                          PrintString                       _str_0x7ba4
-                              LDWI                              _1310
-                              CALL                              giga_vAC                        ; PRINT "ORANGE";:GOSUB 1310
-
-_960                          LDWI                              _330
-                              CALL                              giga_vAC                        ; GOTO 330
-
-_970                          PrintString                       _str_0x7acf
-                              LDWI                              _1310
-                              CALL                              giga_vAC                        ; PRINT "LEMON";:GOSUB 1310
-
-_980                          LDWI                              _330
-                              CALL                              giga_vAC                        ; GOTO 330
-
-_990                          PrintString                       _str_0x7ac9
-                              LDWI                              _1310
-                              CALL                              giga_vAC                        ; PRINT "PLUM";:GOSUB 1310
-
-_1000                         LDWI                              _330
-                              CALL                              giga_vAC                        ; GOTO 330
-
-                              STW                               0xc0
-                              LDWI                              _page_0x09a0
-                              CALL                              giga_vAC
-_page_0x09a0                  LDW                               0xc0
-_1010                         PrintString                       _str_0x7ac1
-                              LDWI                              _1310
-                              CALL                              giga_vAC                        ; PRINT "CHERRY";:GOSUB 1310
-
-_1020                         LDWI                              _330
-                              CALL                              giga_vAC                        ; GOTO 330
-
-_1030                         PrintString                       _str_0x7abb
-                              LDWI                              _1310
-                              CALL                              giga_vAC                        ; PRINT " BAR";:GOSUB 1310
-
-_1040                         LDWI                              _390
-                              CALL                              giga_vAC                        ; GOTO 390
-
-_1050                         PrintString                       _str_0x7ab4
-                              LDWI                              _1310
-                              CALL                              giga_vAC                        ; PRINT " BELL";:GOSUB 1310
-
-_1060                         LDWI                              _390
-                              CALL                              giga_vAC                        ; GOTO 390
-
-_1070                         PrintString                       _str_0x7aab
-                              LDWI                              _1310
-                              CALL                              giga_vAC                        ; PRINT " ORANGE";:GOSUB 1310
-
-_1080                         LDWI                              _390
-                              CALL                              giga_vAC                        ; GOTO 390
-
-                              STW                               0xc0
-                              LDWI                              _page_0x0aa0
-                              CALL                              giga_vAC
-_page_0x0aa0                  LDW                               0xc0
-_1090                         PrintString                       _str_0x7aa3
-                              LDWI                              _1310
-                              CALL                              giga_vAC                        ; PRINT " LEMON";:GOSUB 1310
-
-_1100                         LDWI                              _390
-                              CALL                              giga_vAC                        ; GOTO 390
-
-_1110                         PrintString                       _str_0x79f9
-                              LDWI                              _1310
-                              CALL                              giga_vAC                        ; PRINT " PLUM";:GOSUB 1310
-
-_1120                         LDWI                              _390
-                              CALL                              giga_vAC                        ; GOTO 390
-
-_1130                         PrintString                       _str_0x79f0
-                              LDWI                              _1310
-                              CALL                              giga_vAC                        ; PRINT " CHERRY";:GOSUB 1310
-
-_1140                         LDWI                              _390
-                              CALL                              giga_vAC                        ; GOTO 390
-
-_1150                         PrintString                       _str_0x7abb
-                              NewLine                                                           ; PRINT " BAR"
-
-_1160                         LDWI                              _450
-                              CALL                              giga_vAC                        ; GOTO 450
-
-                              STW                               0xc0
-                              LDWI                              _page_0x0ba0
-                              CALL                              giga_vAC
-_page_0x0ba0                  LDW                               0xc0
-_1170                         PrintString                       _str_0x7ab4
-                              NewLine                                                           ; PRINT " BELL"
-
-_1180                         LDWI                              _450
-                              CALL                              giga_vAC                        ; GOTO 450
-
-_1190                         PrintString                       _str_0x7aab
-                              NewLine                                                           ; PRINT " ORANGE"
-
-_1200                         LDWI                              _450
-                              CALL                              giga_vAC                        ; GOTO 450
-
-_1210                         PrintString                       _str_0x7aa3
-                              NewLine                                                           ; PRINT " LEMON"
-
-_1220                         LDWI                              _450
-                              CALL                              giga_vAC                        ; GOTO 450
-
-_1230                         PrintString                       _str_0x79f9
-                              NewLine                                                           ; PRINT " PLUM"
-
-_1240                         LDWI                              _450
-                              CALL                              giga_vAC                        ; GOTO 450
-
-                              STW                               0xc0
-                              LDWI                              _page_0x0ca0
-                              CALL                              giga_vAC
-_page_0x0ca0                  LDW                               0xc0
-_1250                         PrintString                       _str_0x79f0
-                              NewLine                                                           ; PRINT " CHERRY"
-
-_1260                         LDWI                              _450
-                              CALL                              giga_vAC                        ; GOTO 450
-
-_1270                         PUSH                              
-                              LDI                               1
-                              STW                               _Q4                             ; FOR Q4=1 TO 10
-
-_1280                         LDI                               7
-                              PrintAcChar                                                       ; PRINT CHR$(7);
-
-_1290                         ForNextFarInc                     _Q4 _1280 10                    ; NEXT Q4
-
-_1300                         Return                                                            ; RETURN
-
-_1310                         PUSH                              
-                              LDI                               1
-                              STW                               _T8                             ; FOR T8=1 TO 5
-
-_1320                         LDI                               7
-                              PrintAcChar                                                       ; PRINT CHR$(7);
-
-_1330                         ForNextFarInc                     _T8 _1320 5                     ; NEXT T8
-
-_1340                         Return                                                            ; RETURN
-
-_1341                         NewLine                           
-                              STW                               0xc0
-                              LDWI                              _page_0x0da0
-                              CALL                              giga_vAC
-_page_0x0da0                  LDW                               0xc0
-                              PrintString                       _str_0x79e6
-                              NewLine                                                           ; PRINT: PRINT "DOUBLE!!"
-
-_1342                         PrintString                       _str_0x7bc9
-                              NewLine                                                           ; PRINT "YOU WON!"
-
-_1343                         LDI                               2
-                              STW                               mathX
-                              LDW                               _M
-                              STW                               mathY
-                              LDWI                              multiply16bit
-                              CALL                              giga_vAC
-                              ADDW                              _M
-                              ADDW                              _P
-                              STW                               _P                              ; P=(((2*M)+M)+P)
-
-_1344                         LDWI                              _510
-                              CALL                              giga_vAC                        ; GOTO 510
-
-_1350                         BRA                               _1350                           ; END
-
-_9999                         BRA                               _9999                           ; END
-
-_end_0x092f                   BRA                               _end_0x092f                     ; END
+_entryPoint_                      LDI                               0x28
+                                  STW                               romType
+                                  RomCheck                          
+                                  Initialise                        
+                                  InitEqOp                        
+                                  InitLtOp                        
+                                  InitGtOp                                                      ; Main: INIT
+
+                                  LDI                               2
+                                  STW                               graphicsMode
+                                  ScanlineMode                                                  ; Main: mode 2
+
+                                  ClearVertBlinds                                               ; Main: cls
+
+                                  LDI                               0
+                                  STW                               _M                          ; Main: M = 0
+
+_30                               NewLine                           
+                                  NewLine                           
+                                  NewLine                                                       ; Main: PRINT: PRINT: PRINT
+
+_120                              PrintString                       _str_0x7fce
+                                  NewLine                                                       ; Main: PRINT "YOU ARE IN THE H&M CASINO,IN FRONT OF ONE OF OUR"
+
+_130                              PrintString                       _str_0x7fa7
+                                  NewLine                                                       ; Main: PRINT "ONE-ARM BANDITS. BET FROM $1 TO $100."
+
+_140                              PrintString                       _str_0x7ec2
+                                  NewLine                                                       ; Main: PRINT "TO PULL THE ARM, PUNCH THE RETURN KEY AFTER MAKING YOUR BET."
+
+_150                              LDI                               200
+                                  STW                               _P                          ; Main: P=200
+
+_160                              NewLine                           
+                                  PrintString                       _str_0x7eb8                 ; Main: PRINT: PRINT "YOUR BET";
+
+_170                              LDWI                              0xff2a
+                                  Input                                                         ; Main: INPUT M
+
+_180                              LDW                               _M
+                                  SUBI                              100
+                                  CALL                              convertGtOpAddr
+                                  JumpFalse                         _190 0
+                                  LDWI                              _860
+                                  CALL                              giga_vAC                    ; Main: IF M>100 THEN 860
+
+_190                              LDW                               _M
+                                  SUBI                              1
+                                  CALL                              convertLtOpAddr
+                                  JumpFalse                         _200 1
+                                  LDWI                              _880
+                                  CALL                              giga_vAC                    ; Main: IF M<1 THEN 880
+
+_200                              LDW                               _M
+                                  STW                               _M                          ; Main: M=(M)
+
+_210                              LDWI                              _1270
+                                  CALL                              giga_vAC                    ; Main: GOSUB 1270
+
+_220                              NewLine                                                       ; Main: PRINT
+
+_230                              LDI                               0x06
+                                  RandMod                           
+                                  ADDI                              1
+                                  STW                               _X                          ; Main: X=(RND(6)+1)
+
+_240                              LDI                               0x06
+                                  RandMod                           
+                                  ADDI                              1
+                                  STW                               _Y                          ; Main: Y=(RND(6)+1)
+
+_250                              LDI                               0x06
+                                  RandMod                           
+                                  ADDI                              1
+                                  STW                               _Z                          ; Main: Z=(RND(6)+1)
+
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0300
+                                  CALL                              giga_vAC
+_page_0x0300                      LDLW                              0xFE
+_260                              NewLine                                                       ; Main: PRINT
+
+_270                              LDW                               _X
+                                  XORI                              1
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _280 2
+                                  LDWI                              _910
+                                  CALL                              giga_vAC                    ; Main: IF X=1 THEN 910
+
+_280                              LDW                               _X
+                                  XORI                              2
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _290 3
+                                  LDWI                              _930
+                                  CALL                              giga_vAC                    ; Main: IF X=2 THEN 930
+
+_290                              LDW                               _X
+                                  XORI                              3
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _300 4
+                                  LDWI                              _950
+                                  CALL                              giga_vAC                    ; Main: IF X=3 THEN 950
+
+_300                              LDW                               _X
+                                  XORI                              4
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _310 5
+                                  LDWI                              _970
+                                  CALL                              giga_vAC                    ; Main: IF X=4 THEN 970
+
+_310                              LDW                               _X
+                                  XORI                              5
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _320 6
+                                  LDWI                              _990
+                                  CALL                              giga_vAC                    ; Main: IF X=5 THEN 990
+
+_320                              LDW                               _X
+                                  XORI                              6
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _330 7
+                                  LDWI                              _1010
+                                  CALL                              giga_vAC                    ; Main: IF X=6 THEN 1010
+
+_330                              LDW                               _Y
+                                  XORI                              1
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _340 8
+                                  LDWI                              _1030
+                                  CALL                              giga_vAC                    ; Main: IF Y=1 THEN 1030
+
+_340                              LDW                               _Y
+                                  XORI                              2
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _350 9
+                                  LDWI                              _1050
+                                  CALL                              giga_vAC                    ; Main: IF Y=2 THEN 1050
+
+_350                              LDW                               _Y
+                                  XORI                              3
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _360 10
+                                  LDWI                              _1070
+                                  CALL                              giga_vAC                    ; Main: IF Y=3 THEN 1070
+
+_360                              LDW                               _Y
+                                  XORI                              4
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _370 11
+                                  LDWI                              _1090
+                                  CALL                              giga_vAC                    ; Main: IF Y=4 THEN 1090
+
+_370                              LDW                               _Y
+                                  XORI                              5
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _380 12
+                                  LDWI                              _1110
+                                  CALL                              giga_vAC                    ; Main: IF Y=5 THEN 1110
+
+_380                              LDW                               _Y
+                                  XORI                              6
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _390 13
+                                  LDWI                              _1130
+                                  CALL                              giga_vAC                    ; Main: IF Y=6 THEN 1130
+
+_390                              LDW                               _Z
+                                  XORI                              1
+                                  CALL                              convertEqOpAddr
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0400
+                                  CALL                              giga_vAC
+_page_0x0400                      LDLW                              0xFE
+                                  JumpFalse                         _400 14
+                                  LDWI                              _1150
+                                  CALL                              giga_vAC                    ; Main: IF Z=1 THEN 1150
+
+_400                              LDW                               _Z
+                                  XORI                              2
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _410 15
+                                  LDWI                              _1170
+                                  CALL                              giga_vAC                    ; Main: IF Z=2 THEN 1170
+
+_410                              LDW                               _Z
+                                  XORI                              3
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _420 16
+                                  LDWI                              _1190
+                                  CALL                              giga_vAC                    ; Main: IF Z=3 THEN 1190
+
+_420                              LDW                               _Z
+                                  XORI                              4
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _430 17
+                                  LDWI                              _1210
+                                  CALL                              giga_vAC                    ; Main: IF Z=4 THEN 1210
+
+_430                              LDW                               _Z
+                                  XORI                              5
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _440 18
+                                  LDWI                              _1230
+                                  CALL                              giga_vAC                    ; Main: IF Z=5 THEN 1230
+
+_440                              LDW                               _Z
+                                  XORI                              6
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _450 19
+                                  LDWI                              _1250
+                                  CALL                              giga_vAC                    ; Main: IF Z=6 THEN 1250
+
+_450                              LDW                               _X
+                                  XORW                              _Y
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _460 20
+                                  LDWI                              _600
+                                  CALL                              giga_vAC                    ; Main: IF X=Y THEN 600
+
+_460                              LDW                               _X
+                                  XORW                              _Z
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _470 21
+                                  LDWI                              _630
+                                  CALL                              giga_vAC                    ; Main: IF X=Z THEN 630
+
+_470                              LDW                               _Y
+                                  XORW                              _Z
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _480 22
+                                  LDWI                              _650
+                                  CALL                              giga_vAC                    ; Main: IF Y=Z THEN 650
+
+_480                              NewLine                                                       ; Main: PRINT
+
+_490                              PrintString                       _str_0x7ead
+                                  NewLine                                                       ; Main: PRINT "YOU LOST."
+
+_500                              LDW                               _P
+                                  SUBW                              _M
+                                  STW                               _P                          ; Main: P=P-M
+
+_510                              LDW                               _P
+                                  PrintAcInt16                      
+                                  NewLine                                                       ; Main: PRINT "YOUR STANDINGS ARE $"P
+
+_520                              PrintString                       _str_0x7ea6                 ; Main: PRINT "AGAIN";
+
+_530                              LDWI                              0xff1c
+                                  Input                                                         ; Main: INPUT A$
+
+_540                              LDWI                              0x7da0
+                                  STW                               strSrcAddr
+                                  LDWI                              0xff40
+                                  StringUpper                       
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0500
+                                  CALL                              giga_vAC
+_page_0x0500                      LDLW                              0xFE
+                                  LDWI                              0xff40
+                                  STW                               strSrcAddr
+                                  LDWI                              0x7fa1
+                                  StringCmp                         
+                                  ANDI                              1
+                                  JumpFalse                         _550 23
+                                  LDWI                              _160
+                                  CALL                              giga_vAC                    ; Main: IF upper$(A$)="Y" THEN 160
+
+_550                              NewLine                                                       ; Main: PRINT
+
+_560                              LDW                               _P
+                                  CALL                              convertLtOpAddr
+                                  JumpFalse                         _570 24
+                                  LDWI                              _670
+                                  CALL                              giga_vAC                    ; Main: IF P<0 THEN 670
+
+_570                              LDW                               _P
+                                  XORI                              0
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _580 25
+                                  LDWI                              _690
+                                  CALL                              giga_vAC                    ; Main: IF P=0 THEN 690
+
+_580                              LDW                               _P
+                                  CALL                              convertGtOpAddr
+                                  JumpFalse                         _590 26
+                                  LDWI                              _710
+                                  CALL                              giga_vAC                    ; Main: IF P>0 THEN 710
+
+_590                              LDWI                              _1350
+                                  CALL                              giga_vAC                    ; Main: GOTO 1350
+
+_600                              LDW                               _Y
+                                  XORW                              _Z
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _610 27
+                                  LDWI                              _730
+                                  CALL                              giga_vAC                    ; Main: IF Y=Z THEN 730
+
+_610                              LDW                               _Y
+                                  XORI                              1
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _620 28
+                                  LDWI                              _820
+                                  CALL                              giga_vAC                    ; Main: IF Y=1 THEN 820
+
+_620                              LDWI                              _1341
+                                  CALL                              giga_vAC                    ; Main: GOTO 1341
+
+_630                              LDW                               _Z
+                                  XORI                              1
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _640 29
+                                  LDWI                              _820
+                                  CALL                              giga_vAC                    ; Main: IF Z=1 THEN 820
+
+_640                              LDWI                              _470
+                                  CALL                              giga_vAC                    ; Main: GOTO 470
+
+_650                              LDW                               _Z
+                                  XORI                              1
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _660 30
+                                  LDWI                              _820
+                                  CALL                              giga_vAC                    ; Main: IF Z=1 THEN 820
+
+_660                              LDWI                              _1341
+                                  CALL                              giga_vAC                    ; Main: GOTO 1341
+
+_670                              PrintString                       _str_0x7ccd
+                                  NewLine                                                       ; Main: PRINT "PAY UP!  PLEASE LEAVE YOUR MONEY ON THE TERMINAL."
+
+_680                              LDWI                              _1350
+                                  CALL                              giga_vAC                    ; Main: GOTO 1350
+
+_690                              PrintString                       _str_0x7cb7
+                                  NewLine                                                       ; Main: PRINT "HEY, YOU BROKE EVEN."
+
+_700                              LDWI                              _1350
+                                  CALL                              giga_vAC                    ; Main: GOTO 1350
+
+_710                              PrintString                       _str_0x7bd3
+                                  NewLine                                                       ; Main: PRINT "COLLECT YOUR WINNINGS FROM THE H&M CASHIER."
+
+_720                              LDWI                              _1350
+                                  CALL                              giga_vAC                    ; Main: GOTO 1350
+
+_730                              LDW                               _Z
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0600
+                                  CALL                              giga_vAC
+_page_0x0600                      LDLW                              0xFE
+                                  XORI                              1
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _740 31
+                                  LDWI                              _780
+                                  CALL                              giga_vAC                    ; Main: IF Z=1 THEN 780
+
+_740                              NewLine                           
+                                  PrintString                       _str_0x7ca7
+                                  NewLine                                                       ; Main: PRINT: PRINT "**TOP DOLLAR**"
+
+_750                              PrintString                       _str_0x7bc9
+                                  NewLine                                                       ; Main: PRINT "YOU WON!"
+
+_760                              LDI                               10
+                                  STW                               mathX
+                                  LDW                               _M
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  ADDW                              _M
+                                  ADDW                              _P
+                                  STW                               _P                          ; Main: P=(((10*M)+M)+P)
+
+_770                              LDWI                              _510
+                                  CALL                              giga_vAC                    ; Main: GOTO 510
+
+_780                              NewLine                           
+                                  PrintString                       _str_0x7bba
+                                  NewLine                                                       ; Main: PRINT:PRINT "***JACKPOT***"
+
+_790                              PrintString                       _str_0x7bc9
+                                  NewLine                                                       ; Main: PRINT "YOU WON!"
+
+_800                              LDI                               100
+                                  STW                               mathX
+                                  LDW                               _M
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  ADDW                              _M
+                                  ADDW                              _P
+                                  STW                               _P                          ; Main: P=(((100*M)+M)+P)
+
+_810                              LDWI                              _510
+                                  CALL                              giga_vAC                    ; Main: GOTO 510
+
+_820                              NewLine                           
+                                  PrintString                       _str_0x7bac
+                                  NewLine                                                       ; Main: PRINT:PRINT "*DOUBLE BAR*"
+
+_830                              PrintString                       _str_0x7bc9
+                                  NewLine                                                       ; Main: PRINT "YOU WON!"
+
+_840                              LDI                               5
+                                  STW                               mathX
+                                  LDW                               _M
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  ADDW                              _M
+                                  ADDW                              _P
+                                  STW                               _P                          ; Main: P=(((5*M)+M)+P)
+
+_850                              LDWI                              _510
+                                  CALL                              giga_vAC                    ; Main: GOTO 510
+
+_860                              PrintString                       _str_0x7ae9
+                                  NewLine                                                       ; Main: PRINT "HOUSE LIMITS ARE $100"
+
+_870                              LDWI                              _160
+                                  CALL                              giga_vAC                    ; Main: GOTO 160
+
+_880                              PrintString                       _str_0x7ad6
+                                  NewLine                                                       ; Main: PRINT "MINIMUM BET IS $1"
+
+_890                              LDWI                              _160
+                                  CALL                              giga_vAC                    ; Main: GOTO 160
+
+_900                              LDWI                              _220
+                                  CALL                              giga_vAC                    ; Main: GOTO 220
+
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x08a0
+                                  CALL                              giga_vAC
+_page_0x08a0                      LDLW                              0xFE
+_910                              PrintString                       _str_0x7ea1
+                                  LDWI                              _1310
+                                  CALL                              giga_vAC                    ; Main: PRINT "BAR";:GOSUB 1310
+
+_920                              LDWI                              _330
+                                  CALL                              giga_vAC                    ; Main: GOTO 330
+
+_930                              PrintString                       _str_0x7ca1
+                                  LDWI                              _1310
+                                  CALL                              giga_vAC                    ; Main: PRINT "BELL";:GOSUB 1310
+
+_940                              LDWI                              _330
+                                  CALL                              giga_vAC                    ; Main: GOTO 330
+
+_950                              PrintString                       _str_0x7ba4
+                                  LDWI                              _1310
+                                  CALL                              giga_vAC                    ; Main: PRINT "ORANGE";:GOSUB 1310
+
+_960                              LDWI                              _330
+                                  CALL                              giga_vAC                    ; Main: GOTO 330
+
+_970                              PrintString                       _str_0x7acf
+                                  LDWI                              _1310
+                                  CALL                              giga_vAC                    ; Main: PRINT "LEMON";:GOSUB 1310
+
+_980                              LDWI                              _330
+                                  CALL                              giga_vAC                    ; Main: GOTO 330
+
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x09a0
+                                  CALL                              giga_vAC
+_page_0x09a0                      LDLW                              0xFE
+_990                              PrintString                       _str_0x7ac9
+                                  LDWI                              _1310
+                                  CALL                              giga_vAC                    ; Main: PRINT "PLUM";:GOSUB 1310
+
+_1000                             LDWI                              _330
+                                  CALL                              giga_vAC                    ; Main: GOTO 330
+
+_1010                             PrintString                       _str_0x7ac1
+                                  LDWI                              _1310
+                                  CALL                              giga_vAC                    ; Main: PRINT "CHERRY";:GOSUB 1310
+
+_1020                             LDWI                              _330
+                                  CALL                              giga_vAC                    ; Main: GOTO 330
+
+_1030                             PrintString                       _str_0x7abb
+                                  LDWI                              _1310
+                                  CALL                              giga_vAC                    ; Main: PRINT " BAR";:GOSUB 1310
+
+_1040                             LDWI                              _390
+                                  CALL                              giga_vAC                    ; Main: GOTO 390
+
+_1050                             PrintString                       _str_0x7ab4
+                                  LDWI                              _1310
+                                  CALL                              giga_vAC                    ; Main: PRINT " BELL";:GOSUB 1310
+
+_1060                             LDWI                              _390
+                                  CALL                              giga_vAC                    ; Main: GOTO 390
+
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0aa0
+                                  CALL                              giga_vAC
+_page_0x0aa0                      LDLW                              0xFE
+_1070                             PrintString                       _str_0x7aab
+                                  LDWI                              _1310
+                                  CALL                              giga_vAC                    ; Main: PRINT " ORANGE";:GOSUB 1310
+
+_1080                             LDWI                              _390
+                                  CALL                              giga_vAC                    ; Main: GOTO 390
+
+_1090                             PrintString                       _str_0x7aa3
+                                  LDWI                              _1310
+                                  CALL                              giga_vAC                    ; Main: PRINT " LEMON";:GOSUB 1310
+
+_1100                             LDWI                              _390
+                                  CALL                              giga_vAC                    ; Main: GOTO 390
+
+_1110                             PrintString                       _str_0x79f9
+                                  LDWI                              _1310
+                                  CALL                              giga_vAC                    ; Main: PRINT " PLUM";:GOSUB 1310
+
+_1120                             LDWI                              _390
+                                  CALL                              giga_vAC                    ; Main: GOTO 390
+
+_1130                             PrintString                       _str_0x79f0
+                                  LDWI                              _1310
+                                  CALL                              giga_vAC                    ; Main: PRINT " CHERRY";:GOSUB 1310
+
+_1140                             LDWI                              _390
+                                  CALL                              giga_vAC                    ; Main: GOTO 390
+
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0ba0
+                                  CALL                              giga_vAC
+_page_0x0ba0                      LDLW                              0xFE
+_1150                             PrintString                       _str_0x7abb
+                                  NewLine                                                       ; Main: PRINT " BAR"
+
+_1160                             LDWI                              _450
+                                  CALL                              giga_vAC                    ; Main: GOTO 450
+
+_1170                             PrintString                       _str_0x7ab4
+                                  NewLine                                                       ; Main: PRINT " BELL"
+
+_1180                             LDWI                              _450
+                                  CALL                              giga_vAC                    ; Main: GOTO 450
+
+_1190                             PrintString                       _str_0x7aab
+                                  NewLine                                                       ; Main: PRINT " ORANGE"
+
+_1200                             LDWI                              _450
+                                  CALL                              giga_vAC                    ; Main: GOTO 450
+
+_1210                             PrintString                       _str_0x7aa3
+                                  NewLine                                                       ; Main: PRINT " LEMON"
+
+_1220                             LDWI                              _450
+                                  CALL                              giga_vAC                    ; Main: GOTO 450
+
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0ca0
+                                  CALL                              giga_vAC
+_page_0x0ca0                      LDLW                              0xFE
+_1230                             PrintString                       _str_0x79f9
+                                  NewLine                                                       ; Main: PRINT " PLUM"
+
+_1240                             LDWI                              _450
+                                  CALL                              giga_vAC                    ; Main: GOTO 450
+
+_1250                             PrintString                       _str_0x79f0
+                                  NewLine                                                       ; Main: PRINT " CHERRY"
+
+_1260                             LDWI                              _450
+                                  CALL                              giga_vAC                    ; Main: GOTO 450
+
+_1270                             PUSH                              
+                                  LDI                               1
+                                  STW                               _Q4                         ; Main: FOR Q4=1 TO 10
+
+_1280                             LDI                               7
+                                  PrintAcChar                                                   ; Main: PRINT CHR$(7);
+
+_1290                             ForNextFarInc                     _Q4 _1280 10                ; Main: NEXT Q4
+
+_1300                             Return                                                        ; Main: RETURN
+
+_1310                             PUSH                              
+                                  LDI                               1
+                                  STW                               _T8                         ; Main: FOR T8=1 TO 5
+
+_1320                             LDI                               7
+                                  PrintAcChar                                                   ; Main: PRINT CHR$(7);
+
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0da0
+                                  CALL                              giga_vAC
+_page_0x0da0                      LDLW                              0xFE
+_1330                             ForNextFarInc                     _T8 _1320 5                 ; Main: NEXT T8
+
+_1340                             Return                                                        ; Main: RETURN
+
+_1341                             NewLine                           
+                                  PrintString                       _str_0x79e6
+                                  NewLine                                                       ; Main: PRINT: PRINT "DOUBLE!!"
+
+_1342                             PrintString                       _str_0x7bc9
+                                  NewLine                                                       ; Main: PRINT "YOU WON!"
+
+_1343                             LDI                               2
+                                  STW                               mathX
+                                  LDW                               _M
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  ADDW                              _M
+                                  ADDW                              _P
+                                  STW                               _P                          ; Main: P=(((2*M)+M)+P)
+
+_1344                             LDWI                              _510
+                                  CALL                              giga_vAC                    ; Main: GOTO 510
+
+_1350                             HALT                                                          ; Main: END
+
+_9999                             HALT                                                          ; Main: END
+
+                                  HALT                                                          ; Main: END
 
 
 
@@ -927,49 +934,52 @@ _end_0x092f                   BRA                               _end_0x092f     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0xfb37
-realTimeStub                  EQU     0xfab1
-convertEqOp                   EQU     0xfa82
-convertLtOp                   EQU     0xfa79
-convertGtOp                   EQU     0xfa70
-multiply16bit                 EQU     0xfc1b
-divide16bit                   EQU     0xfda8
-randMod16bit                  EQU     0xfac3
-scanlineMode                  EQU     0xfb00
-resetVideoFlags               EQU     0xfa8b
-initClearFuncs                EQU     0xfaa4
-clearVertBlinds               EQU     0xfc86
-clearCursorRow                EQU     0xfbcf
-input                         EQU     0xff02
-inputExt1                     EQU     0xfd08
-inputExt2                     EQU     0xfb4e
-inputCursor                   EQU     0xfbad
-inputKeys                     EQU     0xff29
-inputIntVar                   EQU     0xfad6
-inputStrVar                   EQU     0xfb20
-inputReturn                   EQU     0xfc4d
-inputDelete                   EQU     0xfe06
-inputPrint                    EQU     0xfb6c
-inputNewline                  EQU     0xfaea
-printInit                     EQU     0xfb0a
-printText                     EQU     0xfc02
-printDigit                    EQU     0xfb8b
-printInt16                    EQU     0xfd57
-printChr                      EQU     0xfa97
-printChar                     EQU     0xfe4c
-newLineScroll                 EQU     0xfea4
-integerStr                    EQU     0xfcc0
-convertEqOpAddr               EQU     0x00c2
-convertNeOpAddr               EQU     0x00c4
-convertLeOpAddr               EQU     0x00c6
-convertGeOpAddr               EQU     0x00c8
-convertLtOpAddr               EQU     0x00ca
-convertGtOpAddr               EQU     0x00cc
-convert8Arr2dAddr             EQU     0x00ce
-convert8Arr3dAddr             EQU     0x00d0
-convert16Arr2dAddr            EQU     0x00d2
-convert16Arr3dAddr            EQU     0x00d4
-realTimeStubAddr              EQU     0x00d6
+romCheck                          EQU     0xfc01
+convertEqOp                       EQU     0xf95e
+convertLtOp                       EQU     0xf955
+convertGtOp                       EQU     0xf94c
+loadRegs                          EQU     0xfa43
+saveRegs                          EQU     0xfa25
+multiply16bit                     EQU     0xfb5b
+divide16bit                       EQU     0xfca8
+randMod16bit                      EQU     0xf991
+scanlineMode                      EQU     0xfd01
+resetVideoFlags                   EQU     0xf967
+initClearFuncs                    EQU     0xf980
+clearVertBlinds                   EQU     0xfb8f
+clearCursorRow                    EQU     0xfb2b
+input                             EQU     0xfb07
+inputExt1                         EQU     0xfda6
+inputExt2                         EQU     0xfad3
+inputCursor                       EQU     0xfa07
+inputKeys                         EQU     0xfe47
+inputIntVar                       EQU     0xff00
+inputStrVar                       EQU     0xf9cf
+inputReturn                       EQU     0xfd0b
+inputDelete                       EQU     0xfe01
+inputPrint                        EQU     0xfa83
+inputNewline                      EQU     0xf9a4
+printInit                         EQU     0xf9b9
+printText                         EQU     0xf9e6
+printDigit                        EQU     0xfa61
+printInt16                        EQU     0xfc57
+printChr                          EQU     0xf973
+printChar                         EQU     0xfd4e
+newLineScroll                     EQU     0xfea2
+integerStr                        EQU     0xfc18
+stringCmp                         EQU     0xfbc5
+stringUpper                       EQU     0xfaa7
+convertEqOpAddr                   EQU     0x00c0
+convertNeOpAddr                   EQU     0x00c2
+convertLeOpAddr                   EQU     0x00c4
+convertGeOpAddr                   EQU     0x00c6
+convertLtOpAddr                   EQU     0x00c8
+convertGtOpAddr                   EQU     0x00ca
+convert8Arr2dAddr                 EQU     0x00cc
+convert8Arr3dAddr                 EQU     0x00ce
+convert16Arr2dAddr                EQU     0x00d0
+convert16Arr3dAddr                EQU     0x00d2
+realTimeStubAddr                  EQU     0x00d4
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -1000,23 +1010,6 @@ romC_loop           LD      romErrPixel
                     BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
                     
 romC_return         RET                    
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-                    ; self modifying code allows for timer, midi and user procs
-realTimeStub        RET                                     ; RET gets replaced by PUSH
-                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
-                    CALL    giga_vAC
-realTimeStub1       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
-                    CALL    giga_vAC
-realTimeStub2       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
-                    CALL    giga_vAC
-                    POP
-                    RET
 
 
                     ; convert equal to into a boolean
@@ -1081,10 +1074,14 @@ multiply16_skip     LDW     mathX
                     STW     mathY               ; mathY = mathY >>1
                     BRA     multiply16_loop
 
+%if TIME_SLICING
 multiply16_exit     PUSH
                     CALL    realTimeStubAddr
                     POP
                     LDW     mathSum
+%else
+multiply16_exit     LDW     mathSum
+%endif
                     RET
 
 
@@ -1129,9 +1126,11 @@ divide16_incr       LDW     mathX
 divide16_incx       LDW     mathMask
                     LSLW
                     BNE     divide16_loop
+%if TIME_SLICING
                     PUSH
                     CALL    realTimeStubAddr
                     POP
+%endif
                     LDW     mathSign
                     BGE     divide16_exit
                     LDI     0
@@ -1255,11 +1254,11 @@ clrLines            EQU     register14
 clrWidth            EQU     register15
     
 
-resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+resetVideoFlags     LDI     giga_CursorX                    ; cursor x start
                     STW     cursorXY
                     LDWI    ON_BOTTOM_ROW_MSK
                     ANDW    miscFlags
-                    STW     miscFlags                           ; reset on bottom row flag
+                    STW     miscFlags                       ; reset on bottom row flag
                     RET
 
 
@@ -1267,9 +1266,10 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 initClearFuncs      PUSH
                     LDWI    resetVideoFlags
                     CALL    giga_vAC
-    
-                    LDWI    SYS_SetMemory_v2_54                 ; setup fill memory SYS routine
+                    LDWI    SYS_SetMemory_v2_54             ; setup fill memory SYS routine
                     STW     giga_sysFn
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value
                     POP
                     RET
 
@@ -1278,29 +1278,29 @@ initClearFuncs      PUSH
 clearVertBlinds     PUSH
                     LDWI    initClearFuncs
                     CALL    giga_vAC
-                    LD      fgbgColour
-                    ST      giga_sysArg1                        ; fill value
                     LDI     giga_vram >> 8
                     STW     top  
                     
 clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LD      top
-                    ST      giga_sysArg3                        ; top line
-                    SYS     54                                  ; fill memory
+                    ST      giga_sysArg3                    ; top line
+                    SYS     54                              ; fill memory
     
                     LDI     giga_xres
                     ST      giga_sysArg0
                     LDI     0
-                    ST      giga_sysArg2                        ; low start address
+                    ST      giga_sysArg2                    ; low start address
                     LDWI    giga_yres - 1 + 16
                     SUBW    top
-                    ST      giga_sysArg3                        ; bottom line
-                    SYS     54                                  ; fill memory
-                    INC     top                                 ; next top line
+                    ST      giga_sysArg3                    ; bottom line
+                    SYS     54                              ; fill memory
+                    INC     top                             ; next top line
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      top
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loopy
@@ -1314,18 +1314,14 @@ inpLutAddr          EQU     register0
 inpKeyBak           EQU     register0
 inpVarsAddr         EQU     register1
 inpStrsAddr         EQU     register2
-inpTypesAddr        EQU     register4
-inpTextAddr         EQU     register5
-inpTextOfs          EQU     register6
-inpTypeData         EQU     register7
-inpTextEnd          EQU     register8
-printXYBak          EQU     register11
-cursXYBak           EQU     register12
-cursFlash           EQU     register13
-cursorChr           EQU     register14
-cursXYOfs           EQU     register15
-
-cursorDelay         EQU     30
+inpTypesAddr        EQU     register3
+inpTextAddr         EQU     register8
+inpTextOfs          EQU     register9
+inpTypeData         EQU     register10
+inpPrnXYBak         EQU     register11
+inpCursXYBak        EQU     register12
+inpCursXYOfs        EQU     register13
+inpTextEnd          EQU     register14
 
     
                     ; inputs numerics and text into vars
@@ -1342,16 +1338,63 @@ input               PUSH
                     DEEK
                     STW     inpTypesAddr        ; types LUT address
 
+                    LDWI    ENABLE_SCROLL_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags           ; disable text scrolling
+                    
                     LD      giga_serialRaw
                     ST      serialRawPrev       ; initialise previous keystroke
-                    LD      giga_frameCount
-                    ADDI    cursorDelay
-                    STW     cursFlash           ; delay for cursor flash
-                    LDI     127
-                    STW     cursorChr           ; cursor char
                     LDWI    inputExt1
                     CALL    giga_vAC            ; doesn't return to here
 
+
+
+
+cpySrcAddr          EQU     register0
+cpyDstAddr          EQU     register1
+cpyCount            EQU     register2
+cpyLoaderLut        EQU     register3
+regsWork            EQU     giga_sysArg4                        ; use SYS arg registers to stop conflicts with time slicing/vblanks
+regsAddr            EQU     giga_sysArg6                        ; use SYS arg registers to stop conflicts with time slicing/vblanks
+
+
+                    ; hard coded to load register8 to register15
+saveRegs            LDWI    regsWorkArea
+                    STW     regsWork
+                    LDI     register8
+                    STW     regsAddr
+
+saveRegs_loop       LDW     regsAddr
+                    DEEK
+                    DOKE    regsWork
+                    INC     regsWork
+                    INC     regsWork
+                    INC     regsAddr
+                    INC     regsAddr
+                    LDW     regsAddr
+                    SUBI    register15
+                    BLE     saveRegs_loop
+                    RET
+
+
+
+                    ; hard coded to save register8 to register15
+loadRegs            LDWI    regsWorkArea
+                    STW     regsWork
+                    LDI     register8
+                    STW     regsAddr
+
+loadRegs_loop       LDW     regsWork
+                    DEEK
+                    DOKE    regsAddr
+                    INC     regsAddr
+                    INC     regsAddr
+                    INC     regsWork
+                    INC     regsWork
+                    LDW     regsAddr
+                    SUBI    register15
+                    BLE     loadRegs_loop
+                    RET
 
 
 
@@ -1362,18 +1405,22 @@ inputExt1           LDW     inpTypesAddr
                     STW     inpTypeData         ; high byte is max string length, 8th and 7th bits of low byte are newlines, last 6 bits of low byte is type
                     ANDI    0x40
                     BEQ     inputE1_print       ; check for prefix newline
-                    LDWI    inputNewline
+                    LDWI    inputNewline        ; registers don't need to be saved yet
                     CALL    giga_vAC
                     
 inputE1_print       LDW     inpStrsAddr
                     DEEK
                     STW     textStr
+                    LDWI    saveRegs
+                    CALL    giga_vAC
                     LDWI    printText           ; print strings LUT
+                    CALL    giga_vAC
+                    LDWI    loadRegs
                     CALL    giga_vAC
                     LD      inpTypeData
                     ANDI    0x80
                     BEQ     inputE1_skip        ; check for suffix newline
-                    LDWI    inputNewline
+                    LDWI    inputNewline        ; registers don't need to be saved yet
                     CALL    giga_vAC
                     
 inputE1_skip        LDWI    textWorkArea + 1
@@ -1387,8 +1434,8 @@ inputE1_skip        LDWI    textWorkArea + 1
                     STW     inpTextEnd          ; text max = textWorkArea + (highByte(inpTypeData) >> 8)
                     
                     LDW     cursorXY
-                    STW     cursXYBak
-                    STW     printXYBak
+                    STW     inpCursXYBak
+                    STW     inpPrnXYBak
                     LDWI    inputExt2
                     CALL    giga_vAC            ; doesn't return to here
                     
@@ -1402,7 +1449,13 @@ inputE1_exit        LDI     ENABLE_SCROLL_BIT
 
 
                     ; input extended 2
-inputExt2           LDWI    inputCursor
+inputExt2           LDWI    saveRegs
+                    CALL    giga_vAC
+                    LDI     127
+                    STW     textChr
+                    LDWI    inputCursor
+                    CALL    giga_vAC
+                    LDWI    loadRegs
                     CALL    giga_vAC
                     LDWI    inputKeys
                     CALL    giga_vAC
@@ -1418,21 +1471,18 @@ inputExt2           LDWI    inputCursor
                     CALL    giga_vAC            ; doesn't return to here
 
 
-                    ; flashes cursor
-inputCursor         LD      giga_frameCount
-                    SUBW    cursFlash
-                    BEQ     inputC_toggle
-                    RET
+                    ; draws cursor
+inputCursor         PUSH
+                    LDW     textChr
+                    XORI    127
+                    BNE     inputC_skip         ; don't flash cursor if char != 127
+                    LD      giga_ledState
+                    ANDI    2
+                    BNE     inputC_skip         ; use ledState as a hack timer
+                    LDI     32
+                    STW     textChr             ; alternate between 32 and 127
                     
-inputC_toggle       PUSH
-                    LD      giga_frameCount
-                    ADDI    cursorDelay
-                    ST      cursFlash           ; delay for cursor flash
-                    LD      cursorChr
-                    ST      textChr
-                    XORI    0xDF
-                    ST      cursorChr           ; toggle between 127 and 32 for cursor char
-                    LDW     cursXYBak
+inputC_skip         LDW     inpCursXYBak
                     STW     cursorXY            ; restore cursor position after the printChr
                     LDWI    printChr
                     CALL    giga_vAC
@@ -1475,7 +1525,7 @@ inputK_char         LDW     inpTextEnd
                     INC     inpTextAddr
                     LDI     0
                     POKE    inpTextAddr         ; set new end of text string
-                    LD      cursXYBak
+                    LD      inpCursXYBak
                     SUBI    giga_xres - 11
                     BLT     inputK_advance      ; cursor max bounds
                     INC     inpTextOfs
@@ -1484,7 +1534,7 @@ inputK_char         LDW     inpTextEnd
                     
 inputK_advance      LDI     6
                     
-inputK_print        STW     cursXYOfs           ; advance cursor
+inputK_print        STW     inpCursXYOfs        ; advance cursor
                     LDWI    inputPrint
                     CALL    giga_vAC            ; doesn't return to here
                     
@@ -1524,11 +1574,14 @@ inputIntVar         PUSH
                     RET
 
 
-inputReturn         LDI     32
-                    STW     cursorChr
-                    LDWI    inputC_toggle
-                    CALL    giga_vAC            ; erase cursor
-                    
+inputReturn         LDWI    saveRegs
+                    CALL    giga_vAC
+                    LDI     32
+                    STW     textChr
+                    LDWI    inputCursor
+                    CALL    giga_vAC
+                    LDWI    loadRegs
+                    CALL    giga_vAC
                     LDWI    textWorkArea
                     STW     register0
                     LDW     inpTextAddr
@@ -1561,7 +1614,7 @@ inputDelete         LD      inpTextOfs
                     SUBI    1
                     STW     inpTextOfs          ; decrement print text offset
                     LDI     0
-                    STW     cursXYOfs           ; stationary cursor
+                    STW     inpCursXYOfs        ; stationary cursor
                     LDI     0
                     POKE    inpTextAddr         ; delimiter
                     LDW     inpTextAddr
@@ -1571,11 +1624,11 @@ inputDelete         LD      inpTextOfs
                     POKE    inpTextAddr         ; delete char
                     BRA     inputD_print
 
-inputD_bounds       LDW     printXYBak
-                    SUBW    cursXYBak
+inputD_bounds       LDW     inpPrnXYBak
+                    SUBW    inpCursXYBak
                     BGE     inputD_exit         ; cursor min bounds
                     LDWI    -6
-                    STW     cursXYOfs           ; retreat cursor
+                    STW     inpCursXYOfs        ; retreat cursor
                     LDI     32                  
                     POKE    inpTextAddr         ; delete cursor
                     INC     inpTextAddr
@@ -1595,18 +1648,20 @@ inputD_exit         LDI     0                   ; keep looping on current var
                     RET
 
 
-inputPrint          LDWI    inputCursor
-                    CALL    giga_vAC            ; call cursor flash frequently
-                    LDWI    textWorkArea
+inputPrint          LDWI    textWorkArea
                     ADDW    inpTextOfs
                     STW     textStr
-                    LDW     printXYBak
+                    LDW     inpPrnXYBak
                     STW     cursorXY            ; restore cursor position after the printText
+                    LDWI    saveRegs
+                    CALL    giga_vAC
                     LDWI    printText
                     CALL    giga_vAC
-                    LDW     cursXYBak           ; new cursor position
-                    ADDW    cursXYOfs
-                    STW     cursXYBak
+                    LDWI    loadRegs
+                    CALL    giga_vAC
+                    LDW     inpCursXYBak        ; new cursor position
+                    ADDW    inpCursXYOfs
+                    STW     inpCursXYBak
                     LDI     0                   ; keep looping on current var
                     POP
                     RET
@@ -1630,10 +1685,10 @@ inputNewline        PUSH
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
-textLen             EQU     register1
-textOfs             EQU     register2
-textChr             EQU     register3
-textHex             EQU     register8
+textHex             EQU     register1
+textLen             EQU     register2
+textOfs             EQU     register3
+textChr             EQU     register8
 textFont            EQU     register9
 textSlice           EQU     register10
 scanLine            EQU     register11
@@ -1788,7 +1843,9 @@ printC_slice        ST      textSlice
                     INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     
                     PUSH
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      cursorXY
                     ADDI    giga_xfont
                     ST      cursorXY
@@ -1824,7 +1881,9 @@ clearCR_loopy       ST      clearLoop
                     LD      clearLoop
                     SUBI    1
                     BNE     clearCR_loopy
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LDWI    printInit
                     CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP
@@ -1856,9 +1915,13 @@ newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
                     LDWI    giga_videoTable
                     STW     scanLine
-    
+
+%if TIME_SLICING
 newLS_scroll        CALL    realTimeStubAddr
                     LDW     scanLine
+%else
+newLS_scroll        LDW     scanLine
+%endif
                     PEEK
                     ADDI    giga_yfont
                     ANDI    0x7F
@@ -1941,5 +2004,91 @@ integerS_neg        LD      intNegative
                     RET
                     
 integerS_exit       LDW     intResult
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing
+strChr              EQU     register0
+strAddr             EQU     register0
+strHex              EQU     register1
+strLen              EQU     register2
+strDstLen           EQU     register0
+strFinish           EQU     register0
+strSrcAddr          EQU     register1
+strDstAddr          EQU     register2
+strSrcLen           EQU     register3
+strOffset           EQU     register8
+strSrcAddr2         EQU     register9
+strTmpAddr          EQU     register10
+strLutAddr          EQU     register11
+strBakAddr          EQU     register12
+strSrcLen2          EQU     register13
+strInteger          EQU     register0
+strDigit            EQU     register1
+strMult             EQU     register3
+
+
+                    ; compares two strings: returns 0 for smaller, 1 for equal and 2 for larger
+stringCmp           LDW     strSrcAddr
+                    PEEK
+                    STW     strSrcLen                           ; save str length
+                    LDW     strSrcAddr2
+                    PEEK
+                    STW     strSrcLen2                          ; save str length
+                    INC     strSrcAddr
+                    INC     strSrcAddr2                         ; skip lengths
+                    
+stringC_loop        LDW     strSrcAddr
+                    PEEK
+                    BEQ     stringC_equal                       ; this assumes your strings are valid, (i.e. valid length and terminating bytes)
+                    STW     strChr
+                    LDW     strSrcAddr2
+                    PEEK
+                    SUBW    strChr
+                    BLT     stringC_larger
+                    BGT     stringC_smaller
+                    INC     strSrcAddr
+                    INC     strSrcAddr2
+                    BRA     stringC_loop
+
+stringC_smaller     LDI     0
+                    RET
+                    
+stringC_equal       LDW     strSrcLen
+                    SUBW    strSrcLen2
+                    BLT     stringC_smaller
+                    BGT     stringC_larger                      ; if strings are equal, choose based on length
+                    LDI     1
+                    RET
+                    
+stringC_larger      LDI     2
+                    RET
+
+
+                    ; creates an upper case string
+stringUpper         LDW     strSrcAddr
+                    PEEK
+                    POKE    strDstAddr                          ; dst length = src length
+    
+stringUp_next       INC     strSrcAddr                          ; next char, (skips length byte)
+                    INC     strDstAddr
+                    LDW     strSrcAddr
+                    PEEK
+                    BEQ     stringUp_exit
+                    ST      strChr
+                    SUBI    97
+                    BLT     stringUp_char
+                    LD      strChr
+                    SUBI    122
+                    BGT     stringUp_char
+                    LD      strChr                              ; >= 97 'a' and <= 122 'z'
+                    SUBI    32
+                    ST      strChr
+                    
+stringUp_char       LD      strChr
+                    POKE    strDstAddr                          ; upper case char
+                    BRA     stringUp_next
+                    
+stringUp_exit       POKE    strDstAddr                          ; terminating 0
                     RET
 

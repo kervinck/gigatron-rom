@@ -1,0 +1,19 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+cls
+
+z = 3
+for i=0 to 5
+    a = &h10
+    b = a + 100
+    c = NOT (a <> b) : d = peek(c)
+    e = &hAA55 XOR a OR c AND &hFFFF
+    z = z + 1
+    print a;" ";b;" ";hex$(c, 4);" ";hex$(d, 2);" ";hex$(e, 4);" ";z
+next i
+print hex$(c, 1);" ";hex$(c, 2);" ";hex$(c, 3);" ";hex$(c, 4)
+
+for i=4 downto 1
+    print hex$(c, i);" ";
+next i

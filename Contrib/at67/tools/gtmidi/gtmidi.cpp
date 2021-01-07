@@ -12,20 +12,15 @@
 #include "../../cpu.h"
 #include "../../memory.h"
 #include "../../expression.h"
+#include "../../midi.h"
+#include "../../gtmidi.h"
 
 
-// 64K is maximum size, (good luck getting it into a Gigatron)
-#define MAX_MIDI_BUFFER_SIZE  0x10000
-#define MAX_SOUND_CHANNELS    4
-#define MASK_SOUND_CHANNELS   0x03
-#define MIN_GIGA_NOTE         12
-#define MAX_GIGA_NOTE         106
-#define PERCUSSION_NOTES      128
-#define MAX_ELEMENTS          16
-
-#define GTMIDI_MAJOR_VERSION "0.5"
-#define GTMIDI_MINOR_VERSION "3"
+#define GTMIDI_MAJOR_VERSION "0.6"
+#define GTMIDI_MINOR_VERSION "0"
 #define GTMIDI_VERSION_STR "gtmidi v" GTMIDI_MAJOR_VERSION "." GTMIDI_MINOR_VERSION
+
+#define MAX_ELEMENTS 16
 
 
 enum Format {gtMID=0, vCPU, GBAS, GCL, CPP, PY, NumFormats};
@@ -43,7 +38,8 @@ std::map<std::string, int> _formatName =
     {"PY"  ,  PY   },
 };
 
-uint8_t _midiBuffer[MAX_MIDI_BUFFER_SIZE];
+uint8_t _midiBuffer[MIDI_MAX_BUFFER_SIZE];
+std::vector<uint8_t> _outBuffer;
 
 
 void padString(std::string &str, size_t num, char pad=' ')
@@ -55,6 +51,32 @@ void addString(std::string &str, size_t num, char add=' ')
     str.append(num, add);
 }
 
+
+// gtMID output
+void outputGTMIDheader(std::ofstream& outfile, const std::string& name, bool hasVolume)
+{
+    GtMidiHdr gtMidiHdr;
+
+    // Write GtMiDiHdr, upto HiSize
+    strncpy((char *)gtMidiHdr._name, name.c_str(), int(name.length()) % GTMIDI_NAME_SIZE);
+    gtMidiHdr._hasVolume = hasVolume;
+    outfile.write((char *)&gtMidiHdr, GTMIDI_HI_SIZE_OFFSET);
+}
+void outputGTMIDcommand(uint8_t command)
+{
+    _outBuffer.push_back(command);
+}
+void outputGTMIDbuffer(std::ofstream& outfile)
+{
+    // Write HiSize and LoSize, (which are part of GtMiDiHdr), can't be written until size is calculated
+    uint8_t loSize = uint8_t(_outBuffer.size() & 0xFF);
+    uint8_t hiSize = uint8_t((_outBuffer.size() >>8) & 0xFF);
+    outfile.write((char *)&hiSize, 1);
+    outfile.write((char *)&loSize, 1);
+
+    // Write MIDI stream
+    outfile.write((char *)&_outBuffer[0], _outBuffer.size());
+}
 
 // vCPU output
 void outputVCPUheader(std::ofstream& outfile, const std::string& name, uint16_t address, uint16_t segmentSize, uint16_t segmentIndex)
@@ -233,11 +255,12 @@ void outputDelay(std::ofstream& outfile, Format format, uint8_t delay8, double t
 
     switch(format)
     {
-        case Format::vCPU: outputVCPUcommand(outfile, delay8); break;
-        case Format::GBAS: outputGBAScommand(outfile, delay8); break;
-        case Format::GCL:  outputGCLcommand(outfile,  delay8); break;
-        case Format::CPP:  outputCPPcommand(outfile,  delay8); break;
-        case Format::PY:   outputPYcommand(outfile,   delay8); break;
+        case Format::gtMID: outputGTMIDcommand(delay8);         break;
+        case Format::vCPU:  outputVCPUcommand(outfile, delay8); break;
+        case Format::GBAS:  outputGBAScommand(outfile, delay8); break;
+        case Format::GCL:   outputGCLcommand(outfile,  delay8); break;
+        case Format::CPP:   outputCPPcommand(outfile,  delay8); break;
+        case Format::PY:    outputPYcommand(outfile,   delay8); break;
 
         default: break;
     }
@@ -247,9 +270,10 @@ int main(int argc, char* argv[])
 {
     if(argc < 9  ||  argc > 10)
     {
-        fprintf(stderr, "%s\n", GTMIDI_VERSION_STR);
-        fprintf(stderr, "Usage:    gtmidi <input filename> <output filename> <midi name> <format name> <uint16_t start_address in hex>\n         <uint16_t segment_offset in hex> <int segment_size> <float timing_adjust> <optional -v>\n");
-        fprintf(stderr, "Example:  gtmidi game_over.bin game_over.i gameOver vCPU 0x8000 0 0 0.5 -v\n");
+        fprintf(stderr, "Version:  %s\n", GTMIDI_VERSION_STR);
+        fprintf(stderr, "Usage:    gtmidi <input filename> <output filename> <midi name> <format name> <uint16_t start_address in hex>\n                 <uint16_t segment_offset in hex> <int segment_size> <float timing_adjust> <optional -v>\n\n");
+        fprintf(stderr, "Example1: gtmidi game_over.bin game_over.i gameOver vCPU 0x08A0 0x0100 96 0.5\n");        
+        fprintf(stderr, "Example2: gtmidi game_over.bin game_over.i gameOver vCPU 0x8000 0 0 0.5 -v\n\n");
         fprintf(stderr, "Input:    miditones binary file produced with miditones, e.g. miditones -t4 -b -s1 -pi -v <filename>.bin\n");
         fprintf(stderr, "Format:   'gtMID', 'vCPU', 'GBAS', 'GCL', 'CPP', 'Py'\n");
         fprintf(stderr, "Optional: -v use volume/velocity values, (use -v with miditones)\n");
@@ -264,7 +288,7 @@ int main(int argc, char* argv[])
     formatName = Expression::strToUpper(formatName);
     if(_formatName.find(formatName) == _formatName.end())
     {
-        fprintf(stderr, "Format must be one of 'gtMID', 'vCPU', 'GBAS', 'GCL', 'CPP', 'Py'\n");
+        fprintf(stderr, "Format must be one of : 'gtMID', 'vCPU', 'GBAS', 'GCL', 'CPP', 'Py'\n");
         return 1;
     }
 
@@ -282,7 +306,7 @@ int main(int argc, char* argv[])
     uint16_t segmentSize = uint16_t(strtol(argv[7], nullptr, 10));
     double timingAdjust = strtod(argv[8], nullptr);
 
-    bool useVolume = false;
+    bool hasVolume = false;
     if(argc == 10)
     {
         std::string volume = argv[9];
@@ -293,7 +317,7 @@ int main(int argc, char* argv[])
             return 1;
         }
 
-        useVolume = true;
+        hasVolume = true;
     }
 
     std::ifstream infile(inFilename, std::ios::binary | std::ios::in);
@@ -310,7 +334,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    infile.read((char *)&_midiBuffer, MAX_MIDI_BUFFER_SIZE);
+    infile.read((char *)&_midiBuffer, MIDI_MAX_BUFFER_SIZE);
     if(infile.bad())
     {
         fprintf(stderr, "Failed to read input file '%s'\n", inFilename.c_str());
@@ -329,11 +353,12 @@ int main(int argc, char* argv[])
     // Header
     switch(format)
     {
-        case Format::vCPU: outputVCPUheader(outfile, midiName, startAddress, segmentSize, segmentIndex); break;
-        case Format::GBAS: outputGBASheader(outfile, startAddress);                                      break;
-        case Format::GCL:  outputGCLheader(outfile, startAddress);                                       break;
-        case Format::CPP:  outputCPPheader(outfile, midiName, segmentSize, segmentIndex);                break;
-        case Format::PY:   outputPYheader(outfile, midiName, segmentSize, segmentIndex);                 break;
+        case Format::gtMID: outputGTMIDheader(outfile, midiName, hasVolume);                              break;
+        case Format::vCPU:  outputVCPUheader(outfile, midiName, startAddress, segmentSize, segmentIndex); break;
+        case Format::GBAS:  outputGBASheader(outfile, startAddress);                                      break;
+        case Format::GCL:   outputGCLheader(outfile, startAddress);                                       break;
+        case Format::CPP:   outputCPPheader(outfile, midiName, segmentSize, segmentIndex);                break;
+        case Format::PY:    outputPYheader(outfile, midiName, segmentSize, segmentIndex);                 break;
 
         default: break;
     }
@@ -341,6 +366,7 @@ int main(int argc, char* argv[])
     // Commands
     int noteOnCount = 0;
     uint16_t segmentCount = 0;
+    uint16_t consecutiveDelays = 0;
     while(midiSize)
     {
         uint8_t command = *midiPtr++; midiSize--;
@@ -352,15 +378,15 @@ int main(int argc, char* argv[])
                 noteOnCount++;
 
                 uint8_t note = *midiPtr++; midiSize--;
-                if(note >= PERCUSSION_NOTES) note -= PERCUSSION_NOTES;
-                if(note < MIN_GIGA_NOTE) note = MIN_GIGA_NOTE;
-                if(note > MAX_GIGA_NOTE) note = MAX_GIGA_NOTE;
+                if(note >= MIDI_PERCUSSION_NOTES) note -= MIDI_PERCUSSION_NOTES;
+                if(note < MIDI_MIN_GIGA_NOTE) note = MIDI_MIN_GIGA_NOTE;
+                if(note > MIDI_MAX_GIGA_NOTE) note = MIDI_MAX_GIGA_NOTE;
                 gigaSize += 2;
                 segmentCount += 2;
 
                 // Volume, (0 -> 127), needs to be scaled, inverted and offset into (127 -> 64)
                 uint8_t volume;
-                if(useVolume)
+                if(hasVolume)
                 {
                     volume = *midiPtr++; midiSize--;
                     volume = (63 - ((volume & 127) >>1)) + 64;
@@ -370,11 +396,12 @@ int main(int argc, char* argv[])
 
                 switch(format)
                 {
-                    case Format::vCPU: outputVCPUcommand(outfile, command); outputVCPUcommand(outfile, note); if(useVolume) outputVCPUcommand(outfile, volume); break;
-                    case Format::GBAS: outputGBAScommand(outfile, command); outputGBAScommand(outfile, note); if(useVolume) outputGBAScommand(outfile, volume); break;
-                    case Format::GCL:  outputGCLcommand(outfile,  command); outputGCLcommand(outfile,  note); if(useVolume) outputGCLcommand(outfile,  volume); break;
-                    case Format::CPP:  outputCPPcommand(outfile,  command); outputCPPcommand(outfile,  note); if(useVolume) outputCPPcommand(outfile,  volume); break;
-                    case Format::PY:   outputPYcommand(outfile,   command); outputPYcommand(outfile,   note); if(useVolume) outputPYcommand(outfile,   volume); break;
+                    case Format::gtMID: outputGTMIDcommand(command);         outputGTMIDcommand(note);         if(hasVolume) outputGTMIDcommand(volume);         break;
+                    case Format::vCPU:  outputVCPUcommand(outfile, command); outputVCPUcommand(outfile, note); if(hasVolume) outputVCPUcommand(outfile, volume); break;
+                    case Format::GBAS:  outputGBAScommand(outfile, command); outputGBAScommand(outfile, note); if(hasVolume) outputGBAScommand(outfile, volume); break;
+                    case Format::GCL:   outputGCLcommand(outfile,  command); outputGCLcommand(outfile,  note); if(hasVolume) outputGCLcommand(outfile,  volume); break;
+                    case Format::CPP:   outputCPPcommand(outfile,  command); outputCPPcommand(outfile,  note); if(hasVolume) outputCPPcommand(outfile,  volume); break;
+                    case Format::PY:    outputPYcommand(outfile,   command); outputPYcommand(outfile,   note); if(hasVolume) outputPYcommand(outfile,   volume); break;
 
                     default: break;
                 }
@@ -386,11 +413,12 @@ int main(int argc, char* argv[])
                 segmentCount += 1;
                 switch(format)
                 {
-                    case Format::vCPU: outputVCPUcommand(outfile, command); break;
-                    case Format::GBAS: outputGBAScommand(outfile, command); break;
-                    case Format::GCL:  outputGCLcommand(outfile,  command); break;
-                    case Format::CPP:  outputCPPcommand(outfile,  command); break;
-                    case Format::PY:   outputPYcommand(outfile,   command); break;
+                    case Format::gtMID: outputGTMIDcommand(command);         break;
+                    case Format::vCPU:  outputVCPUcommand(outfile, command); break;
+                    case Format::GBAS:  outputGBAScommand(outfile, command); break;
+                    case Format::GCL:   outputGCLcommand(outfile,  command); break;
+                    case Format::CPP:   outputCPPcommand(outfile,  command); break;
+                    case Format::PY:    outputPYcommand(outfile,   command); break;
 
                     default: break;
                 }
@@ -416,6 +444,7 @@ int main(int argc, char* argv[])
                 coalescedDelay += (midiPtr[index]<<8) + midiPtr[index + 1];
                 index += 2;
                 midiSize -= 2;
+                consecutiveDelays++;
             }
             midiPtr += index;
 
@@ -512,14 +541,15 @@ int main(int argc, char* argv[])
     // Footer
     switch(format)
     {
-        case Format::GCL: outputGCLfooter(outfile, midiName); break;
-        case Format::CPP: outputCPPfooter(outfile);           break;
-        case Format::PY:  outputPYfooter(outfile);            break;
+        case Format::gtMID: outputGTMIDbuffer(outfile);         break;
+        case Format::GCL:   outputGCLfooter(outfile, midiName); break;
+        case Format::CPP:   outputCPPfooter(outfile);           break;
+        case Format::PY:    outputPYfooter(outfile);            break;
 
         default: break;
     }
 
-    fprintf(stderr, "Note On count:%d  Original size:%d  New size:%d  Original time:%.1lfms  New time:%.1lfms  Error:%.1lfms  Start Address:0x%04x  End Address:0x%04x\n",
-                    noteOnCount, int(infile.gcount()), gigaSize, totalTime16, totalTime8, totalTime8 - totalTime16, startAddress, segment+segmentSize);
+    fprintf(stderr, "Note On count:%d  Consecutive Delays Eliminated:%d  Original size:%d  New size:%d  Original time:%.1lfms  New time:%.1lfms  Error:%.1lfms  Start Address:0x%04x  End Address:0x%04x\n",
+                    noteOnCount, consecutiveDelays, int(infile.gcount()), gigaSize, totalTime16, totalTime8, totalTime8 - totalTime16, startAddress, segment+segmentSize);
     return 0;
 }

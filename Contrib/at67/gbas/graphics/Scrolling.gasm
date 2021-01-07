@@ -1,57 +1,57 @@
-_startAddress_                EQU                               0x0200
+_startAddress_                    EQU                               0x0200
 
 ; Internal Variables
-serialRawPrev                 EQU                               0x0081
-register0                     EQU                               0x0082
-register1                     EQU                               register0 + 0x02
-register2                     EQU                               register0 + 0x04
-register3                     EQU                               register0 + 0x06
-register4                     EQU                               register0 + 0x08
-register5                     EQU                               register0 + 0x0A
-register6                     EQU                               register0 + 0x0C
-register7                     EQU                               register0 + 0x0E
-register8                     EQU                               register0 + 0x10
-register9                     EQU                               register0 + 0x12
-register10                    EQU                               register0 + 0x14
-register11                    EQU                               register0 + 0x16
-register12                    EQU                               register0 + 0x18
-register13                    EQU                               register0 + 0x1A
-register14                    EQU                               register0 + 0x1C
-register15                    EQU                               register0 + 0x1E
-fgbgColour                    EQU                               register0 + 0x20
-cursorXY                      EQU                               register0 + 0x22
-midiStream                    EQU                               register0 + 0x24
-midiDelay                     EQU                               register0 + 0x26
-miscFlags                     EQU                               register0 + 0x28
-timerTick                     EQU                               register0 + 0x2A
-timerPrev                     EQU                               register0 + 0x2C
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
 
 ; Internal Constants
-ENABLE_SCROLL_BIT             EQU                               0x0001
-ON_BOTTOM_ROW_BIT             EQU                               0x0002
-ENABLE_SCROLL_MSK             EQU                               0xfffe
-ON_BOTTOM_ROW_MSK             EQU                               0xfffd
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
 
 ; Internal Buffers
-textWorkArea                  EQU                               0x06a0
+regsWorkArea                      EQU                               0x0000
+textWorkArea                      EQU                               0x06a0
 
 ; Includes
-%includePath                  "../runtime"
-%include                      util.i
-%include                      gigatron.i
-%include                      macros.i
+%includePath                      "../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros.i
 
 ; Labels
-_entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x021b
-_repeat_0x0242                EQU                               0x023e
-_end_0x0268                   EQU                               0x025e
+_entryPoint_                      EQU                               0x0200
+_loop                             EQU                               0x0216
+_repeat_0x023d                    EQU                               0x0239
 
 ; Global Variables
-_x                            EQU                               0x0030
-_p                            EQU                               0x0032
-_x2                           EQU                               0x0034
-_nx2                          EQU                               0x0036
+_x                                EQU                               0x0030
+_p                                EQU                               0x0032
+_x2                               EQU                               0x0034
+_nx2                              EQU                               0x0036
 
 ; Local Variables
 
@@ -71,6 +71,8 @@ _nx2                          EQU                               0x0036
 
 ; Define Images
 
+; Define Loader Image Chunks
+
 ; Define Sprites
 
 ; Define Fonts
@@ -78,54 +80,53 @@ _nx2                          EQU                               0x0036
 ; Lookup Tables
 
 ; Code
-_entryPoint_                  Initialise                        
-                              InitRealTimeStub                                                  ; INIT
+_entryPoint_                      Initialise                                                    ; Main: INIT
 
-                              LDI                               0
-                              STW                               _x                              ; x = 0
+                                  LDI                               0
+                                  STW                               _x                          ; Main: x = 0
 
-_loop                         LDI                               1
-                              STW                               waitVBlankNum
-                              WaitVBlanks                                                       ; wait 1
+_loop                             LDI                               1
+                                  STW                               waitVBlankNum
+                                  WaitVBlanks                                                   ; Main: wait 1
 
-                              LDWI                              257
-                              STW                               register0
-                              LDW                               _x
-                              POKE                              register0                       ; poke &h0101, x
+                                  LDWI                              257
+                                  STW                               register0
+                                  LDW                               _x
+                                  POKE                              register0                   ; Main: poke &h0101, x
 
-                              LDWI                              273
-                              STW                               _p                              ; p = &h0111
+                                  LDWI                              273
+                                  STW                               _p                          ; Main: p = &h0111
 
-                              LDW                               _x
-                              ADDW                              _x
-                              STW                               _x2                             ; x2 = x + x
+                                  LDW                               _x
+                                  ADDW                              _x
+                                  STW                               _x2                         ; Main: x2 = x + x
 
-                              LDI                               0
-                              SUBW                              _x2
-                              STW                               _nx2                            ; nx2 = -x2
+                                  LDI                               0
+                                  SUBW                              _x2
+                                  STW                               _nx2                        ; Main: nx2 = -x2
 
-_repeat_0x0242                LDW                               _nx2
-                              POKE                              _p                              ; poke p, nx2
+_repeat_0x023d                    LDW                               _nx2
+                                  POKE                              _p                          ; Main: poke p, nx2
 
-                              LDW                               _p
-                              ADDI                              16
-                              STW                               0xe8
-                              LDW                               _x2
-                              POKE                              0xe8                            ; poke p + 16, x2
+                                  LDW                               _p
+                                  ADDI                              16
+                                  STW                               0xe8
+                                  LDW                               _x2
+                                  POKE                              0xe8                        ; Main: poke p + 16, x2
 
-                              LDW                               _p
-                              ADDI                              32
-                              STW                               _p                              ; p = p + 32
+                                  LDW                               _p
+                                  ADDI                              32
+                                  STW                               _p                          ; Main: p = p + 32
 
-                              LDWI                              465
-                              SUBW                              _p
-                              BGE                               _repeat_0x0242                  ; until p &&>= &h01D1
+                                  LDWI                              465
+                                  SUBW                              _p
+                                  BGE                               _repeat_0x023d              ; Main: until p &&>= &h01D1
 
-                              INC                               _x                              ; inc x
+                                  INC                               _x                          ; Main: inc x
 
-                              BRA                               _loop                           ; goto &loop
+                                  BRA                               _loop                       ; Main: goto &loop
 
-_end_0x0268                   BRA                               _end_0x0268                     ; END
+                                  HALT                                                          ; Main: END
 
 
 
@@ -135,53 +136,20 @@ _end_0x0268                   BRA                               _end_0x0268     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x067b
-waitVBlank                    EQU     0x066f
-waitVBlanks                   EQU     0x068d
-resetVideoFlags               EQU     0x0663
-convertEqOpAddr               EQU     0x00c2
-convertNeOpAddr               EQU     0x00c4
-convertLeOpAddr               EQU     0x00c6
-convertGeOpAddr               EQU     0x00c8
-convertLtOpAddr               EQU     0x00ca
-convertGtOpAddr               EQU     0x00cc
-convert8Arr2dAddr             EQU     0x00ce
-convert8Arr3dAddr             EQU     0x00d0
-convert16Arr2dAddr            EQU     0x00d2
-convert16Arr3dAddr            EQU     0x00d4
-realTimeStubAddr              EQU     0x00d6
-
-
-; do *NOT* use register4 to register7 during time slicing
-realTimeAddr        EQU     register0
-realTimeProc0       EQU     register1
-realTimeProc1       EQU     register2
-realTimeProc2       EQU     register3
-numericLabel        EQU     register0
-defaultLabel        EQU     register1
-lutLabs             EQU     register2
-lutAddrs            EQU     register3
-lutIndex            EQU     register8
-romType             EQU     register0
-romErrAddr          EQU     register1
-romErrPixel         EQU     register2
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-                    ; self modifying code allows for timer, midi and user procs
-realTimeStub        RET                                     ; RET gets replaced by PUSH
-                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
-                    CALL    giga_vAC
-realTimeStub1       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
-                    CALL    giga_vAC
-realTimeStub2       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
-                    CALL    giga_vAC
-                    POP
-                    RET
+waitVBlank                        EQU     0x0621
+waitVBlanks                       EQU     0x062d
+resetVideoFlags                   EQU     0x0615
+convertEqOpAddr                   EQU     0x00c0
+convertNeOpAddr                   EQU     0x00c2
+convertLeOpAddr                   EQU     0x00c4
+convertGeOpAddr                   EQU     0x00c6
+convertLtOpAddr                   EQU     0x00c8
+convertGtOpAddr                   EQU     0x00ca
+convert8Arr2dAddr                 EQU     0x00cc
+convert8Arr3dAddr                 EQU     0x00ce
+convert16Arr2dAddr                EQU     0x00d0
+convert16Arr3dAddr                EQU     0x00d2
+realTimeStubAddr                  EQU     0x00d4
 
 
 
@@ -254,12 +222,7 @@ drawRect_y2         EQU     register15
 drawRectF_x1        EQU     register0
 drawRectF_y1        EQU     register1
 drawRectF_x2        EQU     register2
-drawRectF_y2        EQU     register3
-drawRectF_lines     EQU     register8
-drawRectF_width     EQU     register9
-drawRectF_start     EQU     register10
-drawRectF_end       EQU     register11
-drawRectF_rem       EQU     register12
+drawRectF_y2        EQU     register7
 
 drawPoly_mode       EQU     register14
 drawPoly_addr       EQU     register15
@@ -268,9 +231,11 @@ drawPoly_addr       EQU     register15
 waitVBlank          LD      giga_videoY
                     XORI    179
                     BNE     waitVBlank
+%if TIME_SLICING
                     PUSH
                     CALL    realTimeStubAddr
                     POP
+%endif
                     RET
 
 

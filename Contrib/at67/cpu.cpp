@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "memory.h"
+#include "assembler.h"
 #include "cpu.h"
 
 #ifndef STAND_ALONE
@@ -104,7 +105,7 @@ namespace Cpu
             return (a._count > b._count);
         });
 
-        for(int i=0; i<_instCounts.size(); i++)
+        for(int i=0; i<<int(_instCounts.size()); i++)
         {
             float percent = float(_instCounts[i]._count)/float(_totalCount)*100.0f;
             if(percent > 1.0f)
@@ -368,9 +369,9 @@ namespace Cpu
         _RAM[(address+1) & (Memory::getSizeRAM()-1)] = uint8_t(HI_BYTE(data));
     }
 
-    void setSizeRAM(size_t size)
+    void setSizeRAM(int size)
     {
-        _RAM.resize(size);
+        _RAM.resize(size_t(size));
     }
 
     void clearUserRAM(void)
@@ -915,8 +916,11 @@ namespace Cpu
         setClock(CLOCK_RESET);
 
         Memory::initialise();
+        Assembler::setvSpMin(0x00);
         Graphics::resetVTable();
         Editor::setSingleStepAddress(FRAME_COUNT_ADDRESS);
+
+        Audio::restoreWaveTables();
     }
 
     void softReset(void)
@@ -937,7 +941,7 @@ namespace Cpu
     {
         UNREFERENCED_PARAM(T);
 
-        // All ROM's so far v1 through v4 use the same vCPU dispatch address!
+        // All ROM's so far v1 through v5a/DEVROM use the same vCPU dispatch address!
         if(S._PC == ROM_VCPU_DISPATCH)
         {
             _vPC = (getRAM(0x0017) <<8) | getRAM(0x0016);
@@ -945,7 +949,7 @@ namespace Cpu
             _vCpuInstPerFrameMax++;
 
             // Soft reset
-            if(_vPC == 0x01F0) softReset();
+            if(_vPC == VCPU_SOFT_RESET) softReset();
 
             static uint64_t prevFrameCounter = 0;
             double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
@@ -971,8 +975,10 @@ namespace Cpu
         }
     }
 
-    void process(bool disableOutput)
+    bool process(bool disableOutput)
     {
+        bool vBlank = false;
+
         // MCP100 Power-On Reset
         if(_clock < 0)
         {
@@ -994,6 +1000,8 @@ namespace Cpu
         // Falling vSync edge
         if(_vSync < 0)
         {
+            vBlank = true;
+
             _clockStall = _clock;
             _vgaY = VSYNC_START;
 
@@ -1046,7 +1054,9 @@ namespace Cpu
 
             if(_initAudio  &&  _clock > STARTUP_DELAY_CLOCKS*10.0)
             {
-                Audio::initialiseChannels(_coldBoot);
+                // ROM's V1 to V3 do not re-initialise RAM Audio Wave Tables on soft reboot, (we re-initialise them for ALL ROM versions)
+                Audio::initialiseChannels();
+                Audio::saveWaveTables();
 
                 _coldBoot = false;
                 _initAudio = false;
@@ -1100,6 +1110,8 @@ namespace Cpu
 
         _stateS = _stateT;
         _clock++;
+
+        return vBlank;
     }
 
 #ifdef _WIN32
@@ -1115,9 +1127,9 @@ namespace Cpu
 
             int xpos, ypos, width, height;
             sscanf_s(line.c_str(), "%d %d %d %d", &xpos, &ypos, &width, &height);
-            if(xpos < -2000  ||  xpos > 4000  ||  ypos < 320  ||  ypos > 1000  ||  width < 100  ||  width > 2000  ||  height < 100 ||  height > 1000)
+            if(xpos < -2000  ||  xpos > 4000  ||  ypos < 120  ||  ypos > 1000  ||  width < 100  ||  width > 2000  ||  height < 100 ||  height > 1000)
             {
-                xpos = -1000; ypos = 320; width = 1000; height = 1000;
+                xpos = -1000; ypos = 120; width = 1000; height = 1000;
             }
 
             MoveWindow(_consoleWindowHWND, xpos, ypos, width, height, true);

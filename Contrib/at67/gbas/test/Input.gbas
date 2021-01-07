@@ -18,8 +18,8 @@ a.hi = 1 : a.lo = 0
 b = a.hi + 1
 c.hi = 1
 
-poke &h08E0, a.lo
-doke &h08E0, a.lo - b.hi * 3 + 1 - a
+poke &h18E0, a.lo
+doke &h18E0, a.lo - b.hi * 3 + 1 - a
 
 const big$="aioujehfiadsuhgfaissuhfgdiughafpiusfghpdsiufghspi;udf"
 const a=23
@@ -33,25 +33,25 @@ print
 print cat$;" ";hours;" ";minutes;" ";seconds
 
 a = rnd(len(dog)) + len(dog) + len(cat$) + 27
-b = len(big$) + len(a) + len(chr$(65)) + len(hex$(255)) + len(HEXW$(65000))
+b = len(big$) + len(a) + len(chr$(65)) + len(hex$(255, 2)) + len(hex$(65000, 4))
 print
 print a.lo;" ";b.hi;" ";b
 e = @e + d + 1
 f = @big$
-print hexw$(@b);" ";hexw$(@c);" ";hexw$(d);" ";hexw$(e);" ";hexw$(f)
-print hexw$(@arr);" ";hexw$(@cat$);" ";hexw$(@hours);" ";hexw$(@minutes);" ";hexw$(@seconds)
+print hex$(@b, 4);" ";hex$(@c, 4);" ";hex$(d, 4);" ";hex$(e, 4);" ";hex$(f, 4)
+print hex$(@arr, 4);" ";hex$(@cat$, 4);" ";hex$(@hours, 4);" ";hex$(@minutes, 4);" ";hex$(@seconds, 4)
 
 arr(0).lo = &h34
 arr(0).hi = &h12
-print hexw$(arr(0))
+print hex$(arr(0), 4)
 
 arr(1).lo = f.lo
 arr(1).hi = f.hi
-print hexw$(arr(1))
+print hex$(arr(1), 4)
 
-print hex$(arr(0).hi);" ";hex$(arr(0).lo);" ";hex$(arr(1).hi);" ";hex$(arr(1).lo)
+print hex$(arr(0).hi, 2);" ";hex$(arr(0).lo, 2);" ";hex$(arr(1).hi, 2);" ";hex$(arr(1).lo, 2)
 
-print arr(0);" ";arr(1);" ";hexw$(arr(0));" ";hexw$(arr(1))
+print arr(0);" ";arr(1);" ";hex$(arr(0), 4);" ";hex$(arr(1), 4)
 
 print rnd(0) AND 63;" ";len(big$);" ";peek(0);" ";deek(0);" ";@big$
 

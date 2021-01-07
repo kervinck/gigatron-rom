@@ -1,5 +1,5 @@
 _runtimePath_ "../runtime"
-_codeRomType_ ROMv1
+_codeRomType_ ROMv2
 
 'audio fix for ROMv5a
 poke &h21, peek(&h21) OR 3
@@ -8,11 +8,15 @@ scroll off
 init midi
 play midi, &h10a0, 3
 
-10 set BG_COLOUR, &h2A : cls : 'Paper
-20 set FG_COLOUR,rnd(0) AND 63 : 'Pen
-30 at rnd(155), rnd(113)
-40 put 127 : 'Block
-50 goto &20
+set BG_COLOUR, &h2A
+mode 2
+cls
+
+repeat
+    set FG_COLOUR, rnd(0) AND 63
+    x = rnd(155) : y = rnd(113)
+    rectf x, y, x + 5, y + 7
+forever
 
 
 def byte(&h10a0) =  &h90, &h40, &h91, &h25, &h0a, &h90, &h44, &h0a, &h90, &h49, &h09, &h90, &h40, &h0a, &h90, &h44,

@@ -19,6 +19,7 @@ dim c2(2) = &h03, &h02, &h01
 
 fade=0 : cIndex=fade : decay=54
 
+
 ' Draw tiles in perspective in screen memory
 for y=119 downto horizonY
     color1 = c1(cIndex) : color2 = c2(cIndex)
@@ -59,6 +60,9 @@ for y=119 downto horizonY
     set VIDEO_TOP, y+y
 next y
 
+init midi
+play midi,&h8000,3
+
 dim sky(2) = &h10, &h20, &h30
 
 ' sky
@@ -78,9 +82,6 @@ for y=horizonY-1 &downto 0
     
     set VIDEO_TOP, y+y
 next y
-
-init midi
-play midi,&h8000,3
 
 x=0 : v=8
 loop:   i = x AND 255

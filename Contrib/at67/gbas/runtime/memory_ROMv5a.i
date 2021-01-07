@@ -1,3 +1,51 @@
+cpySrcAddr          EQU     register0
+cpyDstAddr          EQU     register1
+cpyCount            EQU     register2
+cpyLoaderLut        EQU     register3
+regsWork            EQU     giga_sysArg4                        ; use SYS arg registers to stop conflicts with time slicing/vblanks
+regsAddr            EQU     giga_sysArg6                        ; use SYS arg registers to stop conflicts with time slicing/vblanks
+
+
+%SUB                loadRegs
+                    ; hard coded to save register8 to register15
+loadRegs            LDWI    regsWorkArea
+                    STW     regsWork
+                    LDI     register8
+                    STW     regsAddr
+
+loadRegs_loop       LDW     regsWork
+                    DEEK
+                    DOKE    regsAddr
+                    INC     regsAddr
+                    INC     regsAddr
+                    INC     regsWork
+                    INC     regsWork
+                    LDW     regsAddr
+                    SUBI    register15
+                    BLE     loadRegs_loop
+                    RET
+%ENDS
+
+%SUB                saveRegs
+                    ; hard coded to load register8 to register15
+saveRegs            LDWI    regsWorkArea
+                    STW     regsWork
+                    LDI     register8
+                    STW     regsAddr
+
+saveRegs_loop       LDW     regsAddr
+                    DEEK
+                    DOKE    regsWork
+                    INC     regsWork
+                    INC     regsWork
+                    INC     regsAddr
+                    INC     regsAddr
+                    LDW     regsAddr
+                    SUBI    register15
+                    BLE     saveRegs_loop
+                    RET
+%ENDS
+
 %SUB                getArrayByte
                     ; get 8bit value from array
 getArrayByte        LDW     memAddr
@@ -140,8 +188,62 @@ readIntVar          LDWI    _dataIndex_
 readStrVar          PUSH
                     CALLI   readIntVar
                     STW     strSrcAddr
-                    LDWI    stringCopy
-                    CALL    giga_vAC
+                    CALLI   stringCopy
                     POP
+                    RET
+%ENDS
+
+%SUB                copyBytes
+copyBytes           LDW     cpySrcAddr
+                    PEEK
+                    POKE    cpyDstAddr
+                    INC     cpySrcAddr
+                    INC     cpyDstAddr
+                    LDW     cpyCount
+                    SUBI    1
+                    STW     cpyCount
+                    BGT     copyBytes
+                    RET
+%ENDS
+
+%SUB                copyWords
+copyWords           LDW     cpySrcAddr
+                    DEEK
+                    DOKE    cpyDstAddr
+                    INC     cpySrcAddr
+                    INC     cpySrcAddr
+                    INC     cpyDstAddr
+                    INC     cpyDstAddr
+                    LDW     cpyCount
+                    SUBI    1
+                    STW     cpyCount
+                    BGT     copyWords
+                    RET
+%ENDS
+
+%SUB                copyLoaderImages
+copyLoaderImages    PUSH
+                    LDWI    _loader_image_chunksLut
+                    STW     cpyLoaderLut
+                    
+copyLI_loop         LDW     cpyLoaderLut
+                    DEEK
+                    BEQ     copyLI_exit
+                    STW     cpySrcAddr
+                    INC     cpyLoaderLut
+                    INC     cpyLoaderLut
+                    LDW     cpyLoaderLut
+                    DEEK
+                    STW     cpyDstAddr
+                    INC     cpyLoaderLut
+                    INC     cpyLoaderLut
+                    LDW     cpyLoaderLut
+                    PEEK
+                    STW     cpyCount
+                    INC     cpyLoaderLut
+                    CALLI   copyBytes
+                    BRA     copyLI_loop
+
+copyLI_exit         POP
                     RET
 %ENDS

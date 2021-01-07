@@ -51,41 +51,41 @@
 %ENDM
 
 %MACRO  ForNextDec _var _label _end
-        LD      _var
+        LDW     _var
         SUBI    1
-        ST      _var
+        STW     _var
         SUBI    _end
         BGE     _label
 %ENDM
 
 %MACRO  ForNextDecZero _var _label
-        LD      _var
+        LDW     _var
         SUBI    1
-        ST      _var
+        STW     _var
         BGE     _label
 %ENDM
 
 %MACRO  ForNextFarDecZero _var _label
-        LD      _var
+        LDW     _var
         SUBI    1
-        ST      _var
+        STW     _var
         BLT     _label_ + 2
         LDWI    _label
 _label_ CALL    giga_vAC        
 %ENDM
 
 %MACRO  ForNextAdd _var _label _end _step
-        LD      _var
+        LDW     _var
         ADDI    _step
-        ST      _var
+        STW     _var
         SUBI    _end
         BLE     _label
 %ENDM
 
 %MACRO  ForNextSub _var _label _end _step
-        LD      _var
+        LDW     _var
         SUBI    _step
-        ST      _var
+        STW     _var
         SUBI    _end
         BGE     _label
 %ENDM
@@ -116,9 +116,9 @@ _label_ CALL    giga_vAC
 %ENDM
 
 %MACRO  ForNextFarDec _var _label _end
-        LD      _var
+        LDW     _var
         SUBI    1
-        ST      _var
+        STW     _var
         SUBI    _end
         BLT     _label_ + 2
         LDWI    _label
@@ -126,9 +126,9 @@ _label_ CALL    giga_vAC
 %ENDM
 
 %MACRO  ForNextFarAdd _var _label _end _step
-        LD      _var
+        LDW     _var
         ADDI    _step
-        ST      _var
+        STW     _var
         SUBI    _end
         BGT     _label_ + 2
         LDWI    _label
@@ -136,9 +136,9 @@ _label_ CALL    giga_vAC
 %ENDM
 
 %MACRO  ForNextFarSub _var _label _end _step
-        LD      _var
+        LDW     _var
         SUBI    _step
-        ST      _var
+        STW      _var
         SUBI    _end
         BLT     _label_ + 2
         LDWI    _label
@@ -241,29 +241,8 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
-%MACRO  PrintAcHexByte
-        ST      textHex
-        LDWI    printHexByte
-        CALL    giga_vAC
-%ENDM
-
-%MACRO  PrintVarHexByte _var
-        LD      _var
-        ST      textHex
-        LDWI    printHexByte
-        CALL    giga_vAC
-%ENDM
-
-%MACRO  PrintAcHexWord
-        STW     textHex
-        LDWI    printHexWord
-        CALL    giga_vAC
-%ENDM
-
-%MACRO  PrintVarHexWord _var
-        LDW     _var
-        STW     textHex
-        LDWI    printHexWord
+%MACRO  PrintHex
+        LDWI    printHex
         CALL    giga_vAC
 %ENDM
 
@@ -288,20 +267,27 @@ _label_ CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintAcLeft
-        STW     textStr
         LDWI    printLeft
         CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintAcRight
-        STW     textStr
         LDWI    printRight
         CALL    giga_vAC
 %ENDM
 
 %MACRO  PrintAcMid
-        STW     textStr
         LDWI    printMid
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintAcLower
+        LDWI    printLower
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintAcUpper
+        LDWI    printUpper
         CALL    giga_vAC
 %ENDM
 
@@ -342,14 +328,8 @@ _label_ CALL    giga_vAC
 %ENDM
 
 %MACRO  StringHex
-        STW     strDstAddr
+        STW     strAddr
         LDWI    stringHex
-        CALL    giga_vAC
-%ENDM
-
-%MACRO  StringHexw
-        STW     strDstAddr
-        LDWI    stringHexw
         CALL    giga_vAC
 %ENDM
 
@@ -371,6 +351,12 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  StringConcatLut
+        STW     strDstAddr
+        LDWI    stringConcatLut
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  StringLeft
         STW     strDstAddr
         LDWI    stringLeft
@@ -386,6 +372,18 @@ _label_ CALL    giga_vAC
 %MACRO  StringMid
         STW     strDstAddr
         LDWI    stringMid
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  StringLower
+        STW     strDstAddr
+        LDWI    stringLower
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  StringUpper
+        STW     strDstAddr
+        LDWI    stringUpper
         CALL    giga_vAC
 %ENDM
 
@@ -634,6 +632,11 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  GetMidiNote
+        LDWI    midiGetNote
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  PlayMusic
         STW     musicStream
         LDWI    resetMusic
@@ -852,6 +855,16 @@ _id_    CALL    giga_vAC
 %MACRO  InitRealTimeStub
         LDWI    realTimeStub
         STW     realTimeStubAddr
+%ENDM
+
+%MACRO  CopyBytes
+        LDWI    copyBytes
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  CopyWords
+        LDWI    copyWords
+        CALL    giga_vAC
 %ENDM
 
 %MACRO  ResetVars

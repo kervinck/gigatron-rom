@@ -585,31 +585,57 @@ namespace Graphics
         _pixels[screen + 0 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 1 + 3*SCREEN_WIDTH] = 0x00;   _pixels[screen + 2 + 3*SCREEN_WIDTH] = 0x00;
     }
 
-    void drawLine(int x0, int y0, int x1, int y1, uint32_t colour)
+    void drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t colour)
     {
-        int dx =  abs(x1 - x0);
-        int sx = (x0 < x1) ? 1 : -1;
-        int dy = -abs(y1 - y0);
-        int sy = (y0 < y1) ? 1 : -1;
-        int err = dx + dy;  /* error value e_xy */
-        
-        for(;;)
-        {
-            if(x0 == x1  &&  y0 == y1) break;
-            int e2 = 2*err;
-            if(e2 >= dy)
-            {
-                err += dy; /* e_xy+e_x > 0 */
-                x0 += sx;
-            }
-            if(e2 <= dx) /* e_xy+e_y < 0 */
-            {
-                err += dx;
-                y0 += sy;
-            }
+        int16_t sx = x2 - x1;
+        int16_t sy = y2 - y1;
+        int h = sy;
+        int16_t dx1 = 1, dx2 = 1, dy1 = 1, dy2 = 0;
 
-            drawPixel(uint8_t(x0), uint8_t(y0), colour);
+        if(sx & 0x8000)
+        {
+            dx1 = -1;
+            dx2 = -1;
+            sx = 0 - sx;
         }
+
+        if(sy & 0x8000)
+        {
+            dy1 = -1;
+            sy = 0 - sy;
+            if(sx < sy) dy2 = -1;
+        }
+
+        if(sx < sy) 
+        {
+            dx2 = 0;
+            std::swap(sx, sy);
+            if(h > 0) dy2 = 1;
+        }
+
+        int16_t numerator = sx >> 1;
+        int16_t xy1 = x1 | (y1<<8);
+        int16_t xy2 = x2 | (y2<<8);
+        int16_t dxy1 = dx1 + (dy1<<8);
+        int16_t dxy2 = dx2 + (dy2<<8);
+
+        for(uint16_t i=0; i<=sx/2; i++) 
+        {
+            drawPixel(uint8_t(xy1), uint8_t(xy1>>8), colour);
+            drawPixel(uint8_t(xy2), uint8_t(xy2>>8), colour);
+            numerator += sy;
+            if(numerator > sx) 
+            {
+                numerator -= sx;
+                xy1 += dxy1;
+                xy2 -= dxy1;
+            }
+            else
+            {
+                xy1 += dxy2;
+                xy2 -= dxy2;
+            }
+        }     
     }
 
     void drawLeds(void)
@@ -708,15 +734,15 @@ namespace Graphics
         return drawText(text, _pixels, x, y, fgColour, invert, invertSize, 0, bgColour, false, -1, true, 0x00000000, 0x00000000);
     }
 
-    bool drawDialog(int x, int y, int w, int h, uint32_t bgColour, uint32_t bdColour)
+    bool drawDialog(int16_t x, int16_t y, int16_t w, int16_t h, uint32_t bgColour, uint32_t bdColour)
     {
-        Graphics::drawLine(x-1, y,   x+w, y,       bdColour);
+        Graphics::drawLine(x,   y,   x+w, y,       bdColour);
         Graphics::drawLine(x,   y+h+1, x+w, y+h+1, bdColour);
         Graphics::drawLine(x,   y,   x,   y+h+1,   bdColour);
         Graphics::drawLine(x+w, y,   x+w, y+h+1,   bdColour);
-        for(int yy=y+1; yy<=y+h; yy++)
+        for(int16_t yy=y+1; yy<=y+h; yy++)
         {
-            Graphics::drawLine(x, yy, x+w-1, yy, bgColour);
+            Graphics::drawLine(x+1, yy, x+w-1, yy, bgColour);
         }
 
         return true;
@@ -1030,12 +1056,12 @@ namespace Graphics
             // Display vCPU registers
             sprintf(str, "PC:%04X LR:%04X Fn:%04X", Cpu::getVPC(), Cpu::getRAM(0x001A) | (Cpu::getRAM(0x001B)<<8), Cpu::getRAM(0x0022) | (Cpu::getRAM(0x0023)<<8));
             drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*2.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
-            sprintf(str, "AC:%04X SP:%02X Sr:%06X", Cpu::getRAM(0x0018) | (Cpu::getRAM(0x0019)<<8), Cpu::getRAM(0x001C), Cpu::getRAM(0x000F) | (Cpu::getRAM(0x0010)<<8) | (Cpu::getRAM(0x0011)<<16));
+            sprintf(str, "AC:%04X SP:%04X Sr:%04X", Cpu::getRAM(0x0018) | (Cpu::getRAM(0x0019)<<8), Assembler::getvSpMin() | (Cpu::getRAM(0x001C)<<8), Cpu::getRAM(0x000F) | (Cpu::getRAM(0x0011)<<8));
             drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*3.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
         }
         else
         {
-            // Display native registers
+            // Display Native registers
             sprintf(str, "PC:%04X  IR:%02X  OUT:%02X", Cpu::getStateS()._PC, Cpu::getStateT()._IR, Cpu::getStateT()._OUT);
             drawText(std::string(str), _pixels, HEX_START_X, int(FONT_CELL_Y*2.0) + FONT_CELL_Y*HEX_CHARS_Y, 0xFF00FFFF, false, 0);
             sprintf(str, "AC:%02X  X:%02X  Y:%02X  D:%02X", Cpu::getStateT()._AC, Cpu::getStateT()._X, Cpu::getStateT()._Y, Cpu::getStateT()._D);

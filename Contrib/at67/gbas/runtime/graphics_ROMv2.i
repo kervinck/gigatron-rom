@@ -101,14 +101,16 @@ waitVB_vblank       LDWI    waitVBlank
 waitVBlank          LD      giga_videoY
                     XORI    179
                     BNE     waitVBlank
+%if TIME_SLICING
                     PUSH
                     CALL    realTimeStubAddr
                     POP
+%endif
                     RET
 %ENDS
 
 %SUB                readPixel
-readPixel           LD      readPixel_xy + 1                ; xy = peek(256+2*y)*256 + x
+readPixel           LD      readPixel_xy + 1                ; pixel = peek(peek(256 + 2*y)*256 + x)
                     LSLW
                     INC     giga_vAC + 1
                     PEEK
@@ -119,7 +121,7 @@ readPixel           LD      readPixel_xy + 1                ; xy = peek(256+2*y)
 %ENDS
 
 %SUB                drawPixel
-drawPixel           LD      drawPixel_xy + 1                ; xy = peek(256+2*y)*256 + x
+drawPixel           LD      drawPixel_xy + 1                ; poke peek(256 + 2*y)*256 + x, fg_colour
                     LSLW
                     INC     giga_vAC + 1
                     PEEK
@@ -151,7 +153,9 @@ drawHL_cont         ADDI    1
                     LDWI    SYS_SetMemory_v2_54
                     STW     giga_sysFn
                     SYS     54                              ; fill memory
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     POP
                     RET
 %ENDS
@@ -193,7 +197,9 @@ drawVL_cont         LD      drawVLine_x1
 drawVL_loop0        LDI     0xFF
                     ST      giga_sysArg2                    ; 8 pixels of fg and bg colour
                     SYS     134                             ; SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      giga_sysArg5
                     ADDI    8
                     ST      giga_sysArg5
@@ -316,9 +322,13 @@ drawL_flip          LDW     drawLine_xy1
                     LDW     drawLine_xy2        
                     SUBW    drawLine_dxy2
                     STW     drawLine_xy2                    ; xy2 -= dxy2
-                    
+
+%if TIME_SLICING
 drawL_count         CALL    realTimeStubAddr
                     LDW     drawLine_count
+%else
+drawL_count         LDW     drawLine_count
+%endif
                     SUBI    0x01
                     STW     drawLine_count
                     BGT     drawLineLoop
@@ -424,7 +434,9 @@ drawLineSlowLoop    LD      fgbgColour + 1
 drawLLS_xy          LDW     drawLine_addr
                     ADDW    drawLine_u
                     STW     drawLine_addr
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LDW     drawLine_num
                     ADDI    1
                     STW     drawLine_num
@@ -562,9 +574,13 @@ drawVTL_flip        LDW     drawLine_xy1
                     LDW     drawLine_xy2        
                     SUBW    drawLine_dxy2
                     STW     drawLine_xy2                    ;xy2 -= dxy2
-                    
+
+%if TIME_SLICING
 drawVTL_count       CALL    realTimeStubAddr
                     LDW     drawLine_count
+%else
+drawVTL_count       LDW     drawLine_count
+%endif
                     SUBI    0x01
                     STW     drawLine_count
                     BGT     drawVTLineLoop

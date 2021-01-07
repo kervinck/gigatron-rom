@@ -14,9 +14,11 @@ namespace Expression
                          HasOperators=0x0010, HasIntConsts=0x0020, HasIntVars=0x0040, HasPragmas=0x0080, HasKeywords=0x0100, HasFunctions=0x0200, HasOptimisedPrint=0x0400};
     enum NumericType {BadBase=-1, Decimal, HexaDecimal, Octal, Binary};
     enum CCType {BooleanCC, NormalCC, FastCC};
+    enum OPType {EqOP, NeOP, LeOP, GeOP, LtOP, GtOP};
     enum Int16Byte {Int16Both, Int16Low, Int16High};
-    enum VarType {Number, String, Constant, TmpVar, IntVar, Arr1Var8, Arr2Var8, Arr3Var8, Arr1Var16, Arr2Var16, Arr3Var16, StrVar, Str2Var, TmpStrVar};
-    enum SysMacro {SysNone, SysInitEqOp, SysInitNeOp, SysInitLeOp, SysInitGeOp, SysInitLtOp, SysInitGtOp, SysInit8Array2d, SysInit8Array3d, SysInit16Array2d, SysInit16Array3d, SysInitRealTimeStub};
+    enum VarType {Number, String, Constant, TmpVar, IntVar16, Arr1Var8, Arr2Var8, Arr3Var8, Arr1Var16, Arr2Var16, Arr3Var16, StrVar, Str2Var, TmpStrVar};
+    enum TokType {Invalid, Literal, Variable, Array};
+
 
     struct Numeric
     {
@@ -45,10 +47,12 @@ namespace Expression
         Int16Byte _int16Byte = Int16Both;
         std::string _name;
         std::string _text;
-        std::vector<Numeric> _parameters;
+        std::vector<Numeric> _params;
+        int _nestedCount = 0;
+        bool _returnAddress = false;
     };
 
-    using exprFuncPtr = std::function<Numeric (void)>;
+    using exprFuncPtr = std::function<Numeric (bool)>;
 
     template <typename T> int sgn(T val)
     {
@@ -56,27 +60,29 @@ namespace Expression
     }
 
 
-    bool getEnableOptimisedPrint(void);
     Numeric& getOutputNumeric(void);
+    bool getEnableOptimisedPrint(void);
 
     void setExprFunc(exprFuncPtr exprFunc);
     void setEnableOptimisedPrint(bool enableOptimisedPrint);
 
+
     void initialise(void);
 
+    bool isNumber(const std::string& input);
     ExpressionType isExpression(const std::string& input);
-    bool isVarNameValid(const std::string& varName);
-    bool isLabNameValid(const std::string& varName);
+    TokType isVarNameValid(const std::string& varName);
+    TokType isStrNameValid(const std::string& strName);
+    bool isLabNameValid(const std::string& labName);
     bool isStringValid(const std::string& input);
-
-    bool hasNonStringWhiteSpace(int chr);
-    bool hasNonStringEquals(int chr);
-    bool hasNonStringColon(int chr);
+    bool hasOnlyWhiteSpace(const std::string& input);
 
     std::string::const_iterator findNonStringEquals(const std::string& input);
     std::string::const_iterator findNonStringColon(const std::string& input);
+    std::string::const_iterator findNonStringBracket(const std::string& input, int bra);
     void stripNonStringWhitespace(std::string& input);
     void stripWhitespace(std::string& input);
+    bool stripChars(std::string& input, const std::string& chars);
     std::string stripStrings(const std::string& input);
     std::string stripStrings(const std::string& input, std::vector<std::string>& strings, bool saveExtraFields=false);
     void trimWhitespace(std::string& input);
@@ -87,10 +93,13 @@ namespace Expression
     void addString(std::string &str, int num, char add=' ');
     int tabbedStringLength(const std::string& input, int tabSize);
     void operatorReduction(std::string& input);
-    bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra);
+    bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra, char obra='(');
+    bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra, char obra, std::string& name, int& paramNum);
 
     std::string byteToHexString(uint8_t n);
     std::string wordToHexString(uint16_t n);
+    std::string strLower(const std::string& s);
+    std::string strUpper(const std::string& s);
     std::string& strToLower(std::string& s);
     std::string& strToUpper(std::string& s);
     std::string getSubAlpha(const std::string& s);
@@ -127,7 +136,7 @@ namespace Expression
     bool findFunc(const std::string& text);
 
     bool number(int16_t& value);
-    Numeric expression(void);
+    Numeric expression(bool returnAddress=false);
     bool parse(const std::string& expression, int lineNumber, Numeric& numeric);
 }
 

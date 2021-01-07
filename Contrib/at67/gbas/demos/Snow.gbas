@@ -17,8 +17,8 @@ init midi
 10 dim X(N)=0 : dim Y(N)=0
 20 I=1 : J=0
 30 set BG_COLOUR,D : cls
-40 set FG_COLOUR,72 : at 32,96
-50 print "Merry Christmas!";
+40 set FG_COLOUR,72 : at 16,96
+50 print "Merry Christmas 2019!";
 60 hline 0, 119, W 'at 0,119 : line W,0
 70 play midi,&h08a0,3
 80 for S=0 to N

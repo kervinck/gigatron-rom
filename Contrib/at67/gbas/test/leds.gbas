@@ -1,0 +1,33 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &h7FFF
+_codeRomType_ ROMv1
+
+leds = 0
+
+
+'ROMv1
+'poke &h2F, &hFF
+'    
+'repeat
+'    poke &h2D, &hFF
+'    gosub flashLeds
+'&forever
+
+
+'ROMv2+
+poke &h2E, &h01
+
+repeat
+    gosub &flashLeds
+&forever
+
+
+flashLeds:
+    leds = (NOT leds) AND &h0F
+    poke &h14, leds
+    
+    'same as wait 30 but more efficient, (no time slicing available though)
+    poke &h0E, 0
+    repeat
+    until peek(&h0E) &&= 30
+ret

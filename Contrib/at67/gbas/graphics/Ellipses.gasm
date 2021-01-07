@@ -1,80 +1,79 @@
-_startAddress_                EQU                               0x0200
+_startAddress_                    EQU                               0x0200
 
 ; Internal Variables
-serialRawPrev                 EQU                               0x0081
-register0                     EQU                               0x0082
-register1                     EQU                               register0 + 0x02
-register2                     EQU                               register0 + 0x04
-register3                     EQU                               register0 + 0x06
-register4                     EQU                               register0 + 0x08
-register5                     EQU                               register0 + 0x0A
-register6                     EQU                               register0 + 0x0C
-register7                     EQU                               register0 + 0x0E
-register8                     EQU                               register0 + 0x10
-register9                     EQU                               register0 + 0x12
-register10                    EQU                               register0 + 0x14
-register11                    EQU                               register0 + 0x16
-register12                    EQU                               register0 + 0x18
-register13                    EQU                               register0 + 0x1A
-register14                    EQU                               register0 + 0x1C
-register15                    EQU                               register0 + 0x1E
-fgbgColour                    EQU                               register0 + 0x20
-cursorXY                      EQU                               register0 + 0x22
-midiStream                    EQU                               register0 + 0x24
-midiDelay                     EQU                               register0 + 0x26
-miscFlags                     EQU                               register0 + 0x28
-timerTick                     EQU                               register0 + 0x2A
-timerPrev                     EQU                               register0 + 0x2C
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
 
 ; Internal Constants
-ENABLE_SCROLL_BIT             EQU                               0x0001
-ON_BOTTOM_ROW_BIT             EQU                               0x0002
-ENABLE_SCROLL_MSK             EQU                               0xfffe
-ON_BOTTOM_ROW_MSK             EQU                               0xfffd
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
 
 ; Internal Buffers
-textWorkArea                  EQU                               0x7fa0
+regsWorkArea                      EQU                               0x0000
+textWorkArea                      EQU                               0x7fa0
 
 ; Includes
-%includePath                  "../runtime"
-%include                      util.i
-%include                      gigatron.i
-%include                      macros.i
+%includePath                      "../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros.i
 
 ; Labels
-_entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x021c
-_ellipse                      EQU                               0x0284
-_else_0x0262                  EQU                               0x024c
-_endif_0x0266                 EQU                               0x0250
-_end_0x02ac                   EQU                               0x0282
-_while_0x031d                 EQU                               0x02df
-_page_0x0300                  EQU                               0x0300
-_else_0x035a                  EQU                               0x031b
-_endif_0x0378                 EQU                               0x0333
-_wend_0x03ad                  EQU                               0x0364
-_end_0x03af                   EQU                               0x0366
+_entryPoint_                      EQU                               0x0200
+_loop                             EQU                               0x0217
+_ellipse                          EQU                               0x027f
+_else_0x025d                      EQU                               0x0247
+_endif_0x0261                     EQU                               0x024b
+_while_0x0318                     EQU                               0x02da
+_page_0x0300                      EQU                               0x0300
+_else_0x0355                      EQU                               0x0317
+_endif_0x0373                     EQU                               0x032f
+_wend_0x03a8                      EQU                               0x0360
 
 ; Global Variables
-_color                        EQU                               0x0030
-_a                            EQU                               0x0032
-_b                            EQU                               0x0034
-_t                            EQU                               0x0036
-_mx                           EQU                               0x0038
-_my                           EQU                               0x003a
-_pixel                        EQU                               0x003c
-_mx1                          EQU                               0x003e
-_my1                          EQU                               0x0040
-_mx2                          EQU                               0x0042
-_my2                          EQU                               0x0044
-_aa                           EQU                               0x0046
-_dx                           EQU                               0x0048
-_bb                           EQU                               0x004a
-_dy                           EQU                               0x004c
-_r                            EQU                               0x004e
-_rx                           EQU                               0x0050
-_ry                           EQU                               0x0052
-_x                            EQU                               0x0054
+_color                            EQU                               0x0030
+_a                                EQU                               0x0032
+_b                                EQU                               0x0034
+_t                                EQU                               0x0036
+_mx                               EQU                               0x0038
+_my                               EQU                               0x003a
+_pixel                            EQU                               0x003c
+_mx1                              EQU                               0x003e
+_my1                              EQU                               0x0040
+_mx2                              EQU                               0x0042
+_my2                              EQU                               0x0044
+_aa                               EQU                               0x0046
+_dx                               EQU                               0x0048
+_bb                               EQU                               0x004a
+_dy                               EQU                               0x004c
+_r                                EQU                               0x004e
+_rx                               EQU                               0x0050
+_ry                               EQU                               0x0052
+_x                                EQU                               0x0054
 
 ; Local Variables
 
@@ -94,6 +93,8 @@ _x                            EQU                               0x0054
 
 ; Define Images
 
+; Define Loader Image Chunks
+
 ; Define Sprites
 
 ; Define Fonts
@@ -101,190 +102,189 @@ _x                            EQU                               0x0054
 ; Lookup Tables
 
 ; Code
-_entryPoint_                  Initialise                        
-                              InitRealTimeStub                                                  ; INIT
+_entryPoint_                      Initialise                                                    ; Main: INIT
 
-                              ClearVertBlinds                                                   ; cls
+                                  ClearVertBlinds                                               ; Main: cls
 
-_loop                         Rand                              
-                              ANDI                              63
-                              STW                               _color                          ; color = rnd(0) AND &h3F
+_loop                             Rand                              
+                                  ANDI                              63
+                                  STW                               _color                      ; Main: color = rnd(0) AND &h3F
 
-                              LDI                               0x27
-                              RandMod                           
-                              ADDI                              1
-                              STW                               _a
-                              LDI                               0x27
-                              RandMod                           
-                              ADDI                              1
-                              STW                               _b                              ; a = rnd(39) + 1 : b = rnd(39) + 1
+                                  LDI                               0x27
+                                  RandMod                           
+                                  ADDI                              1
+                                  STW                               _a
+                                  LDI                               0x27
+                                  RandMod                           
+                                  ADDI                              1
+                                  STW                               _b                          ; Main: a = rnd(39) + 1 : b = rnd(39) + 1
 
-                              LDW                               _a
-                              SUBW                              _b
-                              BLE                               _else_0x0262                    ; if a &&> b
+                                  LDW                               _a
+                                  SUBW                              _b
+                                  BLE                               _else_0x025d                ; Main: if a &&> b
 
-                              LDW                               _a
-                              STW                               _t
-                              BRA                               _endif_0x0266                   ; t = a
+                                  LDW                               _a
+                                  STW                               _t
+                                  BRA                               _endif_0x0261               ; Main: t = a
 
-_else_0x0262                  LDW                               _b
-                              STW                               _t                              ; t = b
+_else_0x025d                      LDW                               _b
+                                  STW                               _t                          ; Main: t = b
 
-_endif_0x0266                 LDW                               _t
-                              LSLW                              
-                              STW                               0xea
-                              LDI                               160
-                              SUBW                              0xea
-                              RandMod                           
-                              ADDW                              _t
-                              STW                               _mx                             ; mx = rnd(160 - (t LSL 1)) + t
+_endif_0x0261                     LDW                               _t
+                                  LSLW                              
+                                  STW                               0xea
+                                  LDI                               160
+                                  SUBW                              0xea
+                                  RandMod                           
+                                  ADDW                              _t
+                                  STW                               _mx                         ; Main: mx = rnd(160 - (t LSL 1)) + t
 
-                              LDW                               _t
-                              LSLW                              
-                              STW                               0xea
-                              LDI                               120
-                              SUBW                              0xea
-                              RandMod                           
-                              ADDW                              _t
-                              STW                               _my                             ; my = rnd(120 - (t LSL 1)) + t
+                                  LDW                               _t
+                                  LSLW                              
+                                  STW                               0xea
+                                  LDI                               120
+                                  SUBW                              0xea
+                                  RandMod                           
+                                  ADDW                              _t
+                                  STW                               _my                         ; Main: my = rnd(120 - (t LSL 1)) + t
 
-                              LDWI                              _ellipse
-                              CALL                              giga_vAC                        ; gosub ellipse
+                                  LDWI                              _ellipse
+                                  CALL                              giga_vAC                    ; Main: gosub ellipse
 
-                              LDWI                              _loop
-                              CALL                              giga_vAC                        ; goto loop
+                                  LDWI                              _loop
+                                  CALL                              giga_vAC                    ; Main: goto loop
 
-_end_0x02ac                   BRA                               _end_0x02ac                     ; end
+                                  HALT                                                          ; Main: end
 
-_ellipse                      PUSH                              
-                              LDW                               _mx
-                              ST                                _pixel
-                              LDW                               _my
-                              ADDI                              8
-                              ST                                _pixel + 1                      ; pixel.lo = mx : pixel.hi = my + 8
+_ellipse                          PUSH                              
+                                  LDW                               _mx
+                                  ST                                _pixel
+                                  LDW                               _my
+                                  ADDI                              8
+                                  ST                                _pixel + 1                  ; Main: pixel.lo = mx : pixel.hi = my + 8
 
-                              LDW                               _pixel
-                              ADDW                              _a
-                              STW                               0xe8
-                              LDW                               _color
-                              POKE                              0xe8                            ; poke pixel + a, color
+                                  LDW                               _pixel
+                                  ADDW                              _a
+                                  STW                               0xe8
+                                  LDW                               _color
+                                  POKE                              0xe8                        ; Main: poke pixel + a, color
 
-                              LDW                               _pixel
-                              SUBW                              _a
-                              STW                               0xe8
-                              LDW                               _color
-                              POKE                              0xe8                            ; poke pixel - a, color
+                                  LDW                               _pixel
+                                  SUBW                              _a
+                                  STW                               0xe8
+                                  LDW                               _color
+                                  POKE                              0xe8                        ; Main: poke pixel - a, color
 
-                              LDW                               _mx
-                              SUBW                              _a
-                              STW                               _mx1
-                              LDW                               _my
-                              STW                               _my1                            ; mx1 = mx - a : my1 = my
+                                  LDW                               _mx
+                                  SUBW                              _a
+                                  STW                               _mx1
+                                  LDW                               _my
+                                  STW                               _my1                        ; Main: mx1 = mx - a : my1 = my
 
-                              LDW                               _mx
-                              ADDW                              _a
-                              STW                               _mx2
-                              LDW                               _my
-                              STW                               _my2                            ; mx2 = mx + a : my2 = my
+                                  LDW                               _mx
+                                  ADDW                              _a
+                                  STW                               _mx2
+                                  LDW                               _my
+                                  STW                               _my2                        ; Main: mx2 = mx + a : my2 = my
 
-                              LDW                               _a
-                              STW                               _aa
-                              LSLW                              
-                              STW                               _dx                             ; aa = a      : dx = aa LSL 1
+                                  LDW                               _a
+                                  STW                               _aa
+                                  LSLW                              
+                                  STW                               _dx                         ; Main: aa = a      : dx = aa LSL 1
 
-                              LDW                               _b
-                              STW                               _bb
-                              LSLW                              
-                              STW                               _dy                             ; bb = b      : dy = bb LSL 1
+                                  LDW                               _b
+                                  STW                               _bb
+                                  LSLW                              
+                                  STW                               _dy                         ; Main: bb = b      : dy = bb LSL 1
 
-                              LDW                               _a
-                              STW                               mathX
-                              LDW                               _bb
-                              STW                               mathY
-                              LDWI                              multiply16bit
-                              CALL                              giga_vAC
-                              STW                               _r
-                              LSLW                              
-                              STW                               _rx                             ; r  = a * bb : rx = r  LSL 1
+                                  LDW                               _a
+                                  STW                               mathX
+                                  LDW                               _bb
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  STW                               _r
+                                  LSLW                              
+                                  STW                               _rx                         ; Main: r  = a * bb : rx = r  LSL 1
 
-                              LDI                               0
-                              STW                               _ry                             ; ry = 0
+                                  LDI                               0
+                                  STW                               _ry                         ; Main: ry = 0
 
-                              LDW                               _a
-                              STW                               _x                              ; x  = a
+                                  LDW                               _a
+                                  STW                               _x                          ; Main: x  = a
 
-_while_0x031d                 LDW                               _x
-                              JumpGT                            _wend_0x03ad 4                  ; while x &> 0
+_while_0x0318                     LDW                               _x
+                                  JumpGT                            _wend_0x03a8 4              ; Main: while x &> 0
 
-                              LDW                               _r
-                              JumpGT                            _else_0x035a 2                  ; if r &> 0
+                                  LDW                               _r
+                                  JumpGT                            _else_0x0355 2              ; Main: if r &> 0
 
-                              STW                               0xc0
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xc0
-                              INC                               _my1
-                              LDW                               _my2
-                              SUBI                              1
-                              STW                               _my2                            ; inc my1 : dec my2
+                                  INC                               _my1
+                                  LDW                               _my2
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0300
+                                  CALL                              giga_vAC
+_page_0x0300                      LDLW                              0xFE
+                                  SUBI                              1
+                                  STW                               _my2                        ; Main: inc my1 : dec my2
 
-                              LDW                               _ry
-                              ADDW                              _dx
-                              STW                               _ry
-                              LDW                               _r
-                              SUBW                              _ry
-                              STW                               _r
-                              LDWI                              _endif_0x0378
-                              CALL                              giga_vAC                        ; ry = ry + dx : r = r - ry
+                                  LDW                               _ry
+                                  ADDW                              _dx
+                                  STW                               _ry
+                                  LDW                               _r
+                                  SUBW                              _ry
+                                  STW                               _r
+                                  LDWI                              _endif_0x0373
+                                  CALL                              giga_vAC                    ; Main: ry = ry + dx : r = r - ry
 
-_else_0x035a                  LDW                               _x
-                              SUBI                              1
-                              STW                               _x
-                              INC                               _mx1
-                              LDW                               _mx2
-                              SUBI                              1
-                              STW                               _mx2                            ; dec x : inc mx1 : dec mx2
+_else_0x0355                      LDW                               _x
+                                  SUBI                              1
+                                  STW                               _x
+                                  INC                               _mx1
+                                  LDW                               _mx2
+                                  SUBI                              1
+                                  STW                               _mx2                        ; Main: dec x : inc mx1 : dec mx2
 
-                              LDW                               _rx
-                              SUBW                              _dy
-                              STW                               _rx
-                              ADDW                              _r
-                              STW                               _r                              ; rx = rx - dy : r = rx + r
+                                  LDW                               _rx
+                                  SUBW                              _dy
+                                  STW                               _rx
+                                  ADDW                              _r
+                                  STW                               _r                          ; Main: rx = rx - dy : r = rx + r
 
-_endif_0x0378                 LDW                               _my1
-                              ADDI                              8
-                              ST                                _pixel + 1                      ; pixel.hi = my1 + 8
+_endif_0x0373                     LDW                               _my1
+                                  ADDI                              8
+                                  ST                                _pixel + 1                  ; Main: pixel.hi = my1 + 8
 
-                              LDW                               _mx1
-                              ST                                _pixel
-                              LDW                               _color
-                              POKE                              _pixel                          ; pixel.lo = mx1 : poke pixel, color
+                                  LDW                               _mx1
+                                  ST                                _pixel
+                                  LDW                               _color
+                                  POKE                              _pixel                      ; Main: pixel.lo = mx1 : poke pixel, color
 
-                              LDW                               _mx2
-                              ST                                _pixel
-                              LDW                               _color
-                              POKE                              _pixel                          ; pixel.lo = mx2 : poke pixel, color
+                                  LDW                               _mx2
+                                  ST                                _pixel
+                                  LDW                               _color
+                                  POKE                              _pixel                      ; Main: pixel.lo = mx2 : poke pixel, color
 
-                              LDW                               _my2
-                              ADDI                              8
-                              ST                                _pixel + 1                      ; pixel.hi = my2 + 8
+                                  LDW                               _my2
+                                  ADDI                              8
+                                  ST                                _pixel + 1                  ; Main: pixel.hi = my2 + 8
 
-                              LDW                               _mx1
-                              ST                                _pixel
-                              LDW                               _color
-                              POKE                              _pixel                          ; pixel.lo = mx1 : poke pixel, color
+                                  LDW                               _mx1
+                                  ST                                _pixel
+                                  LDW                               _color
+                                  POKE                              _pixel                      ; Main: pixel.lo = mx1 : poke pixel, color
 
-                              LDW                               _mx2
-                              ST                                _pixel
-                              LDW                               _color
-                              POKE                              _pixel                          ; pixel.lo = mx2 : poke pixel, color
+                                  LDW                               _mx2
+                                  ST                                _pixel
+                                  LDW                               _color
+                                  POKE                              _pixel                      ; Main: pixel.lo = mx2 : poke pixel, color
 
-                              LDWI                              _while_0x031d
-                              CALL                              giga_vAC                        ; wend
+                                  LDWI                              _while_0x0318
+                                  CALL                              giga_vAC                    ; Main: wend
 
-_wend_0x03ad                  Return                                                            ; return
+_wend_0x03a8                      Return                                                        ; Main: return
 
-_end_0x03af                   BRA                               _end_0x03af                     ; END
+                                  HALT                                                          ; Main: END
 
 
 
@@ -294,57 +294,24 @@ _end_0x03af                   BRA                               _end_0x03af     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7ca8
-multiply16bit                 EQU     0x7ccd
-divide16bit                   EQU     0x7ea8
-rand16bit                     EQU     0x7ea0
-randMod16bit                  EQU     0x7cba
-resetVideoFlags               EQU     0x7da2
-initClearFuncs                EQU     0x7dae
-clearVertBlinds               EQU     0x7dc5
-convertEqOpAddr               EQU     0x00c2
-convertNeOpAddr               EQU     0x00c4
-convertLeOpAddr               EQU     0x00c6
-convertGeOpAddr               EQU     0x00c8
-convertLtOpAddr               EQU     0x00ca
-convertGtOpAddr               EQU     0x00cc
-convert8Arr2dAddr             EQU     0x00ce
-convert8Arr3dAddr             EQU     0x00d0
-convert16Arr2dAddr            EQU     0x00d2
-convert16Arr3dAddr            EQU     0x00d4
-realTimeStubAddr              EQU     0x00d6
-
-
-; do *NOT* use register4 to register7 during time slicing
-realTimeAddr        EQU     register0
-realTimeProc0       EQU     register1
-realTimeProc1       EQU     register2
-realTimeProc2       EQU     register3
-numericLabel        EQU     register0
-defaultLabel        EQU     register1
-lutLabs             EQU     register2
-lutAddrs            EQU     register3
-lutIndex            EQU     register8
-romType             EQU     register0
-romErrAddr          EQU     register1
-romErrPixel         EQU     register2
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-                    ; self modifying code allows for timer, midi and user procs
-realTimeStub        RET                                     ; RET gets replaced by PUSH
-                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
-                    CALL    giga_vAC
-realTimeStub1       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
-                    CALL    giga_vAC
-realTimeStub2       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
-                    CALL    giga_vAC
-                    POP
-                    RET
+multiply16bit                     EQU     0x7bcb
+divide16bit                       EQU     0x7da8
+rand16bit                         EQU     0x7da0
+randMod16bit                      EQU     0x7bb8
+resetVideoFlags                   EQU     0x7ca0
+initClearFuncs                    EQU     0x7cac
+clearVertBlinds                   EQU     0x7cc3
+convertEqOpAddr                   EQU     0x00c0
+convertNeOpAddr                   EQU     0x00c2
+convertLeOpAddr                   EQU     0x00c4
+convertGeOpAddr                   EQU     0x00c6
+convertLtOpAddr                   EQU     0x00c8
+convertGtOpAddr                   EQU     0x00ca
+convert8Arr2dAddr                 EQU     0x00cc
+convert8Arr3dAddr                 EQU     0x00ce
+convert16Arr2dAddr                EQU     0x00d0
+convert16Arr3dAddr                EQU     0x00d2
+realTimeStubAddr                  EQU     0x00d4
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -385,10 +352,14 @@ multiply16_skip     LDW     mathX
                     STW     mathY               ; mathY = mathY >>1
                     BRA     multiply16_loop
 
+%if TIME_SLICING
 multiply16_exit     PUSH
                     CALL    realTimeStubAddr
                     POP
                     LDW     mathSum
+%else
+multiply16_exit     LDW     mathSum
+%endif
                     RET
 
 
@@ -439,9 +410,11 @@ divide16_incr       LDW     mathX
 divide16_incx       LDW     mathMask
                     LSLW
                     BNE     divide16_loop
+%if TIME_SLICING
                     PUSH
                     CALL    realTimeStubAddr
                     POP
+%endif
                     LDW     mathSign
                     BGE     divide16_exit
                     LDI     0
@@ -518,9 +491,13 @@ clearVertBlinds     PUSH
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top
-    
+
+%if TIME_SLICING
 clearVB_loop        CALL    realTimeStubAddr
                     LD      top
+%else
+clearVB_loop        LD      top
+%endif
                     ST      giga_sysArg4 + 1                    ; top line
                     SYS     30
     
