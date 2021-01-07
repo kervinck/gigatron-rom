@@ -186,17 +186,27 @@ namespace Validater
                     {
                         // ROMS that don't have CALLI save and restore vAC
                         std::string codeSTW, codeLDWI, codeCALL, codeLDW;
+#define VAC_SAVE_STACK
+#ifdef VAC_SAVE_STACK
+                        int sizeSTW  = Compiler::createVcpuAsm("STLW", "0xFE", codeLineIndex, codeSTW);
+                        int sizeLDWI = Compiler::createVcpuAsm("LDWI", nextPClabel, codeLineIndex, codeLDWI);
+                        int sizeCALL = Compiler::createVcpuAsm("CALL", "giga_vAC", codeLineIndex, codeCALL);
+                        int sizeLDW  = Compiler::createVcpuAsm("LDLW", "0xFE", codeLineIndex, codeLDW);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 0, "STLW", "0xFE", codeSTW,  uint16_t(currPC), sizeSTW);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", nextPClabel, codeLDWI, uint16_t(currPC + sizeSTW), sizeLDWI);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", "giga_vAC", codeCALL, uint16_t(currPC + sizeSTW + sizeLDWI), sizeCALL);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDLW", "0xFE", codeLDW,  uint16_t(nextPC), sizeLDW);
+#else
+#define VAC_SAVE_START  0x00D6
                         int sizeSTW  = Compiler::createVcpuAsm("STW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, codeSTW);
-                        //int sizeSTW  = Compiler::createVcpuAsm("STLW", "0xFE", codeLineIndex, codeSTW);
                         int sizeLDWI = Compiler::createVcpuAsm("LDWI", nextPClabel, codeLineIndex, codeLDWI);
                         int sizeCALL = Compiler::createVcpuAsm("CALL", "giga_vAC", codeLineIndex, codeCALL);
                         int sizeLDW  = Compiler::createVcpuAsm("LDW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, codeLDW);
-                        //int sizeLDW  = Compiler::createVcpuAsm("LDLW", "0xFE", codeLineIndex, codeLDW);
                         itVasm = insertPageJumpInstruction(itCode, itVasm + 0, "STW",  Expression::byteToHexString(VAC_SAVE_START), codeSTW,  uint16_t(currPC), sizeSTW);
                         itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", nextPClabel, codeLDWI, uint16_t(currPC + sizeSTW), sizeLDWI);
                         itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", "giga_vAC", codeCALL, uint16_t(currPC + sizeSTW + sizeLDWI), sizeCALL);
                         itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDW",  Expression::byteToHexString(VAC_SAVE_START), codeLDW,  uint16_t(nextPC), sizeLDW);
-
+#endif
                         // New page address is offset by size of vAC restore
                         restoreOffset = sizeLDW;
                     }
@@ -339,8 +349,7 @@ namespace Validater
                         uint16_t labAddr = Compiler::getLabels()[labelIndex]._address;
                         if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                         {
-                            fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i + 1);
-                            //_PAUSE_;
+                            fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i);
                             Compiler::setCompilingError(true);
                         }
                     }
@@ -356,8 +365,7 @@ namespace Validater
                             uint16_t labAddr = Compiler::getInternalLabels()[labelIndex]._address;
                             if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                             {
-                                fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i + 1);
-                                //_PAUSE_;
+                                fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i);
                                 Compiler::setCompilingError(true);
                             }
                         }

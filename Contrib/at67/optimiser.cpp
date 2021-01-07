@@ -14,9 +14,10 @@
 
 namespace Optimiser
 {
-    enum OptimiseTypes {StwLdwPair=0, StwLdPair, StwStHigh, ExtraLdw, LdwPair, StwLdiAddw, StwLdwAddw, StwLdwAddwVar, StwLdiAndw, StwLdwAndw, StwLdwAndwVar, StwLdiXorw, StwLdwXorw,
-                        StwLdwXorwVar, StwLdiOrw, StwLdwOrw, StwLdwOrwVar, PokeVar, DokeVar, StwPair, StwPairReg, ExtraStw, PeekArrayB, PeekArray, DeekArray, 
-                        PokeArray, DokeArray, PokeVarArrayB, PokeVarArray, DokeVarArray, PokeTmpArrayB, PokeTmpArray, DokeTmpArray, AddiPair, AddiZero, SubiZero, NumOptimiseTypes};
+    enum OptimiseTypes {StwLdwPair=0, StwLdPair, StwStHigh, ExtraLdw, ExtraLd, LdwPair, StwLdiAddw, StwLdwAddw, StwLdwAddwVar, StwLdiAndw, StwLdwAndw, StwLdwAndwVar, StwLdiXorw, 
+                        StwLdwXorw, StwLdwXorwVar, StwLdiOrw, StwLdwOrw, StwLdwOrwVar, LdwBeqStwTmp, LdwBeqStwVar, LdBeqStTmp, LdBeqStVar, PokeVar, DokeVar, StwPair, StwPairReg,
+                        ExtraStw, PeekArrayB, PeekArray, DeekArray, PokeArray, DokeArray, PokeVarArrayB, PokeVarArray, DokeVarArray, PokeTmpArrayB, PokeTmpArray, DokeTmpArray, 
+                        StwPokeArray, StwDokeArray, LdSubLoHi, LdiSubLoHi, LdwSubLoHi, AddiPair, AddiZero, SubiZero, NumOptimiseTypes};
 
     struct MatchSequence
     {
@@ -42,6 +43,10 @@ namespace Optimiser
         // ExtraLdw
         {0, 1, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
                 "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_"  }},
+
+        // ExtraLd
+        {0, 1, {"ST" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "_",
+                "LD" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "_"  }},
 
         // LdwPair
         {0, 1, {"LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
@@ -106,6 +111,26 @@ namespace Optimiser
         {0, 2, {"STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", 
                 "LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_",
                 "ORW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x"}},
+
+        // LdwBeqStwTmp
+        {0, 2, {"LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x", 
+                "BEQ" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "",
+                "STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x"}},
+
+        // LdwBeqStwVar
+        {0, 2, {"LDW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_", 
+                "BEQ" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "",
+                "STW" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "_"}},
+
+        // LdBeqStTmp
+        {0, 2, {"LD"  + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "0x", 
+                "BEQ" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "",
+                "ST"  + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "0x"}},
+
+        // LdBeqStVar
+        {0, 2, {"LD"  + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "_", 
+                "BEQ" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "",
+                "ST"  + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "_"}},
 
         // PokeVar
         {0, 2, {"LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "", 
@@ -226,6 +251,38 @@ namespace Optimiser
                 "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "mem",
                 "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem"}},
+
+        // StwPokeArray
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "POKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem"}},
+
+        // StwDokeArray
+        {0, 0, {"STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "0x",
+                "DOKE" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "mem"}},
+
+        // LdSubLoHi
+        {0, 0, {"LD"   + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LD"   + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "_",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "SUBW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+
+        // LdiSubLoHi
+        {0, 0, {"LDI"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LD"   + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "_",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "SUBW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
+
+        // LdwSubLoHi
+        {0, 0, {"LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LD"   + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + "_",
+                "STW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "LDW"  + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + "reg",
+                "SUBW" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "reg"}},
 
         // AddiPair
         {0, 0, {"ADDI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "",
@@ -405,8 +462,9 @@ RESTART_OPTIMISE:
                                 }
                                 break;
 
-                                // Match STW LDW, delete LDW
+                                // Match STW/ST LDW/LD, delete LDW/LD
                                 case ExtraLdw:
+                                case ExtraLd:
                                 {
                                     // If the LDW has an internal label, then it probably can't be optimised away
                                     if(!Compiler::getCodeLines()[i]._vasm[firstLine + 1]._internalLabel.size())
@@ -677,6 +735,23 @@ RESTART_OPTIMISE:
                                 }
                                 break;
 
+                                // Match LDW/LD BEQ STW/ST, delete STW/ST
+                                case LdwBeqStwTmp:
+                                case LdwBeqStwVar:
+                                case LdBeqStTmp:
+                                case LdBeqStVar:
+                                {
+                                    // STW/ST can have an internal label
+                                    if(!migrateInternalLabel(i, firstLine + 2, firstLine + 3)) break;
+
+                                    // Delete STW/ST
+                                    linesDeleted = true;
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine + 2);
+                                    adjustLabelAddresses(i, firstLine + 2, -2);
+                                    adjustVasmAddresses(i, firstLine + 2, -2);
+                                }
+                                break;
+
                                 // Match LDW POKE/DOKE LDW, delete second LDW if it matches with first LDW
                                 case PokeVar:
                                 case DokeVar:
@@ -873,7 +948,7 @@ RESTART_OPTIMISE:
                                     linesDeleted = true;
                                     itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine - 1);
                                     itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
-                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm + 6); //points to last LDW
+                                    itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm + 6); //points to last LDW, after LD<X> and STW were deleted
 
                                     // Replace LDW with saved LD<X> and operand
                                     itVasm = Compiler::getCodeLines()[i]._vasm.insert(itVasm, savedLD);
@@ -897,6 +972,46 @@ RESTART_OPTIMISE:
                                 // Replace operand of both ADDW's
                                 updateVasm(itVasm, 1, "ADDW", savedLDW._operand);
                                 updateVasm(itVasm, 2, "ADDW", savedLDW._operand);
+                                adjustLabelAddresses(i, firstLine, -4);
+                                adjustVasmAddresses(i, firstLine, -4);
+                            }
+                            break;
+
+                            case StwPokeArray:
+                            case StwDokeArray:
+                            {
+                                // Migrate internal label to next available instruction
+                                if(!migrateInternalLabel(i, firstLine, firstLine + 1)) break;
+
+                                // Delete first STW
+                                linesDeleted = true;
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                adjustLabelAddresses(i, firstLine, -2);
+                                adjustVasmAddresses(i, firstLine, -2);
+                            }
+                            break;
+
+                            // Match LD/LDW STW LD STW LDW SUBW
+                            case LdSubLoHi:
+                            case LdiSubLoHi:
+                            case LdwSubLoHi:
+                            {
+                                // Save LD<X>
+                                Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine];
+
+                                // Migrate LD<X>'s label to LD
+                                if(!migrateInternalLabel(i, firstLine, firstLine + 2)) break;
+                                savedLD._internalLabel = "";
+                                savedLD._address += 8; // LD<X> is moved 8 bytes
+
+                                // Delete LD<X>, first STW and last LDW
+                                linesDeleted = true;
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(Compiler::getCodeLines()[i]._vasm.begin() + firstLine);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm);
+                                itVasm = Compiler::getCodeLines()[i]._vasm.erase(itVasm + 2); //points to last LDW, after LD<X> and STW were deleted
+
+                                // Replace LDW with saved LD<X> and operand
+                                itVasm = Compiler::getCodeLines()[i]._vasm.insert(itVasm, savedLD);
                                 adjustLabelAddresses(i, firstLine, -4);
                                 adjustVasmAddresses(i, firstLine, -4);
                             }

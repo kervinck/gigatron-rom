@@ -1,5 +1,5 @@
 /*******************************************************************************/
-/* gtemuAT67 Ver 1.0.0B, (Beta)                                                */
+/* gtemuAT67 Ver 1.0.5R, (Rlease)                                              */
 /*                                                                             */ 
 /* gtemuAT67 is an emulator, controller, assembler, (vCPU and Native code),    */
 /* disassembler, debugger and  BASIC compiler for the Gigatron TTL             */
@@ -134,29 +134,11 @@ int main(int argc, char* argv[])
     {
         switch(Editor::getEditorMode())
         {
-            case Editor::Term:
-            {
-                Terminal::process();
-            }
-            break;
+            case Editor::Term:  Terminal::process(); break;
+            case Editor::Image: Image::process();    break;
+            case Editor::Audio: Audio::process();    break;
 
-            case Editor::Image:
-            {
-                Image::process();
-            }
-            break;
-
-            case Editor::Audio:
-            {
-                Audio::process();
-            }
-            break;
-
-            default:
-            {
-                Cpu::process();
-            }
-            break;
+            default: Cpu::process(); break;
         }
     }
 

@@ -44,17 +44,17 @@ set FG_COLOUR, &h0F
 cls
 set VIDEO_TOP, 0  'enable video
 
-input "Enter Time ", H,"H:";2;, M,"M:";2;, S,"S:";2;
+scroll off
+at 2, 119 : print "Press Enter to reset clock";
+at 2, 0   : input "Enter Time ", H,"H:";2;, M,"M:";2;, S,"S:";2;
 B=get("FRAME_COUNT")
-at 2,0 : print "                          ";
+scroll off
+at 2,0   : print "                          ";
+at 2,119 : print "                          ";
 
-if H &&= 0
-    H=12
-else
-    H=H%13
-endif
-M=M%60
-S=S%60
+H = H % 13 : if H &&= 0 then H = 12
+M = M % 60
+S = S % 60
 
 HH=H : MM=M : SS=S
 
@@ -82,17 +82,17 @@ if get("SERIAL_RAW") <> 255
 endif
 goto &30 'use T=T+2500 for debugging
 
-drawDigits:
-    set FGBG_COLOUR, &h0C00
-    at 57,82 : print H/10;H%10;":";M/10;M%10;":";S/10;S%10;
-    set BG_COLOUR, DIAL_COLOUR
-return
-
 drawClock:
     gosub drawDigits
     gosub drawSeconds
     gosub drawMinutes
     gosub drawHours
+return
+
+drawDigits:
+    set FGBG_COLOUR, &h0C00
+    at 57,82 : print H/10;H%10;":";M/10;M%10;":";S/10;S%10;
+    set BG_COLOUR, DIAL_COLOUR
 return
 
 drawSeconds:
@@ -102,10 +102,10 @@ drawSeconds:
 return
 
 drawMinutes:
-    if M &&<> MM 
+    if M &<> MM 
         gosub eraseMinuteHand
         MM=M : Md12=M/12
-        if Md12 &&<> MMd12
+        if Md12 &<> MMd12
             gosub eraseHourHand
             MMd12=Md12
         endif

@@ -1,12 +1,15 @@
 _runtimePath_ "../runtime"
 _codeRomType_ ROMv3
 
-cls
-    set BG_COLOUR, 0
-for i=1 to 158
-    cls &h0801, i, 4
-next i 
-end
+'cls
+'b = 1
+'if &(b XOR 1) then a = 2
+'end
+
+'b = 2
+'a = 3
+'if &(a <> b AND b = 2) then c = 1
+'end
 
 init:   a = 1
         

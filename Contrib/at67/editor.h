@@ -166,6 +166,9 @@ namespace Editor
 
     void startDebugger(void);
     void resetDebugger(void);
+    void runToBreakpoint(void);
+    void singleStepWatch(void);
+    void singleStepPc(void);
 }
 
 #endif

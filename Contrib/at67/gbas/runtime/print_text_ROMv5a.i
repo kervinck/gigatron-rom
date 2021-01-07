@@ -2,10 +2,10 @@
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
-textLen             EQU     register1
-textOfs             EQU     register2
-textChr             EQU     register3
-textHex             EQU     register8
+textHex             EQU     register1
+textLen             EQU     register2
+textOfs             EQU     register3
+textChr             EQU     register8
 textFont            EQU     register9
 textSlice           EQU     register10
 scanLine            EQU     register11
@@ -78,7 +78,6 @@ printT_exit         POP
 %SUB                printLeft
                     ; prints left sub string pointed to by the accumulator
 printLeft           PUSH
-                    STW     textStr
                     CALLI   printInit
                     LD      textLen
                     BEQ     printL_exit
@@ -100,7 +99,6 @@ printL_exit         POP
 %SUB                printRight
                     ; prints right sub string pointed to by the accumulator
 printRight          PUSH
-                    STW     textStr
                     CALLI   printInit
                     LDW     textStr
                     PEEK                                    ; text length
@@ -127,7 +125,6 @@ printR_exit         POP
 %SUB                printMid
                     ; prints sub string pointed to by the accumulator
 printMid            PUSH
-                    STW     textStr
                     CALLI   printInit
                     LDW     textStr
                     ADDW    textOfs
@@ -148,6 +145,58 @@ printM_char         ST      textLen
 printM_exit         POP
                     RET
 %ENDS   
+
+%SUB                printLower
+                    ; prints lower case version of textStr
+printLower          PUSH
+                    CALLI   printInit
+    
+printLo_next        INC     textStr                         ; next char, (skips length byte)
+                    LDW     textStr
+                    PEEK
+                    BEQ     printLo_exit
+                    ST      textChr
+                    SUBI    65
+                    BLT     printLo_char
+                    LD      textChr
+                    SUBI    90
+                    BGT     printLo_char
+                    LD      textChr                         ; >= 65 'A' and <= 90 'Z'
+                    ADDI    32
+                    ST      textChr
+                    
+printLo_char        CALLI   printChar
+                    BRA     printLo_next
+                    
+printLo_exit        POP
+                    RET
+%ENDS
+
+%SUB                printUpper
+                    ; prints upper case version of textStr
+printUpper          PUSH
+                    CALLI   printInit
+    
+printUp_next        INC     textStr                         ; next char, (skips length byte)
+                    LDW     textStr
+                    PEEK
+                    BEQ     printUp_exit
+                    ST      textChr
+                    SUBI    97
+                    BLT     printUp_char
+                    LD      textChr
+                    SUBI    122
+                    BGT     printUp_char
+                    LD      textChr                         ; >= 97 'a' and <= 122 'z'
+                    SUBI    32
+                    ST      textChr
+                    
+printUp_char        CALLI   printChar
+                    BRA     printUp_next
+                    
+printUp_exit        POP
+                    RET
+%ENDS
 
 %SUB                printDigit
                     ; prints single digit in textNum
@@ -203,44 +252,17 @@ printI16_pos        LDWI    10000
                     RET
 %ENDS
 
-%SUB                printHexByte
-                    ; print hex byte in textHex
-printHexByte        PUSH
-                    ST      textHex
-                    LDWI    SYS_LSRW4_50                    ; shift right by 4 SYS routine
-                    STW     giga_sysFn
-                    LD      textHex
-                    SYS     50
-                    SUBI    10
-                    BLT     printH_skip0
-                    ADDI    7
-printH_skip0        ADDI    0x3A
-                    ST      textChr
-                    CALLI   printInit
-                    CALLI   printChar
-                    LD      textHex
-                    ANDI    0x0F
-                    SUBI    10
-                    BLT     printH_skip1
-                    ADDI    7
-printH_skip1        ADDI    0x3A
-                    ST      textChr
-                    CALLI   printChar
+%SUB                printHex
+                    ; print textLen hex digits in textHex, (textStr, textHex, textLen = strAddr, strHex, strLen in string::stringHex)
+printHex            PUSH
+                    LDWI    textWorkArea
+                    STW     strAddr
+                    CALLI   stringHex
+                    LDW     strAddr
+                    CALLI   printText
                     POP
                     RET
-%ENDS                    
-        
-%SUB                printHexWord     
-                    ; print hex word in textHex
-printHexWord        PUSH
-                    STW     textBak
-                    LD      textBak + 1
-                    CALLI   printHexByte
-                    LD      textBak
-                    CALLI   printHexByte
-                    POP
-                    RET
-%ENDS   
+%ENDS
 
 %SUB                printChr
                     ; prints char in textChr for standalone calls

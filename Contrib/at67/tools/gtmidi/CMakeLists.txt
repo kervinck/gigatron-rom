@@ -8,7 +8,7 @@ if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
-set(headers ../../cpu.h ../../memory.h ../../expression.h)
+set(headers ../../cpu.h ../../memory.h ../../expression.h ../../midi.h ../../gtmidi.h)
 set(sources ../../expression.cpp gtmidi.cpp)
 
 add_executable(gtmidi ${headers} ${sources})

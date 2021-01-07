@@ -3,17 +3,9 @@ _runtimeStart_ &h06FF
 _arraysStart_ &h06FF
 _codeRomType_ ROMv1
 
-load image, ../../res/image/Parallax.tga, &h0800
+free STRINGWORKAREA
 
-' hack to get around 'Loader.gcl' being resident in video memory
-' to solve this issue you need to cut your image into horizontal strips
-' and paste the &h5900 to &h5B00 strip AFTER loading has finished to
-' avoid corrupting 'Loader.gcl', here we just draw some blue lines
-' *NOTE* the compiler will NOT write to &h5900, &h5A00 or &h5B00 scanlines
-set FG_COLOUR, &h30
-hline 0, &h51, 255
-hline 0, &h52, 255
-hline 0, &h53, 255
+load image, ../../res/image/Parallax.tga, &h0800
 
 x0 = 0 : x1 = x0 : x2 = x1 : x3 = x2 : x4 = x3 : x5 = x4
 

@@ -136,7 +136,7 @@ namespace Image
         // Quick sanity check on total size, (maximum RAM is 64K)
         if(totalSize >= 0x10000)
         {
-            fprintf(stderr, "Image::loadGtRgbFile() : image is bigger than 64K bytes : width=%d : height=%d : format=%04x : in '%s'\n", header._width, header._height, header._format, filename.c_str());
+            fprintf(stderr, "Image::loadGtRgbFile() : image is larger than 64K bytes : width=%d : height=%d : format=%04x : in '%s'\n", header._width, header._height, header._format, filename.c_str());
             return false;
         }
 
@@ -200,7 +200,7 @@ namespace Image
         // Quick sanity check on total size, (maximum RAM is 64K)
         if(totalSize >= 0x10000)
         {
-            fprintf(stderr, "Image::saveGtRgbFile() : image is bigger than 64K bytes : width=%d : height=%d : format=%04x : in '%s'\n", gtRgbFile._header._width, gtRgbFile._header._height, gtRgbFile._header._format, filename.c_str());
+            fprintf(stderr, "Image::saveGtRgbFile() : image is larger than 64K bytes : width=%d : height=%d : format=%04x : in '%s'\n", gtRgbFile._header._width, gtRgbFile._header._height, gtRgbFile._header._format, filename.c_str());
             return false;
         }
 
@@ -361,7 +361,7 @@ namespace Image
         // Quick sanity check on total size, (maximum RAM is 64K)
         if(totalSize >= 0x10000 * (header._bitsPerPixel / 8))
         {
-            fprintf(stderr, "Image::loadTgaFile() : image is bigger than %d bytes : width=%d : height=%d : in '%s'\n", 0x10000 * (header._bitsPerPixel / 8), header._width, header._height, filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : image is larger than %d bytes : width=%d : height=%d : in '%s'\n", 0x10000 * (header._bitsPerPixel / 8), header._width, header._height, filename.c_str());
             return false;
         }
 
@@ -413,7 +413,6 @@ namespace Image
         int startX = 0, endX = width, stepX = 1;
         int startY = 0, endY = height, stepY = 1;
 
-        imageOrigin = 2;
         switch(imageOrigin)
         {
             case 0: startX = 0, endX = width, stepX = 1;     startY = height-1, endY = -1, stepY = -1; break;
@@ -490,7 +489,6 @@ namespace Image
         int startX = 0, endX = width, stepX = 1;
         int startY = 0, endY = height, stepY = 1;
 
-        imageOrigin = 2;
         switch(imageOrigin)
         {
             case 0: startX = 0, endX = width, stepX = 1;     startY = height-1, endY = -1, stepY = -1; break;

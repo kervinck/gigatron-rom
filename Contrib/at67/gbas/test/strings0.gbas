@@ -13,7 +13,7 @@ b$="hello test world"
 
 num0$ = "-1234"
 num1$ = "1234"
-print val("-4532");" ";val(a$);" ";val(num0$);" &h";hexw$(val("0x1234"));" &h";hexw$(val("&hFFFF"));" &h";hexw$(val("&b0000000011110000"));" &h";hexw$(val("&o777"));" ";val(num1$)
+print val("-4532");" ";val(a$);" ";val(num0$);" &h";hex$(val("0x1234"), 4);" &h";hex$(val("&hFFFF"), 4);" &h";hex$(val("&b0000000011110000"), 4);" &h";hex$(val("&o777"), 4);" ";val(num1$)
 
 c$=left$(b$, 5)
 d$ = right$ (b$,5)
@@ -39,8 +39,8 @@ i = len(a)
 zzz = -4
 print a;" ";b;" ";c;" ";d;" ";e;" "
 print abs(-3);" ";abs(zzz);" ";strcmp("world", d$);" ";asc("dog");" ";f;" ";g
-print hex$(h);" ";i;" ";hex$(@a);" ";len(a)
-print hexw$(dog(0));" ";dog(1);" ";dog(2);" ";dog(3)
+print hex$(h, 2);" ";i;" ";hex$(@a, 2);" ";len(a)
+print hex$(dog(0), 4);" ";dog(1);" ";dog(2);" ";dog(3)
 print deek(&h08A0);" ";deek(&h08A2)
 print a$
 print b$

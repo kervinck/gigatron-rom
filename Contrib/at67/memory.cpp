@@ -43,13 +43,13 @@ namespace Memory
         // 0x0500 <-> 0x0600
         _freeRam.push_back({RAM_PAGE_START_3, RAM_PAGE_SIZE_3*2});
 
-        // 0x08A0 <-> 0c7FA0
+        // 0x08A0 <-> 0x7FA0
         for(uint16_t i=RAM_SEGMENTS_START; i<=RAM_SEGMENTS_END; i+=RAM_SEGMENTS_OFS) _freeRam.push_back({i, RAM_SEGMENTS_SIZE});
 
         // 0x8000 <-> 0xFF00
         if(_sizeRAM == RAM_SIZE_HI) _freeRam.push_back({RAM_EXPANSION_START, RAM_EXPANSION_SIZE});
 
-        // VRAM 0x0800 <-> 0c7F00
+        // VRAM 0x0800 <-> 0x7F00, 160x120 pixels, offscreen areas start at 0xXXA0 and end at 0xXXFF, (can be used for horizontal scrolling or code/data storage)
         for(uint16_t i=RAM_VIDEO_START; i<=RAM_VIDEO_END; i+=RAM_VIDEO_OFS) _videoRam.push_back({i, RAM_SCANLINE_SIZE});
 
         _baseFreeRAM = _sizeRAM - RAM_USED_DEFAULT;
@@ -157,13 +157,8 @@ namespace Memory
     {
         for(int i=0; i<int(_videoRam.size()); i++)
         {
-            // Video RAM segment
-            if(address == _videoRam[i]._address)
-            {
-                return true;
-            }
-            // Video RAM within segment
-            else if(address > _videoRam[i]._address  &&  (address <= _videoRam[i]._address + _videoRam[i]._size))
+            // Address within Video RAM segment
+            if(address >= _videoRam[i]._address  &&  (address < _videoRam[i]._address + _videoRam[i]._size))
             {
                 return true;
             }

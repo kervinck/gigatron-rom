@@ -139,21 +139,24 @@ namespace Pragmas
         Compiler::setRuntimeStart(address);
 
         // Re-initialise memory manager for 64K
-        if(address >= RAM_EXPANSION_START)
+        if(address >= RAM_EXPANSION_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
         {
             Memory::setSizeRAM(RAM_SIZE_HI);
             Memory::initialise();
         }
 
-        // String work area needs to be updated, (return old work area and get a new one)
-        uint16_t strWorkArea;
-        Memory::giveFreeRAM(Compiler::getStrWorkArea(), USER_STR_SIZE + 2);
-        if(!Memory::getFreeRAM(Memory::FitDescending, USER_STR_SIZE + 2, USER_CODE_START, address, strWorkArea))
+        // String work area needs to be updated, (return old work areas and get new ones)
+        for(int i=0; i<NUM_STR_WORK_AREAS; i++)
         {
-            fprintf(stderr, "Pragmas::RUNTIMESTART() : Setting new String Work Area failed, in '%s' on line %d\n", input.c_str(), codeLineIndex);
-            return false;
+            uint16_t strWorkArea;
+            Memory::giveFreeRAM(Compiler::getStrWorkArea(i), USER_STR_SIZE + 2);
+            if(!Memory::getFreeRAM(Memory::FitDescending, USER_STR_SIZE + 2, USER_CODE_START, address, strWorkArea))
+            {
+                fprintf(stderr, "Pragmas::RUNTIMESTART() : Setting new String Work Area failed, in '%s' on line %d\n", input.c_str(), codeLineIndex);
+                return false;
+            }
+            Compiler::setStrWorkArea(strWorkArea, i);
         }
-        Compiler::setStrWorkArea(strWorkArea);
 
         return true;
     }
@@ -184,7 +187,7 @@ namespace Pragmas
         Compiler::setArraysStart(address);
 
         // Re-initialise memory manager for 64K
-        if(address >= RAM_EXPANSION_START)
+        if(address >= RAM_EXPANSION_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
         {
             Memory::setSizeRAM(RAM_SIZE_HI);
             Memory::initialise();
@@ -219,7 +222,7 @@ namespace Pragmas
         Compiler::setStringsStart(address);
 
         // Re-initialise memory manager for 64K
-        if(address >= RAM_EXPANSION_START)
+        if(address >= RAM_EXPANSION_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
         {
             Memory::setSizeRAM(RAM_SIZE_HI);
             Memory::initialise();
@@ -250,14 +253,21 @@ namespace Pragmas
             return false;
         }
 
-        // String work area needs to be updated, (return old work area and get a new one)
-        Memory::giveFreeRAM(Compiler::getStrWorkArea(), USER_STR_SIZE + 2);
+        // String work area needs to be updated, (return old work areas and get new ones)
+        Memory::giveFreeRAM(Compiler::getStrWorkArea(0), USER_STR_SIZE + 2);
         if(!Memory::takeFreeRAM(strWorkArea, USER_STR_SIZE + 2))
         {
             fprintf(stderr, "Pragmas::STRINGWORKAREA() : Setting new String Work Area failed, in '%s' on line %d\n", input.c_str(), codeLineIndex);
             return false;
         }
-        Compiler::setStrWorkArea(strWorkArea);
+        Compiler::setStrWorkArea(strWorkArea, 0);
+        Memory::giveFreeRAM(Compiler::getStrWorkArea(1), USER_STR_SIZE + 2);
+        if(!Memory::getFreeRAM(Memory::FitDescending, USER_STR_SIZE + 2, USER_CODE_START, strWorkArea, strWorkArea))
+        {
+            fprintf(stderr, "Pragmas::STRINGWORKAREA() : Setting new String Work Area failed, in '%s' on line %d\n", input.c_str(), codeLineIndex);
+            return false;
+        }
+        Compiler::setStrWorkArea(strWorkArea, 1);
 
         return true;
     }

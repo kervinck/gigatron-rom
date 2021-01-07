@@ -1,57 +1,56 @@
-_startAddress_                EQU                               0x0200
+_startAddress_                    EQU                               0x0200
 
 ; Internal Variables
-serialRawPrev                 EQU                               0x0081
-register0                     EQU                               0x0082
-register1                     EQU                               register0 + 0x02
-register2                     EQU                               register0 + 0x04
-register3                     EQU                               register0 + 0x06
-register4                     EQU                               register0 + 0x08
-register5                     EQU                               register0 + 0x0A
-register6                     EQU                               register0 + 0x0C
-register7                     EQU                               register0 + 0x0E
-register8                     EQU                               register0 + 0x10
-register9                     EQU                               register0 + 0x12
-register10                    EQU                               register0 + 0x14
-register11                    EQU                               register0 + 0x16
-register12                    EQU                               register0 + 0x18
-register13                    EQU                               register0 + 0x1A
-register14                    EQU                               register0 + 0x1C
-register15                    EQU                               register0 + 0x1E
-fgbgColour                    EQU                               register0 + 0x20
-cursorXY                      EQU                               register0 + 0x22
-midiStream                    EQU                               register0 + 0x24
-midiDelay                     EQU                               register0 + 0x26
-miscFlags                     EQU                               register0 + 0x28
-timerTick                     EQU                               register0 + 0x2A
-timerPrev                     EQU                               register0 + 0x2C
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
 
 ; Internal Constants
-ENABLE_SCROLL_BIT             EQU                               0x0001
-ON_BOTTOM_ROW_BIT             EQU                               0x0002
-ENABLE_SCROLL_MSK             EQU                               0xfffe
-ON_BOTTOM_ROW_MSK             EQU                               0xfffd
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
 
 ; Internal Buffers
-textWorkArea                  EQU                               0x7fa0
+regsWorkArea                      EQU                               0x0000
+textWorkArea                      EQU                               0x7fa0
 
 ; Includes
-%includePath                  "../runtime"
-%include                      util.i
-%include                      gigatron.i
-%include                      macros.i
+%includePath                      "../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros.i
 
 ; Labels
-_entryPoint_                  EQU                               0x0200
-_getRomNote                   EQU                               0x0273
-_next_0x023b                  EQU                               0x0231
-_end_0x027b                   EQU                               0x0271
-_end_0x0293                   EQU                               0x0289
+_entryPoint_                      EQU                               0x0200
+_getRomNote                       EQU                               0x026e
+_next_0x0236                      EQU                               0x022c
 
 ; Global Variables
-_note                         EQU                               0x0030
-_notes                        EQU                               0x0032
-_index                        EQU                               0x0034
+_note                             EQU                               0x0030
+_notes                            EQU                               0x0032
+_index                            EQU                               0x0034
 
 ; Local Variables
 
@@ -60,8 +59,8 @@ _index                        EQU                               0x0034
 ; Strings
 
 ; Constant Strings
-_str_0x7efd                   EQU                               0x7efd
-_str_0x7efd                   DB                                1 ' ' 0
+_str_0x7dfd                       EQU                               0x7dfd
+_str_0x7dfd                       DB                                1 ' ' 0
 
 ; Data
 
@@ -73,6 +72,8 @@ _str_0x7efd                   DB                                1 ' ' 0
 
 ; Define Images
 
+; Define Loader Image Chunks
+
 ; Define Sprites
 
 ; Define Fonts
@@ -80,62 +81,61 @@ _str_0x7efd                   DB                                1 ' ' 0
 ; Lookup Tables
 
 ; Code
-_entryPoint_                  Initialise                        
-                              InitRealTimeStub                                                  ; INIT
+_entryPoint_                      Initialise                                                    ; Main: INIT
 
-                              LD                                0x21
-                              ORI                               3
-                              ST                                33                              ; poke &h21, peek(&h21) OR 3
+                                  LD                                0x21
+                                  ORI                               3
+                                  ST                                33                          ; Main: poke &h21, peek(&h21) OR 3
 
-                              SoundAllOff                                                       ; sound off
+                                  SoundAllOff                                                   ; Main: sound off
 
-                              ClearVertBlinds                                                   ; cls
+                                  ClearVertBlinds                                               ; Main: cls
 
-                              LDI                               0
-                              STW                               _note
-                              STW                               _notes                          ; note = 0 : notes = note
+                                  LDI                               0
+                                  STW                               _note
+                                  STW                               _notes                      ; Main: note = 0 : notes = note
 
-                              LDI                               0
-                              STW                               _index                          ; for index=0 &to 95
+                                  LDI                               0
+                                  STW                               _index                      ; Main: for index=0 &to 95
 
-_next_0x023b                  LDI                               10
-                              ST                                giga_soundTimer                 ; set SOUND_TIMER, 10
+_next_0x0236                      LDI                               10
+                                  ST                                giga_soundTimer             ; Main: set SOUND_TIMER, 10
 
-                              LDWI                              _getRomNote
-                              CALL                              giga_vAC                        ; gosub getRomNote
+                                  LDWI                              _getRomNote
+                                  CALL                              giga_vAC                    ; Main: gosub getRomNote
 
-                              LDI                               1
-                              ST                                sndChannel + 1
-                              LDW                               _note
-                              STW                               sndFrequency
-                              SoundOn                                                           ; sound on, 1, note
+                                  LDI                               1
+                                  ST                                sndChannel + 1
+                                  LDW                               _note
+                                  STW                               sndFrequency
+                                  SoundOn                                                       ; Main: sound on, 1, note
 
-                              LDW                               _index
-                              PrintAcInt16                      
-                              PrintString                       _str_0x7efd
-                              LDW                               _note
-                              PrintAcInt16                      
-                              NewLine                                                           ; print index;" ";note
+                                  LDW                               _index
+                                  PrintAcInt16                      
+                                  PrintString                       _str_0x7dfd
+                                  LDW                               _note
+                                  PrintAcInt16                      
+                                  NewLine                                                       ; Main: print index;" ";note
 
-                              ForNextInc                        _index _next_0x023b 95          ; next index
+                                  ForNextInc                        _index _next_0x0236 95      ; Main: next index
 
-_end_0x027b                   BRA                               _end_0x027b                     ; end
+                                  HALT                                                          ; Main: end
 
-_getRomNote                   PUSH                                                              ; asm
+_getRomNote                       PUSH                                                          ; Main: asm
 
-                              LDWI                              0x0900                          ; LDWI    0x0900
-                              ADDW                              _index                          ; ADDW    _index
-                              ADDW                              _index                          ; ADDW    _index
-                              STW                               _notes                          ; STW     _notes
-                              LUP                               0                               ; LUP     0
-                              ST                                _note                           ; ST      _note
-                              LDW                               _notes                          ; LDW     _notes
-                              LUP                               1                               ; LUP     1
-                              ST                                _note+1                         ; ST      _note + 1
+                                  LDWI                              0x0900                      ; Main: LDWI    0x0900
+                                  ADDW                              _index                      ; Main: ADDW    _index
+                                  ADDW                              _index                      ; Main: ADDW    _index
+                                  STW                               _notes                      ; Main: STW     _notes
+                                  LUP                               0                           ; Main: LUP     0
+                                  ST                                _note                       ; Main: ST      _note
+                                  LDW                               _notes                      ; Main: LDW     _notes
+                                  LUP                               1                           ; Main: LUP     1
+                                  ST                                _note+1                     ; Main: ST      _note + 1
 
-                              Return                                                            ; return
+                                  Return                                                        ; Main: return
 
-_end_0x0293                   BRA                               _end_0x0293                     ; END
+                                  HALT                                                          ; Main: END
 
 
 
@@ -145,62 +145,29 @@ _end_0x0293                   BRA                               _end_0x0293     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x78ed
-resetVideoFlags               EQU     0x7ca2
-initClearFuncs                EQU     0x79cf
-clearVertBlinds               EQU     0x7ac5
-clearCursorRow                EQU     0x7bb6
-soundAllOff                   EQU     0x7ba0
-soundOn                       EQU     0x79a5
-printInit                     EQU     0x79b9
-printText                     EQU     0x79e6
-printDigit                    EQU     0x7aa3
-printInt16                    EQU     0x7cae
-printChar                     EQU     0x7da7
-newLineScroll                 EQU     0x7ea2
-convertEqOpAddr               EQU     0x00c2
-convertNeOpAddr               EQU     0x00c4
-convertLeOpAddr               EQU     0x00c6
-convertGeOpAddr               EQU     0x00c8
-convertLtOpAddr               EQU     0x00ca
-convertGtOpAddr               EQU     0x00cc
-convert8Arr2dAddr             EQU     0x00ce
-convert8Arr3dAddr             EQU     0x00d0
-convert16Arr2dAddr            EQU     0x00d2
-convert16Arr3dAddr            EQU     0x00d4
-realTimeStubAddr              EQU     0x00d6
-
-
-; do *NOT* use register4 to register7 during time slicing
-realTimeAddr        EQU     register0
-realTimeProc0       EQU     register1
-realTimeProc1       EQU     register2
-realTimeProc2       EQU     register3
-numericLabel        EQU     register0
-defaultLabel        EQU     register1
-lutLabs             EQU     register2
-lutAddrs            EQU     register3
-lutIndex            EQU     register8
-romType             EQU     register0
-romErrAddr          EQU     register1
-romErrPixel         EQU     register2
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-                    ; self modifying code allows for timer, midi and user procs
-realTimeStub        RET                                     ; RET gets replaced by PUSH
-                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
-                    CALL    giga_vAC
-realTimeStub1       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
-                    CALL    giga_vAC
-realTimeStub2       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
-                    CALL    giga_vAC
-                    POP
-                    RET
+resetVideoFlags                   EQU     0x7ba2
+initClearFuncs                    EQU     0x78cf
+clearVertBlinds                   EQU     0x79c3
+clearCursorRow                    EQU     0x7ab6
+soundAllOff                       EQU     0x7aa0
+soundOn                           EQU     0x78a5
+printInit                         EQU     0x78b9
+printText                         EQU     0x78e6
+printDigit                        EQU     0x79a1
+printInt16                        EQU     0x7bae
+printChar                         EQU     0x7ca7
+newLineScroll                     EQU     0x7da0
+convertEqOpAddr                   EQU     0x00c0
+convertNeOpAddr                   EQU     0x00c2
+convertLeOpAddr                   EQU     0x00c4
+convertGeOpAddr                   EQU     0x00c6
+convertLtOpAddr                   EQU     0x00c8
+convertGtOpAddr                   EQU     0x00ca
+convert8Arr2dAddr                 EQU     0x00cc
+convert8Arr3dAddr                 EQU     0x00ce
+convert16Arr2dAddr                EQU     0x00d0
+convert16Arr3dAddr                EQU     0x00d2
+realTimeStubAddr                  EQU     0x00d4
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -215,7 +182,13 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
 varAddress          EQU     register13
-    
+clrAddress          EQU     register10
+clrLines            EQU     register11
+clrWidth            EQU     register12
+clrStart            EQU     register13
+clrEnd              EQU     register14
+clrRem              EQU     register15
+
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
                     STW     cursorXY
@@ -234,7 +207,7 @@ initClearFuncs      PUSH
                     ST      giga_sysArg0
                     ST      giga_sysArg0 + 1
                     ST      giga_sysArg2
-                    ST      giga_sysArg2 + 1                    ; 4 pixels of fg colour
+                    ST      giga_sysArg2 + 1                    ; 4 pixels of bg colour
     
                     LDWI    SYS_Draw4_30                        ; setup 4 pixel SYS routine
                     STW     giga_sysFn
@@ -251,9 +224,13 @@ clearVertBlinds     PUSH
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top
-    
+
+%if TIME_SLICING
 clearVB_loop        CALL    realTimeStubAddr
                     LD      top
+%else
+clearVB_loop        LD      top
+%endif
                     ST      giga_sysArg4 + 1                    ; top line
                     SYS     30
     
@@ -323,10 +300,10 @@ soundOn             LDWI    SYS_LSRW1_48
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
-textLen             EQU     register1
-textOfs             EQU     register2
-textChr             EQU     register3
-textHex             EQU     register8
+textHex             EQU     register1
+textLen             EQU     register2
+textOfs             EQU     register3
+textChr             EQU     register8
 textFont            EQU     register9
 textSlice           EQU     register10
 scanLine            EQU     register11
@@ -471,7 +448,9 @@ printC_slice        ST      textSlice
                     INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     
                     PUSH
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      cursorXY
                     ADDI    giga_xfont
                     ST      cursorXY
@@ -503,7 +482,9 @@ clearCursorRow      PUSH
                     LDI     giga_yfont
 
 clearCR_loopy       ST      clearLoop
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
@@ -556,9 +537,13 @@ newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
                     LDWI    giga_videoTable
                     STW     scanLine
-    
+
+%if TIME_SLICING
 newLS_scroll        CALL    realTimeStubAddr
                     LDW     scanLine
+%else
+newLS_scroll        LDW     scanLine
+%endif
                     PEEK
                     ADDI    giga_yfont
                     ANDI    0x7F

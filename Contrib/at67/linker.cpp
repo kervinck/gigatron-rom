@@ -18,8 +18,12 @@
 
 namespace Linker
 {
-    std::map<std::string, std::vector<std::string>> _subIncludeFiles;
+    // Define handling is repeated here, as the Linker runs before the Assembler, (it's simpler here as error handling is performed in the Assembler)
+    // Make sure to keep the two in sync, e.g. if adding extra functionality such as %elseif
+    std::map<std::string, Assembler::Define> _defines;
+    std::stack<std::string> _currentDefine;
 
+    std::map<std::string, std::vector<std::string>> _subIncludeFiles;
     std::map<int, uint16_t> _internalSubMap;
 
     // TODO: use std::map
@@ -40,6 +44,11 @@ namespace Linker
         {0x0000, 0x0000, "setRealTimeProc0" , "", false, false},
         {0x0000, 0x0000, "setRealTimeProc1" , "", false, false},
         {0x0000, 0x0000, "setRealTimeProc2" , "", false, false},
+        {0x0000, 0x0000, "loadRegs"         , "", false, false},
+        {0x0000, 0x0000, "saveRegs"         , "", false, false},
+        {0x0000, 0x0000, "copyBytes"        , "", false, false},
+        {0x0000, 0x0000, "copyWords"        , "", false, false},
+        {0x0000, 0x0000, "copyLoaderImages" , "", false, false},
         {0x0000, 0x0000, "resetVars"        , "", false, false},
         {0x0000, 0x0000, "absolute"         , "", false, false},
         {0x0000, 0x0000, "sign"             , "", false, false},
@@ -122,7 +131,7 @@ namespace Linker
         {0x0000, 0x0000, "setPolyRelFlipX"  , "", false, false},
         {0x0000, 0x0000, "setPolyRelFlipY"  , "", false, false},
         {0x0000, 0x0000, "atLineCursor"     , "", false, false},
-        {0x0000, 0x0000, "draw_sprite"      , "", false, false},
+        {0x0000, 0x0000, "drawSprite_"      , "", false, false},
         {0x0000, 0x0000, "drawSprite"       , "", false, false},
         {0x0000, 0x0000, "drawSpriteX"      , "", false, false},
         {0x0000, 0x0000, "drawSpriteY"      , "", false, false},
@@ -132,6 +141,7 @@ namespace Linker
         {0x0000, 0x0000, "playMidi"         , "", false, false},
         {0x0000, 0x0000, "playMidiVol"      , "", false, false},
         {0x0000, 0x0000, "midiStartNote"    , "", false, false},
+        {0x0000, 0x0000, "midiGetNote"      , "", false, false},
         {0x0000, 0x0000, "resetMusic"       , "", false, false},
         {0x0000, 0x0000, "playMusic"        , "", false, false},
         {0x0000, 0x0000, "musicGetNote"     , "", false, false},
@@ -157,26 +167,28 @@ namespace Linker
         {0x0000, 0x0000, "printLeft"        , "", false, false},
         {0x0000, 0x0000, "printRight"       , "", false, false},
         {0x0000, 0x0000, "printMid"         , "", false, false},
+        {0x0000, 0x0000, "printLower"       , "", false, false},
+        {0x0000, 0x0000, "printUpper"       , "", false, false},
         {0x0000, 0x0000, "printDigit"       , "", false, false},
         {0x0000, 0x0000, "printInt16"       , "", false, false},
         {0x0000, 0x0000, "printChr"         , "", false, false},
         {0x0000, 0x0000, "printChar"        , "", false, false},
-        {0x0000, 0x0000, "printHexByte"     , "", false, false},
-        {0x0000, 0x0000, "printHexWord"     , "", false, false},
+        {0x0000, 0x0000, "printHex"         , "", false, false},
         {0x0000, 0x0000, "atTextCursor"     , "", false, false},
         {0x0000, 0x0000, "newLineScroll"    , "", false, false},
         {0x0000, 0x0000, "integerStr"       , "", false, false},
         {0x0000, 0x0000, "stringChr"        , "", false, false},
         {0x0000, 0x0000, "stringHex"        , "", false, false},
-        {0x0000, 0x0000, "stringHexw"       , "", false, false},
-        {0x0000, 0x0000, "createHex"        , "", false, false},
         {0x0000, 0x0000, "stringCopy"       , "", false, false},
         {0x0000, 0x0000, "stringCmp"        , "", false, false},
         {0x0000, 0x0000, "stringAdd"        , "", false, false},
         {0x0000, 0x0000, "stringConcat"     , "", false, false},
-        {0x0000, 0x0000, "stringMid"        , "", false, false},
+        {0x0000, 0x0000, "stringConcatLut"  , "", false, false},
         {0x0000, 0x0000, "stringLeft"       , "", false, false},
         {0x0000, 0x0000, "stringRight"      , "", false, false},
+        {0x0000, 0x0000, "stringMid"        , "", false, false},
+        {0x0000, 0x0000, "stringLower"      , "", false, false},
+        {0x0000, 0x0000, "stringUpper"      , "", false, false},
         {0x0000, 0x0000, "stringDigit"      , "", false, false},
         {0x0000, 0x0000, "stringInt"        , "", false, false},
         {0x0000, 0x0000, "tickTime"         , "", false, false},
@@ -312,6 +324,31 @@ namespace Linker
         return false;
     }
 
+
+    void resetIncludeFiles(void)
+    {
+        _subIncludeFiles.clear();
+    }
+
+    void reset(void)
+    {
+        resetIncludeFiles();
+
+        _defines.clear();
+        while(!_currentDefine.empty()) _currentDefine.pop();
+
+        _internalSubMap.clear();
+
+        for(int i=0; i<int(_internalSubs.size()); i++)
+        {
+            _internalSubs[i]._size = 0;
+            _internalSubs[i]._address = 0;
+            _internalSubs[i]._includeName = "";
+            _internalSubs[i]._loaded = false;
+            _internalSubs[i]._inUse = false;
+        }
+    }
+
     bool initialise(void)
     {
         return true;
@@ -320,7 +357,7 @@ namespace Linker
 
     bool enableFontLinking(void)
     {
-        Linker::resetIncludeFiles();
+        resetIncludeFiles();
 
         for(int i=0; i<int(_subIncludesROMv3.size()); i++)
         {
@@ -340,7 +377,7 @@ namespace Linker
             }
         }
 
-        return Linker::parseIncludes();
+        return parseIncludes();
     }
 
     bool disableFontLinking(void)
@@ -638,7 +675,7 @@ namespace Linker
         fprintf(stderr, "**********************************************\n");
         fprintf(stderr, "*        Name          : Address :    Size    \n");
         fprintf(stderr, "**********************************************\n");
-        
+
         for(int i=0; i<int(Compiler::getCodeLines().size()); i++)
         {
             // Valid BASIC code
@@ -650,15 +687,85 @@ namespace Linker
                     std::vector<std::string> tokens = Expression::tokenise(Compiler::getCodeLines()[i]._vasm[j]._code, ' ');
                     for(int k=0; k<int(tokens.size()); k++) Expression::stripWhitespace(tokens[k]);
 
+                    // Handle %define, %if, %else and %endif, error handling is performed in Assembler::preProcess()
+                    if(tokens.size())
+                    {
+                        std::string token = Expression::strUpper(tokens[0]);
+                        if(token == "%DEFINE")
+                        {
+                            // Create enabled defines
+                            if(tokens.size() > 1)
+                            {
+                                for(int k=1; k<int(tokens.size()); k++)
+                                {
+                                    std::string define = tokens[k];
+                                    _defines[define] = {true, false, define};
+                                }
+                            }
+
+                            continue;
+                        }
+                        else if(token == "%IF")
+                        {
+                            // If define does not exist, create a disabled define
+                            if(tokens.size() > 1)
+                            {
+                                std::string define = tokens[1];
+                                if(_defines.find(define) == _defines.end()) _defines[define] = {false, false, define};
+                                _currentDefine.push(define);
+                            }
+
+                            continue;
+                        }
+                        else if(token == "%ENDIF")
+                        {
+                            // Pop current define from stack
+                            if(!_currentDefine.empty())
+                            {
+                                // If enabled was toggled by an else then reset it
+                                std::string define = _currentDefine.top();
+                                if(_defines[define]._toggle == true)
+                                {
+                                    _defines[define]._enabled = !_defines[define]._enabled;
+                                    _defines[define]._toggle = false;
+                                }
+
+                                _currentDefine.pop();
+                            }
+
+                            continue;
+                        }
+                        else if(token == "%ELSE")
+                        {
+                            // Toggle current define
+                            if(!_currentDefine.empty())
+                            {
+                                std::string define = _currentDefine.top();
+                                _defines[define]._enabled = !_defines[define]._enabled;
+                                _defines[define]._toggle = true;
+                            }
+
+                            continue;
+                        }
+                    }
+
+                    // If a define exists and is disabled, then skip current line
+                    if(!_currentDefine.empty())
+                    {
+                        std::string define = _currentDefine.top();
+                        if(_defines.find(define) != _defines.end()  &&  !_defines[define]._enabled) continue;
+                    }
+
+                    // Check for internal subs in code and macros
                     for(int k=0; k<int(_internalSubs.size()); k++)
                     {
-                        // Check for internal subs in code
+                        // Code
                         if(findSub(tokens, _internalSubs[k]._name))
                         {
                             loadInternalSub(k);
                         }
 
-                        // Check for internal subs in macros, (even nested)
+                        // Macros, (even nested)
                         std::string opcode = Compiler::getCodeLines()[i]._vasm[j]._opcode;
                         if(opcode.size()  &&  opcode[0] == '%')
                         {
@@ -688,7 +795,8 @@ RESTART_COLLECTION:
                 Compiler::getRuntime().push_back("\n");
                 std::vector<std::string> code;
 
-                if(getInternalSubCode(_internalSubs[i]._includeName, includeVarsDone, code, i)) goto RESTART_COLLECTION; // this is a BASIC compiler, it can't possibly work without at least one GOTO
+                // This is a BASIC compiler, it can't possibly work without at least one GOTO
+                if(getInternalSubCode(_internalSubs[i]._includeName, includeVarsDone, code, i)) goto RESTART_COLLECTION;
 
                 includeVarsDone.push_back(_internalSubs[i]._includeName);
 
@@ -795,25 +903,5 @@ RESTART_COLLECTION:
         Compiler::getOutput().push_back("\n");
 
         for(int i=0; i<int(Compiler::getRuntime().size()); i++) Compiler::getOutput().push_back(Compiler::getRuntime()[i]);
-    }
-
-
-    void resetIncludeFiles(void)
-    {
-        _subIncludeFiles.clear();
-    }
-
-    void resetInternalSubs(void)
-    {
-        _internalSubMap.clear();
-
-        for(int i=0; i<int(_internalSubs.size()); i++)
-        {
-            _internalSubs[i]._size = 0;
-            _internalSubs[i]._address = 0;
-            _internalSubs[i]._includeName = "";
-            _internalSubs[i]._loaded = false;
-            _internalSubs[i]._inUse = false;
-        }
     }
 }

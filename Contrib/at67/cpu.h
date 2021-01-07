@@ -9,7 +9,7 @@
 
 
 #define MAJOR_VERSION "1.0"
-#define MINOR_VERSION "1B"
+#define MINOR_VERSION "6R"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
  
 #define ROM_INST 0
@@ -31,6 +31,8 @@
 
 #define VBLANK_PROC 0x01F6
 #define VIDEO_TOP   0x01F9
+
+#define VCPU_SOFT_RESET 0x01F0
 
 #define ROM_TYPE          0x0021
 #define ROM_TYPE_MASK     0x00FC
@@ -140,7 +142,7 @@ namespace Cpu
     void setRAM16(uint16_t address, uint16_t data);
     void setROM16(uint16_t base, uint16_t address, uint16_t data);
     void setRomType(void);
-    void setSizeRAM(size_t size);
+    void setSizeRAM(int size);
 
     void saveScanlineModes(void);
     void restoreScanlineModes(void);
@@ -156,7 +158,7 @@ namespace Cpu
     void softReset(void);
     void swapMemoryModel(void);
     void vCpuUsage(const State& S, const State& T);
-    void process(bool disableOutput=false);
+    bool process(bool disableOutput=false);
 
 #ifdef _WIN32
     void restoreWin32Console(void);

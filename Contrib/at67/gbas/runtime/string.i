@@ -1,7 +1,8 @@
 ; do *NOT* use register4 to register7 during time slicing
 strChr              EQU     register0
+strAddr             EQU     register0
 strHex              EQU     register1
-strCmpRes           EQU     register2
+strLen              EQU     register2
 strDstLen           EQU     register0
 strFinish           EQU     register0
 strSrcAddr          EQU     register1
@@ -12,6 +13,7 @@ strSrcAddr2         EQU     register9
 strTmpAddr          EQU     register10
 strLutAddr          EQU     register11
 strBakAddr          EQU     register12
+strSrcLen2          EQU     register13
 strInteger          EQU     register0
 strDigit            EQU     register1
 strMult             EQU     register3
@@ -31,62 +33,38 @@ stringChr           LDI     1
 %ENDS
 
 %SUB                stringHex
-                    ; create a hex byte string, (parameter in strChr)
-stringHex           PUSH
-                    LDI     2
-                    POKE    strDstAddr                          ; set destination buffer length                    
-                    INC     strDstAddr
-                    LDWI    createHex
-                    CALL    giga_vAC
-                    LDI     0
-                    POKE    strDstAddr                          ; terminating 0
-                    POP
-                    RET
-%ENDS
-
-%SUB                stringHexw
-                    ; create a hex word string, (parameter in strHex)
-stringHexw          PUSH
-                    LDI     4
-                    POKE    strDstAddr                          ; set destination buffer length                    
-                    INC     strDstAddr
-                    LD      strHex + 1
-                    ST      strChr
-                    LDWI    createHex
-                    CALL    giga_vAC
-                    LD      strHex
-                    ST      strChr
-                    LDWI    createHex
-                    CALL    giga_vAC
-                    LDI     0
-                    POKE    strDstAddr                          ; terminating 0
-                    POP
-                    RET
-%ENDS
-
-%SUB                createHex
-                    ; updates a hex byte
-createHex           LDWI    SYS_LSRW4_50                        ; shift right by 4 SYS routine
+                    ; creates a hex string at strAddr of strLen digits from strHex
+stringHex           LDWI    SYS_LSRW4_50                        ; shift right by 4 SYS routine
                     STW     giga_sysFn
-                    LD      strChr
-                    SYS     50
-                    SUBI    10
-                    BLT     createH_skip0
-                    ADDI    7
-
-createH_skip0       ADDI    0x3A
-                    POKE    strDstAddr                          ; save first char
-                    INC     strDstAddr
-                    LD      strChr
+                    LDW     strAddr
+                    STW     strTmpAddr                          ; store string start
+                    LD      strLen
+                    POKE    strAddr                             ; length byte
+                    ADDI    1
+                    ADDW    strAddr
+                    STW     strAddr                             ; offset by length byte and zero delimeter
+                    LDI     0
+                    POKE    strAddr                             ; zero delimiter
+                    
+stringH_loop        LDW     strAddr
+                    SUBI    1
+                    STW     strAddr                             ; start at LSD and finish at MSD
+                    SUBW    strTmpAddr
+                    BEQ     stringH_done
+                    LD      strHex
                     ANDI    0x0F
                     SUBI    10
-                    BLT     createH_skip1
+                    BLT     stringH_skip
                     ADDI    7
                     
-createH_skip1       ADDI    0x3A                    
-                    POKE    strDstAddr                          ; save second char
-                    INC     strDstAddr
-                    RET
+stringH_skip        ADDI    0x3A
+                    POKE    strAddr
+                    LDW     strHex
+                    SYS     50
+                    STW     strHex                              ; next nibble
+                    BRA     stringH_loop
+                    
+stringH_done        RET
 %ENDS
 
 %SUB                stringCopy
@@ -101,25 +79,40 @@ stringCopy          LDW     strSrcAddr
 %ENDS
 
 %SUB                stringCmp
-                    ; compares two strings
-stringCmp           LDI     0
-                    STW     strCmpRes
-
-stringC_cmp         LDW     strSrcAddr
+                    ; compares two strings: returns 0 for smaller, 1 for equal and 2 for larger
+stringCmp           LDW     strSrcAddr
                     PEEK
-                    BEQ     stringC_one                         ; this assumes your strings are valid, (i.e. valid length and terminating bytes)
+                    STW     strSrcLen                           ; save str length
+                    LDW     strSrcAddr2
+                    PEEK
+                    STW     strSrcLen2                          ; save str length
+                    INC     strSrcAddr
+                    INC     strSrcAddr2                         ; skip lengths
+                    
+stringC_loop        LDW     strSrcAddr
+                    PEEK
+                    BEQ     stringC_equal                       ; this assumes your strings are valid, (i.e. valid length and terminating bytes)
                     STW     strChr
                     LDW     strSrcAddr2
                     PEEK
                     SUBW    strChr
-                    BNE     stringC_zero
+                    BLT     stringC_larger
+                    BGT     stringC_smaller
                     INC     strSrcAddr
                     INC     strSrcAddr2
-                    BRA     stringC_cmp
-                    
-stringC_one         INC     strCmpRes                           ; return 1
+                    BRA     stringC_loop
 
-stringC_zero        LDW     strCmpRes
+stringC_smaller     LDI     0
+                    RET
+                    
+stringC_equal       LDW     strSrcLen
+                    SUBW    strSrcLen2
+                    BLT     stringC_smaller
+                    BGT     stringC_larger                      ; if strings are equal, choose based on length
+                    LDI     1
+                    RET
+                    
+stringC_larger      LDI     2
                     RET
 %ENDS
 
@@ -127,12 +120,22 @@ stringC_zero        LDW     strCmpRes
                     ; adds two strings together, (internal sub)
 stringAdd           LDW     strDstAddr
                     STW     strTmpAddr
-                    INC     strSrcAddr
+                    XORW    strSrcAddr
+                    BNE     stringA_diff
+                    LDW     strDstAddr                          ; if src = dst then skip first copy
+                    PEEK
+                    STW     strDstLen
+                    ADDW    strDstAddr
+                    STW     strDstAddr                          ; skip length byte and point to end of dst
+                    INC     strDstAddr
+                    BRA     stringA_copy1
+
+stringA_diff        INC     strSrcAddr
                     INC     strDstAddr                          ; skip lengths
                     LDI     0
                     STW     strDstLen
                     
-stringA_copy0       LDW     strSrcAddr
+stringA_copy0       LDW     strSrcAddr                          ; assumes strSrcAddr is a valid string <= 94 length
                     PEEK
                     BEQ     stringA_copy1
                     POKE    strDstAddr
@@ -163,27 +166,36 @@ stringA_exit        LDW     strDstLen
 %SUB                stringConcat
                     ; concatenates multiple strings together
 stringConcat        PUSH
+                    LDWI    stringAdd
+                    CALL    giga_vAC
+                    POP
+                    RET
+%ENDS
+
+%SUB                stringConcatLut
+                    ; concatenates multiple strings together using a LUT of string addresses
+stringConcatLut     PUSH
                     LDW     strLutAddr
                     DEEK
-                    BEQ     stringCC_exit
+                    BEQ     stringCCL_exit
                     STW     strSrcAddr
                     LDW     strDstAddr
                     STW     strBakAddr
                     
-stringCC_loop       INC     strLutAddr
+stringCCL_loop      INC     strLutAddr
                     INC     strLutAddr
                     LDW     strLutAddr
                     DEEK
-                    BEQ     stringCC_exit
+                    BEQ     stringCCL_exit
                     STW     strSrcAddr2
                     LDWI    stringAdd
                     CALL    giga_vAC
                     LDW     strBakAddr
                     STW     strDstAddr
                     STW     strSrcAddr
-                    BRA     stringCC_loop
+                    BRA     stringCCL_loop
                     
-stringCC_exit       POP
+stringCCL_exit      POP
                     RET
 %ENDS
 
@@ -289,6 +301,64 @@ stringM_loop        INC     strSrcAddr                          ; skip lengths t
 stringM_exit        INC     strDstAddr
                     LDI     0
                     POKE    strDstAddr                          ; terminating 0
+                    RET
+%ENDS
+
+%SUB                stringLower
+                    ; creates a lower case string
+stringLower         LDW     strSrcAddr
+                    PEEK
+                    POKE    strDstAddr                          ; dst length = src length
+                    
+stringLo_next       INC     strSrcAddr                          ; next char, (skips length byte)
+                    INC     strDstAddr
+                    LDW     strSrcAddr
+                    PEEK
+                    BEQ     stringLo_exit
+                    ST      strChr
+                    SUBI    65
+                    BLT     stringLo_char
+                    LD      strChr
+                    SUBI    90
+                    BGT     stringLo_char
+                    LD      strChr                              ; >= 65 'A' and <= 90 'Z'
+                    ADDI    32
+                    ST      strChr
+                    
+stringLo_char       LD      strChr
+                    POKE    strDstAddr                          ; lower case char
+                    BRA     stringLo_next
+                    
+stringLo_exit       POKE    strDstAddr                          ; terminating 0
+                    RET
+%ENDS
+
+%SUB                stringUpper
+                    ; creates an upper case string
+stringUpper         LDW     strSrcAddr
+                    PEEK
+                    POKE    strDstAddr                          ; dst length = src length
+    
+stringUp_next       INC     strSrcAddr                          ; next char, (skips length byte)
+                    INC     strDstAddr
+                    LDW     strSrcAddr
+                    PEEK
+                    BEQ     stringUp_exit
+                    ST      strChr
+                    SUBI    97
+                    BLT     stringUp_char
+                    LD      strChr
+                    SUBI    122
+                    BGT     stringUp_char
+                    LD      strChr                              ; >= 97 'a' and <= 122 'z'
+                    SUBI    32
+                    ST      strChr
+                    
+stringUp_char       LD      strChr
+                    POKE    strDstAddr                          ; upper case char
+                    BRA     stringUp_next
+                    
+stringUp_exit       POKE    strDstAddr                          ; terminating 0
                     RET
 %ENDS
 

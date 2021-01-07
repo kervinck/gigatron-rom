@@ -2,10 +2,10 @@
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
-textLen             EQU     register1
-textOfs             EQU     register2
-textChr             EQU     register3
-textHex             EQU     register8
+textHex             EQU     register1
+textLen             EQU     register2
+textOfs             EQU     register3
+textChr             EQU     register8
 textFont            EQU     register9
 textSlice           EQU     register10
 scanLine            EQU     register11
@@ -32,7 +32,9 @@ clearCursorRow      PUSH
                     LDI     giga_yfont
 
 clearCR_loopy       ST      clearLoop
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
@@ -117,6 +119,62 @@ printL_char         ST      textLen
 printL_exit         POP
                     RET
 %ENDS   
+
+%SUB                printLower
+                    ; prints lower case version of textStr
+printLower          PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
+    
+printLo_next        INC     textStr                         ; next char, (skips length byte)
+                    LDW     textStr
+                    PEEK
+                    BEQ     printLo_exit
+                    ST      textChr
+                    SUBI    65
+                    BLT     printLo_char
+                    LD      textChr
+                    SUBI    90
+                    BGT     printLo_char
+                    LD      textChr                         ; >= 65 'A' and <= 90 'Z'
+                    ADDI    32
+                    ST      textChr
+                    
+printLo_char        LDWI    printChar
+                    CALL    giga_vAC
+                    BRA     printLo_next
+                    
+printLo_exit        POP
+                    RET
+%ENDS
+
+%SUB                printUpper
+                    ; prints upper case version of textStr
+printUpper          PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
+    
+printUp_next        INC     textStr                         ; next char, (skips length byte)
+                    LDW     textStr
+                    PEEK
+                    BEQ     printUp_exit
+                    ST      textChr
+                    SUBI    97
+                    BLT     printUp_char
+                    LD      textChr
+                    SUBI    122
+                    BGT     printUp_char
+                    LD      textChr                         ; >= 97 'a' and <= 122 'z'
+                    SUBI    32
+                    ST      textChr
+                    
+printUp_char        LDWI    printChar
+                    CALL    giga_vAC
+                    BRA     printUp_next
+                    
+printUp_exit        POP
+                    RET
+%ENDS
 
 %SUB                printRight
                     ; prints right sub string pointed to by textStr
@@ -236,51 +294,18 @@ printI16_pos        LDWI    10000
                     RET
 %ENDS
 
-%SUB                printHexByte
-                    ; print hex byte in textHex
-printHexByte        PUSH
-                    LDWI    SYS_LSRW4_50                    ; shift right by 4 SYS routine
-                    STW     giga_sysFn
-                    LD      textHex
-                    SYS     50
-                    SUBI    10
-                    BLT     printH_skip0
-                    ADDI    7
-printH_skip0        ADDI    0x3A
-                    ST      textChr
-                    LDWI    printInit
+%SUB                printHex
+                    ; print textLen hex digits in textHex, (textStr, textHex, textLen = strAddr, strHex, strLen in string::stringHex)
+printHex            PUSH
+                    LDWI    textWorkArea
+                    STW     strAddr
+                    LDWI    stringHex
                     CALL    giga_vAC
-                    LDWI    printChar
-                    CALL    giga_vAC
-                    LD      textHex
-                    ANDI    0x0F
-                    SUBI    10
-                    BLT     printH_skip1
-                    ADDI    7
-printH_skip1        ADDI    0x3A
-                    ST      textChr
-                    LDWI    printChar
+                    LDWI    printText
                     CALL    giga_vAC
                     POP
                     RET
-%ENDS                    
-        
-%SUB                printHexWord     
-                    ; print hex word in textHex
-printHexWord        PUSH
-                    LD      textHex
-                    ST      textBak
-                    LD      textHex + 1
-                    ST      textHex
-                    LDWI    printHexByte
-                    CALL    giga_vAC
-                    LD      textBak
-                    ST      textHex
-                    LDWI    printHexByte
-                    CALL    giga_vAC
-                    POP
-                    RET
-%ENDS   
+%ENDS
 
 %SUB                printChr
                     ; prints char in textChr for standalone calls
@@ -333,7 +358,9 @@ printC_slice        ST      textSlice
                     INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     
                     PUSH
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      cursorXY
                     ADDI    giga_xfont
                     ST      cursorXY
@@ -373,9 +400,13 @@ newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
                     LDWI    giga_videoTable
                     STW     scanLine
-    
+
+%if TIME_SLICING
 newLS_scroll        CALL    realTimeStubAddr
                     LDW     scanLine
+%else
+newLS_scroll        LDW     scanLine
+%endif
                     PEEK
                     ADDI    giga_yfont
                     ANDI    0x7F

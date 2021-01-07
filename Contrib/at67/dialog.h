@@ -78,7 +78,7 @@ namespace Dialog
         int _offsetX = 2;
         int _offsetY = 5;
 
-        std::string _name;
+        std::string _text;
         std::vector<Item> _items;
 
         Size _size = Regular;
@@ -115,8 +115,8 @@ namespace Dialog
 
     bool setDialogItem(const std::string& name, int index, Item& item);
 
-    bool createDialog(const std::string& name, const std::vector<Item>& items, int numCols, int numRows, Dialog::Size size=Dialog::DoubleWidth, int offsetX=2, int offsetY=5,
-                                                                                                         int maxCols=MAX_SCREEN_COLS, int maxRows=MAX_SCREEN_ROWS);
+    bool createDialog(const std::string& name, const std::string& text, const std::vector<Item>& items, int numCols, int numRows, Dialog::Size size=Dialog::DoubleWidth,
+                                                                                                        int offsetX=2, int offsetY=5, int maxCols=MAX_SCREEN_COLS, int maxRows=MAX_SCREEN_ROWS);
     bool positionDialog(const std::string& name, int screenX, int screenY);
     bool renderDialog(const std::string& name, int mouseX, int mouseY);
 }

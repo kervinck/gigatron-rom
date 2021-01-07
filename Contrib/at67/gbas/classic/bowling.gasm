@@ -1,445 +1,445 @@
-_startAddress_                EQU                               0x0200
+_startAddress_                    EQU                               0x0200
 
 ; Internal Variables
-serialRawPrev                 EQU                               0x0081
-register0                     EQU                               0x0082
-register1                     EQU                               register0 + 0x02
-register2                     EQU                               register0 + 0x04
-register3                     EQU                               register0 + 0x06
-register4                     EQU                               register0 + 0x08
-register5                     EQU                               register0 + 0x0A
-register6                     EQU                               register0 + 0x0C
-register7                     EQU                               register0 + 0x0E
-register8                     EQU                               register0 + 0x10
-register9                     EQU                               register0 + 0x12
-register10                    EQU                               register0 + 0x14
-register11                    EQU                               register0 + 0x16
-register12                    EQU                               register0 + 0x18
-register13                    EQU                               register0 + 0x1A
-register14                    EQU                               register0 + 0x1C
-register15                    EQU                               register0 + 0x1E
-fgbgColour                    EQU                               register0 + 0x20
-cursorXY                      EQU                               register0 + 0x22
-midiStream                    EQU                               register0 + 0x24
-midiDelay                     EQU                               register0 + 0x26
-miscFlags                     EQU                               register0 + 0x28
-timerTick                     EQU                               register0 + 0x2A
-timerPrev                     EQU                               register0 + 0x2C
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
 
 ; Internal Constants
-ENABLE_SCROLL_BIT             EQU                               0x0001
-ON_BOTTOM_ROW_BIT             EQU                               0x0002
-ENABLE_SCROLL_MSK             EQU                               0xfffe
-ON_BOTTOM_ROW_MSK             EQU                               0xfffd
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
 
 ; Internal Buffers
-textWorkArea                  EQU                               0x7fa0
+regsWorkArea                      EQU                               0x6bd8
+textWorkArea                      EQU                               0x7ea0
 
 ; Includes
-%includePath                  "../runtime"
-%include                      util.i
-%include                      gigatron.i
-%include                      macros.i
+%includePath                      "../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros.i
 
 ; Labels
-_entryPoint_                  EQU                               0x0200
-_270                          EQU                               0x0247
-_360                          EQU                               0x0247
-_450                          EQU                               0x0256
-_540                          EQU                               0x0265
-_630                          EQU                               0x0274
-_720                          EQU                               0x0279
-_810                          EQU                               0x0288
-_900                          EQU                               0x0292
-_960                          EQU                               0x02b2
-_990                          EQU                               0x02d2
-_1080                         EQU                               0x02e1
-_1170                         EQU                               0x0302
-_1260                         EQU                               0x0307
-_1350                         EQU                               0x0316
-_1440                         EQU                               0x0325
-_1530                         EQU                               0x0334
-_1620                         EQU                               0x033e
-_1710                         EQU                               0x0348
-_1800                         EQU                               0x034d
-_1890                         EQU                               0x035c
-_1980                         EQU                               0x0395
-_2070                         EQU                               0x0399
-_2160                         EQU                               0x03a5
-_2250                         EQU                               0x03a9
-_2340                         EQU                               0x03ad
-_2430                         EQU                               0x03b5
-_2520                         EQU                               0x0239
-_2610                         EQU                               0x03d4
-_2700                         EQU                               0x03e3
-_2790                         EQU                               0x03ed
-_2880                         EQU                               0x0404
-_2970                         EQU                               0x0408
-_3060                         EQU                               0x0413
-_3150                         EQU                               0x0417
-_3240                         EQU                               0x0439
-_3330                         EQU                               0x0447
-_3420                         EQU                               0x0469
-_3510                         EQU                               0x0239
-_3600                         EQU                               0x0477
-_3690                         EQU                               0x0499
-_3780                         EQU                               0x049d
-_3870                         EQU                               0x04a2
-_3960                         EQU                               0x04b0
-_4050                         EQU                               0x04b6
-_4140                         EQU                               0x04cf
-_4230                         EQU                               0x04e2
-_4320                         EQU                               0x04e7
-_4410                         EQU                               0x050c
-_4500                         EQU                               0x051c
-_4590                         EQU                               0x052a
-_4680                         EQU                               0x0239
-_4770                         EQU                               0x052f
-_4860                         EQU                               0x0533
-_4950                         EQU                               0x053f
-_5040                         EQU                               0x054d
-_5130                         EQU                               0x0562
-_5220                         EQU                               0x0571
-_5310                         EQU                               0x058e
-_5400                         EQU                               0x059d
-_5490                         EQU                               0x05a1
-_5580                         EQU                               0x05be
-_5670                         EQU                               0x05cd
-_5760                         EQU                               0x05d1
-_5850                         EQU                               0x05ee
-_5940                         EQU                               0x0607
-_6030                         EQU                               0x060b
-_6120                         EQU                               0x08a2
-_6210                         EQU                               0x0239
-_6300                         EQU                               0x08b1
-_6390                         EQU                               0x08b6
-_6480                         EQU                               0x08d6
-_6570                         EQU                               0x08e9
-_6660                         EQU                               0x08ed
-_6750                         EQU                               0x08f1
-_6840                         EQU                               0x09af
-_6930                         EQU                               0x09d1
-_7020                         EQU                               0x09e4
-_7110                         EQU                               0x0aaf
-_7200                         EQU                               0x0abf
-_7290                         EQU                               0x0ac5
-_7295                         EQU                               0x0ad8
-_7380                         EQU                               0x0ae7
-_7470                         EQU                               0x0aeb
-_7560                         EQU                               0x0ba2
-_7650                         EQU                               0x0bb0
-_7740                         EQU                               0x0bb5
-_7830                         EQU                               0x0bc1
-_7920                         EQU                               0x0bc5
-_8010                         EQU                               0x0bc9
-_8100                         EQU                               0x0be9
-_8105                         EQU                               0x0ca2
-_8190                         EQU                               0x0ca7
-_8280                         EQU                               0x0cb5
-_8370                         EQU                               0x0cba
-_8460                         EQU                               0x0cca
-_8550                         EQU                               0x0cd9
-_8640                         EQU                               0x0ce3
-_page_0x0300                  EQU                               0x0300
-_next_0x0345                  EQU                               0x0360
-_next_0x0349                  EQU                               0x0364
-_next_0x039e                  EQU                               0x03b9
-_page_0x0400                  EQU                               0x0400
-_page_0x0500                  EQU                               0x0500
-_page_0x0600                  EQU                               0x0600
-_page_0x08a0                  EQU                               0x08a0
-_page_0x09a0                  EQU                               0x09a0
-_page_0x0aa0                  EQU                               0x0aa0
-_page_0x0ba0                  EQU                               0x0ba0
-_page_0x0ca0                  EQU                               0x0ca0
-_page_0x0da0                  EQU                               0x0da0
-_else_0x0831                  EQU                               0x0dc2
-_end_0x0833                   EQU                               0x0dc4
+_entryPoint_                      EQU                               0x0200
+_270                              EQU                               0x0242
+_360                              EQU                               0x0242
+_450                              EQU                               0x0251
+_540                              EQU                               0x0260
+_630                              EQU                               0x026f
+_720                              EQU                               0x0274
+_810                              EQU                               0x0283
+_900                              EQU                               0x028d
+_960                              EQU                               0x02ba
+_990                              EQU                               0x02e7
+_1080                             EQU                               0x0307
+_1170                             EQU                               0x0316
+_1260                             EQU                               0x031b
+_1350                             EQU                               0x032a
+_1440                             EQU                               0x0339
+_1530                             EQU                               0x0348
+_1620                             EQU                               0x0352
+_1710                             EQU                               0x035c
+_1800                             EQU                               0x0361
+_1890                             EQU                               0x0370
+_1980                             EQU                               0x03a9
+_2070                             EQU                               0x03ad
+_2160                             EQU                               0x03b9
+_2250                             EQU                               0x03bd
+_2340                             EQU                               0x03c1
+_2430                             EQU                               0x03c9
+_2520                             EQU                               0x0234
+_2610                             EQU                               0x03e8
+_2700                             EQU                               0x0407
+_2790                             EQU                               0x0411
+_2880                             EQU                               0x0419
+_2970                             EQU                               0x041d
+_3060                             EQU                               0x0428
+_3150                             EQU                               0x042c
+_3240                             EQU                               0x044e
+_3330                             EQU                               0x045c
+_3420                             EQU                               0x047e
+_3510                             EQU                               0x0234
+_3600                             EQU                               0x048c
+_3690                             EQU                               0x04ae
+_3780                             EQU                               0x04b2
+_3870                             EQU                               0x04b7
+_3960                             EQU                               0x04c5
+_4050                             EQU                               0x04cb
+_4140                             EQU                               0x04e4
+_4230                             EQU                               0x050c
+_4320                             EQU                               0x0511
+_4410                             EQU                               0x0524
+_4500                             EQU                               0x0534
+_4590                             EQU                               0x0542
+_4680                             EQU                               0x0234
+_4770                             EQU                               0x0547
+_4860                             EQU                               0x054b
+_4950                             EQU                               0x0557
+_5040                             EQU                               0x0565
+_5130                             EQU                               0x057a
+_5220                             EQU                               0x0589
+_5310                             EQU                               0x05a6
+_5400                             EQU                               0x05b5
+_5490                             EQU                               0x05b9
+_5580                             EQU                               0x05d6
+_5670                             EQU                               0x05e5
+_5760                             EQU                               0x05e9
+_5850                             EQU                               0x0611
+_5940                             EQU                               0x0620
+_6030                             EQU                               0x0624
+_6120                             EQU                               0x08b5
+_6210                             EQU                               0x0234
+_6300                             EQU                               0x08c4
+_6390                             EQU                               0x08c9
+_6480                             EQU                               0x08e9
+_6570                             EQU                               0x09a7
+_6660                             EQU                               0x09ab
+_6750                             EQU                               0x09af
+_6840                             EQU                               0x09c2
+_6930                             EQU                               0x09e4
+_7020                             EQU                               0x0aa2
+_7110                             EQU                               0x0ac2
+_7200                             EQU                               0x0ad2
+_7290                             EQU                               0x0ad8
+_7295                             EQU                               0x0aeb
+_7380                             EQU                               0x0ba7
+_7470                             EQU                               0x0bab
+_7560                             EQU                               0x0bb4
+_7650                             EQU                               0x0bc2
+_7740                             EQU                               0x0bc7
+_7830                             EQU                               0x0bd3
+_7920                             EQU                               0x0bd7
+_8010                             EQU                               0x0bdb
+_8100                             EQU                               0x0ca9
+_8105                             EQU                               0x0cb7
+_8190                             EQU                               0x0cbc
+_8280                             EQU                               0x0cca
+_8370                             EQU                               0x0ccf
+_8460                             EQU                               0x0cdf
+_8550                             EQU                               0x0cee
+_8640                             EQU                               0x0da2
+_page_0x0300                      EQU                               0x0300
+_next_0x0352                      EQU                               0x0374
+_next_0x0356                      EQU                               0x0378
+_next_0x03ab                      EQU                               0x03cd
+_page_0x0400                      EQU                               0x0400
+_page_0x0500                      EQU                               0x0500
+_page_0x0600                      EQU                               0x0600
+_page_0x08a0                      EQU                               0x08a0
+_page_0x09a0                      EQU                               0x09a0
+_page_0x0aa0                      EQU                               0x0aa0
+_page_0x0ba0                      EQU                               0x0ba0
+_page_0x0ca0                      EQU                               0x0ca0
+_page_0x0da0                      EQU                               0x0da0
+_else_0x0847                      EQU                               0x0de2
 
 ; Global Variables
-_R                            EQU                               0x0030
-_I                            EQU                               0x0032
-_J                            EQU                               0x0034
-_F                            EQU                               0x0036
-_P                            EQU                               0x0038
-_M                            EQU                               0x003a
-_B                            EQU                               0x003c
-_Q                            EQU                               0x003e
-_K                            EQU                               0x0040
-_D                            EQU                               0x0042
-_X                            EQU                               0x0044
+_R                                EQU                               0x0030
+_I                                EQU                               0x0032
+_J                                EQU                               0x0034
+_F                                EQU                               0x0036
+_P                                EQU                               0x0038
+_M                                EQU                               0x003a
+_B                                EQU                               0x003c
+_Q                                EQU                               0x003e
+_K                                EQU                               0x0040
+_D                                EQU                               0x0042
+_X                                EQU                               0x0044
 
 ; Local Variables
 
 ; Arrays
-_C_array                      EQU                               0x7ee0
-_C_array                      DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_array                      EQU                               0x0636
-_A_array                      DW                                0x7ed2 0x7ec4 0x7eb6 0x7ea8 0x7df2 0x7de4 0x7dd6 0x7dc8 0x7dba 0x7dac 0x7cf2 0x7ce4 0x7cd6 0x7cc8 0x7cba 0x7cac 0x7bf2 0x7be4 0x7bd6 0x7bc8 0x7bba 0x7bac 0x7af2 0x7ae4 0x7ad6 0x7ac8 0x7aba 0x7aac 0x79f2 0x79e4 0x79d6 0x79c8 0x79ba 0x79ac 0x78f2 0x78e4 0x78d6 0x78c8 0x78ba 0x78ac 0x77f2 0x77e4 0x77d6 0x77c8 0x77ba 0x77ac 0x76f2 0x76e4 0x76d6 0x76c8 0x76ba 0x76ac 0x75f2 0x75e4 0x75d6 0x75c8 0x75ba 0x75ac 0x74f2 0x74e4 0x74d6 0x74c8 0x74ba 0x74ac 0x73f2 0x73e4 0x73d6 0x73c8 0x73ba 0x73ac 0x72f2 0x72e4 0x72d6 0x72c8 0x72ba 0x72ac 0x71f2 0x71e4 0x71d6 0x71c8 0x71ba 0x71ac 0x70f2 0x70e4 0x70d6 0x70c8 0x70ba 0x70ac 0x6ff2 0x6fe4 0x6fd6 0x6fc8 0x6fba 0x6fac 0x6ef2 0x6ee4 0x6ed6 0x6ec8 0x6eba 0x6eac 0x6df2 
-_A_0x7ed2                     EQU                               0x7ed2
-_A_0x7ed2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7ec4                     EQU                               0x7ec4
-_A_0x7ec4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7eb6                     EQU                               0x7eb6
-_A_0x7eb6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7ea8                     EQU                               0x7ea8
-_A_0x7ea8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7df2                     EQU                               0x7df2
-_A_0x7df2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7de4                     EQU                               0x7de4
-_A_0x7de4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7dd6                     EQU                               0x7dd6
-_A_0x7dd6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7dc8                     EQU                               0x7dc8
-_A_0x7dc8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7dba                     EQU                               0x7dba
-_A_0x7dba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7dac                     EQU                               0x7dac
-_A_0x7dac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7cf2                     EQU                               0x7cf2
-_A_0x7cf2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7ce4                     EQU                               0x7ce4
-_A_0x7ce4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7cd6                     EQU                               0x7cd6
-_A_0x7cd6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7cc8                     EQU                               0x7cc8
-_A_0x7cc8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7cba                     EQU                               0x7cba
-_A_0x7cba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7cac                     EQU                               0x7cac
-_A_0x7cac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7bf2                     EQU                               0x7bf2
-_A_0x7bf2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7be4                     EQU                               0x7be4
-_A_0x7be4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7bd6                     EQU                               0x7bd6
-_A_0x7bd6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7bc8                     EQU                               0x7bc8
-_A_0x7bc8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7bba                     EQU                               0x7bba
-_A_0x7bba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7bac                     EQU                               0x7bac
-_A_0x7bac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7af2                     EQU                               0x7af2
-_A_0x7af2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7ae4                     EQU                               0x7ae4
-_A_0x7ae4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7ad6                     EQU                               0x7ad6
-_A_0x7ad6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7ac8                     EQU                               0x7ac8
-_A_0x7ac8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7aba                     EQU                               0x7aba
-_A_0x7aba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x7aac                     EQU                               0x7aac
-_A_0x7aac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x79f2                     EQU                               0x79f2
-_A_0x79f2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x79e4                     EQU                               0x79e4
-_A_0x79e4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x79d6                     EQU                               0x79d6
-_A_0x79d6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x79c8                     EQU                               0x79c8
-_A_0x79c8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x79ba                     EQU                               0x79ba
-_A_0x79ba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x79ac                     EQU                               0x79ac
-_A_0x79ac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x78f2                     EQU                               0x78f2
-_A_0x78f2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x78e4                     EQU                               0x78e4
-_A_0x78e4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x78d6                     EQU                               0x78d6
-_A_0x78d6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x78c8                     EQU                               0x78c8
-_A_0x78c8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x78ba                     EQU                               0x78ba
-_A_0x78ba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x78ac                     EQU                               0x78ac
-_A_0x78ac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x77f2                     EQU                               0x77f2
-_A_0x77f2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x77e4                     EQU                               0x77e4
-_A_0x77e4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x77d6                     EQU                               0x77d6
-_A_0x77d6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x77c8                     EQU                               0x77c8
-_A_0x77c8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x77ba                     EQU                               0x77ba
-_A_0x77ba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x77ac                     EQU                               0x77ac
-_A_0x77ac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x76f2                     EQU                               0x76f2
-_A_0x76f2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x76e4                     EQU                               0x76e4
-_A_0x76e4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x76d6                     EQU                               0x76d6
-_A_0x76d6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x76c8                     EQU                               0x76c8
-_A_0x76c8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x76ba                     EQU                               0x76ba
-_A_0x76ba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x76ac                     EQU                               0x76ac
-_A_0x76ac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x75f2                     EQU                               0x75f2
-_A_0x75f2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x75e4                     EQU                               0x75e4
-_A_0x75e4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x75d6                     EQU                               0x75d6
-_A_0x75d6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x75c8                     EQU                               0x75c8
-_A_0x75c8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x75ba                     EQU                               0x75ba
-_A_0x75ba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x75ac                     EQU                               0x75ac
-_A_0x75ac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x74f2                     EQU                               0x74f2
-_A_0x74f2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x74e4                     EQU                               0x74e4
-_A_0x74e4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x74d6                     EQU                               0x74d6
-_A_0x74d6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x74c8                     EQU                               0x74c8
-_A_0x74c8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x74ba                     EQU                               0x74ba
-_A_0x74ba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x74ac                     EQU                               0x74ac
-_A_0x74ac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x73f2                     EQU                               0x73f2
-_A_0x73f2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x73e4                     EQU                               0x73e4
-_A_0x73e4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x73d6                     EQU                               0x73d6
-_A_0x73d6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x73c8                     EQU                               0x73c8
-_A_0x73c8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x73ba                     EQU                               0x73ba
-_A_0x73ba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x73ac                     EQU                               0x73ac
-_A_0x73ac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x72f2                     EQU                               0x72f2
-_A_0x72f2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x72e4                     EQU                               0x72e4
-_A_0x72e4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x72d6                     EQU                               0x72d6
-_A_0x72d6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x72c8                     EQU                               0x72c8
-_A_0x72c8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x72ba                     EQU                               0x72ba
-_A_0x72ba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x72ac                     EQU                               0x72ac
-_A_0x72ac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x71f2                     EQU                               0x71f2
-_A_0x71f2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x71e4                     EQU                               0x71e4
-_A_0x71e4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x71d6                     EQU                               0x71d6
-_A_0x71d6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x71c8                     EQU                               0x71c8
-_A_0x71c8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x71ba                     EQU                               0x71ba
-_A_0x71ba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x71ac                     EQU                               0x71ac
-_A_0x71ac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x70f2                     EQU                               0x70f2
-_A_0x70f2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x70e4                     EQU                               0x70e4
-_A_0x70e4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x70d6                     EQU                               0x70d6
-_A_0x70d6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x70c8                     EQU                               0x70c8
-_A_0x70c8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x70ba                     EQU                               0x70ba
-_A_0x70ba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x70ac                     EQU                               0x70ac
-_A_0x70ac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x6ff2                     EQU                               0x6ff2
-_A_0x6ff2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x6fe4                     EQU                               0x6fe4
-_A_0x6fe4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x6fd6                     EQU                               0x6fd6
-_A_0x6fd6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x6fc8                     EQU                               0x6fc8
-_A_0x6fc8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x6fba                     EQU                               0x6fba
-_A_0x6fba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x6fac                     EQU                               0x6fac
-_A_0x6fac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x6ef2                     EQU                               0x6ef2
-_A_0x6ef2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x6ee4                     EQU                               0x6ee4
-_A_0x6ee4                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x6ed6                     EQU                               0x6ed6
-_A_0x6ed6                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x6ec8                     EQU                               0x6ec8
-_A_0x6ec8                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x6eba                     EQU                               0x6eba
-_A_0x6eba                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x6eac                     EQU                               0x6eac
-_A_0x6eac                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
-_A_0x6df2                     EQU                               0x6df2
-_A_0x6df2                     DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_C_array                          EQU                               0x7de0
+_C_array                          DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_array                          EQU                               0x0636
+_A_array                          DW                                0x7dd2 0x7dc4 0x7db6 0x7da8 0x7cf2 0x7ce4 0x7cd6 0x7cc8 0x7cba 0x7cac 0x7bf2 0x7be4 0x7bd6 0x7bc8 0x7bba 0x7bac 0x7af2 0x7ae4 0x7ad6 0x7ac8 0x7aba 0x7aac 0x79f2 0x79e4 0x79d6 0x79c8 0x79ba 0x79ac 0x78f2 0x78e4 0x78d6 0x78c8 0x78ba 0x78ac 0x77f2 0x77e4 0x77d6 0x77c8 0x77ba 0x77ac 0x76f2 0x76e4 0x76d6 0x76c8 0x76ba 0x76ac 0x75f2 0x75e4 0x75d6 0x75c8 0x75ba 0x75ac 0x74f2 0x74e4 0x74d6 0x74c8 0x74ba 0x74ac 0x73f2 0x73e4 0x73d6 0x73c8 0x73ba 0x73ac 0x72f2 0x72e4 0x72d6 0x72c8 0x72ba 0x72ac 0x71f2 0x71e4 0x71d6 0x71c8 0x71ba 0x71ac 0x70f2 0x70e4 0x70d6 0x70c8 0x70ba 0x70ac 0x6ff2 0x6fe4 0x6fd6 0x6fc8 0x6fba 0x6fac 0x6ef2 0x6ee4 0x6ed6 0x6ec8 0x6eba 0x6eac 0x6df2 0x6de4 0x6dd6 0x6dc8 0x6dba 0x6dac 0x6cf2 
+_A_0x7dd2                         EQU                               0x7dd2
+_A_0x7dd2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7dc4                         EQU                               0x7dc4
+_A_0x7dc4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7db6                         EQU                               0x7db6
+_A_0x7db6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7da8                         EQU                               0x7da8
+_A_0x7da8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7cf2                         EQU                               0x7cf2
+_A_0x7cf2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7ce4                         EQU                               0x7ce4
+_A_0x7ce4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7cd6                         EQU                               0x7cd6
+_A_0x7cd6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7cc8                         EQU                               0x7cc8
+_A_0x7cc8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7cba                         EQU                               0x7cba
+_A_0x7cba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7cac                         EQU                               0x7cac
+_A_0x7cac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7bf2                         EQU                               0x7bf2
+_A_0x7bf2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7be4                         EQU                               0x7be4
+_A_0x7be4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7bd6                         EQU                               0x7bd6
+_A_0x7bd6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7bc8                         EQU                               0x7bc8
+_A_0x7bc8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7bba                         EQU                               0x7bba
+_A_0x7bba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7bac                         EQU                               0x7bac
+_A_0x7bac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7af2                         EQU                               0x7af2
+_A_0x7af2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7ae4                         EQU                               0x7ae4
+_A_0x7ae4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7ad6                         EQU                               0x7ad6
+_A_0x7ad6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7ac8                         EQU                               0x7ac8
+_A_0x7ac8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7aba                         EQU                               0x7aba
+_A_0x7aba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x7aac                         EQU                               0x7aac
+_A_0x7aac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x79f2                         EQU                               0x79f2
+_A_0x79f2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x79e4                         EQU                               0x79e4
+_A_0x79e4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x79d6                         EQU                               0x79d6
+_A_0x79d6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x79c8                         EQU                               0x79c8
+_A_0x79c8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x79ba                         EQU                               0x79ba
+_A_0x79ba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x79ac                         EQU                               0x79ac
+_A_0x79ac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x78f2                         EQU                               0x78f2
+_A_0x78f2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x78e4                         EQU                               0x78e4
+_A_0x78e4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x78d6                         EQU                               0x78d6
+_A_0x78d6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x78c8                         EQU                               0x78c8
+_A_0x78c8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x78ba                         EQU                               0x78ba
+_A_0x78ba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x78ac                         EQU                               0x78ac
+_A_0x78ac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x77f2                         EQU                               0x77f2
+_A_0x77f2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x77e4                         EQU                               0x77e4
+_A_0x77e4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x77d6                         EQU                               0x77d6
+_A_0x77d6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x77c8                         EQU                               0x77c8
+_A_0x77c8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x77ba                         EQU                               0x77ba
+_A_0x77ba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x77ac                         EQU                               0x77ac
+_A_0x77ac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x76f2                         EQU                               0x76f2
+_A_0x76f2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x76e4                         EQU                               0x76e4
+_A_0x76e4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x76d6                         EQU                               0x76d6
+_A_0x76d6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x76c8                         EQU                               0x76c8
+_A_0x76c8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x76ba                         EQU                               0x76ba
+_A_0x76ba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x76ac                         EQU                               0x76ac
+_A_0x76ac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x75f2                         EQU                               0x75f2
+_A_0x75f2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x75e4                         EQU                               0x75e4
+_A_0x75e4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x75d6                         EQU                               0x75d6
+_A_0x75d6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x75c8                         EQU                               0x75c8
+_A_0x75c8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x75ba                         EQU                               0x75ba
+_A_0x75ba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x75ac                         EQU                               0x75ac
+_A_0x75ac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x74f2                         EQU                               0x74f2
+_A_0x74f2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x74e4                         EQU                               0x74e4
+_A_0x74e4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x74d6                         EQU                               0x74d6
+_A_0x74d6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x74c8                         EQU                               0x74c8
+_A_0x74c8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x74ba                         EQU                               0x74ba
+_A_0x74ba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x74ac                         EQU                               0x74ac
+_A_0x74ac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x73f2                         EQU                               0x73f2
+_A_0x73f2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x73e4                         EQU                               0x73e4
+_A_0x73e4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x73d6                         EQU                               0x73d6
+_A_0x73d6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x73c8                         EQU                               0x73c8
+_A_0x73c8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x73ba                         EQU                               0x73ba
+_A_0x73ba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x73ac                         EQU                               0x73ac
+_A_0x73ac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x72f2                         EQU                               0x72f2
+_A_0x72f2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x72e4                         EQU                               0x72e4
+_A_0x72e4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x72d6                         EQU                               0x72d6
+_A_0x72d6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x72c8                         EQU                               0x72c8
+_A_0x72c8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x72ba                         EQU                               0x72ba
+_A_0x72ba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x72ac                         EQU                               0x72ac
+_A_0x72ac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x71f2                         EQU                               0x71f2
+_A_0x71f2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x71e4                         EQU                               0x71e4
+_A_0x71e4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x71d6                         EQU                               0x71d6
+_A_0x71d6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x71c8                         EQU                               0x71c8
+_A_0x71c8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x71ba                         EQU                               0x71ba
+_A_0x71ba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x71ac                         EQU                               0x71ac
+_A_0x71ac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x70f2                         EQU                               0x70f2
+_A_0x70f2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x70e4                         EQU                               0x70e4
+_A_0x70e4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x70d6                         EQU                               0x70d6
+_A_0x70d6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x70c8                         EQU                               0x70c8
+_A_0x70c8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x70ba                         EQU                               0x70ba
+_A_0x70ba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x70ac                         EQU                               0x70ac
+_A_0x70ac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6ff2                         EQU                               0x6ff2
+_A_0x6ff2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6fe4                         EQU                               0x6fe4
+_A_0x6fe4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6fd6                         EQU                               0x6fd6
+_A_0x6fd6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6fc8                         EQU                               0x6fc8
+_A_0x6fc8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6fba                         EQU                               0x6fba
+_A_0x6fba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6fac                         EQU                               0x6fac
+_A_0x6fac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6ef2                         EQU                               0x6ef2
+_A_0x6ef2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6ee4                         EQU                               0x6ee4
+_A_0x6ee4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6ed6                         EQU                               0x6ed6
+_A_0x6ed6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6ec8                         EQU                               0x6ec8
+_A_0x6ec8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6eba                         EQU                               0x6eba
+_A_0x6eba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6eac                         EQU                               0x6eac
+_A_0x6eac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6df2                         EQU                               0x6df2
+_A_0x6df2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6de4                         EQU                               0x6de4
+_A_0x6de4                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6dd6                         EQU                               0x6dd6
+_A_0x6dd6                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6dc8                         EQU                               0x6dc8
+_A_0x6dc8                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6dba                         EQU                               0x6dba
+_A_0x6dba                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6dac                         EQU                               0x6dac
+_A_0x6dac                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
+_A_0x6cf2                         EQU                               0x6cf2
+_A_0x6cf2                         DW                                0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 0x0000 
 
 ; Strings
-_Z$                           EQU                               0x6ba0
-_Z$                           DB                                0 '' 0
-_N$                           EQU                               0x67a0
-_N$                           DB                                0 '' 0
-_A$                           EQU                               0x65a0
-_A$                           DB                                0 '' 0
+_Z$                               EQU                               0x6aa0
+_Z$                               DB                                0 '' 0
+_N$                               EQU                               0x66a0
+_N$                               DB                                0 '' 0
+_A$                               EQU                               0x64a0
+_A$                               DB                                0 '' 0
 
 ; Constant Strings
-_str_0x6ddc                   EQU                               0x6ddc
-_str_0x6ddc                   DB                                20 'WELCOME TO THE ALLEY' 0
-_str_0x6dc8                   EQU                               0x6dc8
-_str_0x6dc8                   DB                                18 'BRING YOUR FRIENDS' 0
-_str_0x6da6                   EQU                               0x6da6
-_str_0x6da6                   DB                                32 'OKAY LET US FIRST GET ACQUAINTED' 0
-_str_0x6ce8                   EQU                               0x6ce8
-_str_0x6ce8                   DB                                22 'THE INSTRUCTIONS (Y/N)' 0
-_str_0x7ea5                   EQU                               0x7ea5
-_str_0x7ea5                   DB                                1 '?' 0
-_str_0x7ca9                   EQU                               0x7ca9
-_str_0x7ca9                   DB                                1 'Y' 0
-_str_0x7ca6                   EQU                               0x7ca6
-_str_0x7ca6                   DB                                1 'N' 0
-_str_0x6cae                   EQU                               0x6cae
-_str_0x6cae                   DB                                56 'THE GAME OF BOWLING TAKES MIND AND SKILL.DURING THE GAME' 0
-_str_0x6acd                   EQU                               0x6acd
-_str_0x6acd                   DB                                49 'THE COMPUTER WILL KEEP SCORE.YOU MAY COMPETE WITH' 0
-_str_0x69c6                   EQU                               0x69c6
-_str_0x69c6                   DB                                56 'ON THE PIN DIAGRAM O MEANS THE PIN IS DOWN...+ MEANS THE' 0
-_str_0x68c4                   EQU                               0x68c4
-_str_0x68c4                   DB                                58 'PIN IS STANDING.AFTER THE GAME THE COMPUTER WILL SHOW YOUR' 0
-_str_0x7ba2                   EQU                               0x7ba2
-_str_0x7ba2                   DB                                8 'SCORES .' 0
-_str_0x6aa8                   EQU                               0x6aa8
-_str_0x6aa8                   DB                                35 'FIRST OF ALL...HOW MANY ARE PLAYING' 0
-_str_0x6ca0                   EQU                               0x6ca0
-_str_0x6ca0                   DB                                12 'VERY GOOD...' 0
-_str_0x69a4                   EQU                               0x69a4
-_str_0x69a4                   DB                                32 'TYPE ROLL TO GET THE BALL GOING.' 0
-_str_0x78a4                   EQU                               0x78a4
-_str_0x78a4                   DB                                6 'FRAME:' 0
-_str_0x77a5                   EQU                               0x77a5
-_str_0x77a5                   DB                                5 'BALL:' 0
-_str_0x79a2                   EQU                               0x79a2
-_str_0x79a2                   DB                                2 '+ ' 0
-_str_0x78a0                   EQU                               0x78a0
-_str_0x78a0                   DB                                2 'O ' 0
-_str_0x76a2                   EQU                               0x76a2
-_str_0x76a2                   DB                                8 'GUTTER!!' 0
-_str_0x68b7                   EQU                               0x68b7
-_str_0x68b7                   DB                                11 'STRIKE!!!!!' 0
-_str_0x75a1                   EQU                               0x75a1
-_str_0x75a1                   DB                                9 'SPARE!!!!' 0
-_str_0x74a2                   EQU                               0x74a2
-_str_0x74a2                   DB                                8 'ERROR!!!' 0
-_str_0x68a3                   EQU                               0x68a3
-_str_0x68a3                   DB                                18 'ROLL YOUR 2ND BALL' 0
-_str_0x73a4                   EQU                               0x73a4
-_str_0x73a4                   DB                                6 'FRAMES' 0
-_str_0x66e6                   EQU                               0x66e6
-_str_0x66e6                   DB                                24 'DO YOU WANT ANOTHER GAME' 0
+_str_0x6cdc                       EQU                               0x6cdc
+_str_0x6cdc                       DB                                20 'WELCOME TO THE ALLEY' 0
+_str_0x6cc8                       EQU                               0x6cc8
+_str_0x6cc8                       DB                                18 'BRING YOUR FRIENDS' 0
+_str_0x6ca6                       EQU                               0x6ca6
+_str_0x6ca6                       DB                                32 'OKAY LET US FIRST GET ACQUAINTED' 0
+_str_0x6be8                       EQU                               0x6be8
+_str_0x6be8                       DB                                22 'THE INSTRUCTIONS (Y/N)' 0
+_str_0x7da5                       EQU                               0x7da5
+_str_0x7da5                       DB                                1 '?' 0
+_str_0x7ba9                       EQU                               0x7ba9
+_str_0x7ba9                       DB                                1 'Y' 0
+_str_0x7ba6                       EQU                               0x7ba6
+_str_0x7ba6                       DB                                1 'N' 0
+_str_0x69c6                       EQU                               0x69c6
+_str_0x69c6                       DB                                56 'THE GAME OF BOWLING TAKES MIND AND SKILL.DURING THE GAME' 0
+_str_0x6ba5                       EQU                               0x6ba5
+_str_0x6ba5                       DB                                49 'THE COMPUTER WILL KEEP SCORE.YOU MAY COMPETE WITH' 0
+_str_0x68c6                       EQU                               0x68c6
+_str_0x68c6                       DB                                56 'ON THE PIN DIAGRAM O MEANS THE PIN IS DOWN...+ MEANS THE' 0
+_str_0x67c4                       EQU                               0x67c4
+_str_0x67c4                       DB                                58 'PIN IS STANDING.AFTER THE GAME THE COMPUTER WILL SHOW YOUR' 0
+_str_0x7aa2                       EQU                               0x7aa2
+_str_0x7aa2                       DB                                8 'SCORES .' 0
+_str_0x69a1                       EQU                               0x69a1
+_str_0x69a1                       DB                                35 'FIRST OF ALL...HOW MANY ARE PLAYING' 0
+_str_0x68b8                       EQU                               0x68b8
+_str_0x68b8                       DB                                12 'VERY GOOD...' 0
+_str_0x67a2                       EQU                               0x67a2
+_str_0x67a2                       DB                                32 'TYPE ROLL TO GET THE BALL GOING.' 0
+_str_0x77a4                       EQU                               0x77a4
+_str_0x77a4                       DB                                6 'FRAME:' 0
+_str_0x76a5                       EQU                               0x76a5
+_str_0x76a5                       DB                                5 'BALL:' 0
+_str_0x78a2                       EQU                               0x78a2
+_str_0x78a2                       DB                                2 '+ ' 0
+_str_0x77a0                       EQU                               0x77a0
+_str_0x77a0                       DB                                2 'O ' 0
+_str_0x75a2                       EQU                               0x75a2
+_str_0x75a2                       DB                                8 'GUTTER!!' 0
+_str_0x68ab                       EQU                               0x68ab
+_str_0x68ab                       DB                                11 'STRIKE!!!!!' 0
+_str_0x74a1                       EQU                               0x74a1
+_str_0x74a1                       DB                                9 'SPARE!!!!' 0
+_str_0x73a2                       EQU                               0x73a2
+_str_0x73a2                       DB                                8 'ERROR!!!' 0
+_str_0x65ec                       EQU                               0x65ec
+_str_0x65ec                       DB                                18 'ROLL YOUR 2ND BALL' 0
+_str_0x72a4                       EQU                               0x72a4
+_str_0x72a4                       DB                                6 'FRAMES' 0
+_str_0x65d2                       EQU                               0x65d2
+_str_0x65d2                       DB                                24 'DO YOU WANT ANOTHER GAME' 0
 
 ; Data
 
@@ -451,579 +451,589 @@ _str_0x66e6                   DB                                24 'DO YOU WANT 
 
 ; Define Images
 
+; Define Loader Image Chunks
+
 ; Define Sprites
 
 ; Define Fonts
 
 ; Lookup Tables
-_inputVars_0x7ea3             EQU                               0x7ea3
-_inputVars_0x7ea3             DW                                0x6ba0 
-_inputStrs_0x7ea1             EQU                               0x7ea1
-_inputStrs_0x7ea1             DW                                0x7ea5 
-_inputTypes_0x7da2            EQU                               0x7da2
-_inputTypes_0x7da2            DW                                0x5f05 0x0000 
-_input_0x7da6                 EQU                               0x7da6
-_input_0x7da6                 DW                                0x7ea3 0x7ea1 0x7da2 
-_inputVars_0x7da0             EQU                               0x7da0
-_inputVars_0x7da0             DW                                0x0030 
-_inputStrs_0x7ba0             EQU                               0x7ba0
-_inputStrs_0x7ba0             DW                                0x7ea5 
-_inputTypes_0x7aa8            EQU                               0x7aa8
-_inputTypes_0x7aa8            DW                                0x5f03 0x0000 
-_input_0x7ca0                 EQU                               0x7ca0
-_input_0x7ca0                 DW                                0x7da0 0x7ba0 0x7aa8 
-_inputVars_0x7aa0             EQU                               0x7aa0
-_inputVars_0x7aa0             DW                                0x67a0 
-_inputStrs_0x79aa             EQU                               0x79aa
-_inputStrs_0x79aa             DW                                0x7ea5 
-_inputTypes_0x79a6            EQU                               0x79a6
-_inputTypes_0x79a6            DW                                0x5f05 0x0000 
-_input_0x7aa2                 EQU                               0x7aa2
-_input_0x7aa2                 DW                                0x7aa0 0x79aa 0x79a6 
-_inputVars_0x79a0             EQU                               0x79a0
-_inputVars_0x79a0             DW                                0x65a0 
-_inputStrs_0x77a3             EQU                               0x77a3
-_inputStrs_0x77a3             DW                                0x7ea5 
-_inputTypes_0x73a0            EQU                               0x73a0
-_inputTypes_0x73a0            DW                                0x5f05 0x0000 
-_input_0x72a6                 EQU                               0x72a6
-_input_0x72a6                 DW                                0x79a0 0x77a3 0x73a0 
+_inputVars_0x7da3                 EQU                               0x7da3
+_inputVars_0x7da3                 DW                                0x6aa0 
+_inputStrs_0x7da1                 EQU                               0x7da1
+_inputStrs_0x7da1                 DW                                0x7da5 
+_inputTypes_0x7ca2                EQU                               0x7ca2
+_inputTypes_0x7ca2                DW                                0x5f05 0x0000 
+_input_0x7ca6                     EQU                               0x7ca6
+_input_0x7ca6                     DW                                0x7da3 0x7da1 0x7ca2 
+_inputVars_0x7ca0                 EQU                               0x7ca0
+_inputVars_0x7ca0                 DW                                0x0030 
+_inputStrs_0x7aa0                 EQU                               0x7aa0
+_inputStrs_0x7aa0                 DW                                0x7da5 
+_inputTypes_0x79a8                EQU                               0x79a8
+_inputTypes_0x79a8                DW                                0x5f03 0x0000 
+_input_0x7ba0                     EQU                               0x7ba0
+_input_0x7ba0                     DW                                0x7ca0 0x7aa0 0x79a8 
+_inputVars_0x79a0                 EQU                               0x79a0
+_inputVars_0x79a0                 DW                                0x66a0 
+_inputStrs_0x78aa                 EQU                               0x78aa
+_inputStrs_0x78aa                 DW                                0x7da5 
+_inputTypes_0x78a6                EQU                               0x78a6
+_inputTypes_0x78a6                DW                                0x5f05 0x0000 
+_input_0x79a2                     EQU                               0x79a2
+_input_0x79a2                     DW                                0x79a0 0x78aa 0x78a6 
+_inputVars_0x78a0                 EQU                               0x78a0
+_inputVars_0x78a0                 DW                                0x64a0 
+_inputStrs_0x76a3                 EQU                               0x76a3
+_inputStrs_0x76a3                 DW                                0x7da5 
+_inputTypes_0x72a0                EQU                               0x72a0
+_inputTypes_0x72a0                DW                                0x5f05 0x0000 
+_input_0x71a6                     EQU                               0x71a6
+_input_0x71a6                     DW                                0x78a0 0x76a3 0x72a0 
 
 ; Code
-_entryPoint_                  LDI                               0x20
-                              STW                               romType
-                              RomCheck                          
-                              Initialise                        
-                              InitEqOp                        
-                              InitNeOp                        
-                              InitGeOp                        
-                              InitLtOp                        
-                              Init16Array2d                   
-                              InitRealTimeStub                                                  ; INIT
-
-                              LDI                               2
-                              STW                               graphicsMode
-                              ScanlineMode                      
-                              ClearVertBlinds                                                   ; mode 2 : cls
-
-_360                          PrintString                       _str_0x6ddc
-                              NewLine                                                           ; PRINT "WELCOME TO THE ALLEY"
-
-_450                          PrintString                       _str_0x6dc8
-                              NewLine                                                           ; PRINT "BRING YOUR FRIENDS"
-
-_540                          PrintString                       _str_0x6da6
-                              NewLine                                                           ; PRINT "OKAY LET US FIRST GET ACQUAINTED"
-
-_630                          NewLine                                                           ; PRINT ""
-
-_720                          PrintString                       _str_0x6ce8
-                              NewLine                                                           ; PRINT "THE INSTRUCTIONS (Y/N)"
-
-_810                          LDWI                              0x7da6
-                              Input                                                             ; INPUT Z$
-
-_900                          LDWI                              0x6ba0
-                              STW                               strSrcAddr
-                              LDWI                              0x7ca9
-                              StringCmp                         
-                              XORI                              1
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _960 0
-                              LDWI                              _990
-                              CALL                              giga_vAC                        ; IF strcmp(Z$,"Y") = 1 THEN 990
-
-_960                          LDWI                              0x6ba0
-                              STW                               strSrcAddr
-                              LDWI                              0x7ca6
-                              StringCmp                         
-                              XORI                              1
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _990 1
-                              LDWI                              _1530
-                              CALL                              giga_vAC                        ; IF strcmp(Z$,"N") = 1 THEN 1530
-
-_990                          PrintString                       _str_0x6cae
-                              NewLine                                                           ; PRINT "THE GAME OF BOWLING TAKES MIND AND SKILL.DURING THE GAME"
-
-_1080                         PrintString                       _str_0x6acd
-                              NewLine                                                           ; PRINT "THE COMPUTER WILL KEEP SCORE.YOU MAY COMPETE WITH"
-
-                              STW                               0xc0
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xc0
-_1170                         NewLine                                                           ; PRINT "OTHER PLAYERS[UP TO FOUR].YOU WILL BE PLAYING TEN FRAMES"
-
-_1260                         PrintString                       _str_0x69c6
-                              NewLine                                                           ; PRINT "ON THE PIN DIAGRAM O MEANS THE PIN IS DOWN...+ MEANS THE"
-
-_1350                         PrintString                       _str_0x68c4
-                              NewLine                                                           ; PRINT "PIN IS STANDING.AFTER THE GAME THE COMPUTER WILL SHOW YOUR"
-
-_1440                         PrintString                       _str_0x7ba2
-                              NewLine                                                           ; PRINT "SCORES ."
-
-_1530                         PrintString                       _str_0x6aa8                     ; PRINT "FIRST OF ALL...HOW MANY ARE PLAYING";
-
-_1620                         LDWI                              0x7ca0
-                              Input                                                             ; INPUT R
-
-_1710                         NewLine                                                           ; PRINT
-
-_1800                         PrintString                       _str_0x6ca0
-                              NewLine                                                           ; PRINT "VERY GOOD..."
-
-_1890                         LDI                               1
-                              STW                               _I
-_next_0x0345                  LDI                               1
-                              STW                               _J
-_next_0x0349                  LDI                               0
-                              STW                               memValue
-                              LDW                               _I
-                              STW                               memIndex0
-                              LDW                               _J
-                              STW                               memIndex1
-                              LDWI                              0x0636
-                              CALL                              convert16Arr2dAddr
-                              LDW                               memValue
-                              DOKE                              memAddr
-                              ForNextFarInc                     _J _next_0x0349 6
-                              ForNextFarInc                     _I _next_0x0345 100             ; FOR I=1 TO 100: FOR J=1 TO 6: A(I,J)=0: NEXT J: NEXT I
-
-_1980                         LDI                               1
-                              STW                               _F                              ; F=1
-
-_2070                         LDI                               1
-                              STW                               _P
-                              LDW                               _R
-                              STW                               0xb0
-                              LDI                               1
-                              STW                               0xb2                            ; FOR P=1 TO R
-
-_2160                         LDI                               0
-                              STW                               _M                              ; M=0
-
-_2250                         LDI                               1
-                              STW                               _B                              ; B=1
-
-_2340                         LDI                               0
-                              STW                               _M
-                              LDI                               0
-                              STW                               _Q                              ; M=0: Q=0
-
-_2430                         LDI                               1
-                              STW                               _I
-_next_0x039e                  LDWI                              0x7ee0
-                              ADDW                              _I
-                              ADDW                              _I
-                              STW                               memAddr
-                              LDI                               0
-                              DOKE                              memAddr
-                              ForNextFarInc                     _I _next_0x039e 15              ; FOR I=1 TO 15: C(I)=0: NEXT I
-
-_2610                         PrintString                       _str_0x69a4
-                              NewLine                                                           ; PRINT "TYPE ROLL TO GET THE BALL GOING."
-
-_2700                         LDWI                              0x7aa2
-                              Input                                                             ; INPUT N$
-
-_2790                         LDI                               0
-                              STW                               _K
-                              LDI                               0
-                              STW                               0xc0
-                              LDWI                              _page_0x0400
-                              CALL                              giga_vAC
-_page_0x0400                  LDW                               0xc0
-                              STW                               _D                              ; K=0: D=0
-
-_2880                         LDI                               1
-                              STW                               _I                              ; FOR I=1 TO 20
-
-_2970                         LDI                               0x64
-                              RandMod                           
-                              STW                               _X                              ; X=RND(100)
-
-_3060                         LDI                               1
-                              STW                               _J                              ; FOR J=1 TO 10
-
-_3150                         LDI                               15
-                              STW                               mathX
-                              LDW                               _J
-                              STW                               mathY
-                              LDWI                              multiply16bit
-                              CALL                              giga_vAC
-                              STW                               0xe8
-                              LDW                               _X
-                              SUBW                              0xe8
-                              CALL                              convertLtOpAddr
-                              JumpFalse                         _3240 2
-                              LDWI                              _3330
-                              CALL                              giga_vAC                        ; IF X<15*J THEN 3330
-
-_3240                         ForNextFarInc                     _J _3150 10                     ; NEXT J
-
-_3330                         LDI                               1
-                              STW                               memValue
-                              LDI                               15
-                              STW                               mathX
-                              LDW                               _J
-                              STW                               mathY
-                              LDWI                              multiply16bit
-                              CALL                              giga_vAC
-                              SUBW                              _X
-                              STW                               memIndex0
-                              LDWI                              0x7ee0
-                              ADDW                              memIndex0
-                              ADDW                              memIndex0
-                              STW                               memAddr
-                              LDW                               memValue
-                              DOKE                              memAddr                         ; C(15*J-X)=1
-
-_3420                         ForNextFarInc                     _I _2970 20                     ; NEXT I
-
-_3600                         LDW                               _P
-                              PrintAcInt16                      
-                              PrintString                       _str_0x78a4
-                              PrintString                       _str_0x77a5
-                              NewLine                                                           ; PRINT "PLAYER:"P;"FRAME:";F"BALL:"B
-
-_3690                         LDI                               0
-                              STW                               _I                              ; FOR I=0 TO 3
-
-_3780                         NewLine                                                           ; PRINT
-
-_3870                         LDI                               1
-                              STW                               _J
-                              LDI                               4
-                              SUBW                              _I
-                              STW                               0xb8
-                              LDI                               1
-                              STW                               0xba                            ; FOR J=1 TO 4-I
-
-_3960                         LDW                               _K
-                              ADDI                              1
-                              STW                               _K                              ; K=K+1
-
-_4050                         LDWI                              0x7ee0
-                              ADDW                              _K
-                              ADDW                              _K
-                              DEEK                              
-                              XORI                              1
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _4140 3
-                              LDWI                              _4320
-                              CALL                              giga_vAC                        ; IF C(K)=1 THEN 4320
-
-_4140                         LDW                               _I
-                              ST                                cursorXY
-                              AtTextCursor                      
-                              PrintString                       _str_0x79a2                     ; AT I : PRINT "+ ";
-
-_4230                         LDWI                              _4410
-                              CALL                              giga_vAC                        ; GOTO 4410
-
-_4320                         LDW                               _I
-                              ST                                cursorXY
-                              AtTextCursor                      
-                              STW                               0xc0
-                              LDWI                              _page_0x0500
-                              CALL                              giga_vAC
-_page_0x0500                  LDW                               0xc0
-                              PrintString                       _str_0x78a0                     ; AT I : PRINT "O ";
-
-_4410                         ForNextFarVarAdd                  _J _3960 0xb8 0xba              ; NEXT J
-
-_4500                         ForNextFarInc                     _I _3780 3                      ; NEXT I
-
-_4590                         NewLine                                                           ; PRINT ""
-
-_4770                         LDI                               1
-                              STW                               _I                              ; FOR I=1 TO 10
-
-_4860                         LDWI                              0x7ee0
-                              ADDW                              _I
-                              ADDW                              _I
-                              DEEK                              
-                              ADDW                              _D
-                              STW                               _D                              ; D=D+C(I)
-
-_4950                         ForNextFarInc                     _I _4860 10                     ; NEXT I
-
-_5040                         LDW                               _D
-                              SUBW                              _M
-                              XORI                              0
-                              CALL                              convertNeOpAddr
-                              JumpFalse                         _5130 4
-                              LDWI                              _5220
-                              CALL                              giga_vAC                        ; IF D-M <> 0 THEN 5220
-
-_5130                         PrintString                       _str_0x76a2
-                              NewLine                                                           ; PRINT "GUTTER!!"
-
-_5220                         LDW                               _B
-                              XORI                              1
-                              CALL                              convertNeOpAddr
-                              STW                               0xe8
-                              LDW                               _D
-                              XORI                              10
-                              CALL                              convertNeOpAddr
-                              ORW                               0xe8
-                              JumpFalse                         _5310 5
-                              LDWI                              _5490
-                              CALL                              giga_vAC                        ; IF (B<>1) OR (D<>10) THEN 5490
-
-_5310                         PrintString                       _str_0x68b7
-                              NewLine                                                           ; PRINT "STRIKE!!!!!"
-
-_5400                         LDI                               3
-                              STW                               _Q                              ; Q=3
-
-_5490                         LDW                               _B
-                              XORI                              2
-                              CALL                              convertNeOpAddr
-                              STW                               0xe8
-                              LDW                               _D
-                              XORI                              10
-                              CALL                              convertNeOpAddr
-                              ORW                               0xe8
-                              JumpFalse                         _5580 6
-                              LDWI                              _5760
-                              CALL                              giga_vAC                        ; IF (B<>2) OR (D<>10) THEN 5760
-
-_5580                         PrintString                       _str_0x75a1
-                              NewLine                                                           ; PRINT "SPARE!!!!"
-
-_5670                         LDI                               2
-                              STW                               _Q                              ; Q=2
-
-_5760                         LDW                               _B
-                              XORI                              2
-                              CALL                              convertNeOpAddr
-                              STW                               0xe8
-                              LDW                               _D
-                              SUBI                              10
-                              CALL                              convertGeOpAddr
-                              ORW                               0xe8
-                              JumpFalse                         _5850 7
-                              LDWI                              _6030
-                              CALL                              giga_vAC                        ; IF (B<>2) OR (D>=10) THEN 6030
-
-_5850                         PrintString                       _str_0x74a2
-                              STW                               0xc0
-                              LDWI                              _page_0x0600
-                              CALL                              giga_vAC
-_page_0x0600                  LDW                               0xc0
-                              NewLine                                                           ; PRINT "ERROR!!!"
-
-_5940                         LDI                               1
-                              STW                               _Q                              ; Q=1
-
-_6030                         LDW                               _B
-                              XORI                              1
-                              CALL                              convertNeOpAddr
-                              STW                               0xe8
-                              LDW                               _D
-                              SUBI                              10
-                              CALL                              convertGeOpAddr
-                              ORW                               0xe8
-                              JumpFalse                         _6120 8
-                              LDWI                              _6210
-                              CALL                              giga_vAC                        ; IF (B<>1) OR (D>=10) THEN 6210
-
-                              STW                               0xc0
-                              LDWI                              _page_0x08a0
-                              CALL                              giga_vAC
-_page_0x08a0                  LDW                               0xc0
-_6120                         PrintString                       _str_0x68a3
-                              NewLine                                                           ; PRINT "ROLL YOUR 2ND BALL"
-
-_6300                         NewLine                                                           ; PRINT
-
-_6390                         LDW                               _D
-                              STW                               memValue
-                              LDW                               _F
-                              STW                               mathX
-                              LDW                               _P
-                              STW                               mathY
-                              LDWI                              multiply16bit
-                              CALL                              giga_vAC
-                              STW                               memIndex0
-                              LDW                               _B
-                              STW                               memIndex1
-                              LDWI                              0x0636
-                              CALL                              convert16Arr2dAddr
-                              LDW                               memValue
-                              DOKE                              memAddr                         ; A(F*P,B)=D
-
-_6480                         LDW                               _B
-                              XORI                              2
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _6570 9
-                              LDWI                              _7020
-                              CALL                              giga_vAC                        ; IF B=2 THEN 7020
-
-_6570                         LDI                               2
-                              STW                               _B                              ; B=2
-
-_6660                         LDW                               _D
-                              STW                               _M                              ; M=D
-
-_6750                         LDW                               _Q
-                              XORI                              3
-                              CALL                              convertEqOpAddr
-                              STW                               0xc0
-                              LDWI                              _page_0x09a0
-                              CALL                              giga_vAC
-_page_0x09a0                  LDW                               0xc0
-                              JumpFalse                         _6840 10
-                              LDWI                              _6210
-                              CALL                              giga_vAC                        ; IF Q=3 THEN 6210
-
-_6840                         LDW                               _D
-                              SUBW                              _M
-                              STW                               memValue
-                              LDW                               _F
-                              STW                               mathX
-                              LDW                               _P
-                              STW                               mathY
-                              LDWI                              multiply16bit
-                              CALL                              giga_vAC
-                              STW                               memIndex0
-                              LDW                               _B
-                              STW                               memIndex1
-                              LDWI                              0x0636
-                              CALL                              convert16Arr2dAddr
-                              LDW                               memValue
-                              DOKE                              memAddr                         ; A(F*P,B)=D-M
-
-_6930                         LDW                               _Q
-                              XORI                              0
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _7020 11
-                              LDWI                              _2520
-                              CALL                              giga_vAC                        ; IF Q=0 THEN 2520
-
-_7020                         LDW                               _Q
-                              STW                               memValue
-                              LDW                               _F
-                              STW                               mathX
-                              LDW                               _P
-                              STW                               mathY
-                              LDWI                              multiply16bit
-                              CALL                              giga_vAC
-                              STW                               memIndex0
-                              STW                               0xc0
-                              LDWI                              _page_0x0aa0
-                              CALL                              giga_vAC
-_page_0x0aa0                  LDW                               0xc0
-                              LDI                               3
-                              STW                               memIndex1
-                              LDWI                              0x0636
-                              CALL                              convert16Arr2dAddr
-                              LDW                               memValue
-                              DOKE                              memAddr                         ; A(F*P,3)=Q
-
-_7110                         ForNextFarVarAdd                  _P _2160 0xb0 0xb2              ; NEXT P
-
-_7200                         LDW                               _F
-                              ADDI                              1
-                              STW                               _F                              ; F=F+1
-
-_7290                         LDW                               _F
-                              SUBI                              11
-                              CALL                              convertLtOpAddr
-                              JumpFalse                         _7295 12
-                              LDWI                              _2070
-                              CALL                              giga_vAC                        ; IF F<11 THEN 2070
-
-_7295                         PrintString                       _str_0x73a4
-                              NewLine                                                           ; PRINT "FRAMES"
-
-_7380                         LDI                               1
-                              STW                               _I                              ; FOR I=1 TO 10
-
-_7470                         LDW                               _I
-                              PrintAcInt16                                                      ; PRINT I;
-
-                              STW                               0xc0
-                              LDWI                              _page_0x0ba0
-                              CALL                              giga_vAC
-_page_0x0ba0                  LDW                               0xc0
-_7560                         ForNextFarInc                     _I _7470 10                     ; NEXT I
-
-_7650                         NewLine                                                           ; PRINT
-
-_7740                         LDI                               1
-                              STW                               _P
-                              LDW                               _R
-                              STW                               0xb0
-                              LDI                               1
-                              STW                               0xb2                            ; FOR P=1 TO R
-
-_7830                         LDI                               1
-                              STW                               _I                              ; FOR I=1 TO 3
-
-_7920                         LDI                               1
-                              STW                               _J                              ; FOR J=1 TO 10
-
-_8010                         LDW                               _J
-                              STW                               mathX
-                              LDW                               _P
-                              STW                               mathY
-                              LDWI                              multiply16bit
-                              CALL                              giga_vAC
-                              STW                               memIndex0
-                              LDW                               _I
-                              STW                               memIndex1
-                              LDWI                              0x0636
-                              CALL                              convert16Arr2dAddr
-                              DEEK                              
-                              PrintAcInt16                                                      ; PRINT A(J*P,I);
-
-_8100                         ForNextFarInc                     _J _8010 10                     ; NEXT J
-
-                              STW                               0xc0
-                              LDWI                              _page_0x0ca0
-                              CALL                              giga_vAC
-_page_0x0ca0                  LDW                               0xc0
-_8105                         NewLine                                                           ; PRINT
-
-_8190                         ForNextFarInc                     _I _7920 3                      ; NEXT I
-
-_8280                         NewLine                                                           ; PRINT
-
-_8370                         ForNextFarVarAdd                  _P _7830 0xb0 0xb2              ; NEXT P
-
-_8460                         PrintString                       _str_0x66e6
-                              NewLine                                                           ; PRINT "DO YOU WANT ANOTHER GAME"
-
-_8550                         LDWI                              0x72a6
-                              Input                                                             ; INPUT A$
-
-_8640                         LDI                               1
-                              STW                               strDstLen
-                              LDWI                              0x65a0
-                              STW                               strSrcAddr
-                              LDWI                              0x7fa0
-                              StringLeft                        
-                              STW                               0xc0
-                              LDWI                              _page_0x0da0
-                              CALL                              giga_vAC
-_page_0x0da0                  LDW                               0xc0
-                              LDWI                              0xffff
-                              STW                               strSrcAddr
-                              LDWI                              0x7ca9
-                              StringCmp                         
-                              XORI                              1
-                              CALL                              convertEqOpAddr
-                              JumpFalse                         _else_0x0831 13
-                              LDWI                              _2610
-                              CALL                              giga_vAC                        ; IF strcmp(LEFT$(A$,1), "Y")=1 THEN 2610
-
-_else_0x0831                  BRA                               _else_0x0831                    ; END
-
-_end_0x0833                   BRA                               _end_0x0833                     ; END
+_entryPoint_                      LDI                               0x20
+                                  STW                               romType
+                                  RomCheck                          
+                                  Initialise                        
+                                  InitEqOp                        
+                                  InitNeOp                        
+                                  InitGeOp                        
+                                  InitLtOp                        
+                                  Init16Array2d                                                 ; Main: INIT
+
+                                  LDI                               2
+                                  STW                               graphicsMode
+                                  ScanlineMode                      
+                                  ClearVertBlinds                                               ; Main: mode 2 : cls
+
+_360                              PrintString                       _str_0x6cdc
+                                  NewLine                                                       ; Main: PRINT "WELCOME TO THE ALLEY"
+
+_450                              PrintString                       _str_0x6cc8
+                                  NewLine                                                       ; Main: PRINT "BRING YOUR FRIENDS"
+
+_540                              PrintString                       _str_0x6ca6
+                                  NewLine                                                       ; Main: PRINT "OKAY LET US FIRST GET ACQUAINTED"
+
+_630                              NewLine                                                       ; Main: PRINT ""
+
+_720                              PrintString                       _str_0x6be8
+                                  NewLine                                                       ; Main: PRINT "THE INSTRUCTIONS (Y/N)"
+
+_810                              LDWI                              0x7ca6
+                                  Input                                                         ; Main: INPUT Z$
+
+_900                              LDWI                              0x6aa0
+                                  STW                               strSrcAddr
+                                  LDWI                              0x7ea0
+                                  StringUpper                       
+                                  LDWI                              0x7ea0
+                                  STW                               strSrcAddr
+                                  LDWI                              0x7ba9
+                                  StringCmp                         
+                                  ANDI                              1
+                                  JumpFalse                         _960 0
+                                  LDWI                              _990
+                                  CALL                              giga_vAC                    ; Main: IF UPPER$(Z$) = "Y" THEN 990
+
+_960                              LDWI                              0x6aa0
+                                  STW                               strSrcAddr
+                                  LDWI                              0x7fa0
+                                  StringUpper                       
+                                  LDWI                              0x7fa0
+                                  STW                               strSrcAddr
+                                  LDWI                              0x7ba6
+                                  StringCmp                         
+                                  ANDI                              1
+                                  JumpFalse                         _990 1
+                                  LDWI                              _1530
+                                  CALL                              giga_vAC                    ; Main: IF UPPER$(Z$) = "N" THEN 1530
+
+_990                              PrintString                       _str_0x69c6
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0300
+                                  CALL                              giga_vAC
+_page_0x0300                      LDLW                              0xFE
+                                  NewLine                                                       ; Main: PRINT "THE GAME OF BOWLING TAKES MIND AND SKILL.DURING THE GAME"
+
+_1080                             PrintString                       _str_0x6ba5
+                                  NewLine                                                       ; Main: PRINT "THE COMPUTER WILL KEEP SCORE.YOU MAY COMPETE WITH"
+
+_1170                             NewLine                                                       ; Main: PRINT "OTHER PLAYERS[UP TO FOUR].YOU WILL BE PLAYING TEN FRAMES"
+
+_1260                             PrintString                       _str_0x68c6
+                                  NewLine                                                       ; Main: PRINT "ON THE PIN DIAGRAM O MEANS THE PIN IS DOWN...+ MEANS THE"
+
+_1350                             PrintString                       _str_0x67c4
+                                  NewLine                                                       ; Main: PRINT "PIN IS STANDING.AFTER THE GAME THE COMPUTER WILL SHOW YOUR"
+
+_1440                             PrintString                       _str_0x7aa2
+                                  NewLine                                                       ; Main: PRINT "SCORES ."
+
+_1530                             PrintString                       _str_0x69a1                 ; Main: PRINT "FIRST OF ALL...HOW MANY ARE PLAYING";
+
+_1620                             LDWI                              0x7ba0
+                                  Input                                                         ; Main: INPUT R
+
+_1710                             NewLine                                                       ; Main: PRINT
+
+_1800                             PrintString                       _str_0x68b8
+                                  NewLine                                                       ; Main: PRINT "VERY GOOD..."
+
+_1890                             LDI                               1
+                                  STW                               _I
+_next_0x0352                      LDI                               1
+                                  STW                               _J
+_next_0x0356                      LDI                               0
+                                  STW                               memValue
+                                  LDW                               _I
+                                  STW                               memIndex0
+                                  LDW                               _J
+                                  STW                               memIndex1
+                                  LDWI                              0x0636
+                                  CALL                              convert16Arr2dAddr
+                                  LDW                               memValue
+                                  DOKE                              memAddr
+                                  ForNextFarInc                     _J _next_0x0356 6
+                                  ForNextFarInc                     _I _next_0x0352 100         ; Main: FOR I=1 TO 100: FOR J=1 TO 6: A(I,J)=0: NEXT J: NEXT I
+
+_1980                             LDI                               1
+                                  STW                               _F                          ; Main: F=1
+
+_2070                             LDI                               1
+                                  STW                               _P
+                                  LDW                               _R
+                                  STW                               0xb0
+                                  LDI                               1
+                                  STW                               0xb2                        ; Main: FOR P=1 TO R
+
+_2160                             LDI                               0
+                                  STW                               _M                          ; Main: M=0
+
+_2250                             LDI                               1
+                                  STW                               _B                          ; Main: B=1
+
+_2340                             LDI                               0
+                                  STW                               _M
+                                  LDI                               0
+                                  STW                               _Q                          ; Main: M=0 : Q=0
+
+_2430                             LDI                               1
+                                  STW                               _I
+_next_0x03ab                      LDWI                              0x7de0
+                                  ADDW                              _I
+                                  ADDW                              _I
+                                  STW                               memAddr
+                                  LDI                               0
+                                  DOKE                              memAddr
+                                  ForNextFarInc                     _I _next_0x03ab 15          ; Main: FOR I=1 TO 15: C(I)=0: NEXT I
+
+_2610                             PrintString                       _str_0x67a2
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0400
+                                  CALL                              giga_vAC
+_page_0x0400                      LDLW                              0xFE
+                                  NewLine                                                       ; Main: PRINT "TYPE ROLL TO GET THE BALL GOING."
+
+_2700                             LDWI                              0x79a2
+                                  Input                                                         ; Main: INPUT N$
+
+_2790                             LDI                               0
+                                  STW                               _K
+                                  LDI                               0
+                                  STW                               _D                          ; Main: K=0: D=0
+
+_2880                             LDI                               1
+                                  STW                               _I                          ; Main: FOR I=1 TO 20
+
+_2970                             LDI                               0x64
+                                  RandMod                           
+                                  STW                               _X                          ; Main: X=RND(100)
+
+_3060                             LDI                               1
+                                  STW                               _J                          ; Main: FOR J=1 TO 10
+
+_3150                             LDI                               15
+                                  STW                               mathX
+                                  LDW                               _J
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  STW                               0xe8
+                                  LDW                               _X
+                                  SUBW                              0xe8
+                                  CALL                              convertLtOpAddr
+                                  JumpFalse                         _3240 2
+                                  LDWI                              _3330
+                                  CALL                              giga_vAC                    ; Main: IF X<15*J THEN 3330
+
+_3240                             ForNextFarInc                     _J _3150 10                 ; Main: NEXT J
+
+_3330                             LDI                               1
+                                  STW                               memValue
+                                  LDI                               15
+                                  STW                               mathX
+                                  LDW                               _J
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  SUBW                              _X
+                                  STW                               memIndex0
+                                  LDWI                              0x7de0
+                                  ADDW                              memIndex0
+                                  ADDW                              memIndex0
+                                  STW                               memAddr
+                                  LDW                               memValue
+                                  DOKE                              memAddr                     ; Main: C(15*J-X)=1
+
+_3420                             ForNextFarInc                     _I _2970 20                 ; Main: NEXT I
+
+_3600                             LDW                               _P
+                                  PrintAcInt16                      
+                                  PrintString                       _str_0x77a4
+                                  PrintString                       _str_0x76a5
+                                  NewLine                                                       ; Main: PRINT "PLAYER:"P;"FRAME:";F"BALL:"B
+
+_3690                             LDI                               0
+                                  STW                               _I                          ; Main: FOR I=0 TO 3
+
+_3780                             NewLine                                                       ; Main: PRINT
+
+_3870                             LDI                               1
+                                  STW                               _J
+                                  LDI                               4
+                                  SUBW                              _I
+                                  STW                               0xb8
+                                  LDI                               1
+                                  STW                               0xba                        ; Main: FOR J=1 TO 4-I
+
+_3960                             LDW                               _K
+                                  ADDI                              1
+                                  STW                               _K                          ; Main: K=K+1
+
+_4050                             LDWI                              0x7de0
+                                  ADDW                              _K
+                                  ADDW                              _K
+                                  DEEK                              
+                                  XORI                              1
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _4140 3
+                                  LDWI                              _4320
+                                  CALL                              giga_vAC                    ; Main: IF C(K)=1 THEN 4320
+
+_4140                             LDW                               _I
+                                  ST                                cursorXY
+                                  AtTextCursor                      
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0500
+                                  CALL                              giga_vAC
+_page_0x0500                      LDLW                              0xFE
+                                  PrintString                       _str_0x78a2                 ; Main: AT I : PRINT "+ ";
+
+_4230                             LDWI                              _4410
+                                  CALL                              giga_vAC                    ; Main: GOTO 4410
+
+_4320                             LDW                               _I
+                                  ST                                cursorXY
+                                  AtTextCursor                      
+                                  PrintString                       _str_0x77a0                 ; Main: AT I : PRINT "O ";
+
+_4410                             ForNextFarVarAdd                  _J _3960 0xb8 0xba          ; Main: NEXT J
+
+_4500                             ForNextFarInc                     _I _3780 3                  ; Main: NEXT I
+
+_4590                             NewLine                                                       ; Main: PRINT ""
+
+_4770                             LDI                               1
+                                  STW                               _I                          ; Main: FOR I=1 TO 10
+
+_4860                             LDWI                              0x7de0
+                                  ADDW                              _I
+                                  ADDW                              _I
+                                  DEEK                              
+                                  ADDW                              _D
+                                  STW                               _D                          ; Main: D=D+C(I)
+
+_4950                             ForNextFarInc                     _I _4860 10                 ; Main: NEXT I
+
+_5040                             LDW                               _D
+                                  SUBW                              _M
+                                  XORI                              0
+                                  CALL                              convertNeOpAddr
+                                  JumpFalse                         _5130 4
+                                  LDWI                              _5220
+                                  CALL                              giga_vAC                    ; Main: IF D-M <> 0 THEN 5220
+
+_5130                             PrintString                       _str_0x75a2
+                                  NewLine                                                       ; Main: PRINT "GUTTER!!"
+
+_5220                             LDW                               _B
+                                  XORI                              1
+                                  CALL                              convertNeOpAddr
+                                  STW                               0xe8
+                                  LDW                               _D
+                                  XORI                              10
+                                  CALL                              convertNeOpAddr
+                                  ORW                               0xe8
+                                  JumpFalse                         _5310 5
+                                  LDWI                              _5490
+                                  CALL                              giga_vAC                    ; Main: IF (B<>1) OR (D<>10) THEN 5490
+
+_5310                             PrintString                       _str_0x68ab
+                                  NewLine                                                       ; Main: PRINT "STRIKE!!!!!"
+
+_5400                             LDI                               3
+                                  STW                               _Q                          ; Main: Q=3
+
+_5490                             LDW                               _B
+                                  XORI                              2
+                                  CALL                              convertNeOpAddr
+                                  STW                               0xe8
+                                  LDW                               _D
+                                  XORI                              10
+                                  CALL                              convertNeOpAddr
+                                  ORW                               0xe8
+                                  JumpFalse                         _5580 6
+                                  LDWI                              _5760
+                                  CALL                              giga_vAC                    ; Main: IF (B<>2) OR (D<>10) THEN 5760
+
+_5580                             PrintString                       _str_0x74a1
+                                  NewLine                                                       ; Main: PRINT "SPARE!!!!"
+
+_5670                             LDI                               2
+                                  STW                               _Q                          ; Main: Q=2
+
+_5760                             LDW                               _B
+                                  XORI                              2
+                                  CALL                              convertNeOpAddr
+                                  STW                               0xe8
+                                  LDW                               _D
+                                  SUBI                              10
+                                  CALL                              convertGeOpAddr
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0600
+                                  CALL                              giga_vAC
+_page_0x0600                      LDLW                              0xFE
+                                  ORW                               0xe8
+                                  JumpFalse                         _5850 7
+                                  LDWI                              _6030
+                                  CALL                              giga_vAC                    ; Main: IF (B<>2) OR (D>=10) THEN 6030
+
+_5850                             PrintString                       _str_0x73a2
+                                  NewLine                                                       ; Main: PRINT "ERROR!!!"
+
+_5940                             LDI                               1
+                                  STW                               _Q                          ; Main: Q=1
+
+_6030                             LDW                               _B
+                                  XORI                              1
+                                  CALL                              convertNeOpAddr
+                                  STW                               0xe8
+                                  LDW                               _D
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x08a0
+                                  CALL                              giga_vAC
+_page_0x08a0                      LDLW                              0xFE
+                                  SUBI                              10
+                                  CALL                              convertGeOpAddr
+                                  ORW                               0xe8
+                                  JumpFalse                         _6120 8
+                                  LDWI                              _6210
+                                  CALL                              giga_vAC                    ; Main: IF (B<>1) OR (D>=10) THEN 6210
+
+_6120                             PrintString                       _str_0x65ec
+                                  NewLine                                                       ; Main: PRINT "ROLL YOUR 2ND BALL"
+
+_6300                             NewLine                                                       ; Main: PRINT
+
+_6390                             LDW                               _D
+                                  STW                               memValue
+                                  LDW                               _F
+                                  STW                               mathX
+                                  LDW                               _P
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  STW                               memIndex0
+                                  LDW                               _B
+                                  STW                               memIndex1
+                                  LDWI                              0x0636
+                                  CALL                              convert16Arr2dAddr
+                                  LDW                               memValue
+                                  DOKE                              memAddr                     ; Main: A(F*P,B)=D
+
+_6480                             LDW                               _B
+                                  XORI                              2
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _6570 9
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x09a0
+                                  CALL                              giga_vAC
+_page_0x09a0                      LDLW                              0xFE
+                                  LDWI                              _7020
+                                  CALL                              giga_vAC                    ; Main: IF B=2 THEN 7020
+
+_6570                             LDI                               2
+                                  STW                               _B                          ; Main: B=2
+
+_6660                             LDW                               _D
+                                  STW                               _M                          ; Main: M=D
+
+_6750                             LDW                               _Q
+                                  XORI                              3
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _6840 10
+                                  LDWI                              _6210
+                                  CALL                              giga_vAC                    ; Main: IF Q=3 THEN 6210
+
+_6840                             LDW                               _D
+                                  SUBW                              _M
+                                  STW                               memValue
+                                  LDW                               _F
+                                  STW                               mathX
+                                  LDW                               _P
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  STW                               memIndex0
+                                  LDW                               _B
+                                  STW                               memIndex1
+                                  LDWI                              0x0636
+                                  CALL                              convert16Arr2dAddr
+                                  LDW                               memValue
+                                  DOKE                              memAddr                     ; Main: A(F*P,B)=D-M
+
+_6930                             LDW                               _Q
+                                  XORI                              0
+                                  CALL                              convertEqOpAddr
+                                  JumpFalse                         _7020 11
+                                  LDWI                              _2520
+                                  CALL                              giga_vAC                    ; Main: IF Q=0 THEN 2520
+
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0aa0
+                                  CALL                              giga_vAC
+_page_0x0aa0                      LDLW                              0xFE
+_7020                             LDW                               _Q
+                                  STW                               memValue
+                                  LDW                               _F
+                                  STW                               mathX
+                                  LDW                               _P
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  STW                               memIndex0
+                                  LDI                               3
+                                  STW                               memIndex1
+                                  LDWI                              0x0636
+                                  CALL                              convert16Arr2dAddr
+                                  LDW                               memValue
+                                  DOKE                              memAddr                     ; Main: A(F*P,3)=Q
+
+_7110                             ForNextFarVarAdd                  _P _2160 0xb0 0xb2          ; Main: NEXT P
+
+_7200                             LDW                               _F
+                                  ADDI                              1
+                                  STW                               _F                          ; Main: F=F+1
+
+_7290                             LDW                               _F
+                                  SUBI                              11
+                                  CALL                              convertLtOpAddr
+                                  JumpFalse                         _7295 12
+                                  LDWI                              _2070
+                                  CALL                              giga_vAC                    ; Main: IF F<11 THEN 2070
+
+_7295                             PrintString                       _str_0x72a4
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0ba0
+                                  CALL                              giga_vAC
+_page_0x0ba0                      LDLW                              0xFE
+                                  NewLine                                                       ; Main: PRINT "FRAMES"
+
+_7380                             LDI                               1
+                                  STW                               _I                          ; Main: FOR I=1 TO 10
+
+_7470                             LDW                               _I
+                                  PrintAcInt16                                                  ; Main: PRINT I;
+
+_7560                             ForNextFarInc                     _I _7470 10                 ; Main: NEXT I
+
+_7650                             NewLine                                                       ; Main: PRINT
+
+_7740                             LDI                               1
+                                  STW                               _P
+                                  LDW                               _R
+                                  STW                               0xb0
+                                  LDI                               1
+                                  STW                               0xb2                        ; Main: FOR P=1 TO R
+
+_7830                             LDI                               1
+                                  STW                               _I                          ; Main: FOR I=1 TO 3
+
+_7920                             LDI                               1
+                                  STW                               _J                          ; Main: FOR J=1 TO 10
+
+_8010                             LDW                               _J
+                                  STW                               mathX
+                                  LDW                               _P
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  STW                               memIndex0
+                                  LDW                               _I
+                                  STW                               memIndex1
+                                  LDWI                              0x0636
+                                  CALL                              convert16Arr2dAddr
+                                  DEEK                              
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0ca0
+                                  CALL                              giga_vAC
+_page_0x0ca0                      LDLW                              0xFE
+                                  PrintAcInt16                                                  ; Main: PRINT A(J*P,I);
+
+_8100                             ForNextFarInc                     _J _8010 10                 ; Main: NEXT J
+
+_8105                             NewLine                                                       ; Main: PRINT
+
+_8190                             ForNextFarInc                     _I _7920 3                  ; Main: NEXT I
+
+_8280                             NewLine                                                       ; Main: PRINT
+
+_8370                             ForNextFarVarAdd                  _P _7830 0xb0 0xb2          ; Main: NEXT P
+
+_8460                             PrintString                       _str_0x65d2
+                                  NewLine                                                       ; Main: PRINT "DO YOU WANT ANOTHER GAME"
+
+_8550                             LDWI                              0x71a6
+                                  Input                                                         ; Main: INPUT A$
+
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0da0
+                                  CALL                              giga_vAC
+_page_0x0da0                      LDLW                              0xFE
+_8640                             LDWI                              0x64a0
+                                  STW                               strSrcAddr
+                                  LDI                               1
+                                  STW                               strDstLen
+                                  LDWI                              0x7ea0
+                                  StringLeft                        
+                                  LDWI                              0x7ea0
+                                  STW                               strSrcAddr
+                                  LDWI                              0x7ea0
+                                  StringUpper                       
+                                  LDWI                              0x7ea0
+                                  STW                               strSrcAddr
+                                  LDWI                              0x7ba9
+                                  StringCmp                         
+                                  ANDI                              1
+                                  JumpFalse                         _else_0x0847 13
+                                  LDWI                              _2610
+                                  CALL                              giga_vAC                    ; Main: IF UPPER$(LEFT$(A$,1)) = "Y" THEN 2610
+
+_else_0x0847                      HALT                                                          ; Main: END
+
+                                  HALT                                                          ; Main: END
 
 
 
@@ -1033,54 +1043,56 @@ _end_0x0833                   BRA                               _end_0x0833     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x58b1
-realTimeStub                  EQU     0x56da
-convertEqOp                   EQU     0x6ea3
-convertNeOp                   EQU     0x5fa7
-convertGeOp                   EQU     0x5ba0
-convertLtOp                   EQU     0x5aa2
-convert16Arr2d                EQU     0x71a0
-multiply16bit                 EQU     0x5acd
-divide16bit                   EQU     0x61a8
-randMod16bit                  EQU     0x56ec
-scanlineMode                  EQU     0x6fa2
-resetVideoFlags               EQU     0x70a0
-initClearFuncs                EQU     0x58a0
-clearVertBlinds               EQU     0x5cc9
-clearCursorRow                EQU     0x59cf
-input                         EQU     0x5ca2
-inputExt1                     EQU     0x5fb0
-inputExt2                     EQU     0x58e1
-inputCursor                   EQU     0x5ba9
-inputKeys                     EQU     0x64a4
-inputIntVar                   EQU     0x57a9
-inputStrVar                   EQU     0x57e8
-inputReturn                   EQU     0x5dc6
-inputDelete                   EQU     0x66a0
-inputPrint                    EQU     0x5ea1
-inputNewline                  EQU     0x57bd
-printInit                     EQU     0x57d2
-printText                     EQU     0x58c8
-printDigit                    EQU     0x5aab
-printInt16                    EQU     0x60ae
-printChr                      EQU     0x60a1
-printChar                     EQU     0x62a7
-atTextCursor                  EQU     0x5da1
-newLineScroll                 EQU     0x63a4
-integerStr                    EQU     0x5ec0
-stringCmp                     EQU     0x59b0
-stringLeft                    EQU     0x5bcb
-convertEqOpAddr               EQU     0x00c2
-convertNeOpAddr               EQU     0x00c4
-convertLeOpAddr               EQU     0x00c6
-convertGeOpAddr               EQU     0x00c8
-convertLtOpAddr               EQU     0x00ca
-convertGtOpAddr               EQU     0x00cc
-convert8Arr2dAddr             EQU     0x00ce
-convert8Arr3dAddr             EQU     0x00d0
-convert16Arr2dAddr            EQU     0x00d2
-convert16Arr3dAddr            EQU     0x00d4
-realTimeStubAddr              EQU     0x00d6
+romCheck                          EQU     0x5ca5
+convertEqOp                       EQU     0x6da3
+convertNeOp                       EQU     0x68a2
+convertGeOp                       EQU     0x57a0
+convertLtOp                       EQU     0x55a3
+convert16Arr2d                    EQU     0x70a0
+loadRegs                          EQU     0x5ba2
+saveRegs                          EQU     0x55e1
+multiply16bit                     EQU     0x58cb
+divide16bit                       EQU     0x5fa8
+randMod16bit                      EQU     0x54ad
+scanlineMode                      EQU     0x6ea2
+resetVideoFlags                   EQU     0x6fa0
+initClearFuncs                    EQU     0x53ee
+clearVertBlinds                   EQU     0x59c9
+clearCursorRow                    EQU     0x65a2
+input                             EQU     0x59a5
+inputExt1                         EQU     0x61a6
+inputExt2                         EQU     0x56d3
+inputCursor                       EQU     0x55c3
+inputKeys                         EQU     0x62a4
+inputIntVar                       EQU     0x54c0
+inputStrVar                       EQU     0x55ac
+inputReturn                       EQU     0x5cbc
+inputDelete                       EQU     0x5db9
+inputPrint                        EQU     0x58a7
+inputNewline                      EQU     0x54d4
+printInit                         EQU     0x54e9
+printText                         EQU     0x5da0
+printDigit                        EQU     0x57a9
+printInt16                        EQU     0x5eae
+printChr                          EQU     0x5ea1
+printChar                         EQU     0x60a7
+atTextCursor                      EQU     0x5aa0
+newLineScroll                     EQU     0x63a2
+integerStr                        EQU     0x5bc0
+stringCmp                         EQU     0x5ac5
+stringLeft                        EQU     0x57cb
+stringUpper                       EQU     0x56a7
+convertEqOpAddr                   EQU     0x00c0
+convertNeOpAddr                   EQU     0x00c2
+convertLeOpAddr                   EQU     0x00c4
+convertGeOpAddr                   EQU     0x00c6
+convertLtOpAddr                   EQU     0x00c8
+convertGtOpAddr                   EQU     0x00ca
+convert8Arr2dAddr                 EQU     0x00cc
+convert8Arr3dAddr                 EQU     0x00ce
+convert16Arr2dAddr                EQU     0x00d0
+convert16Arr3dAddr                EQU     0x00d2
+realTimeStubAddr                  EQU     0x00d4
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -1113,23 +1125,6 @@ romC_loop           LD      romErrPixel
 romC_return         RET                    
 
 
-                    ; runs real time, (time sliced), code at regular intervals
-                    ; self modifying code allows for timer, midi and user procs
-realTimeStub        RET                                     ; RET gets replaced by PUSH
-                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
-                    CALL    giga_vAC
-realTimeStub1       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
-                    CALL    giga_vAC
-realTimeStub2       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
-                    CALL    giga_vAC
-                    POP
-                    RET
-
-
                     ; convert equal to into a boolean
 convertEqOp         BEQ     convertEq_1
                     LDI     0
@@ -1160,6 +1155,14 @@ convertLtOp         BLT     convertLt_1
                     RET
 convertLt_1         LDI     1
                     RET
+
+
+cpySrcAddr          EQU     register0
+cpyDstAddr          EQU     register1
+cpyCount            EQU     register2
+cpyLoaderLut        EQU     register3
+regsWork            EQU     giga_sysArg4                        ; use SYS arg registers to stop conflicts with time slicing/vblanks
+regsAddr            EQU     giga_sysArg6                        ; use SYS arg registers to stop conflicts with time slicing/vblanks
 
 
 convert16Arr2d      ADDW    memIndex0
@@ -1209,10 +1212,14 @@ multiply16_skip     LDW     mathX
                     STW     mathY               ; mathY = mathY >>1
                     BRA     multiply16_loop
 
+%if TIME_SLICING
 multiply16_exit     PUSH
                     CALL    realTimeStubAddr
                     POP
                     LDW     mathSum
+%else
+multiply16_exit     LDW     mathSum
+%endif
                     RET
 
 
@@ -1257,9 +1264,11 @@ divide16_incr       LDW     mathX
 divide16_incx       LDW     mathMask
                     LSLW
                     BNE     divide16_loop
+%if TIME_SLICING
                     PUSH
                     CALL    realTimeStubAddr
                     POP
+%endif
                     LDW     mathSign
                     BGE     divide16_exit
                     LDI     0
@@ -1427,7 +1436,9 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                    ; bottom line
                     SYS     54                              ; fill memory
                     INC     top                             ; next top line
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      top
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loopy
@@ -1441,18 +1452,14 @@ inpLutAddr          EQU     register0
 inpKeyBak           EQU     register0
 inpVarsAddr         EQU     register1
 inpStrsAddr         EQU     register2
-inpTypesAddr        EQU     register4
-inpTextAddr         EQU     register5
-inpTextOfs          EQU     register6
-inpTypeData         EQU     register7
-inpTextEnd          EQU     register8
-printXYBak          EQU     register11
-cursXYBak           EQU     register12
-cursFlash           EQU     register13
-cursorChr           EQU     register14
-cursXYOfs           EQU     register15
-
-cursorDelay         EQU     30
+inpTypesAddr        EQU     register3
+inpTextAddr         EQU     register8
+inpTextOfs          EQU     register9
+inpTypeData         EQU     register10
+inpPrnXYBak         EQU     register11
+inpCursXYBak        EQU     register12
+inpCursXYOfs        EQU     register13
+inpTextEnd          EQU     register14
 
     
                     ; inputs numerics and text into vars
@@ -1469,16 +1476,55 @@ input               PUSH
                     DEEK
                     STW     inpTypesAddr        ; types LUT address
 
+                    LDWI    ENABLE_SCROLL_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags           ; disable text scrolling
+                    
                     LD      giga_serialRaw
                     ST      serialRawPrev       ; initialise previous keystroke
-                    LD      giga_frameCount
-                    ADDI    cursorDelay
-                    STW     cursFlash           ; delay for cursor flash
-                    LDI     127
-                    STW     cursorChr           ; cursor char
                     LDWI    inputExt1
                     CALL    giga_vAC            ; doesn't return to here
 
+
+
+
+                    ; hard coded to load register8 to register15
+saveRegs            LDWI    regsWorkArea
+                    STW     regsWork
+                    LDI     register8
+                    STW     regsAddr
+
+saveRegs_loop       LDW     regsAddr
+                    DEEK
+                    DOKE    regsWork
+                    INC     regsWork
+                    INC     regsWork
+                    INC     regsAddr
+                    INC     regsAddr
+                    LDW     regsAddr
+                    SUBI    register15
+                    BLE     saveRegs_loop
+                    RET
+
+
+
+                    ; hard coded to save register8 to register15
+loadRegs            LDWI    regsWorkArea
+                    STW     regsWork
+                    LDI     register8
+                    STW     regsAddr
+
+loadRegs_loop       LDW     regsWork
+                    DEEK
+                    DOKE    regsAddr
+                    INC     regsAddr
+                    INC     regsAddr
+                    INC     regsWork
+                    INC     regsWork
+                    LDW     regsAddr
+                    SUBI    register15
+                    BLE     loadRegs_loop
+                    RET
 
 
 
@@ -1489,18 +1535,22 @@ inputExt1           LDW     inpTypesAddr
                     STW     inpTypeData         ; high byte is max string length, 8th and 7th bits of low byte are newlines, last 6 bits of low byte is type
                     ANDI    0x40
                     BEQ     inputE1_print       ; check for prefix newline
-                    LDWI    inputNewline
+                    LDWI    inputNewline        ; registers don't need to be saved yet
                     CALL    giga_vAC
                     
 inputE1_print       LDW     inpStrsAddr
                     DEEK
                     STW     textStr
+                    LDWI    saveRegs
+                    CALL    giga_vAC
                     LDWI    printText           ; print strings LUT
+                    CALL    giga_vAC
+                    LDWI    loadRegs
                     CALL    giga_vAC
                     LD      inpTypeData
                     ANDI    0x80
                     BEQ     inputE1_skip        ; check for suffix newline
-                    LDWI    inputNewline
+                    LDWI    inputNewline        ; registers don't need to be saved yet
                     CALL    giga_vAC
                     
 inputE1_skip        LDWI    textWorkArea + 1
@@ -1514,8 +1564,8 @@ inputE1_skip        LDWI    textWorkArea + 1
                     STW     inpTextEnd          ; text max = textWorkArea + (highByte(inpTypeData) >> 8)
                     
                     LDW     cursorXY
-                    STW     cursXYBak
-                    STW     printXYBak
+                    STW     inpCursXYBak
+                    STW     inpPrnXYBak
                     LDWI    inputExt2
                     CALL    giga_vAC            ; doesn't return to here
                     
@@ -1529,7 +1579,13 @@ inputE1_exit        LDI     ENABLE_SCROLL_BIT
 
 
                     ; input extended 2
-inputExt2           LDWI    inputCursor
+inputExt2           LDWI    saveRegs
+                    CALL    giga_vAC
+                    LDI     127
+                    STW     textChr
+                    LDWI    inputCursor
+                    CALL    giga_vAC
+                    LDWI    loadRegs
                     CALL    giga_vAC
                     LDWI    inputKeys
                     CALL    giga_vAC
@@ -1546,21 +1602,18 @@ inputExt2           LDWI    inputCursor
 
 
 
-                    ; flashes cursor
-inputCursor         LD      giga_frameCount
-                    SUBW    cursFlash
-                    BEQ     inputC_toggle
-                    RET
+                    ; draws cursor
+inputCursor         PUSH
+                    LDW     textChr
+                    XORI    127
+                    BNE     inputC_skip         ; don't flash cursor if char != 127
+                    LD      giga_ledState
+                    ANDI    2
+                    BNE     inputC_skip         ; use ledState as a hack timer
+                    LDI     32
+                    STW     textChr             ; alternate between 32 and 127
                     
-inputC_toggle       PUSH
-                    LD      giga_frameCount
-                    ADDI    cursorDelay
-                    ST      cursFlash           ; delay for cursor flash
-                    LD      cursorChr
-                    ST      textChr
-                    XORI    0xDF
-                    ST      cursorChr           ; toggle between 127 and 32 for cursor char
-                    LDW     cursXYBak
+inputC_skip         LDW     inpCursXYBak
                     STW     cursorXY            ; restore cursor position after the printChr
                     LDWI    printChr
                     CALL    giga_vAC
@@ -1603,7 +1656,7 @@ inputK_char         LDW     inpTextEnd
                     INC     inpTextAddr
                     LDI     0
                     POKE    inpTextAddr         ; set new end of text string
-                    LD      cursXYBak
+                    LD      inpCursXYBak
                     SUBI    giga_xres - 11
                     BLT     inputK_advance      ; cursor max bounds
                     INC     inpTextOfs
@@ -1612,7 +1665,7 @@ inputK_char         LDW     inpTextEnd
                     
 inputK_advance      LDI     6
                     
-inputK_print        STW     cursXYOfs           ; advance cursor
+inputK_print        STW     inpCursXYOfs        ; advance cursor
                     LDWI    inputPrint
                     CALL    giga_vAC            ; doesn't return to here
                     
@@ -1652,11 +1705,14 @@ inputIntVar         PUSH
                     RET
 
 
-inputReturn         LDI     32
-                    STW     cursorChr
-                    LDWI    inputC_toggle
-                    CALL    giga_vAC            ; erase cursor
-                    
+inputReturn         LDWI    saveRegs
+                    CALL    giga_vAC
+                    LDI     32
+                    STW     textChr
+                    LDWI    inputCursor
+                    CALL    giga_vAC
+                    LDWI    loadRegs
+                    CALL    giga_vAC
                     LDWI    textWorkArea
                     STW     register0
                     LDW     inpTextAddr
@@ -1689,7 +1745,7 @@ inputDelete         LD      inpTextOfs
                     SUBI    1
                     STW     inpTextOfs          ; decrement print text offset
                     LDI     0
-                    STW     cursXYOfs           ; stationary cursor
+                    STW     inpCursXYOfs        ; stationary cursor
                     LDI     0
                     POKE    inpTextAddr         ; delimiter
                     LDW     inpTextAddr
@@ -1699,11 +1755,11 @@ inputDelete         LD      inpTextOfs
                     POKE    inpTextAddr         ; delete char
                     BRA     inputD_print
 
-inputD_bounds       LDW     printXYBak
-                    SUBW    cursXYBak
+inputD_bounds       LDW     inpPrnXYBak
+                    SUBW    inpCursXYBak
                     BGE     inputD_exit         ; cursor min bounds
                     LDWI    -6
-                    STW     cursXYOfs           ; retreat cursor
+                    STW     inpCursXYOfs        ; retreat cursor
                     LDI     32                  
                     POKE    inpTextAddr         ; delete cursor
                     INC     inpTextAddr
@@ -1723,18 +1779,20 @@ inputD_exit         LDI     0                   ; keep looping on current var
                     RET
 
 
-inputPrint          LDWI    inputCursor
-                    CALL    giga_vAC            ; call cursor flash frequently
-                    LDWI    textWorkArea
+inputPrint          LDWI    textWorkArea
                     ADDW    inpTextOfs
                     STW     textStr
-                    LDW     printXYBak
+                    LDW     inpPrnXYBak
                     STW     cursorXY            ; restore cursor position after the printText
+                    LDWI    saveRegs
+                    CALL    giga_vAC
                     LDWI    printText
                     CALL    giga_vAC
-                    LDW     cursXYBak           ; new cursor position
-                    ADDW    cursXYOfs
-                    STW     cursXYBak
+                    LDWI    loadRegs
+                    CALL    giga_vAC
+                    LDW     inpCursXYBak        ; new cursor position
+                    ADDW    inpCursXYOfs
+                    STW     inpCursXYBak
                     LDI     0                   ; keep looping on current var
                     POP
                     RET
@@ -1758,10 +1816,10 @@ inputNewline        PUSH
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
-textLen             EQU     register1
-textOfs             EQU     register2
-textChr             EQU     register3
-textHex             EQU     register8
+textHex             EQU     register1
+textLen             EQU     register2
+textOfs             EQU     register3
+textChr             EQU     register8
 textFont            EQU     register9
 textSlice           EQU     register10
 scanLine            EQU     register11
@@ -1916,7 +1974,9 @@ printC_slice        ST      textSlice
                     INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     
                     PUSH
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      cursorXY
                     ADDI    giga_xfont
                     ST      cursorXY
@@ -1974,7 +2034,9 @@ clearCR_loopy       ST      clearLoop
                     LD      clearLoop
                     SUBI    1
                     BNE     clearCR_loopy
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LDWI    printInit
                     CALL    giga_vAC                        ; re-initialise the SYS registers
                     POP
@@ -2006,9 +2068,13 @@ newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
                     LDWI    giga_videoTable
                     STW     scanLine
-    
+
+%if TIME_SLICING
 newLS_scroll        CALL    realTimeStubAddr
                     LDW     scanLine
+%else
+newLS_scroll        LDW     scanLine
+%endif
                     PEEK
                     ADDI    giga_yfont
                     ANDI    0x7F
@@ -2096,8 +2162,9 @@ integerS_exit       LDW     intResult
 
 ; do *NOT* use register4 to register7 during time slicing
 strChr              EQU     register0
+strAddr             EQU     register0
 strHex              EQU     register1
-strCmpRes           EQU     register2
+strLen              EQU     register2
 strDstLen           EQU     register0
 strFinish           EQU     register0
 strSrcAddr          EQU     register1
@@ -2108,30 +2175,46 @@ strSrcAddr2         EQU     register9
 strTmpAddr          EQU     register10
 strLutAddr          EQU     register11
 strBakAddr          EQU     register12
+strSrcLen2          EQU     register13
 strInteger          EQU     register0
 strDigit            EQU     register1
 strMult             EQU     register3
 
 
-                    ; compares two strings
-stringCmp           LDI     0
-                    STW     strCmpRes
-
-stringC_cmp         LDW     strSrcAddr
+                    ; compares two strings: returns 0 for smaller, 1 for equal and 2 for larger
+stringCmp           LDW     strSrcAddr
                     PEEK
-                    BEQ     stringC_one                         ; this assumes your strings are valid, (i.e. valid length and terminating bytes)
+                    STW     strSrcLen                           ; save str length
+                    LDW     strSrcAddr2
+                    PEEK
+                    STW     strSrcLen2                          ; save str length
+                    INC     strSrcAddr
+                    INC     strSrcAddr2                         ; skip lengths
+                    
+stringC_loop        LDW     strSrcAddr
+                    PEEK
+                    BEQ     stringC_equal                       ; this assumes your strings are valid, (i.e. valid length and terminating bytes)
                     STW     strChr
                     LDW     strSrcAddr2
                     PEEK
                     SUBW    strChr
-                    BNE     stringC_zero
+                    BLT     stringC_larger
+                    BGT     stringC_smaller
                     INC     strSrcAddr
                     INC     strSrcAddr2
-                    BRA     stringC_cmp
-                    
-stringC_one         INC     strCmpRes                           ; return 1
+                    BRA     stringC_loop
 
-stringC_zero        LDW     strCmpRes
+stringC_smaller     LDI     0
+                    RET
+                    
+stringC_equal       LDW     strSrcLen
+                    SUBW    strSrcLen2
+                    BLT     stringC_smaller
+                    BGT     stringC_larger                      ; if strings are equal, choose based on length
+                    LDI     1
+                    RET
+                    
+stringC_larger      LDI     2
                     RET
 
 
@@ -2164,5 +2247,33 @@ stringL_loop        INC     strSrcAddr                          ; skip lengths t
 stringL_exit        INC     strDstAddr
                     LDI     0
                     POKE    strDstAddr                          ; terminating 0
+                    RET
+
+
+                    ; creates an upper case string
+stringUpper         LDW     strSrcAddr
+                    PEEK
+                    POKE    strDstAddr                          ; dst length = src length
+    
+stringUp_next       INC     strSrcAddr                          ; next char, (skips length byte)
+                    INC     strDstAddr
+                    LDW     strSrcAddr
+                    PEEK
+                    BEQ     stringUp_exit
+                    ST      strChr
+                    SUBI    97
+                    BLT     stringUp_char
+                    LD      strChr
+                    SUBI    122
+                    BGT     stringUp_char
+                    LD      strChr                              ; >= 97 'a' and <= 122 'z'
+                    SUBI    32
+                    ST      strChr
+                    
+stringUp_char       LD      strChr
+                    POKE    strDstAddr                          ; upper case char
+                    BRA     stringUp_next
+                    
+stringUp_exit       POKE    strDstAddr                          ; terminating 0
                     RET
 

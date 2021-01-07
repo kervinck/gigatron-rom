@@ -4,8 +4,8 @@ _codeRomType_ ROMv2
 
 mode 2 : cls
 
-const H=3
-const V=3
+const H=9
+const V=9
 
 110 DIM W(H, V) : DIM V(H, V)
 120 PRINT
@@ -13,7 +13,7 @@ const V=3
 140 PRINT
 150 PRINT
 160 Q=0:Z=0:X=(RND(H)+1)
-165 FOR I=1 TO H
+165 FOR I=0 TO H
 170 IF I=X THEN 173
 171 PRINT ".--";:GOTO 180
 173 PRINT ".  ";

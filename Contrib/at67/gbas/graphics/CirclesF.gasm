@@ -1,50 +1,50 @@
-_startAddress_                EQU                               0x0200
+_startAddress_                    EQU                               0x0200
 
 ; Internal Variables
-serialRawPrev                 EQU                               0x0081
-register0                     EQU                               0x0082
-register1                     EQU                               register0 + 0x02
-register2                     EQU                               register0 + 0x04
-register3                     EQU                               register0 + 0x06
-register4                     EQU                               register0 + 0x08
-register5                     EQU                               register0 + 0x0A
-register6                     EQU                               register0 + 0x0C
-register7                     EQU                               register0 + 0x0E
-register8                     EQU                               register0 + 0x10
-register9                     EQU                               register0 + 0x12
-register10                    EQU                               register0 + 0x14
-register11                    EQU                               register0 + 0x16
-register12                    EQU                               register0 + 0x18
-register13                    EQU                               register0 + 0x1A
-register14                    EQU                               register0 + 0x1C
-register15                    EQU                               register0 + 0x1E
-fgbgColour                    EQU                               register0 + 0x20
-cursorXY                      EQU                               register0 + 0x22
-midiStream                    EQU                               register0 + 0x24
-midiDelay                     EQU                               register0 + 0x26
-miscFlags                     EQU                               register0 + 0x28
-timerTick                     EQU                               register0 + 0x2A
-timerPrev                     EQU                               register0 + 0x2C
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
 
 ; Internal Constants
-ENABLE_SCROLL_BIT             EQU                               0x0001
-ON_BOTTOM_ROW_BIT             EQU                               0x0002
-ENABLE_SCROLL_MSK             EQU                               0xfffe
-ON_BOTTOM_ROW_MSK             EQU                               0xfffd
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
 
 ; Internal Buffers
-textWorkArea                  EQU                               0x7fa0
+regsWorkArea                      EQU                               0x0000
+textWorkArea                      EQU                               0x7fa0
 
 ; Includes
-%includePath                  "../runtime"
-%include                      util.i
-%include                      gigatron.i
-%include                      macros.i
+%includePath                      "../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros.i
 
 ; Labels
-_entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x022e
-_end_0x0285                   EQU                               0x0265
+_entryPoint_                      EQU                               0x0200
+_loop                             EQU                               0x0229
 
 ; Global Variables
 
@@ -66,6 +66,8 @@ _end_0x0285                   EQU                               0x0265
 
 ; Define Images
 
+; Define Loader Image Chunks
+
 ; Define Sprites
 
 ; Define Fonts
@@ -73,38 +75,37 @@ _end_0x0285                   EQU                               0x0265
 ; Lookup Tables
 
 ; Code
-_entryPoint_                  LDI                               0x20
-                              STW                               romType
-                              RomCheck                          
-                              Initialise                        
-                              InitRealTimeStub                                                  ; INIT
+_entryPoint_                      LDI                               0x20
+                                  STW                               romType
+                                  RomCheck                          
+                                  Initialise                                                    ; Main: INIT
 
-                              ClearVertBlinds                   
-                              LDI                               2
-                              STW                               graphicsMode
-                              ScanlineMode                                                      ; cls : mode 2
+                                  ClearVertBlinds                   
+                                  LDI                               2
+                                  STW                               graphicsMode
+                                  ScanlineMode                                                  ; Main: cls : mode 2
 
-_loop                         Rand                              
-                              ANDI                              63
-                              ST                                fgbgColour + 1                  ; set FG_COLOUR, rnd(0) AND &h3F
+_loop                             Rand                              
+                                  ANDI                              63
+                                  ST                                fgbgColour + 1              ; Main: set FG_COLOUR, rnd(0) AND &h3F
 
-                              LDI                               0x64
-                              RandMod                           
-                              ADDI                              30
-                              STW                               drawCircleF_cx
-                              LDI                               0x3c
-                              RandMod                           
-                              ADDI                              30
-                              STW                               drawCircleF_cy
-                              LDI                               0x1e
-                              RandMod                           
-                              ADDI                              1
-                              STW                               drawCircleF_r
-                              DrawCircleF                                                       ; circlef rnd(100) + (- 50 + 80), rnd(60) + (- 30 + 60), rnd(30) + 1
+                                  LDI                               0x64
+                                  RandMod                           
+                                  ADDI                              30
+                                  STW                               drawCircleF_cx
+                                  LDI                               0x3c
+                                  RandMod                           
+                                  ADDI                              30
+                                  STW                               drawCircleF_cy
+                                  LDI                               0x1e
+                                  RandMod                           
+                                  ADDI                              1
+                                  STW                               drawCircleF_r
+                                  DrawCircleF                                                   ; Main: circlef rnd(100) + (- 50 + 80), rnd(60) + (- 30 + 60), rnd(30) + 1
 
-                              BRA                               _loop                           ; goto &loop
+                                  BRA                               _loop                       ; Main: goto &loop
 
-_end_0x0285                   BRA                               _end_0x0285                     ; end
+                                  HALT                                                          ; Main: end
 
 
 
@@ -114,28 +115,27 @@ _end_0x0285                   BRA                               _end_0x0285     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7cb2
-realTimeStub                  EQU     0x7ca0
-divide16bit                   EQU     0x7ea8
-rand16bit                     EQU     0x7ea0
-randMod16bit                  EQU     0x7bbf
-scanlineMode                  EQU     0x7ba4
-resetVideoFlags               EQU     0x7da4
-initClearFuncs                EQU     0x7bae
-clearVertBlinds               EQU     0x7cc9
-drawHLine                     EQU     0x7bd2
-drawCircleF                   EQU     0x7db0
-convertEqOpAddr               EQU     0x00c2
-convertNeOpAddr               EQU     0x00c4
-convertLeOpAddr               EQU     0x00c6
-convertGeOpAddr               EQU     0x00c8
-convertLtOpAddr               EQU     0x00ca
-convertGtOpAddr               EQU     0x00cc
-convert8Arr2dAddr             EQU     0x00ce
-convert8Arr3dAddr             EQU     0x00d0
-convert16Arr2dAddr            EQU     0x00d2
-convert16Arr3dAddr            EQU     0x00d4
-realTimeStubAddr              EQU     0x00d6
+romCheck                          EQU     0x7bb2
+divide16bit                       EQU     0x7da8
+rand16bit                         EQU     0x7da0
+randMod16bit                      EQU     0x7abf
+scanlineMode                      EQU     0x7ab5
+resetVideoFlags                   EQU     0x7ca4
+initClearFuncs                    EQU     0x7ba1
+clearVertBlinds                   EQU     0x7bc9
+drawHLine                         EQU     0x7ad2
+drawCircleF                       EQU     0x7cb0
+convertEqOpAddr                   EQU     0x00c0
+convertNeOpAddr                   EQU     0x00c2
+convertLeOpAddr                   EQU     0x00c4
+convertGeOpAddr                   EQU     0x00c6
+convertLtOpAddr                   EQU     0x00c8
+convertGtOpAddr                   EQU     0x00ca
+convert8Arr2dAddr                 EQU     0x00cc
+convert8Arr3dAddr                 EQU     0x00ce
+convert16Arr2dAddr                EQU     0x00d0
+convert16Arr3dAddr                EQU     0x00d2
+realTimeStubAddr                  EQU     0x00d4
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -166,23 +166,6 @@ romC_loop           LD      romErrPixel
                     BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
                     
 romC_return         RET                    
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-                    ; self modifying code allows for timer, midi and user procs
-realTimeStub        RET                                     ; RET gets replaced by PUSH
-                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
-                    CALL    giga_vAC
-realTimeStub1       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
-                    CALL    giga_vAC
-realTimeStub2       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
-                    CALL    giga_vAC
-                    POP
-                    RET
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -246,9 +229,11 @@ divide16_incr       LDW     mathX
 divide16_incx       LDW     mathMask
                     LSLW
                     BNE     divide16_loop
+%if TIME_SLICING
                     PUSH
                     CALL    realTimeStubAddr
                     POP
+%endif
                     LDW     mathSign
                     BGE     divide16_exit
                     LDI     0
@@ -416,7 +401,9 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                    ; bottom line
                     SYS     54                              ; fill memory
                     INC     top                             ; next top line
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      top
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loopy
@@ -446,7 +433,9 @@ drawHL_cont         ADDI    1
                     LDWI    SYS_SetMemory_v2_54
                     STW     giga_sysFn
                     SYS     54                              ; fill memory
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     POP
                     RET
 

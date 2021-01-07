@@ -1,61 +1,64 @@
-_startAddress_                EQU                               0x0200
+_startAddress_                    EQU                               0x0200
 
-; Internal variables
-serialRawPrev                 EQU                               0x0081
-register0                     EQU                               0x0082
-register1                     EQU                               register0 + 0x02
-register2                     EQU                               register0 + 0x04
-register3                     EQU                               register0 + 0x06
-register4                     EQU                               register0 + 0x08
-register5                     EQU                               register0 + 0x0A
-register6                     EQU                               register0 + 0x0C
-register7                     EQU                               register0 + 0x0E
-register8                     EQU                               register0 + 0x10
-register9                     EQU                               register0 + 0x12
-register10                    EQU                               register0 + 0x14
-register11                    EQU                               register0 + 0x16
-register12                    EQU                               register0 + 0x18
-register13                    EQU                               register0 + 0x1A
-register14                    EQU                               register0 + 0x1C
-register15                    EQU                               register0 + 0x1E
-fgbgColour                    EQU                               register0 + 0x20
-cursorXY                      EQU                               register0 + 0x22
-midiStream                    EQU                               register0 + 0x24
-midiDelay                     EQU                               register0 + 0x26
-miscFlags                     EQU                               register0 + 0x28
-timerTick                     EQU                               register0 + 0x2A
-timerPrev                     EQU                               register0 + 0x2C
+; Internal Variables
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
 
 ; Internal Constants
-ENABLE_SCROLL_BIT             EQU                               0x0001
-ON_BOTTOM_ROW_BIT             EQU                               0x0002
-ENABLE_SCROLL_MSK             EQU                               0xfffe
-ON_BOTTOM_ROW_MSK             EQU                               0xfffd
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
 
-; Internal buffers
-textWorkArea                  EQU                               0x7fa0
+; Internal Buffers
+regsWorkArea                      EQU                               0x0000
+textWorkArea                      EQU                               0x7fa0
 
 ; Includes
-%includePath                  "../runtime"
-%include                      util.i
-%include                      gigatron.i
-%include                      macros.i
+%includePath                      "../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros.i
 
 ; Labels
-_entryPoint_                  EQU                               0x0200
-_1                            EQU                               0x0217
-_10                           EQU                               0x0217
-_20                           EQU                               0x021b
-_30                           EQU                               0x0227
-_40                           EQU                               0x023c
-_50                           EQU                               0x0250
-_end_0x0264                   EQU                               0x025e
+_entryPoint_                      EQU                               0x0200
+_1                                EQU                               0x0212
+_10                               EQU                               0x0212
+_20                               EQU                               0x0216
+_30                               EQU                               0x0222
+_40                               EQU                               0x0237
+_50                               EQU                               0x024b
+_end_0x025f                       EQU                               0x0259
 
-; Variables
-_Y                            EQU                               0x0030
-_D                            EQU                               0x0032
-_E                            EQU                               0x0034
-_C                            EQU                               0x0036
+; Global Variables
+_Y                                EQU                               0x0030
+_D                                EQU                               0x0032
+_E                                EQU                               0x0034
+_C                                EQU                               0x0036
+
+; Local Variables
 
 ; Arrays
 
@@ -73,6 +76,8 @@ _C                            EQU                               0x0036
 
 ; Define Images
 
+; Define Loader Image Chunks
+
 ; Define Sprites
 
 ; Define Fonts
@@ -80,39 +85,38 @@ _C                            EQU                               0x0036
 ; Lookup Tables
 
 ; Code
-_entryPoint_                  Initialise                        
-                              InitRealTimeStub                                                  ; INIT
+_entryPoint_                      Initialise                                                    ; Main: INIT
 
-_10                           LDI                               2
-                              STW                               _Y                              ; FOR Y=2 &TO 7
+_10                               LDI                               2
+                                  STW                               _Y                          ; Main: FOR Y=2 &TO 7
 
-_20                           LDW                               _Y
-                              LSLW                              
-                              LSLW                              
-                              LSLW                              
-                              LSLW                              
-                              STW                               _D
-                              ADDI                              15
-                              STW                               _E                              ; D=Y<<4: E=D+15
+_20                               LDW                               _Y
+                                  LSLW                              
+                                  LSLW                              
+                                  LSLW                              
+                                  LSLW                              
+                                  STW                               _D
+                                  ADDI                              15
+                                  STW                               _E                          ; Main: D=Y LSL 4: E=D+15
 
-_30                           LDI                               32
-                              ST                                cursorXY
-                              AtTextCursor                      
-                              LDW                               _D
-                              STW                               _C
-                              LDW                               _E
-                              STW                               0xb4
-                              LDI                               1
-                              STW                               0xb6                            ; AT 32: FOR C=D &TO E
+_30                               LDI                               32
+                                  ST                                cursorXY
+                                  AtTextCursor                      
+                                  LDW                               _D
+                                  STW                               _C
+                                  LDW                               _E
+                                  STW                               0xb4
+                                  LDI                               1
+                                  STW                               0xb6                        ; Main: AT 32: FOR C=D &TO E
 
-_40                           LDW                               _C
-                              PrintAcChar                       
-                              ForNextVarAdd                     _C _40 0xb4 0xb6                ; PUT C: NEXT C
+_40                               LDW                               _C
+                                  PrintAcChar                       
+                                  ForNextVarAdd                     _C _40 0xb4 0xb6            ; Main: PUT C: NEXT C
 
-_50                           NewLine                           
-                              ForNextInc                        _Y _20 7                        ; PRINT: NEXT Y
+_50                               NewLine                           
+                                  ForNextInc                        _Y _20 7                    ; Main: PRINT: NEXT Y
 
-_end_0x0264                   BRA                               _end_0x0264                     ; END
+_end_0x025f                       BRA                               _end_0x025f                 ; Main: END
 
 
 
@@ -122,57 +126,24 @@ _end_0x0264                   BRA                               _end_0x0264     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7bc8
-resetVideoFlags               EQU     0x7baf
-clearCursorRow                EQU     0x7cb6
-printInit                     EQU     0x7ca0
-printChr                      EQU     0x7bbb
-printChar                     EQU     0x7da7
-atTextCursor                  EQU     0x7bda
-newLineScroll                 EQU     0x7ea4
-convertEqOpAddr               EQU     0x00d0
-convertNeOpAddr               EQU     0x00d2
-convertLeOpAddr               EQU     0x00d4
-convertGeOpAddr               EQU     0x00d6
-convertLtOpAddr               EQU     0x00d8
-convertGtOpAddr               EQU     0x00da
-convert8Arr2dAddr             EQU     0x00e0
-convert8Arr3dAddr             EQU     0x00e2
-convert16Arr2dAddr            EQU     0x00e4
-convert16Arr3dAddr            EQU     0x00e6
-realTimeStubAddr              EQU     0x00dc
-
-
-; do *NOT* use register4 to register7 during time slicing
-realTimeAddr        EQU     register0
-realTimeProc0       EQU     register1
-realTimeProc1       EQU     register2
-realTimeProc2       EQU     register3
-numericLabel        EQU     register0
-defaultLabel        EQU     register1
-lutLabs             EQU     register2
-lutAddrs            EQU     register3
-lutIndex            EQU     register8
-romType             EQU     register0
-romErrAddr          EQU     register1
-romErrPixel         EQU     register2
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-                    ; self modifying code allows for timer, midi and user procs
-realTimeStub        RET                                     ; RET gets replaced by PUSH
-                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
-                    CALL    giga_vAC
-realTimeStub1       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
-                    CALL    giga_vAC
-realTimeStub2       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
-                    CALL    giga_vAC
-                    POP
-                    RET
+resetVideoFlags                   EQU     0x7ac1
+clearCursorRow                    EQU     0x7bb6
+printInit                         EQU     0x7ba0
+printChr                          EQU     0x7acd
+printChar                         EQU     0x7ca7
+atTextCursor                      EQU     0x7ada
+newLineScroll                     EQU     0x7da2
+convertEqOpAddr                   EQU     0x00c0
+convertNeOpAddr                   EQU     0x00c2
+convertLeOpAddr                   EQU     0x00c4
+convertGeOpAddr                   EQU     0x00c6
+convertLtOpAddr                   EQU     0x00c8
+convertGtOpAddr                   EQU     0x00ca
+convert8Arr2dAddr                 EQU     0x00cc
+convert8Arr3dAddr                 EQU     0x00ce
+convert16Arr2dAddr                EQU     0x00d0
+convert16Arr3dAddr                EQU     0x00d2
+realTimeStubAddr                  EQU     0x00d4
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -187,7 +158,13 @@ vramAddr            EQU     register11
 evenAddr            EQU     register12
 clsAddress          EQU     register13
 varAddress          EQU     register13
-    
+clrAddress          EQU     register10
+clrLines            EQU     register11
+clrWidth            EQU     register12
+clrStart            EQU     register13
+clrEnd              EQU     register14
+clrRem              EQU     register15
+
 
 resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
                     STW     cursorXY
@@ -202,10 +179,10 @@ resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
 textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
-textLen             EQU     register1
-textOfs             EQU     register2
-textChr             EQU     register3
-textHex             EQU     register8
+textHex             EQU     register1
+textLen             EQU     register2
+textOfs             EQU     register3
+textChr             EQU     register8
 textFont            EQU     register9
 textSlice           EQU     register10
 scanLine            EQU     register11
@@ -278,7 +255,9 @@ printC_slice        ST      textSlice
                     INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     
                     PUSH
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      cursorXY
                     ADDI    giga_xfont
                     ST      cursorXY
@@ -332,7 +311,9 @@ clearCursorRow      PUSH
                     LDI     giga_yfont
 
 clearCR_loopy       ST      clearLoop
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LDI     giga_xres
                     
 clearCR_loopx       SUBI    4                               ; loop is unrolled 4 times
@@ -385,9 +366,13 @@ newLS_cont1         LDWI    clearCursorRow
                     CALL    giga_vAC
                     LDWI    giga_videoTable
                     STW     scanLine
-    
+
+%if TIME_SLICING
 newLS_scroll        CALL    realTimeStubAddr
                     LDW     scanLine
+%else
+newLS_scroll        LDW     scanLine
+%endif
                     PEEK
                     ADDI    giga_yfont
                     ANDI    0x7F

@@ -32,15 +32,16 @@ gigatron-rom
  |     +--- vCPU-summary.txt    Overview of 16-bit virtual CPU instruction set
  |     `--- ...                 All on video, audio, native code, versioning...
  `--- Contrib/                  Contributions outside the kit's ROM and tooling:
-       +--- at67/               Emulator/visualizer (SDL2), 8-bit/16-bit
-       |                        assembler, debugger, MIDI music, demos (sprites,
-       |                        lines, game of life, Tetronis game...)
+       +--- at67/               BASIC compiler, emulator, 8-bit/16-bit
+       |                        assembler/disassembler, debugger, MIDI music,
+       |                        demos and games
        +--- Crouze/             TinyBASIC scripts (including graphclock.gtb)
        +--- Cwiiis/             Gigatris game
        +--- dhkolf/             Fast emulator; Demos (SprPaint, PianoBeep,...)
        +--- flok99/             Simple (and slow) visualizer using SDL2
        +--- gigawalt/           Walter's script
        +--- kervinck/           Ramblings (all work in progress)
+       +--- makerspace48/       C examples, Prime.c and ASCII-mandelbrot.c
        +--- PhilThomas/         Javascript-based Gigatron emulator
        +--- pkupper/            Pluggy Reloaded's Babelfish (to be merged back)
        +--- tbraun-de/          Gigatron Mac; Python port of gtemu.c; maze.gt1

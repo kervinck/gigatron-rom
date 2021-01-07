@@ -10,12 +10,13 @@
 #include "expression.h"
 
 
-#define LABEL_TRUNC_SIZE  30 // The smaller you make this, the more your BASIC label names will be truncated in the resultant .vasm code
-#define OPCODE_TRUNC_SIZE 34 // The smaller you make this, the more your VASM opcode/macro names will be truncated in the resultant .vasm code
-#define USER_STR_SIZE     94
-#define LOOP_VARS_SIZE    4
-#define MAX_NESTED_LOOPS  4
-#define MAX_ARRAY_DIMS    3
+#define LABEL_TRUNC_SIZE   34 // The smaller you make this, the more your BASIC label names will be truncated in the resultant .vasm code
+#define OPCODE_TRUNC_SIZE  34 // The smaller you make this, the more your VASM opcode/macro names will be truncated in the resultant .vasm code
+#define USER_STR_SIZE      94
+#define NUM_STR_WORK_AREAS 2
+#define LOOP_VARS_SIZE     4
+#define MAX_NESTED_LOOPS   4
+#define MAX_ARRAY_DIMS     3
 
 #define SPRITE_CHUNK_SIZE         6
 #define SPRITE_STRIPE_CHUNKS_LO  15 // 15 fits into a 96 byte page
@@ -23,20 +24,23 @@
 #define MAX_NUM_SPRITES_LO      128 // maximum number of sprites for 32K RAM
 #define MAX_NUM_SPRITES_HI      1024 // maximum number of sprites for 64K RAM
 
-// 16 bytes, (0x00F0 <-> 0x00FF), reserved for vCPU stack, allows for 8 nested calls. The amount of nested GOSUBS you can use is dependant on how
+// 16 bytes, (0x00F0 <-> 0x00FF), reserved for vCPU stack, allows for 8 nested calls. The amount of nested GOSUBS/CALLS you can use is dependant on how
 // much of the stack is being used by nested system calls. *NOTE* there is NO call table for user code for this compiler
-#define USER_VAR_START  0x0030  // 80 bytes, (0x0030 <-> 0x007F), reserved for BASIC user variables
-#define INT_VAR_START   0x0082  // 46 bytes, (0x0082 <-> 0x00AF), internal register variables, used by the BASIC runtime
-#define LOOP_VAR_START  0x00B0  // 16 bytes, (0x00B0 <-> 0x00BF), reserved for FOR loops with vars, maximum of 4 nested FOR loops
-#define VAC_SAVE_START  0x00C0  // 2 bytes,  (0x00C0 <-> 0x00C1), reserved for saving vAC
-#define CONVERT_CC_OPS  0x00C2  // 12 bytes, (0x00C2 <-> 0x00CD), critical relational operator routines that can't straddle page boundaries
-#define CONVERT_ARRAY   0x00CE  // 8 bytes,  (0x00CE <-> 0x00D5), critical array accessing routines
-#define REAL_TIME_PROC  0x00D6  // 2 bytes,  (0x00D6 <-> 0x00D7), critical time sliced routine that usually handles TIME/MIDI, etc
-#define LOCAL_VAR_START 0x00D8  // 16 bytes, (0x00D8 <-> 0x00E7), reserved for function/procedure params and local vars
-#define TEMP_VAR_START  0x00E8  // 8 bytes,  (0x00E8 <-> 0x00EF), reserved for temporary expression variables
-#define TEMP_VAR_SIZE   8
-#define USER_CODE_START 0x0200
-#define USER_VAR_END    0x007F
+#define USER_VAR_START   0x0030  // 80 bytes, (0x0030 <-> 0x007F), reserved for BASIC user variables
+#define SER_RAW_PREV     0x0081  // 1 byte,   (0x0081 <-> 0x0081), previous version of serialRaw, used by the BASIC runtime for input edge detection
+#define INT_VAR_START    0x0082  // 46 bytes, (0x0082 <-> 0x00AF), internal register variables, used by the BASIC runtime
+#define LOOP_VAR_START   0x00B0  // 16 bytes, (0x00B0 <-> 0x00BF), reserved for FOR loops with vars, maximum of 4 nested FOR loops
+#define CONVERT_CC_OPS   0x00C0  // 12 bytes, (0x00C0 <-> 0x00CB), critical relational operator routines that can't straddle page boundaries
+#define CONVERT_ARRAY    0x00CC  // 8 bytes,  (0x00CC <-> 0x00D3), critical array accessing routines
+#define REAL_TIME_PROC   0x00D4  // 2 bytes,  (0x00D4 <-> 0x00D5), critical time sliced routine that usually handles TIME/MIDI, etc
+#define LOCAL_VAR_ADDR   0x00D6  // 2 bytes,  (0x00D6 <-> 0x00D7), reserved for local vars pointer
+#define LOCAL_VAR_START  0x00D8  // 16 bytes, (0x00D8 <-> 0x00E7), reserved for function/procedure params and local vars
+#define TEMP_VAR_START   0x00E8  // 8 bytes,  (0x00E8 <-> 0x00EF), reserved for temporary expression variables
+#define TEMP_VAR_SIZE    8
+#define USER_CODE_START  0x0200
+#define USER_VAR_END     0x007F
+#define REG_WORK_SIZE    16
+#define GPRINT_VAR_ADDRS 16
 
 // Misc flags bits
 #define ENABLE_SCROLL_BIT 0x0001
@@ -46,20 +50,32 @@
 #define ENABLE_SCROLL_MSK 0xFFFE
 #define ON_BOTTOM_ROW_MSK 0xFFFD
 
+// Loader.gcl prohibited addresses
+#define LOADER_SCANLINE0_START 0x5900
+#define LOADER_SCANLINE0_END   0x599F
+#define LOADER_SCANLINE1_START 0x5A00
+#define LOADER_SCANLINE1_END   0x5A9F
+#define LOADER_SCANLINE2_START 0x5B00
+#define LOADER_SCANLINE2_END   0x5B9F
+
 #define SYS_INIT_FUNC_LEN 5
+
+#define MODULE_MAIN "Main"
 
 
 namespace Compiler
 {
     enum VarType {ConstInt16, ConstStr, VarInt8, VarInt16, VarInt32, VarStr, VarStr2, VarFloat16, VarFloat32, Var1Arr8, Var2Arr8, Var3Arr8, Var1Arr16, Var2Arr16, Var3Arr16};
     enum IntSize {Int8=1, Int16=2, Int32=4};
-    enum ConstStrType {StrChar, StrHex, StrHexw, StrLeft, StrRight, StrMid};
+    enum ConstStrType {StrChar, StrHex, StrLeft, StrRight, StrMid, StrLower, StrUpper};
     enum IfElseEndType {IfBlock, ElseIfBlock, ElseBlock, EndIfBlock};
-    enum OperandType {OperandVar, OperandTemp, OperandConst};
+    enum OperandType {OperandInvalid, OperandVar, OperandTemp, OperandConst};
     enum StatementResult {StatementError, StatementSuccess, StatementExpression, SingleStatementParsed, MultiStatementParsed, StringStatementParsed, RedoStatementParse};
     enum CodeOptimiseType {CodeSpeed, CodeSize};
-    enum SpriteFlipType {NoFlip=0, FlipX, FlipY, FlipXY};
+    enum SpriteFlipType {NoFlip, FlipX, FlipY, FlipXY};
     enum DataType {DataInteger, DataString};
+    enum ForNextType {AutoTo, UpTo, DownTo};
+    enum TypeVarType {Byte, Word, String, ArrayB, Array2B, Array3B, ArrayW, Array2W, Array3W, ArrayS};
 
 
     struct Constant
@@ -171,6 +187,12 @@ namespace Compiler
         std::vector<uint16_t> _typesLut;
     };
 
+    struct Input
+    {
+        bool _parse = true;
+        std::string _text;
+    };
+
     struct CodeLine
     {
         std::string _text;
@@ -190,6 +212,13 @@ namespace Compiler
         bool _containsVars = false;
         bool _pushEmitted = false;
         bool _dontParse = false;
+        std::string _module = MODULE_MAIN;
+    };
+
+    struct ModuleLine
+    {
+        int _index;
+        std::string _name = MODULE_MAIN;
     };
 
     struct InternalSub
@@ -210,7 +239,7 @@ namespace Compiler
         int16_t _loopStep;
         uint16_t _varEnd;
         uint16_t _varStep;
-        bool _downTo = false;
+        ForNextType _type = AutoTo;
         bool _farJump = true;
         bool _optimise = true;
         int _codeLineIndex;
@@ -246,6 +275,17 @@ namespace Compiler
         int _codeLineIndex;
     };
 
+    struct TypeVar
+    {
+        uint16_t _address;
+        TypeVarType _type;
+    };
+    struct TypeData
+    {
+        uint16_t _address;
+        std::map<std::string, TypeVar> _vars;
+    };
+
     struct CallData
     {
         int _numParams = 0;
@@ -279,6 +319,19 @@ namespace Compiler
     {
         uint16_t _address;
         uint16_t _width, _height, _stride;
+        std::vector<uint8_t> _data;
+    };
+
+    // Image data that conflicts with loader must be handled separately
+    const int DefDataLoaderImageChunkLutEntrySize = 5;
+    struct DefDataLoaderImageChunk
+    {
+        struct LutEntry
+        {
+            uint16_t _srcAddr, _dstAddr;
+            uint8_t _length;
+        } _lutEntry;
+
         std::vector<uint8_t> _data;
     };
 
@@ -351,7 +404,10 @@ namespace Compiler
     uint16_t getStringsStart(void);
     uint16_t getTempVarStart(void);
     uint16_t getTempVarSize(void);
+    uint16_t getRegWorkArea(void);
+    uint16_t getGprintfVarsAddr(void);
     uint16_t getStrWorkArea(void);
+    uint16_t getStrWorkArea(int index);
     uint16_t getSpritesAddrLutAddress(void);
     uint16_t getSpriteStripeChunks(void);
     uint16_t getSpriteStripeMinAddress(void);
@@ -362,6 +418,8 @@ namespace Compiler
     bool getCompilingError(void);
     bool getArrayIndiciesOne(void);
     int getCurrentLabelIndex(void);
+    int getCurrentCodeLineIndex(void); 
+    int getNumNumericLabels(void);
     const std::string& getRuntimePath(void);
     const std::string& getTempVarStartStr(void);
     const std::string& getNextInternalLabel(void);
@@ -374,7 +432,9 @@ namespace Compiler
     void setStringsStart(uint16_t stringsStart);
     void setTempVarStart(uint16_t tempVarStart);
     void setTempVarSize(uint16_t tempVarSize);
-    void setStrWorkArea(uint16_t strWorkArea);
+    void setRegWorkArea(uint16_t regWorkArea);
+    void setGprintfVarsAddr(uint16_t gprintfVarsAddr);
+    void setStrWorkArea(uint16_t strWorkArea, int index=0);
     void setSpritesAddrLutAddress(uint16_t spritesAddrLutAddress);
     void setSpriteStripeChunks(uint16_t spriteStripeChunks);
     void setSpriteStripeMinAddress(uint16_t spriteStripeMinAddress);
@@ -386,13 +446,17 @@ namespace Compiler
     void setCompilingError(bool compilingError);
     void setArrayIndiciesOne(bool arrayIndiciesOne);
 
+    void nextStrWorkArea(void);
+
     int getNextJumpFalseUniqueId(void);
 
     std::vector<Label>& getLabels(void);
     std::vector<Constant>& getConstants(void);
     std::vector<CodeLine>& getCodeLines(void);
+    std::vector<ModuleLine>& getModuleLines(void);
     std::vector<IntegerVar>& getIntegerVars(void);
     std::vector<StringVar>& getStringVars(void);
+    std::map<std::string, TypeData>& getTypeDatas(void);
     std::vector<InternalLabel>& getInternalLabels(void);
     std::vector<InternalLabel>& getDiscardedLabels(void);
     std::vector<std::string>& getOutput(void);
@@ -400,6 +464,7 @@ namespace Compiler
     std::vector<DefDataByte>& getDefDataBytes(void);
     std::vector<DefDataWord>& getDefDataWords(void);
     std::vector<DefDataImage>& getDefDataImages(void);
+    std::vector<DefDataLoaderImageChunk>& getDefDataLoaderImageChunks(void);
 
     std::map<int, DefDataSprite>& getDefDataSprites(void);
     SpritesAddrLut& getSpritesAddrLut(void);
@@ -409,7 +474,7 @@ namespace Compiler
 
     std::map<std::string, DefFunction>& getDefFunctions(void);
     std::vector<std::unique_ptr<DataObject>>& getDataObjects(void);
-    
+
     std::map<std::string, MacroIndexEntry>& getMacroIndexEntries(void);
     
     std::stack<ForNextData>& getForNextDataStack(void);
@@ -431,7 +496,10 @@ namespace Compiler
     bool initialise(void);
     bool initialiseMacros(void);
 
-    Expression::Numeric expression(void);
+    bool parsePragmas(std::vector<Input>& input, int numLines);
+    bool parseLabels(std::vector<Input>& input, int numLines);
+
+    Expression::Numeric expression(bool returnAddress=false);
 
     int findLabel(const std::string& labelName);
     int findLabel(uint16_t address);
@@ -442,7 +510,10 @@ namespace Compiler
     int findVar(std::string& varName, std::string& oldName, bool subAlpha=true);
     int findStr(std::string& strName);
 
-    bool createCodeLine(const std::string& code, int codeLineOffset, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool vars, CodeLine& codeLine);
+    void writeArrayVarNoAssign(CodeLine& codeLine, int codeLineIndex, int varIndex);
+    void writeArrayStrNoAssign(std::string& arrText, int codeLineIndex, int strIndex);
+
+    bool createCodeLine(const std::string& code, int codeLineStart, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool vars, CodeLine& codeLine, const std::string& moduleName=MODULE_MAIN);
     void createLabel(uint16_t address, const std::string& name, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, uint16_t address, int& varIndex);
@@ -453,6 +524,8 @@ namespace Compiler
     uint16_t getOrCreateConstString(ConstStrType constStrType, int16_t input, int& index);
     uint16_t getOrCreateConstString(ConstStrType constStrType, const std::string& input, int8_t length, uint8_t offset, int& index);
     int createStringArray(CodeLine& codeLine, int codeLineIndex, std::string& name, uint8_t size, std::vector<std::string>& arrInits, std::vector<uint16_t>& arrAddrs);
+    void getOrCreateString(const Expression::Numeric& numeric, std::string& name, uint16_t& addr, int& index);
+    void emitStringAddress(const Expression::Numeric& numeric, uint16_t address);
 
     void updateVar(int16_t data, CodeLine& codeLine, int varIndex, bool containsVars);
 
@@ -462,13 +535,14 @@ namespace Compiler
     std::pair<int, int> emitVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, bool nextTempVar, int codeLineIdx=-1, const std::string& internalLabel="", bool pageJump=false);
     void createVcpuAsmLabel(int codeLineIdxBra, int vcpuAsmBra, int codeLineIdxDst, int vcpuAsmDst, const std::string& label);
     bool emitVcpuAsmUserVar(const std::string& opcodeStr, Expression::Numeric& numeric, bool nextTempVar);
+    void emitVcpuPreProcessingCmd(const std::string& cmdStr);
     void getNextTempVar(void);
 
     uint32_t isExpression(std::string& input, int& varIndex, int& constIndex, int& strIndex);
     OperandType parseExpression(int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric);
     uint32_t parseExpression(int codeLineIndex, std::string& expression, Expression::Numeric& numeric);
     uint32_t handleExpression(int codeLineIndex, std::string& expression, Expression::Numeric numeric);
-    StatementResult parseMultiStatements(const std::string& code, CodeLine& codeLine, int codeLineIndex, int& varIndex, int& strIndex);
+    StatementResult parseMultiStatements(const std::string& code, int codeLineIndex, int codeLineStart, int& varIndex, int& strIndex);
 
     void addLabelToJumpCC(std::vector<VasmLine>& vasm, const std::string& label);
     void addLabelToJump(std::vector<VasmLine>& vasm, const std::string& label);

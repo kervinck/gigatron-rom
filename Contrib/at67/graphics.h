@@ -89,12 +89,12 @@ namespace Graphics
     void pixelReticle(const Cpu::State& S, int vgaX, int vgaY);
     
     void drawPixel(uint8_t x, uint8_t y, uint32_t colour);
-    void drawLine(int x0, int y0, int x1, int y1, uint32_t colour);
+    void drawLine(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint32_t colour);
 
     void drawLeds(void);
     bool drawText(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize, int invertPos=0);
     bool drawMenuItem(const std::string& text, int x, int y, uint32_t fgColour, bool invert, int invertSize, uint32_t bgColour);
-    bool drawDialog(int x, int y, int w, int h, uint32_t bgColour, uint32_t bdColour);
+    bool drawDialog(int16_t x, int16_t y, int16_t w, int16_t h, uint32_t bgColour, uint32_t bdColour);
     bool drawDialogItem(const std::string& text, int x, int y, uint32_t fgColour, uint32_t bdColour);
     bool drawText(const std::string& text, uint32_t* pixels, int x, int y, uint32_t fgColour, bool invert, int invertSize, int invertPos=0,
                   uint32_t bgColour=0x00000000, bool colourKey=false, int numChars=-1, bool fullscreen=false, uint32_t commentColour=0x00000000, uint32_t sectionColour=0x00000000);

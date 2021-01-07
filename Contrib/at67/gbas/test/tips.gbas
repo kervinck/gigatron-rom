@@ -10,7 +10,7 @@ data 1, "one", 2, "two", 3, "three", 4, "four", 5, "five", 6, "test", 7, "yes", 
 
 for i=1 to 4
     read a, a$
-    print i;" ";hexw$(a);" : ";a$
+    print i;" ";hex$(a, 4);" : ";a$
 next i
 
 print
@@ -18,18 +18,17 @@ restore 2
 
 for i=1 to 7
     read a, a$
-    print i;" ";hexw$(a);" : ";a$
+    print i;" ";hex$(a, 4);" : ";a$
 next i
 
-wait 120
-print
-
-'elements 4 to 9 are initialised to ""
-dim string$(9) = "test", "dog", "cat", "fish", ""
+dim strings$(3) = "test", "dog", "cat", "fish"
 a = 2
-oops$ = string$(a)
-print oops$;" ";string$(a);" ";string$(0);" ";string$(a + 1);" ";hexw$(@string$)
-print #oops$;" ";#string$;" ";hexw$(addr(string$, 1));" ";hexw$(addr(string$, a + 1))
+oops$ = strings$(a)
+print oops$;" ";strings$(a);" ";strings$(0);" ";strings$(a + 1);" ";hex$(@strings$, 4)
+print #oops$;" ";#strings$;" ";hex$(@strings$(0), 4);" ";hex$(@strings$(1, 3), 4);" ";chr$(peek(addr(strings$(a + 1)) + 1));" ";peek(@strings$(0, 1))
+
+input fff$
+print
 
 'elements 4 to 5 are initialised to -1
 dim test1d%(5) = 1, 2, 3, 0xAA55, 23
@@ -52,17 +51,17 @@ next i
 
 a = 2
 a = test1d(a)
-print a;" ";hexw$(test1d(3));" ";hexw$(test1d(3).lo);" ";hexw$(test1d(3).hi);" ";
+print a;" ";hex$(test1d(3), 4);" ";hex$(test1d(3).lo, 4);" ";hex$(test1d(3).hi, 4);" ";
 
 dim test2d%(1, 1) = 0, 1
 print test2d(0, 0);" ";test2d(0, 1)
 test2d(0, 1) = &hBEEF
-print test2d(0, 0);" ";hexw$(test2d(0, 1))
+print test2d(0, 0);" ";hex$(test2d(0, 1), 4)
 
 dim test3d%(2, 2, 4) = 1, 2, 3, 4, 0
 print test3d(1, 2, 3);" ";
 test3d(1, 2, 3) = &hAA55
-print hexw$(test3d(1, 2, 3))
+print hex$(test3d(1, 2, 3), 4)
 
 dim arr3d%(2, 2, 2) = 1, 2, 3, 4, 5, 6, 7, 8, 9, 0
 
@@ -84,12 +83,12 @@ print
 
 strTest$ = "dogcat"
 print len(test1d);" ";len(test2d);" ";len(test3d);" ";len(arr3d);" ";len(strTest$)
-print hexw$(@test1d);" ";hexw$(@test2d);" ";hexw$(@test3d);" ";hexw$(@arr3d)
-print peek(addr(test1d, 0));" ";peek(addr(test2d, 0, 0));" ";hexw$(peek(addr(test3d, 0, 0, 2)));" ";peek(addr(arr3d, 1, 1, 1));" ";
-index0=0 : print peek(addr(test1d, index0));" ";
-index0=0 : index1=0 : print peek(addr(test2d, index0, index1));" ";
-index0=0 : index1=0 : index2=2 : print peek(addr(test3d, index0, index1, index2));" ";
-index0=1 : index1=1 : index2=1 : print peek(addr(arr3d, index0, index1, index2))
+print hex$(@test1d, 4);" ";hex$(@test2d, 4);" ";hex$(@test3d, 4);" ";hex$(@arr3d, 4)
+print peek(@test1d(0));" ";peek(@test2d(0, 0));" ";hex$(peek(@test3d(0, 0, 2)), 4);" ";peek(@arr3d(1, 1, 1));" ";
+index0=0 : print peek(addr(test1d(index0)));" ";
+index0=0 : index1=0 : print peek(addr(test2d(index0, index1)));" ";
+index0=0 : index1=0 : index2=2 : print peek(addr(test3d(index0, index1, index2)));" ";
+index0=1 : index1=1 : index2=1 : print peek(addr(arr3d(index0, index1, index2)))
 
 aaa = @arr3d
 aaa = deek(aaa + 2) ' arrays k pointers are always 2 bytes, so multiply your k index by 2
@@ -108,7 +107,7 @@ print blah
 
 print pow(144, 0.5);" ";sqrt(256.0);" ";exp2(13);" ";exp(5);" ";log(148);" ";log2(2048);" ";log10(10000);" ";atan2(10.0, -10.0)
 
-print hex$(lup(&h0920, 0));" ";hex$(lup(&h0920, 1))
+print hex$(lup(&h0920, 0), 2);" ";hex$(lup(&h0920, 1), 2)
 
 'loop:
 '    a = rnd(2) + 1
@@ -158,7 +157,7 @@ proc doStuff, a, b, c, d
     g = a + b + c + d
     h = e*f
         
-    print a;" ";b;" ";c;" ";d;" ";e;" ";f;" ";g;" ";h;" ";hex$(@a);" ";#b
+    print a;" ";b;" ";c;" ";d;" ";e;" ";f;" ";g;" ";h;" ";hex$(@a, 2);" ";#b
     
     print min(1, 2);" ";max(3, -1);" ";clamp(8, c, f);" ";
 endproc

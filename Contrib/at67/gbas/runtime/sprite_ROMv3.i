@@ -4,17 +4,17 @@ spriteXY            EQU     register1
 spriteAddrs         EQU     register2
 
     
-%SUB                draw_sprite
-draw_sprite         PUSH
+%SUB                drawSprite_
+drawSprite_         PUSH
                     LDWI    _spritesLut_
                     ADDW    spriteId
                     ADDW    spriteId
                     DEEK
                     STW     spriteAddrs                     ; get sprite address table
                     
-draw_s_loop         LDW     spriteAddrs
+drawS_loop          LDW     spriteAddrs
                     DEEK                                    ; get source address
-                    BEQ     draw_s_exit
+                    BEQ     drawS_exit
                     STW     giga_sysArg0
                     INC     spriteAddrs
                     INC     spriteAddrs
@@ -24,10 +24,12 @@ draw_s_loop         LDW     spriteAddrs
                     SYS     64
                     INC     spriteAddrs
                     INC     spriteAddrs
+%if TIME_SLICING
                     CALL    realTimeStubAddr
-                    BRA     draw_s_loop
+%endif
+                    BRA     drawS_loop
                     
-draw_s_exit         POP
+drawS_exit          POP
                     RET
 %ENDS
 
@@ -35,7 +37,7 @@ draw_s_exit         POP
 drawSprite          PUSH
                     LDWI    SYS_Sprite6_v3_64
                     STW     giga_sysFn
-                    LDWI    draw_sprite
+                    LDWI    drawSprite_
                     CALL    giga_vAC
                     POP
                     RET
@@ -45,7 +47,7 @@ drawSprite          PUSH
 drawSpriteX         PUSH
                     LDWI    SYS_Sprite6x_v3_64
                     STW     giga_sysFn
-                    LDWI    draw_sprite
+                    LDWI    drawSprite_
                     CALL    giga_vAC
                     POP
                     RET
@@ -55,7 +57,7 @@ drawSpriteX         PUSH
 drawSpriteY         PUSH
                     LDWI    SYS_Sprite6y_v3_64
                     STW     giga_sysFn
-                    LDWI    draw_sprite
+                    LDWI    drawSprite_
                     CALL    giga_vAC
                     POP
                     RET
@@ -65,7 +67,7 @@ drawSpriteY         PUSH
 drawSpriteXY        PUSH
                     LDWI    SYS_Sprite6xy_v3_64
                     STW     giga_sysFn
-                    LDWI    draw_sprite
+                    LDWI    drawSprite_
                     CALL    giga_vAC
                     POP
                     RET

@@ -44,8 +44,7 @@ resetVideoTable     PUSH
                     LDWI    giga_videoTable
                     STW     evenAddr
     
-resetVT_loop        CALLI   realTimeStub
-                    LDW     vramAddr
+resetVT_loop        LDW     vramAddr
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
@@ -110,7 +109,6 @@ clearR_loop         ST      clrLines
                     LD      clrLines
                     SUBI    1
                     BNE     clearR_loop
-                    CALLI   realTimeStub
                     POP
                     RET
 %ENDS
@@ -139,7 +137,6 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                    ; bottom line
                     SYS     54                              ; fill memory
                     INC     top                             ; next top line
-                    CALLI   realTimeStub
                     LD      top
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loopy

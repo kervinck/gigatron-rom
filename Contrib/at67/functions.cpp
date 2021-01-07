@@ -1,5 +1,7 @@
 #include <ctime>
 #include <random>
+#include <numeric>
+#include <algorithm>
 
 #include "memory.h"
 #include "cpu.h"
@@ -9,7 +11,14 @@
 
 namespace Functions
 {
-    enum EmitStringResult {SyntaxError, InvalidStringVar, ValidStringVar};
+    int _nestedCount = -1;
+
+    double _umin = 0.0;
+    double _umax = 0.0;
+    double _ulen = 0.0;
+    double _ustp = 1.0;
+    uint16_t _uidx = 0;
+    std::vector<int16_t> _uvalues;
 
     std::mt19937_64 _randGenerator;
 
@@ -21,13 +30,28 @@ namespace Functions
     std::map<std::string, std::string>& getStringFunctions(void) {return _stringFunctions;}
 
 
+    void restart(void)
+    {
+        _nestedCount = -1;
+
+        _umin = _umax = _ulen = 0.0;
+        _ustp = 1.0;
+        _uidx = 0;
+        _uvalues.clear();
+    }
+
     bool initialise(void)
     {
+        restart();
+
         // Functions
+        _functions["IARR"  ] = "IARR";
+        _functions["SARR"  ] = "SARR";
         _functions["PEEK"  ] = "PEEK";
         _functions["DEEK"  ] = "DEEK";
         _functions["USR"   ] = "USR";
         _functions["RND"   ] = "RND";
+        _functions["URND"  ] = "URND";
         _functions["LEN"   ] = "LEN";
         _functions["GET"   ] = "GET";
         _functions["ABS"   ] = "ABS";
@@ -42,17 +66,18 @@ namespace Functions
         _functions["MIN"   ] = "MIN";
         _functions["MAX"   ] = "MAX";
         _functions["CLAMP" ] = "CLAMP";
-        _functions["SWAP"  ] = "SWAP";
 
         // String functions
-        _stringFunctions["CHR$"  ] = "CHR$";
-        _stringFunctions["HEX$"  ] = "HEX$";
-        _stringFunctions["HEXW$" ] = "HEXW$";
-        _stringFunctions["LEFT$" ] = "LEFT$";
-        _stringFunctions["RIGHT$"] = "RIGHT$";
-        _stringFunctions["MID$"  ] = "MID$";
-        _stringFunctions["STR$"  ] = "STR$";
-        _stringFunctions["TIME$" ] = "TIME$";
+        _stringFunctions["CHR$"  ]  = "CHR$";
+        _stringFunctions["HEX$"  ]  = "HEX$";
+        _stringFunctions["LEFT$" ]  = "LEFT$";
+        _stringFunctions["RIGHT$"]  = "RIGHT$";
+        _stringFunctions["MID$"  ]  = "MID$";
+        _stringFunctions["STR$"  ]  = "STR$";
+        _stringFunctions["TIME$" ]  = "TIME$";
+        _stringFunctions["LOWER$"]  = "LOWER$";
+        _stringFunctions["UPPER$"]  = "UPPER$";
+        _stringFunctions["STRCAT$"] = "STRCAT$";
 
         uint64_t timeSeed = time(NULL);
         std::seed_seq seedSequence{uint32_t(timeSeed & 0xffffffff), uint32_t(timeSeed>>32)};
@@ -62,83 +87,30 @@ namespace Functions
     }
 
 
-    EmitStringResult emitStringAddr(const std::string& token, const std::string& operand)
-    {
-        std::string strToken = token;
-        Expression::stripNonStringWhitespace(strToken);
-        if(strToken.back() == '$'  &&  Expression::isVarNameValid(strToken))
-        {
-            uint16_t srcAddr;
-            int strIndexSrc = Compiler::findStr(strToken);
-            if(strIndexSrc >= 0)
-            {
-                srcAddr = Compiler::getStringVars()[strIndexSrc]._address;
-            }
-            else
-            {
-                strIndexSrc = Compiler::findConst(strToken);
-                if(strIndexSrc == -1) return SyntaxError;
-                
-                srcAddr = Compiler::getConstants()[strIndexSrc]._address;
-            }
-
-            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-            Compiler::emitVcpuAsm("STW", operand, false);
-
-            return ValidStringVar;
-        }
-
-        return InvalidStringVar;
-    }
-
-    void getOrCreateString(const Expression::Numeric& numeric, std::string& name, uint16_t& addr, int& index)
-    {
-        switch(numeric._varType)
-        {
-            case Expression::String:
-            {
-                Compiler::getOrCreateConstString(numeric._text, index);
-                name = Compiler::getStringVars()[index]._name;
-                addr = Compiler::getStringVars()[index]._address;
-            }
-            break;
-
-            case Expression::StrVar:
-            {
-                name = Compiler::getStringVars()[index]._name;
-                addr = Compiler::getStringVars()[index]._address;
-            }
-            break;
-
-            case Expression::Constant:
-            {
-                name = Compiler::getConstants()[index]._name;
-                addr = Compiler::getConstants()[index]._address;
-            }
-            break;
-
-            default: break;
-        }
-    }
-
     void handleConstantString(const Expression::Numeric& numeric, Compiler::ConstStrType constStrType, std::string& name, int& index)
     {
         switch(constStrType)
         {
             case Compiler::StrLeft:
-
             case Compiler::StrRight:
             {
-                uint8_t length = uint8_t(std::lround(numeric._parameters[0]._value));
+                uint8_t length = uint8_t(std::lround(numeric._params[0]._value));
                 Compiler::getOrCreateConstString(constStrType, numeric._text, length, 0, index);
             }
             break;
 
             case Compiler::StrMid:
             {
-                uint8_t offset = uint8_t(std::lround(numeric._parameters[0]._value));
-                uint8_t length = uint8_t(std::lround(numeric._parameters[1]._value));
+                uint8_t offset = uint8_t(std::lround(numeric._params[0]._value));
+                uint8_t length = uint8_t(std::lround(numeric._params[1]._value));
                 Compiler::getOrCreateConstString(constStrType, numeric._text, length, offset, index);
+            }
+            break;
+
+            case Compiler::StrLower:
+            case Compiler::StrUpper:
+            {
+                Compiler::getOrCreateConstString(constStrType, numeric._text, 0, 0, index);
             }
             break;
 
@@ -148,7 +120,7 @@ namespace Functions
         name = Compiler::getStringVars()[index]._name;
         uint16_t srcAddr = Compiler::getStringVars()[index]._address;
 
-        if(Expression::getEnableOptimisedPrint())
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
         {
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
             Compiler::emitVcpuAsm("%PrintAcString", "", false);
@@ -185,6 +157,18 @@ namespace Functions
         Operators::handleSingleOp("LDW", param);
     }
 
+    // Does a function contain nested functions as parameters
+    bool isFuncNested(void)
+    {
+        if(Expression::getOutputNumeric()._nestedCount == _nestedCount) return false;
+
+        bool codeInit = (_nestedCount == -1);
+        _nestedCount = Expression::getOutputNumeric()._nestedCount;
+        if(codeInit) return false;
+
+        return true;
+    }
+
 
     // ********************************************************************************************
     // Functions
@@ -202,7 +186,7 @@ namespace Functions
             break;
 
             // User variable
-            case Expression::IntVar:
+            case Expression::IntVar16:
             {
                 Compiler::emitVcpuAsmUserVar("LDW", param, false);
             }
@@ -218,11 +202,12 @@ namespace Functions
             default: break;
         }
     }
-    Expression::Numeric IARR(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric IARR(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::IARR() : ARRAY() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::IARR() : %s cannot be used in static initialisation : in '%s' on line %d\n", numeric._name.c_str(), codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
@@ -232,18 +217,16 @@ namespace Functions
         uint16_t arrayPtr = Compiler::getIntegerVars()[numeric._index]._address;
 
         // Literal array index, (only optimise for 1d arrays)
-        if(numeric._varType == Expression::Arr1Var8  &&  numeric._parameters.size()  &&  numeric._parameters[0]._varType == Expression::Number)
+        if(numeric._varType == Expression::Arr1Var8  &&  numeric._params.size() == 1  &&  numeric._params[0]._varType == Expression::Number)
         {
-            std::string operand = Expression::wordToHexString(arrayPtr + uint16_t(numeric._parameters[0]._value*intSize));
-
+            std::string operand = Expression::wordToHexString(arrayPtr + uint16_t(numeric._params[0]._value*intSize));
             Compiler::emitVcpuAsm("LDWI", operand, false); 
             Compiler::emitVcpuAsm("PEEK", "",      false);
-
             Operators::createTmpVar(numeric);
         }
-        else if(numeric._varType == Expression::Arr1Var16  &&  numeric._parameters.size()  &&  numeric._parameters[0]._varType == Expression::Number)
+        else if(numeric._varType == Expression::Arr1Var16  &&  numeric._params.size() == 1  &&  numeric._params[0]._varType == Expression::Number)
         {
-            std::string operand = Expression::wordToHexString(arrayPtr + uint16_t(numeric._parameters[0]._value*intSize));
+            std::string operand = Expression::wordToHexString(arrayPtr + uint16_t(numeric._params[0]._value*intSize));
 
             // Handle .LO and .HI
             switch(numeric._int16Byte)
@@ -260,9 +243,26 @@ namespace Functions
         // Variable array index or 2d/3d array
         else
         {
-            for(int i=0; i<int(numeric._parameters.size()); i++)
+            size_t numDims = 0;
+            if(numeric._varType >= Expression::Arr1Var8  &&  numeric._varType <= Expression::Arr3Var8)
             {
-                Expression::Numeric param = numeric._parameters[i];
+                numDims = numeric._varType - Expression::Arr1Var8 + 1;
+            }
+            else if(numeric._varType >= Expression::Arr1Var16  &&  numeric._varType <= Expression::Arr3Var16)
+            {
+                numDims = numeric._varType - Expression::Arr1Var16 + 1;
+            }
+            if(numDims != numeric._params.size())
+            {
+                fprintf(stderr, "Functions::IARR() : %s() expects %d dimension/s, found %d : in '%s' on line %d\n", numeric._name.c_str(), int(numDims), int(numeric._params.size()), codeLineText.c_str(), codeLineStart);
+                numeric._isValid = false;
+                return numeric;
+            }
+
+            // Generate array indices
+            for(size_t i=0; i<numeric._params.size(); i++)
+            {
+                Expression::Numeric param = numeric._params[i];
                 opcodeARR(param);
                 Compiler::emitVcpuAsm("STW", "memIndex" + std::to_string(i), false);
             }
@@ -287,7 +287,7 @@ namespace Functions
                 case Expression::Arr3Var8:
                 {
                     Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
-                    (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert8Arr3d", false, codeLineIndex) : Compiler::emitVcpuAsm("CALL", "convert8Arr3dAddr", false);
+                    (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert8Arr3d", false) : Compiler::emitVcpuAsm("CALL", "convert8Arr3dAddr", false);
                 }
                 break;
 
@@ -309,66 +309,73 @@ namespace Functions
                 case Expression::Arr3Var16:
                 {
                     Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
-                    (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert16Arr3d", false, codeLineIndex) : Compiler::emitVcpuAsm("CALL", "convert16Arr3dAddr", false);
+                    (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert16Arr3d", false) : Compiler::emitVcpuAsm("CALL", "convert16Arr3dAddr", false);
                 }
                 break;
 
                 default: break;
             }
 
-            // Bytes
-            if(numeric._varType >= Expression::Arr1Var8  &&  numeric._varType <= Expression::Arr3Var8)
+            // Functions like LEN() and ADDR() require IARR() to return the address rather than the value
+            if(!numeric._returnAddress)
             {
-                Compiler::emitVcpuAsm("PEEK", "", false);
-            }
-            // Words, handle .LO and .HI
-            else
-            {
-                switch(numeric._int16Byte)
+                // Bytes
+                if(numeric._varType >= Expression::Arr1Var8  &&  numeric._varType <= Expression::Arr3Var8)
                 {
-                    case Expression::Int16Low:  Compiler::emitVcpuAsm("PEEK", "",  false);                                           break;
-                    case Expression::Int16High: Compiler::emitVcpuAsm("ADDI", "1", false); Compiler::emitVcpuAsm("PEEK", "", false); break;
-                    case Expression::Int16Both: Compiler::emitVcpuAsm("DEEK", "",  false);                                           break;
+                    Compiler::emitVcpuAsm("PEEK", "", false);
+                }
+                // Words, handle .LO and .HI
+                else
+                {
+                    switch(numeric._int16Byte)
+                    {
+                        case Expression::Int16Low:  Compiler::emitVcpuAsm("PEEK", "",  false);                                           break;
+                        case Expression::Int16High: Compiler::emitVcpuAsm("ADDI", "1", false); Compiler::emitVcpuAsm("PEEK", "", false); break;
+                        case Expression::Int16Both: Compiler::emitVcpuAsm("DEEK", "",  false);                                           break;
 
-                    default: break;
+                        default: break;
+                    }
                 }
             }
         }
 
         Operators::createTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-
+        numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric SARR(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric SARR(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::SARR() : ARRAY() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::SARR() : %s cannot be used in static initialisation : in '%s' on line %d\n", numeric._name.c_str(), codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
-        if(numeric._parameters.size() != 1)
+        if(numeric._params.size() != 1)
         {
-            fprintf(stderr, "Functions::SARR() : ARRAY() can only have 1 dimension : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::SARR() : %s() expects 1 dimension, found %d : in '%s' on line %d\n", numeric._name.c_str(), int(numeric._params.size()), codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
-        Compiler::getNextTempVar();
+        // String addresses cannot be combined using boolean expressions, so no need to increment temporary var
+        //Compiler::getNextTempVar();
 
         uint16_t arrayPtr = Compiler::getStringVars()[numeric._index]._address;
 
         // Literal array index
-        if(numeric._parameters[0]._varType == Expression::Number)
+        if(numeric._params[0]._varType == Expression::Number)
         {
-            std::string operand = Expression::wordToHexString(arrayPtr + uint16_t(numeric._parameters[0]._value)*2);
+            std::string operand = Expression::wordToHexString(arrayPtr + uint16_t(numeric._params[0]._value)*2);
             Compiler::emitVcpuAsm("LDWI", operand, false);
             Compiler::emitVcpuAsm("DEEK", "",      false);
         }
         // Variable array index
         else
         {
-            Expression::Numeric param = numeric._parameters[0];
+            Expression::Numeric param = numeric._params[0];
             opcodeARR(param);
             Compiler::emitVcpuAsm("STW", "memIndex0", false);
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(arrayPtr), false);
@@ -381,15 +388,16 @@ namespace Functions
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         numeric._varType = Expression::Str2Var;
-
+        numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric PEEK(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric PEEK(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::PEEK() : PEEK() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::PEEK() : PEEK() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
@@ -417,11 +425,12 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric DEEK(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric DEEK(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::PEEK() : PEEK() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::PEEK() : PEEK() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
@@ -449,11 +458,12 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric USR(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric USR(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::USR() : USR() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::USR() : USR() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
@@ -487,9 +497,10 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric RND(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric RND(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
-        UNREFERENCED_PARAM(codeLineIndex);
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
 
         bool useMod = true;
         if(numeric._varType == Expression::Number)
@@ -539,111 +550,200 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric LEN(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric URND(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
-        if(numeric._varType != Expression::Number)
+        UNREFERENCED_PARAM(codeLineStart);
+
+        if(!Expression::getOutputNumeric()._staticInit)
         {
-            Compiler::getNextTempVar();
+            fprintf(stderr, "Functions::URND() : URND only works in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._params.size() != 3)
+        {
+            fprintf(stderr, "Functions::URND() : URND expects 4 parameters, found %d : in '%s' on line %d\n", int(numeric._params.size()), codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._varType != Expression::Number  ||  numeric._params[0]._varType != Expression::Number  ||  numeric._params[1]._varType != Expression::Number  ||  numeric._params[2]._varType != Expression::Number)
+        {
+            fprintf(stderr, "Functions::URND() : URND expects 4 literal parameters, 'URND(<min>, <max>, <len>, <step>) : in '%s' on line %d'\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
 
-            // Handle non variables
-            if(numeric._index == -1)
+        // Initialise unique random number generator
+        if(numeric._value != _umin  ||  numeric._params[0]._value != _umax  ||  numeric._params[1]._value != _ulen  ||  numeric._params[2]._value != _ustp)
+        {
+            _umin = _umax = _ulen = 0.0;
+            _ustp = 1.0;
+
+            if(abs(numeric._params[0]._value - numeric._value) < numeric._params[1]._value)
             {
-                switch(numeric._varType)
-                {
-                    // Get or create constant string
-                    case Expression::String:
-                    {
-                        int index;
-                        Compiler::getOrCreateConstString(numeric._text, index);
-                        numeric._index = int16_t(index);
-                        numeric._varType = Expression::StrVar;
-                    }
-                    break;
-
-                    case Expression::TmpStrVar:
-                    {
-                    }
-                    break;
-
-                    default:
-                    {
-                        fprintf(stderr, "Functions::LEN() : couldn't find variable name '%s' : on line %d\n", numeric._name.c_str(), codeLineIndex);
-                        return numeric;
-                    }
-                }
+                fprintf(stderr, "Functions::URND() : range is smaller than length : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                numeric._isValid = false;
+                return numeric;
             }
-
-            int length = 0;
-            switch(numeric._varType)
+            if(numeric._params[0]._value <= numeric._value)
             {
-                case Expression::IntVar:   length = Compiler::getIntegerVars()[numeric._index]._intSize; break;
-                case Expression::StrVar:   length = Compiler::getStringVars()[numeric._index]._size;     break;
-                case Expression::Constant: length = Compiler::getConstants()[numeric._index]._size;      break;
-
-                case Expression::Arr1Var8:
-                case Expression::Arr1Var16:
-                {
-                    length = Compiler::getIntegerVars()[numeric._index]._arrSizes[2] * Compiler::getIntegerVars()[numeric._index]._intSize;
-                }
-                break;
-
-                case Expression::Arr2Var8:
-                case Expression::Arr2Var16:
-                {
-                    length = Compiler::getIntegerVars()[numeric._index]._arrSizes[1] * Compiler::getIntegerVars()[numeric._index]._arrSizes[2] *
-                             Compiler::getIntegerVars()[numeric._index]._intSize;
-                }
-                break;
-
-                case Expression::Arr3Var8:
-                case Expression::Arr3Var16:
-                {
-                    length = Compiler::getIntegerVars()[numeric._index]._arrSizes[0] * Compiler::getIntegerVars()[numeric._index]._arrSizes[1] *
-                             Compiler::getIntegerVars()[numeric._index]._arrSizes[2] * Compiler::getIntegerVars()[numeric._index]._intSize;
-                }
-                break;
-
-                default: break;
+                fprintf(stderr, "Functions::URND() : maximum must be greater than minimum : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                numeric._isValid = false;
+                return numeric;
             }
-
-            // No code needed for static initialisation
-            if(Expression::getOutputNumeric()._staticInit)
+            if(numeric._params[1]._value <= 0.0  ||  std::lround(numeric._params[1]._value) > 0xFFFF)
             {
-                numeric._value = length;
+                fprintf(stderr, "Functions::URND() : 0x0000 < length < 0x10000 : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                numeric._isValid = false;
+                return numeric;
+            }
+            if(numeric._params[2]._value == 0.0)
+            {
+                fprintf(stderr, "Functions::URND() : step must not be equal to zero : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                numeric._isValid = false;
                 return numeric;
             }
 
-            // Variables
-            if(numeric._varType == Expression::StrVar  &&  !Compiler::getStringVars()[numeric._index]._constant)
+            _umin = numeric._value;
+            _umax = numeric._params[0]._value;
+            _ulen = numeric._params[1]._value;
+            _ustp = numeric._params[2]._value;
+            _uidx = 0;
+
+            uint16_t range = uint16_t((abs(std::lround(_umax) - std::lround(_umin))) / std::lround(abs(_ustp))) + 1;
+            if(range == 0)
             {
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[numeric._index]._address), false);
-                Compiler::emitVcpuAsm("PEEK", "", false);
-            }
-            else if(numeric._varType == Expression::TmpStrVar)
-            {
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false);
-                Compiler::emitVcpuAsm("PEEK", "", false);
-            }
-            // Constants
-            else
-            {
-                // Generate code to save result into a tmp var
-                (length <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(length), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(length), false);
+                fprintf(stderr, "Functions::URND() : step size is too large for range : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                numeric._isValid = false;
+                return numeric;
             }
 
-            Operators::createTmpVar(numeric);
-            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-            
+            _uvalues.resize(range);
+
+            for(int i=0; i<range; i++) _uvalues[i] = int16_t(std::lround(_umin)) + int16_t(i*abs(_ustp));
+            //std::iota(_uvalues.begin(), _uvalues.end(), int16_t(std::lround(_umin)));
+            std::shuffle(_uvalues.begin(), _uvalues.end(), _randGenerator);
         }
+
+        if(_uidx >= uint16_t(_uvalues.size()))
+        {
+            fprintf(stderr, "Functions::URND() : length is greater than range : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+
+        numeric._value = _uvalues[_uidx++];
 
         return numeric;
     }
 
-    Expression::Numeric GET(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric LEN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            fprintf(stderr, "Functions::LEN() : parameter can't be a literal : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._params.size() != 0)
+        {
+            fprintf(stderr, "Functions::LEN() : LEN expects 1 parameter, found %d : in '%s' on line %d\n", int(numeric._params.size()), codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+
+        // Handle non variables
+        if(numeric._index == -1)
+        {
+            switch(numeric._varType)
+            {
+                // Get or create constant string
+                case Expression::String:
+                {
+                    int index;
+                    Compiler::getOrCreateConstString(numeric._text, index);
+                    numeric._index = int16_t(index);
+                    numeric._varType = Expression::StrVar;
+                }
+                break;
+
+                // Needs to pass through
+                case Expression::TmpStrVar:
+                {
+                }
+                break;
+
+                default:
+                {
+                    fprintf(stderr, "Functions::LEN() : couldn't find variable name '%s' : in '%s' on line %d\n", numeric._name.c_str(), codeLineText.c_str(), codeLineStart);
+                    numeric._isValid = false;
+                    return numeric;
+                }
+            }
+        }
+
+        int length = 0;
+        switch(numeric._varType)
+        {
+            case Expression::IntVar16:
+            case Expression::Arr1Var8:
+            case Expression::Arr2Var8:
+            case Expression::Arr3Var8:
+            case Expression::Arr1Var16:
+            case Expression::Arr2Var16:
+            case Expression::TmpVar:
+            case Expression::Arr3Var16: length = Compiler::getIntegerVars()[numeric._index]._intSize; break;
+            case Expression::Constant:  length = Compiler::getConstants()[numeric._index]._size;      break;
+            case Expression::StrVar:    length = Compiler::getStringVars()[numeric._index]._size;     break;
+
+            default: break;
+        }
+
+        // No code needed for static initialisation
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            numeric._value = length;
+            return numeric;
+        }
+
+        // String vars
+        if(numeric._varType == Expression::StrVar  &&  !Compiler::getStringVars()[numeric._index]._constant)
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[numeric._index]._address), false);
+            Compiler::emitVcpuAsm("PEEK", "", false);
+        }
+        // String arrays
+        else if(numeric._varType == Expression::Str2Var)
+        {
+            Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+            Compiler::emitVcpuAsm("PEEK", "", false);
+        }
+        // Temp string vars
+        else if(numeric._varType == Expression::TmpStrVar)
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false);
+            Compiler::emitVcpuAsm("PEEK", "", false);
+        }
+        // Ints, int arrays and constants
+        else
+        {
+            // Generate code to save result into a tmp var
+            (length <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(length), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(length), false);
+        }
+
+        Compiler::getNextTempVar();
+        Operators::createTmpVar(numeric);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+
+        return numeric;
+    }
+
+    Expression::Numeric GET(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::GET() : GET() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::GET() : GET() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
@@ -651,39 +751,58 @@ namespace Functions
         {
             std::string sysVarName = numeric._text;
             Expression::strToUpper(sysVarName);
-            if(sysVarName == "SPRITE_LUT"  &&  numeric._parameters.size() == 1)
+            if(sysVarName == "SPRITE_LUT"  &&  numeric._params.size() == 1)
             {
                 // Literal constant
-                if(numeric._parameters[0]._varType == Expression::Number)
+                if(numeric._params[0]._varType == Expression::Number)
                 {
-                    Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._parameters[0]._value))), false);
+                    Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._params[0]._value))), false);
                 }
 
                 // Look up sprite lut from sprites lut using a sprite index, (handleSingleOp LDW is skipped if above was a constant literal)
                 Compiler::getNextTempVar();
-                Operators::handleSingleOp("LDW", numeric._parameters[0]);
+                Operators::handleSingleOp("LDW", numeric._params[0]);
                 Compiler::emitVcpuAsm("STW", "spriteId", false);
                 Compiler::emitVcpuAsm("%GetSpriteLUT", "", false);
                 Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-                return numeric._parameters[0];
+                numeric._params[0]._params.clear();
+                return numeric._params[0];
             }
-            else if(sysVarName == "MUSIC_NOTE"  &&  numeric._parameters.size() == 1)
+            else if(sysVarName == "MIDI_NOTE"  &&  numeric._params.size() == 1)
             {
                 // Literal constant
-                if(numeric._parameters[0]._varType == Expression::Number)
+                if(numeric._params[0]._varType == Expression::Number)
                 {
-                    Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._parameters[0]._value))), false);
+                    Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._params[0]._value))), false);
+                }
+
+                // Look up a ROM note using a midi index, (handleSingleOp LDW is skipped if above was a constant literal)
+                Compiler::getNextTempVar();
+                Operators::handleSingleOp("LDW", numeric._params[0]);
+                Compiler::emitVcpuAsm("STW", "musicNote", false);
+                Compiler::emitVcpuAsm("%GetMidiNote", "", false);
+                Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+                numeric._params[0]._params.clear();
+                return numeric._params[0];
+            }
+            else if(sysVarName == "MUSIC_NOTE"  &&  numeric._params.size() == 1)
+            {
+                // Literal constant
+                if(numeric._params[0]._varType == Expression::Number)
+                {
+                    Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._params[0]._value))), false);
                 }
 
                 // Look up a ROM note using a note index, (handleSingleOp LDW is skipped if above was a constant literal)
                 Compiler::getNextTempVar();
-                Operators::handleSingleOp("LDW", numeric._parameters[0]);
+                Operators::handleSingleOp("LDW", numeric._params[0]);
                 Compiler::emitVcpuAsm("STW", "musicNote", false);
                 Compiler::emitVcpuAsm("%GetMusicNote", "", false);
                 Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-                return numeric._parameters[0];
+                numeric._params[0]._params.clear();
+                return numeric._params[0];
             }
-            else if(numeric._parameters.size() == 0)
+            else if(numeric._params.size() == 0)
             {
                 Compiler::getNextTempVar();
                 Operators::createTmpVar(numeric);
@@ -727,8 +846,9 @@ namespace Functions
                     {
                         std::string romTypeStr;
                         getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
-                        fprintf(stderr, "Functions::GET() : Version error, 'SET VBLANK_PROC' requires ROMv5a or higher, you are trying to link against '%s', on line %d\n", romTypeStr.c_str(), 
-                                                                                                                                                                                  codeLineIndex);
+                        fprintf(stderr, "Functions::GET() : Version error, 'SET VBLANK_PROC' requires ROMv5a or higher, you are trying to link against '%s' : in '%s' on line %d\n", romTypeStr.c_str(), codeLineText.c_str(), codeLineStart);
+                        numeric._isValid = false;
+                        return numeric;
                     }
                     else
                     {
@@ -742,8 +862,9 @@ namespace Functions
                     {
                         std::string romTypeStr;
                         getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
-                        fprintf(stderr, "Functions::GET() : Version error, 'SET VBLANK_FREQ' requires ROMv5a or higher, you are trying to link against '%s', on line %d\n", romTypeStr.c_str(), 
-                                                                                                                                                                                  codeLineIndex);
+                        fprintf(stderr, "Functions::GET() : Version error, 'SET VBLANK_FREQ' requires ROMv5a or higher, you are trying to link against '%s' : in '%s' on line %d\n", romTypeStr.c_str(), codeLineText.c_str(), codeLineStart);
+                        numeric._isValid = false;
+                        return numeric;
                     }
                     // (256 - n) = vblank interrupt frequency, where n = 1 to 255
                     else
@@ -907,7 +1028,8 @@ namespace Functions
                 }
                 else
                 {
-                    fprintf(stderr, "*** Warning *** Functions::GET() : system variable name '%s' does not exist : on line %d\n", numeric._text.c_str(), codeLineIndex);
+                    fprintf(stderr, "Syntax error, Functions::GET() : system variable name '%s' does not exist : in '%s' on line %d\n", numeric._text.c_str(), codeLineText.c_str(), codeLineStart);
+                    numeric._isValid = false;
                     return numeric;
                 }
 
@@ -918,11 +1040,12 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric ABS(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric ABS(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::ABS() : ABS() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::ABS() : ABS() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
@@ -949,11 +1072,12 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric SGN(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric SGN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::SGN() : SGN() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::SGN() : SGN() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
@@ -980,155 +1104,181 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric ASC(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric ASC(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
-        if(numeric._varType != Expression::Number)
+        if(numeric._varType == Expression::Number)
         {
-            Compiler::getNextTempVar();
-
-            // Handle non variables
-            if(numeric._index == -1)
-            {
-                switch(numeric._varType)
-                {
-                    // Get or create constant string
-                    case Expression::String:
-                    {
-                        int index;
-                        Compiler::getOrCreateConstString(numeric._text, index);
-                        numeric._index = int16_t(index);
-                        numeric._varType = Expression::StrVar;
-                    }
-                    break;
-
-                    case Expression::TmpStrVar:
-                    {
-                    }
-                    break;
-
-                    default:
-                    {
-                        fprintf(stderr, "Functions::ASC() : couldn't find variable name '%s' : on line %d\n", numeric._name.c_str(), codeLineIndex);
-                        return numeric;
-                    }
-                }
-            }
-
-            uint8_t ascii = 0;
-            switch(numeric._varType)
-            {
-                case Expression::StrVar:   ascii = Compiler::getStringVars()[numeric._index]._text[0]; break;
-                case Expression::Constant: ascii = Compiler::getConstants()[numeric._index]._text[0];  break;
-
-                default: break;
-            }
-
-            // No code needed for static initialisation
-            if(Expression::getOutputNumeric()._staticInit)
-            {
-                numeric._value = ascii;
-                return numeric;
-            }
-
-            // Variables
-            if(numeric._varType == Expression::StrVar  &&  !Compiler::getStringVars()[numeric._index]._constant)
-            {
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[numeric._index]._address) + " + 1", false);
-                Compiler::emitVcpuAsm("PEEK", "", false);
-            }
-            else if(numeric._varType == Expression::TmpStrVar)
-            {
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()) + " + 1", false);
-                Compiler::emitVcpuAsm("PEEK", "", false);
-            }
-            // Constants
-            else
-            {
-                // Generate code to save result into a tmp var
-                Compiler::emitVcpuAsm("LDI", std::to_string(ascii), false);
-            }
-
-            Operators::createTmpVar(numeric);
-            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-        }
-
-        return numeric;
-    }
-
-    Expression::Numeric STRCMP(Expression::Numeric& numeric, int codeLineIndex)
-    {
-        if(numeric._parameters.size() != 1)
-        {
-            fprintf(stderr, "Functions::STRCMP() : STRCMP() requires two string parameters : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::ASC() : parameter can't be a literal : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
-        // Literal strings, (optimised case)
-        if(numeric._varType == Expression::String  &&  numeric._parameters[0]._varType == Expression::String)
+        Compiler::getNextTempVar();
+
+        // Handle non variables
+        if(numeric._index == -1)
         {
-            // No code needed for static initialisation
-            if(Expression::getOutputNumeric()._staticInit)
+            switch(numeric._varType)
             {
-                numeric._varType = Expression::Number;
-                numeric._value = uint8_t(numeric._text == numeric._parameters[0]._text);
-                return numeric;
-            }
-            // Generate code to save result into a tmp var
-            else
-            {
-                Compiler::emitVcpuAsm("LDI", std::to_string(uint8_t(numeric._text == numeric._parameters[0]._text)), false);
+                // Get or create constant string
+                case Expression::String:
+                {
+                    int index;
+                    Compiler::getOrCreateConstString(numeric._text, index);
+                    numeric._index = int16_t(index);
+                    numeric._varType = Expression::StrVar;
+                }
+                break;
+
+                case Expression::TmpStrVar:
+                {
+                }
+                break;
+
+                default:
+                {
+                    fprintf(stderr, "Functions::ASC() : couldn't find variable name '%s' : in '%s' on line %d\n", numeric._name.c_str(), codeLineText.c_str(), codeLineStart);
+                    numeric._isValid = false;
+                    return numeric;
+                }
             }
         }
+
+        uint8_t ascii = 0;
+        switch(numeric._varType)
+        {
+            case Expression::StrVar:   ascii = Compiler::getStringVars()[numeric._index]._text[0]; break;
+            case Expression::Constant: ascii = Compiler::getConstants()[numeric._index]._text[0];  break;
+
+            default: break;
+        }
+
+        // No code needed for static initialisation
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            numeric._value = ascii;
+            return numeric;
+        }
+
+        // Variables
+        if(numeric._varType == Expression::StrVar  &&  !Compiler::getStringVars()[numeric._index]._constant)
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[numeric._index]._address) + " + 1", false);
+            Compiler::emitVcpuAsm("PEEK", "", false);
+        }
+        else if(numeric._varType == Expression::TmpStrVar)
+        {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()) + " + 1", false);
+            Compiler::emitVcpuAsm("PEEK", "", false);
+        }
+        // Constants
         else
         {
-            // Get addresses of strings to be compared
-            std::string name0, name1;
-            uint16_t srcAddr0, srcAddr1;
-            int index0 = int(numeric._index);
-            int index1 = int(numeric._parameters[0]._index);
-            getOrCreateString(numeric, name0, srcAddr0, index0);
-            getOrCreateString(numeric._parameters[0], name1, srcAddr1, index1);
-
-            // By definition this must be a match
-            if(srcAddr0 == srcAddr1)
-            {
-                Compiler::emitVcpuAsm("LDI", "1", false);
-            }
-            // Compare strings
-            else
-            {
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr0), false);
-                Compiler::emitVcpuAsm("STW",  "strSrcAddr", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr1), false);
-                Compiler::emitVcpuAsm("%StringCmp", "", false);
-            }
+            // Generate code to save result into a tmp var
+            Compiler::emitVcpuAsm("LDI", std::to_string(ascii), false);
         }
 
-        Compiler::getNextTempVar();
         Operators::createTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
     }
 
-    Expression::Numeric BCDCMP(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric STRCMP(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
-        if(Expression::getOutputNumeric()._staticInit)
+        if(numeric._params.size() != 1)
         {
-            fprintf(stderr, "Functions::BCDCMP() : BCDCMP() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::STRCMP() : STRCMP() requires two string parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
-        if(numeric._parameters.size() != 2)
+        // Literal strings, (optimised case)
+        if(numeric._varType == Expression::String  &&  numeric._params[0]._varType == Expression::String)
         {
-            fprintf(stderr, "Functions::BCDCMP() : BCDCMP() requires three string parameters : on line %d\n", codeLineIndex);
+            // No code needed for static initialisation
+            if(Expression::getOutputNumeric()._staticInit)
+            {
+                numeric._varType = Expression::Number;
+                numeric._value = uint8_t(numeric._text == numeric._params[0]._text) - 1;
+                numeric._params.clear();
+                return numeric;
+            }
+            // Generate code to save result into a tmp var
+            else
+            {
+                int result = int(numeric._text == numeric._params[0]._text) - 1;
+                (result >= 0  && result <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(result), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(result), false);
+            }
+        }
+        else
+        {
+            // Get addresses of strings to be compared
+            uint16_t srcAddr0 = 0x0000, srcAddr1 = 0x0000;
+            if(numeric._varType == Expression::TmpStrVar) srcAddr0 = Compiler::getStrWorkArea(0);
+            if(numeric._params[0]._varType == Expression::TmpStrVar) srcAddr1 = Compiler::getStrWorkArea(0);
+            if(numeric._varType == Expression::TmpStrVar  &&  numeric._params[0]._varType == Expression::TmpStrVar)
+            {
+                // If both params are temp strs then swap them so they compare correctly
+                srcAddr1 = Compiler::getStrWorkArea(1);
+                std::swap(srcAddr0, srcAddr1);
+            }
+
+            if(!srcAddr0)
+            {
+                std::string name;
+                int index = int(numeric._index);
+                Compiler::getOrCreateString(numeric, name, srcAddr0, index);
+            }
+            if(!srcAddr1)
+            {
+                std::string name;
+                int index = int(numeric._params[0]._index);
+                Compiler::getOrCreateString(numeric._params[0], name, srcAddr1, index);
+            }
+
+            // By definition this must be a match
+            if(srcAddr0 == srcAddr1)
+            {
+                Compiler::emitVcpuAsm("LDI", "1", false);
+            }
+            // Compare strings, -1, 0, 1, (smaller, equal, bigger)
+            else
+            {
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr0), false);
+                Compiler::emitVcpuAsm("STW",  "strSrcAddr", false);
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr1), false);
+                Compiler::emitVcpuAsm("%StringCmp", "", false);
+                Compiler::emitVcpuAsm("SUBI", "1", false); // convert 0, 1, 2 to -1, 0, 1
+            }
+        }
+
+        Compiler::getNextTempVar();
+        Operators::createTmpVar(numeric);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+        numeric._params.clear();
+        return numeric;
+    }
+
+    Expression::Numeric BCDCMP(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Functions::BCDCMP() : BCDCMP() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._params.size() != 2)
+        {
+            fprintf(stderr, "Functions::BCDCMP() : BCDCMP() requires three string parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
         // Get addresses and length of bcd values to be compared
         uint16_t srcAddr0 = uint16_t(numeric._value);
-        uint16_t srcAddr1 = uint16_t(numeric._parameters[0]._value);
-        uint16_t length = uint16_t(numeric._parameters[1]._value);
+        uint16_t srcAddr1 = uint16_t(numeric._params[0]._value);
+        uint16_t length = uint16_t(numeric._params[1]._value);
 
         // Compare bcd values, (addresses MUST point to msd)
         Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr0), false);
@@ -1141,15 +1291,16 @@ namespace Functions
         Compiler::getNextTempVar();
         Operators::createTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-
+        numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric VAL(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric VAL(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
-        if(numeric._parameters.size() != 0)
+        if(numeric._params.size() != 0)
         {
-            fprintf(stderr, "Functions::VAL() : VAL() requires only one string parameter : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::VAL() : VAL() requires only one string parameter : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
@@ -1178,7 +1329,7 @@ namespace Functions
             std::string name;
             uint16_t srcAddr;
             int index = int(numeric._index);
-            getOrCreateString(numeric, name, srcAddr, index);
+            Compiler::getOrCreateString(numeric, name, srcAddr, index);
 
             // StringVal expects srcAddr to point past the string's length byte
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr + 1), false);
@@ -1192,27 +1343,29 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric LUP(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric LUP(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::LUP() : LUP(<address>, <offset>) cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::LUP() : LUP(<address>, <offset>) cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
-
-        if(numeric._parameters.size() != 1) 
+        if(numeric._params.size() != 1) 
         {
-            fprintf(stderr, "Functions::LUP() : LUP(<address>, <offset>) missing offset : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::LUP() : LUP(<address>, <offset>) missing offset : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
-        if(numeric._parameters[0]._varType != Expression::Number)
+        if(numeric._params[0]._varType != Expression::Number)
         {
-            fprintf(stderr, "Functions::LUP() : LUP(<address>, <offset>) offset is not a constant literal : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::LUP() : LUP(<address>, <offset>) offset is not a constant literal : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
-        std::string offset = Expression::byteToHexString(uint8_t(std::lround(numeric._parameters[0]._value)));
+        std::string offset = Expression::byteToHexString(uint8_t(std::lround(numeric._params[0]._value)));
 
         if(numeric._varType == Expression::Number)
         {
@@ -1227,206 +1380,106 @@ namespace Functions
         Operators::createTmpVar(numeric);
         Compiler::emitVcpuAsm("LUP", offset, false);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-
+        numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric ADDR(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric ADDR(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
-        if(numeric._varType != Expression::Arr1Var8   &&  numeric._varType != Expression::Arr2Var8   &&  numeric._varType != Expression::Arr3Var8   &&
-           numeric._varType != Expression::Arr1Var16  &&  numeric._varType != Expression::Arr2Var16  &&  numeric._varType != Expression::Arr3Var16  &&
-           numeric._varType != Expression::Str2Var)
+        if(numeric._varType == Expression::Number)
         {
-            fprintf(stderr, "Functions::ADDR() : ADDR() can only be used on array variables : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::ADDR() : parameter can't be a literal : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._params.size() != 0)
+        {
+            fprintf(stderr, "Functions::ADDR() : expects 1 parameter, found %d : in '%s' on line %d\n", int(numeric._params.size()), codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
+        // Handle non variables
         if(numeric._index == -1)
         {
-            fprintf(stderr, "Functions::ADDR() : ADDR() can't find array variable : on line %d\n", codeLineIndex);
+            switch(numeric._varType)
+            {
+                // Get or create constant string
+                case Expression::String:
+                {
+                    int index;
+                    Compiler::getOrCreateConstString(numeric._text, index);
+                    numeric._index = int16_t(index);
+                    numeric._varType = Expression::StrVar;
+                }
+                break;
+
+                // Needs to pass through
+                case Expression::TmpStrVar:
+                {
+                }
+                break;
+
+                default:
+                {
+                    fprintf(stderr, "Functions::ADDR() : couldn't find variable name '%s' : in '%s' on line %d\n", numeric._name.c_str(), codeLineText.c_str(), codeLineStart);
+                    numeric._isValid = false;
+                    return numeric;
+                }
+            }
+        }
+
+        uint16_t address = 0x0000;
+        switch(numeric._varType)
+        {
+            case Expression::IntVar16: 
+            case Expression::Arr1Var8:
+            case Expression::Arr1Var16: address = Compiler::getIntegerVars()[numeric._index]._address; break;
+            case Expression::Constant:  address = Compiler::getConstants()[numeric._index]._address;   break;
+            case Expression::StrVar:    address = Compiler::getStringVars()[numeric._index]._address;  break;
+
+            default: break;
+        }
+
+        // No code needed for static initialisation
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            switch(numeric._varType)
+            {
+                case Expression::TmpVar:
+                case Expression::Str2Var:
+                {
+                    fprintf(stderr, "Functions::ADDR() : can't statically initialise from multi-dimensional array '%s' : in '%s' on line %d\n", numeric._name.c_str(), codeLineText.c_str(), codeLineStart);
+                    numeric._isValid = false;
+                    return numeric;
+                }
+
+                default: break;
+            }
+
+            numeric._value = address;
             return numeric;
         }
 
-        if((numeric._varType == Expression::Arr1Var8   &&  numeric._parameters.size() != 1)  ||  (numeric._varType == Expression::Arr2Var8   &&  numeric._parameters.size() != 2)  ||
-           (numeric._varType == Expression::Arr3Var8   &&  numeric._parameters.size() != 3)  ||  (numeric._varType == Expression::Arr1Var16  &&  numeric._parameters.size() != 1)  ||
-           (numeric._varType == Expression::Arr2Var16  &&  numeric._parameters.size() != 2)  ||  (numeric._varType == Expression::Arr3Var16  &&  numeric._parameters.size() != 3)  ||
-           (numeric._varType == Expression::Str2Var    &&  numeric._parameters.size() != 1))
+        // String vars
+        if(numeric._varType == Expression::StrVar  &&  !Compiler::getStringVars()[numeric._index]._constant)
         {
-            fprintf(stderr, "Functions::ADDR() : Wrong number of parameters in ADDR() : on line %d\n", codeLineIndex);
-            return numeric;
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[numeric._index]._address), false);
         }
-
-        // 1d index
-        if(numeric._parameters.size() == 1)
+        // Multi-dimensional arrays, (array of strings, Str2Var, is treated as a 2D array of bytes)
+        else if(numeric._varType == Expression::TmpVar  ||  numeric._varType == Expression::Str2Var)
         {
-            // Literal index, (optimised case)
-            if(numeric._parameters[0]._varType == Expression::Number)
-            {
-                uint16_t address = 0x0000;
-                uint16_t indexI = uint16_t(numeric._parameters[0]._value);
-                switch(numeric._varType)
-                {
-                    case Expression::Arr1Var8:  address = Compiler::getIntegerVars()[numeric._index]._address  +  indexI * 1; break;
-                    case Expression::Arr1Var16: address = Compiler::getIntegerVars()[numeric._index]._address  +  indexI * 2; break;
-                    case Expression::Str2Var:   address = Compiler::getStringVars()[numeric._index]._arrAddrs[indexI];        break;
-
-                    default: break;
-                }
-
-                // No code needed for static initialisation
-                if(Expression::getOutputNumeric()._staticInit)
-                {
-                    numeric._varType = Expression::Number;
-                    numeric._value = address;
-                    return numeric;
-                }
-                // Array address
-                else
-                {
-                    Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(address), false);
-                }
-            }
-            // Convert index parameter into an array address
-            else
-            {
-                switch(numeric._varType)
-                {
-                    case Expression::Arr1Var8:
-                    {
-                        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getIntegerVars()[numeric._index]._address), false);
-                        Operators::createSingleOp("ADDW", numeric._parameters[0]);
-                    }
-                    break;
-
-                    case Expression::Arr1Var16:
-                    {
-                        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getIntegerVars()[numeric._index]._address), false);
-                        Operators::createSingleOp("ADDW", numeric._parameters[0]);
-                        Operators::createSingleOp("ADDW", numeric._parameters[0]);
-                    }
-                    break;
-
-                    case Expression::Str2Var:
-                    {
-                        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStringVars()[numeric._index]._address), false);
-                        Operators::createSingleOp("ADDW", numeric._parameters[0]);
-                        Operators::createSingleOp("ADDW", numeric._parameters[0]);
-                        Compiler::emitVcpuAsm("DEEK", "", false);
-                    }
-                    break;
-
-                    default: break;
-                }
-            }
+            Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         }
-        // 2d indices
-        else if(numeric._parameters.size() == 2)
+        // Temp string vars
+        else if(numeric._varType == Expression::TmpStrVar)
         {
-            // All literal indices, (optimised case)
-            if(numeric._parameters[0]._varType == Expression::Number  &&  numeric._parameters[1]._varType == Expression::Number)
-            {
-                uint16_t indexJ = uint16_t(numeric._parameters[0]._value);
-                uint16_t indexI = uint16_t(numeric._parameters[1]._value);
-
-                uint16_t address = Compiler::getIntegerVars()[numeric._index]._arrAddrs[0][indexJ];
-                address += (Compiler::getIntegerVars()[numeric._index]._intSize == Compiler::Int8) ? indexI : indexI * 2;
-
-                // No code needed for static initialisation
-                if(Expression::getOutputNumeric()._staticInit)
-                {
-                    numeric._varType = Expression::Number;
-                    numeric._value = address;
-                    return numeric;
-                }
-                // Array address
-                else
-                {
-                    Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(address), false);
-                }
-            }
-            // Convert index parameters into an array address
-            else
-            {
-                uint16_t address = Compiler::getIntegerVars()[numeric._index]._address;
-                Operators::createSingleOp("LDW", numeric._parameters[0]);
-                Compiler::emitVcpuAsm("STW", "memIndex0", false);
-                Operators::createSingleOp("LDW", numeric._parameters[1]);
-                Compiler::emitVcpuAsm("STW", "memIndex1", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(address), false);
-
-                switch(Compiler::getIntegerVars()[numeric._index]._intSize)
-                {
-                    case Compiler::Int8:
-                    {
-                        (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert8Arr2d", false) : Compiler::emitVcpuAsm("CALL", "convert8Arr2dAddr", false);
-                    }
-                    break;
-                    
-                    case Compiler::Int16:
-                    {
-                        (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert16Arr2d", false) : Compiler::emitVcpuAsm("CALL", "convert16Arr2dAddr", false);
-                    }
-                    break;
-
-                    default: break;
-                }
-            }
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false);
         }
-        // 3d indices
-        else if(numeric._parameters.size() == 3)
+        // Ints, int arrays and constants
+        else
         {
-            // All literal indices, (optimised case)
-            if(numeric._parameters[0]._varType == Expression::Number  &&  numeric._parameters[1]._varType == Expression::Number  &&  numeric._parameters[2]._varType == Expression::Number)
-            {
-                uint16_t indexK = uint16_t(numeric._parameters[0]._value);
-                uint16_t indexJ = uint16_t(numeric._parameters[1]._value);
-                uint16_t indexI = uint16_t(numeric._parameters[2]._value);
-
-                uint16_t address = Compiler::getIntegerVars()[numeric._index]._arrAddrs[indexK][indexJ];
-                address += (Compiler::getIntegerVars()[numeric._index]._intSize == Compiler::Int8) ? indexI : indexI * 2;
-
-                // No code needed for static initialisation
-                if(Expression::getOutputNumeric()._staticInit)
-                {
-                    numeric._varType = Expression::Number;
-                    numeric._value = address;
-                    return numeric;
-                }
-                // Array address
-                else
-                {
-                    Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(address), false);
-                }
-            }
-            // Convert index parameters into an array address
-            else
-            {
-                uint16_t address = Compiler::getIntegerVars()[numeric._index]._address;
-                Operators::createSingleOp("LDW", numeric._parameters[0]);
-                Compiler::emitVcpuAsm("STW", "memIndex0", false);
-                Operators::createSingleOp("LDW", numeric._parameters[1]);
-                Compiler::emitVcpuAsm("STW", "memIndex1", false);
-                Operators::createSingleOp("LDW", numeric._parameters[2]);
-                Compiler::emitVcpuAsm("STW", "memIndex2", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(address), false);
-
-                switch(Compiler::getIntegerVars()[numeric._index]._intSize)
-                {
-                    case Compiler::Int8:
-                    {
-                        (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert8Arr3d", false) : Compiler::emitVcpuAsm("CALL", "convert8Arr3dAddr", false);
-                    }
-                    break;
-                    
-                    case Compiler::Int16:
-                    {
-                        (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? Compiler::emitVcpuAsm("CALLI", "convert16Arr3d", false) : Compiler::emitVcpuAsm("CALL", "convert16Arr3dAddr", false);
-                    }
-                    break;
-
-                    default: break;
-                }
-            }
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(address), false);
         }
 
         Compiler::getNextTempVar();
@@ -1436,210 +1489,215 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric POINT(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric POINT(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::POINT() : POINT() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::POINT() : POINT() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
-
-        if(numeric._parameters.size() == 1)
+        if(numeric._params.size() != 1)
         {
-            if(numeric._varType == Expression::Number)
-            {
-                Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
-                Compiler::emitVcpuAsm("ST", "readPixel_xy", false);
-            }
-            else
-            {
-                Operators::createSingleOp("LDW", numeric);
-                Compiler::emitVcpuAsm("ST", "readPixel_xy", false);
-            }
-
-            if(numeric._parameters[0]._varType == Expression::Number)
-            {
-                Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._parameters[0]._value))), false);
-                Compiler::emitVcpuAsm("ST", "readPixel_xy + 1", false);
-            }
-            else
-            {
-                Operators::createSingleOp("LDW", numeric._parameters[0]);
-                Compiler::emitVcpuAsm("ST", "readPixel_xy + 1", false);
-            }
-
-            Compiler::getNextTempVar();
-            Operators::createTmpVar(numeric);
-            Compiler::emitVcpuAsm("%ReadPixel", "", false);
-            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-        }
-
-        return numeric;
-    }
-
-    Expression::Numeric MIN(Expression::Numeric& numeric, int codeLineIndex)
-    {
-        if(Expression::getOutputNumeric()._staticInit)
-        {
-            fprintf(stderr, "Functions::MIN() : MIN() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::POINT() : Syntax error, 'POINT(x, y)' requires two parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
-        }
-
-        if(numeric._parameters.size() == 1)
-        {
-            if(numeric._varType == Expression::Number)
-            {
-                int16_t val = int16_t(std::lround(numeric._value));
-                (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
-                Compiler::emitVcpuAsm("STW", "intSrcA", false);
-            }
-            else
-            {
-                Operators::createSingleOp("LDW", numeric);
-                Compiler::emitVcpuAsm("STW", "intSrcA", false);
-            }
-
-            if(numeric._parameters[0]._varType == Expression::Number)
-            {
-                int16_t val = int16_t(std::lround(numeric._parameters[0]._value));
-                (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
-            }
-            else
-            {
-                Operators::createSingleOp("LDW", numeric._parameters[0]);
-            }
-
-            Compiler::getNextTempVar();
-            Operators::createTmpVar(numeric);
-            Compiler::emitVcpuAsm("%IntMin", "", false);
-            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-        }
-
-        return numeric;
-    }
-
-    Expression::Numeric MAX(Expression::Numeric& numeric, int codeLineIndex)
-    {
-        if(Expression::getOutputNumeric()._staticInit)
-        {
-            fprintf(stderr, "Functions::MAX() : MAX() cannot be used in static initialisation : on line %d\n", codeLineIndex);
-            return numeric;
-        }
-
-        if(numeric._parameters.size() == 1)
-        {
-            if(numeric._varType == Expression::Number)
-            {
-                int16_t val = int16_t(std::lround(numeric._value));
-                (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
-                Compiler::emitVcpuAsm("STW", "intSrcA", false);
-            }
-            else
-            {
-                Operators::createSingleOp("LDW", numeric);
-                Compiler::emitVcpuAsm("STW", "intSrcA", false);
-            }
-
-            if(numeric._parameters[0]._varType == Expression::Number)
-            {
-                int16_t val = int16_t(std::lround(numeric._parameters[0]._value));
-                (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
-            }
-            else
-            {
-                Operators::createSingleOp("LDW", numeric._parameters[0]);
-            }
-
-            Compiler::getNextTempVar();
-            Operators::createTmpVar(numeric);
-            Compiler::emitVcpuAsm("%IntMax", "", false);
-            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-        }
-
-        return numeric;
-    }
-
-    Expression::Numeric CLAMP(Expression::Numeric& numeric, int codeLineIndex)
-    {
-        if(Expression::getOutputNumeric()._staticInit)
-        {
-            fprintf(stderr, "Functions::CLAMP() : CLAMP() cannot be used in static initialisation : on line %d\n", codeLineIndex);
-            return numeric;
-        }
-
-        if(numeric._parameters.size() == 2)
-        {
-            if(numeric._varType == Expression::Number)
-            {
-                int16_t val = int16_t(std::lround(numeric._value));
-                (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
-                Compiler::emitVcpuAsm("STW", "intSrcX", false);
-            }
-            else
-            {
-                Operators::createSingleOp("LDW", numeric);
-                Compiler::emitVcpuAsm("STW", "intSrcX", false);
-            }
-
-            if(numeric._parameters[0]._varType == Expression::Number)
-            {
-                int16_t val = int16_t(std::lround(numeric._parameters[0]._value));
-                (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
-                Compiler::emitVcpuAsm("STW", "intSrcA", false);
-            }
-            else
-            {
-                Operators::createSingleOp("LDW", numeric._parameters[0]);
-                Compiler::emitVcpuAsm("STW", "intSrcA", false);
-            }
-
-            if(numeric._parameters[1]._varType == Expression::Number)
-            {
-                int16_t val = int16_t(std::lround(numeric._parameters[1]._value));
-                (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
-            }
-            else
-            {
-                Operators::createSingleOp("LDW", numeric._parameters[1]);
-            }
-
-            Compiler::getNextTempVar();
-            Operators::createTmpVar(numeric);
-            Compiler::emitVcpuAsm("%IntClamp", "", false);
-            Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-        }
-
-        return numeric;
-    }
-
-    Expression::Numeric CHR$(Expression::Numeric& numeric, int codeLineIndex)
-    {
-        if(Expression::getOutputNumeric()._staticInit)
-        {
-            fprintf(stderr, "Functions::CHR$() : CHR$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
-            return numeric;
-        }
-
-        int index;
-        uint16_t dstAddr;
-        Expression::VarType varType;
-        if(Expression::getOutputNumeric()._varType == Expression::StrVar)
-        {
-            index = Expression::getOutputNumeric()._index;
-            dstAddr = Compiler::getStringVars()[index]._address;
-            varType = Expression::StrVar;
-        }
-        else
-        {
-            index = -1;
-            dstAddr = Compiler::getStrWorkArea();
-            varType = Expression::TmpStrVar;
         }
 
         if(numeric._varType == Expression::Number)
         {
+            Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
+            Compiler::emitVcpuAsm("ST", "readPixel_xy", false);
+        }
+        else
+        {
+            Operators::createSingleOp("LDW", numeric);
+            Compiler::emitVcpuAsm("ST", "readPixel_xy", false);
+        }
+
+        if(numeric._params[0]._varType == Expression::Number)
+        {
+            Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._params[0]._value))), false);
+            Compiler::emitVcpuAsm("ST", "readPixel_xy + 1", false);
+        }
+        else
+        {
+            Operators::createSingleOp("LDW", numeric._params[0]);
+            Compiler::emitVcpuAsm("ST", "readPixel_xy + 1", false);
+        }
+
+        Compiler::getNextTempVar();
+        Operators::createTmpVar(numeric);
+        Compiler::emitVcpuAsm("%ReadPixel", "", false);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+        numeric._params.clear();
+        return numeric;
+    }
+
+    Expression::Numeric MIN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    {
+        if(numeric._params.size() != 1)
+        {
+            fprintf(stderr, "Functions::MIN() : Syntax error, 'MIN(x, y)' requires two parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._varType == Expression::Number  &&  numeric._params[0]._varType == Expression::Number)
+        {
+            numeric._value = std::min(numeric._value, numeric._params[0]._value);
+            numeric._params.clear();
+            return numeric;
+        }
+
+        if(numeric._varType == Expression::Number)
+        {
+            int16_t val = int16_t(std::lround(numeric._value));
+            (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
+            Compiler::emitVcpuAsm("STW", "intSrcA", false);
+        }
+        else
+        {
+            Operators::createSingleOp("LDW", numeric);
+            Compiler::emitVcpuAsm("STW", "intSrcA", false);
+        }
+
+        if(numeric._params[0]._varType == Expression::Number)
+        {
+            int16_t val = int16_t(std::lround(numeric._params[0]._value));
+            (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
+        }
+        else
+        {
+            Operators::createSingleOp("LDW", numeric._params[0]);
+        }
+
+        Compiler::getNextTempVar();
+        Operators::createTmpVar(numeric);
+        Compiler::emitVcpuAsm("%IntMin", "", false);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+        numeric._params.clear();
+        return numeric;
+    }
+
+    Expression::Numeric MAX(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    {
+        if(numeric._params.size() != 1)
+        {
+            fprintf(stderr, "Functions::MAX() : Syntax error, 'MAX(x, y)' requires two parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._varType == Expression::Number  &&  numeric._params[0]._varType == Expression::Number)
+        {
+            numeric._value = std::max(numeric._value, numeric._params[0]._value);
+            numeric._params.clear();
+            return numeric;
+        }
+
+        if(numeric._varType == Expression::Number)
+        {
+            int16_t val = int16_t(std::lround(numeric._value));
+            (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
+            Compiler::emitVcpuAsm("STW", "intSrcA", false);
+        }
+        else
+        {
+            Operators::createSingleOp("LDW", numeric);
+            Compiler::emitVcpuAsm("STW", "intSrcA", false);
+        }
+
+        if(numeric._params[0]._varType == Expression::Number)
+        {
+            int16_t val = int16_t(std::lround(numeric._params[0]._value));
+            (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
+        }
+        else
+        {
+            Operators::createSingleOp("LDW", numeric._params[0]);
+        }
+
+        Compiler::getNextTempVar();
+        Operators::createTmpVar(numeric);
+        Compiler::emitVcpuAsm("%IntMax", "", false);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+        numeric._params.clear();
+        return numeric;
+    }
+
+    Expression::Numeric CLAMP(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    {
+        if(numeric._params.size() != 2)
+        {
+            fprintf(stderr, "Functions::CLAMP() : Syntax error, 'CLAMP(x, a, b)' requires three parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._varType == Expression::Number  &&  numeric._params[0]._varType == Expression::Number  &&  numeric._params[1]._varType == Expression::Number)
+        {
+            numeric._value = std::min(std::max(numeric._value, numeric._params[0]._value), numeric._params[1]._value);
+            numeric._params.clear();
+            return numeric;
+        }
+
+        if(numeric._varType == Expression::Number)
+        {
+            int16_t val = int16_t(std::lround(numeric._value));
+            (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
+            Compiler::emitVcpuAsm("STW", "intSrcX", false);
+        }
+        else
+        {
+            Operators::createSingleOp("LDW", numeric);
+            Compiler::emitVcpuAsm("STW", "intSrcX", false);
+        }
+
+        if(numeric._params[0]._varType == Expression::Number)
+        {
+            int16_t val = int16_t(std::lround(numeric._params[0]._value));
+            (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
+            Compiler::emitVcpuAsm("STW", "intSrcA", false);
+        }
+        else
+        {
+            Operators::createSingleOp("LDW", numeric._params[0]);
+            Compiler::emitVcpuAsm("STW", "intSrcA", false);
+        }
+
+        if(numeric._params[1]._varType == Expression::Number)
+        {
+            int16_t val = int16_t(std::lround(numeric._params[1]._value));
+            (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
+        }
+        else
+        {
+            Operators::createSingleOp("LDW", numeric._params[1]);
+        }
+
+        Compiler::getNextTempVar();
+        Operators::createTmpVar(numeric);
+        Compiler::emitVcpuAsm("%IntClamp", "", false);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+        numeric._params.clear();
+        return numeric;
+    }
+
+    Expression::Numeric CHR$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Functions::CHR$() : CHR$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+
+        // Create a new temporary string
+        if(!isFuncNested()) Compiler::nextStrWorkArea();
+        uint16_t dstAddr = Compiler::getStrWorkArea();
+
+        if(numeric._varType == Expression::Number)
+        {
             // Print CHR string, (without wasting memory)
-            if(Expression::getEnableOptimisedPrint())
+            if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
             {
                 Compiler::emitVcpuAsm("LDI", std::to_string(int16_t(std::lround(numeric._value))), false);
                 Compiler::emitVcpuAsm("%PrintAcChar", "", false);
@@ -1652,12 +1710,12 @@ namespace Functions
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
             Compiler::emitVcpuAsm("%StringChr", "", false);
 
-            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
         Operators::handleSingleOp("LDW", numeric);
-        if(Expression::getEnableOptimisedPrint())
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
         {
             Compiler::emitVcpuAsm("%PrintAcChar", "", false);
             return numeric;
@@ -1668,37 +1726,26 @@ namespace Functions
         Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
         Compiler::emitVcpuAsm("%StringChr", "", false);
 
-        return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric STR$(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric STR$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::STR$() : STR$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::STR$() : STR$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
-        int index;
-        uint16_t dstAddr;
-        Expression::VarType varType;
-        if(Expression::getOutputNumeric()._varType == Expression::StrVar)
-        {
-            index = Expression::getOutputNumeric()._index;
-            dstAddr = Compiler::getStringVars()[index]._address;
-            varType = Expression::StrVar;
-        }
-        else
-        {
-            index = -1;
-            dstAddr = Compiler::getStrWorkArea();
-            varType = Expression::TmpStrVar;
-        }
+        // Create a new temporary string
+        if(!isFuncNested()) Compiler::nextStrWorkArea();
+        uint16_t dstAddr = Compiler::getStrWorkArea();
 
         if(numeric._varType == Expression::Number)
         {
             // Print STR string, (without wasting memory)
-            if(Expression::getEnableOptimisedPrint())
+            if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
             {
                 Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
                 Compiler::emitVcpuAsm("%PrintAcInt16", "", false);
@@ -1711,12 +1758,12 @@ namespace Functions
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
             Compiler::emitVcpuAsm("%StringInt", "", false);
 
-            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
         Operators::handleSingleOp("LDW", numeric);
-        if(Expression::getEnableOptimisedPrint())
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
         {
             Compiler::emitVcpuAsm("%PrintAcInt16", "", false);
             return numeric;
@@ -1727,360 +1774,517 @@ namespace Functions
         Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
         Compiler::emitVcpuAsm("%StringInt", "", false);
 
-        return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric TIME$(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric TIME$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::TIME$() : TIME$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::TIME$() : TIME$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
+
+        // Function with no parameters, so isValid needs to be explicitly set
+        numeric._isValid = true;
 
         // Generate new time string
         Compiler::emitVcpuAsm("%TimeString", "", false);
 
         // Print it directly if able
-        if(Expression::getEnableOptimisedPrint())
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
         {
             Compiler::emitVcpuAsm("%PrintString", "_timeString_", false);
             return numeric;
         }
 
-        // Otherwise copy it to var or tmpvar
-        int index;
-        uint16_t dstAddr;
-        Expression::VarType varType;
-        if(Expression::getOutputNumeric()._varType == Expression::StrVar)
-        {
-            index = Expression::getOutputNumeric()._index;
-            dstAddr = Compiler::getStringVars()[index]._address;
-            varType = Expression::StrVar;
-        }
-        else
-        {
-            index = -1;
-            dstAddr = Compiler::getStrWorkArea();
-            varType = Expression::TmpStrVar;
-        }
+        // Create a new temporary string
+        if(!isFuncNested()) Compiler::nextStrWorkArea();
+        uint16_t dstAddr = Compiler::getStrWorkArea();
+
         Compiler::emitVcpuAsm("LDWI", "_timeString_", false);
         Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
         Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
         Compiler::emitVcpuAsm("%StringCopy", "", false);
 
-        return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric HEX$(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric HEX$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::HEX$() : HEX$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::HEX$() : HEX$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._params.size() != 1)
+        {
+            fprintf(stderr, "Functions::HEX$() : Syntax error, 'HEX$(x, n)' requires two parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
-        int index;
-        uint16_t dstAddr;
-        Expression::VarType varType;
-        if(Expression::getOutputNumeric()._varType == Expression::StrVar)
+        if(numeric._params[0]._varType == Expression::Number)
         {
-            index = Expression::getOutputNumeric()._index;
-            dstAddr = Compiler::getStringVars()[index]._address;
-            varType = Expression::StrVar;
+            int16_t val = int16_t(std::lround(numeric._params[0]._value));
+            if(val < 1  ||  val > 4)
+            {
+                fprintf(stderr, "Functions::HEX$() : Syntax error, 'HEX$(x, n)', if 'n' is a literal, it MUST be <1-4> : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                numeric._isValid = false;
+                return numeric;
+            }
+
+            Compiler::emitVcpuAsm("LDI", std::to_string(val), false);
         }
         else
         {
-            index = -1;
-            dstAddr = Compiler::getStrWorkArea();
-            varType = Expression::TmpStrVar;
+            Operators::createSingleOp("LDW", numeric._params[0]);
         }
+        Compiler::emitVcpuAsm("ST", "textLen", false);
+
+        // Create a new temporary string
+        if(!isFuncNested()) Compiler::nextStrWorkArea();
+        uint16_t dstAddr = Compiler::getStrWorkArea();
 
         if(numeric._varType == Expression::Number)
         {
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(uint16_t(std::lround(numeric._value))), false);
+            Compiler::emitVcpuAsm("STW", "textHex", false);
+
             // Print HEX string, (without wasting memory)
-            if(Expression::getEnableOptimisedPrint())
+            if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
             {
-                Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
-                Compiler::emitVcpuAsm("%PrintAcHexByte", "", false);
+                Compiler::emitVcpuAsm("%PrintHex", "", false);
+                numeric._params.clear();
                 return numeric;
             }
 
             // Create HEX string
-            Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
-            Compiler::emitVcpuAsm("STW", "strChr", false);
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
             Compiler::emitVcpuAsm("%StringHex", "", false);
-
-            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+            return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
         }
 
         Compiler::getNextTempVar();
         Operators::handleSingleOp("LDW", numeric);
-        if(Expression::getEnableOptimisedPrint())
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
         {
-            Compiler::emitVcpuAsm("%PrintAcHexByte", "", false);
+            Compiler::emitVcpuAsm("STW", "textHex", false);
+            Compiler::emitVcpuAsm("%PrintHex", "", false);
+            numeric._params.clear();
             return numeric;
         }
 
         // Create HEX string
-        Compiler::emitVcpuAsm("STW", "strChr", false);
-        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-        Compiler::emitVcpuAsm("%StringHex", "", false);
-
-        return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
-    }
-
-    Expression::Numeric HEXW$(Expression::Numeric& numeric, int codeLineIndex)
-    {
-        if(Expression::getOutputNumeric()._staticInit)
-        {
-            fprintf(stderr, "Functions::HEXW$() : HEXW$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
-            return numeric;
-        }
-
-        int index;
-        uint16_t dstAddr;
-        Expression::VarType varType;
-        if(Expression::getOutputNumeric()._varType == Expression::StrVar)
-        {
-            index = Expression::getOutputNumeric()._index;
-            dstAddr = Compiler::getStringVars()[index]._address;
-            varType = Expression::StrVar;
-        }
-        else
-        {
-            index = -1;
-            dstAddr = Compiler::getStrWorkArea();
-            varType = Expression::TmpStrVar;
-        }
-
-        if(numeric._varType == Expression::Number)
-        {
-            // Print HEXW string, (without wasting memory)
-            if(Expression::getEnableOptimisedPrint())
-            {
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
-                Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
-                return numeric;
-            }
-
-            // Create HEXW string
-            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
-            Compiler::emitVcpuAsm("STW", "strHex", false);
-            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-            Compiler::emitVcpuAsm("%StringHexw", "", false);
-
-            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
-        }
-
-        Compiler::getNextTempVar();
-        Operators::handleSingleOp("LDW", numeric);
-        if(Expression::getEnableOptimisedPrint())
-        {
-            Compiler::emitVcpuAsm("%PrintAcHexWord", "", false);
-            return numeric;
-        }
-
-        // Create HEXW string
         Compiler::emitVcpuAsm("STW", "strHex", false);
         Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-        Compiler::emitVcpuAsm("%StringHexw", "", false);
-
-        return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        Compiler::emitVcpuAsm("%StringHex", "", false);
+        return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric LEFT$(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric LEFT$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::LEFT$() : LEFT$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::LEFT$() : LEFT$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._params.size() != 1)
+        {
+            fprintf(stderr, "Functions::LEFT$() : Syntax error, 'LEFT$(s$, n)' requires two parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
         // Literal string and parameter, (optimised case)
-        if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1  &&  numeric._parameters[0]._varType == Expression::Number)
+        if(numeric._varType == Expression::String  &&  numeric._params[0]._varType == Expression::Number)
         {
             int index;
             std::string name;
             handleConstantString(numeric, Compiler::StrLeft, name, index);
-
             return Expression::Numeric(0, uint16_t(index), true, false, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         // Non optimised case
-        if(numeric._parameters.size() == 1)
+        std::string name;
+        uint16_t srcAddr;
+        int index = int(numeric._index);
+
+        // String input can be literal, const, var and temp
+        if(numeric._varType == Expression::TmpStrVar)
         {
-            std::string name;
-            uint16_t srcAddr;
-            Expression::VarType varType = Expression::StrVar;
+            // Second parameter can never be a temp string
+            srcAddr = Compiler::getStrWorkArea();
+        }
+        else
+        {
+            Compiler::getOrCreateString(numeric, name, srcAddr, index);
+        }
 
-            int index = int(numeric._index);
-            getOrCreateString(numeric, name, srcAddr, index);
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
+        {
+            Compiler::emitStringAddress(numeric, srcAddr);
+            Compiler::emitVcpuAsm("STW", "textStr", false);
+            handleStringParameter(numeric._params[0]);
+            Compiler::emitVcpuAsm("STW", "textLen", false);
+            Compiler::emitVcpuAsm("%PrintAcLeft", "", false);
+        }
+        else
+        {
+            // Create a new temporary string
+            if(!isFuncNested()) Compiler::nextStrWorkArea();
+            uint16_t dstAddr = Compiler::getStrWorkArea();
 
-            if(Expression::getEnableOptimisedPrint())
+            // Optimise STW/LDW
+            if(numeric._params[0]._varType == Expression::TmpVar)
             {
-                handleStringParameter(numeric._parameters[0]);
-                Compiler::emitVcpuAsm("STW", "textLen", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("%PrintAcLeft", "", false);
+                handleStringParameter(numeric._params[0]);
+                Compiler::emitVcpuAsm("STW", "strDstLen", false);
+                Compiler::emitStringAddress(numeric, srcAddr);
+                Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
             }
             else
             {
-                uint16_t dstAddr;
-                if(Expression::getOutputNumeric()._varType == Expression::StrVar)
-                {
-                    dstAddr = Compiler::getStringVars()[Expression::getOutputNumeric()._index]._address;
-                }
-                else
-                {
-                    index = -1;
-                    dstAddr = Compiler::getStrWorkArea();
-                    varType = Expression::TmpStrVar;
-                }
-
-                handleStringParameter(numeric._parameters[0]);
-                Compiler::emitVcpuAsm("STW", "strDstLen", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
+                Compiler::emitStringAddress(numeric, srcAddr);
                 Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-                Compiler::emitVcpuAsm("%StringLeft", "", false);
+                handleStringParameter(numeric._params[0]);
+                Compiler::emitVcpuAsm("STW", "strDstLen", false);
             }
-
-            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+            Compiler::emitVcpuAsm("%StringLeft", "", false);
         }
 
-        return numeric;
+        return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
     }
 
-    Expression::Numeric RIGHT$(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric RIGHT$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::RIGHT$() : RIGHT$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::RIGHT$() : RIGHT$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._params.size() != 1)
+        {
+            fprintf(stderr, "Functions::RIGHT$() : Syntax error, 'RIGHT$(s$, n)' requires two parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
         // Literal string and parameter, (optimised case)
-        if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 1  &&  numeric._parameters[0]._varType == Expression::Number)
+        if(numeric._varType == Expression::String  &&  numeric._params[0]._varType == Expression::Number)
         {
             int index;
             std::string name;
             handleConstantString(numeric, Compiler::StrRight, name, index);
-
             return Expression::Numeric(0, uint16_t(index), true, false, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         // Non optimised case
-        if(numeric._parameters.size() == 1)
+        std::string name;
+        uint16_t srcAddr;
+        int index = int(numeric._index);
+
+        // String input can be literal, const, var and temp
+        if(numeric._varType == Expression::TmpStrVar)
         {
-            std::string name;
-            uint16_t srcAddr;
-            Expression::VarType varType = Expression::StrVar;
+            srcAddr = Compiler::getStrWorkArea();
+        }
+        else
+        {
+            Compiler::getOrCreateString(numeric, name, srcAddr, index);
+        }
 
-            int index = int(numeric._index);
-            getOrCreateString(numeric, name, srcAddr, index);
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
+        {
+            Compiler::emitStringAddress(numeric, srcAddr);
+            Compiler::emitVcpuAsm("STW", "textStr", false);
+            handleStringParameter(numeric._params[0]);
+            Compiler::emitVcpuAsm("STW", "textLen", false);
+            Compiler::emitVcpuAsm("%PrintAcRight", "", false);
+        }
+        else
+        {
+            // Create a new temporary string
+            if(!isFuncNested()) Compiler::nextStrWorkArea();
+            uint16_t dstAddr = Compiler::getStrWorkArea();
 
-            if(Expression::getEnableOptimisedPrint())
+            // Optimise STW/LDW
+            if(numeric._params[0]._varType == Expression::TmpVar)
             {
-                handleStringParameter(numeric._parameters[0]);
-                Compiler::emitVcpuAsm("STW", "textLen", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("%PrintAcRight", "", false);
+                handleStringParameter(numeric._params[0]);
+                Compiler::emitVcpuAsm("STW", "strDstLen", false);
+                Compiler::emitStringAddress(numeric, srcAddr);
+                Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
             }
             else
             {
-                uint16_t dstAddr;
-                if(Expression::getOutputNumeric()._varType == Expression::StrVar)
-                {
-                    dstAddr = Compiler::getStringVars()[Expression::getOutputNumeric()._index]._address;
-                }
-                else
-                {
-                    index = -1;
-                    dstAddr = Compiler::getStrWorkArea();
-                    varType = Expression::TmpStrVar;
-                }
-
-                handleStringParameter(numeric._parameters[0]);
-                Compiler::emitVcpuAsm("STW", "strDstLen", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
+                Compiler::emitStringAddress(numeric, srcAddr);
                 Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-                Compiler::emitVcpuAsm("%StringRight", "", false);
+                handleStringParameter(numeric._params[0]);
+                Compiler::emitVcpuAsm("STW", "strDstLen", false);
             }
-
-            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+            Compiler::emitVcpuAsm("%StringRight", "", false);
         }
 
-        return numeric;
+        return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
     }
 
-    Expression::Numeric MID$(Expression::Numeric& numeric, int codeLineIndex)
+    Expression::Numeric MID$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::MID$() : MID$() cannot be used in static initialisation : on line %d\n", codeLineIndex);
+            fprintf(stderr, "Functions::MID$() : MID$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._params.size() != 2)
+        {
+            fprintf(stderr, "Functions::MID$() : Syntax error, 'MID$(s$, i, n)' requires three parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
             return numeric;
         }
 
         // Literal string and parameters, (optimised case)
-        if(numeric._varType == Expression::String  &&  numeric._parameters.size() == 2  &&  numeric._parameters[0]._varType == Expression::Number  &&  
-           numeric._parameters[1]._varType == Expression::Number)
+        if(numeric._varType == Expression::String  &&  numeric._params[0]._varType == Expression::Number  &&  numeric._params[1]._varType == Expression::Number)
         {
             int index;
             std::string name;
             handleConstantString(numeric, Compiler::StrMid, name, index);
-
             return Expression::Numeric(0, uint16_t(index), true, false, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
 
         // Non optimised case
-        if(numeric._parameters.size() == 2)
+        std::string name;
+        uint16_t srcAddr;
+        int index = int(numeric._index);
+
+        // String input can be literal, const, var and temp
+        if(numeric._varType == Expression::TmpStrVar)
         {
-            std::string name;
-            uint16_t srcAddr;
-            Expression::VarType varType = Expression::StrVar;
-
-            int index = int(numeric._index);
-            getOrCreateString(numeric, name, srcAddr, index);
-
-            if(Expression::getEnableOptimisedPrint())
-            {
-                handleStringParameter(numeric._parameters[0]);
-                Compiler::emitVcpuAsm("STW", "textOfs", false);
-                handleStringParameter(numeric._parameters[1]);
-                Compiler::emitVcpuAsm("STW", "textLen", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("%PrintAcMid", "", false);
-            }
-            else
-            {
-                uint16_t dstAddr;
-                if(Expression::getOutputNumeric()._varType == Expression::StrVar)
-                {
-                    dstAddr = Compiler::getStringVars()[Expression::getOutputNumeric()._index]._address;
-                }
-                else
-                {
-                    index = -1;
-                    dstAddr = Compiler::getStrWorkArea();
-                    varType = Expression::TmpStrVar;
-                }
-
-                handleStringParameter(numeric._parameters[0]);
-                Compiler::emitVcpuAsm("STW", "strOffset", false);
-                handleStringParameter(numeric._parameters[1]);
-                Compiler::emitVcpuAsm("STW", "strDstLen", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(srcAddr), false);
-                Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
-                Compiler::emitVcpuAsm("%StringMid", "", false);
-            }
-
-            return Expression::Numeric(0, uint16_t(index), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+            srcAddr = Compiler::getStrWorkArea();
+        }
+        else
+        {
+            Compiler::getOrCreateString(numeric, name, srcAddr, index);
         }
 
-        return numeric;
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
+        {
+            Compiler::emitStringAddress(numeric, srcAddr);
+            Compiler::emitVcpuAsm("STW", "textStr", false);
+            handleStringParameter(numeric._params[1]);
+            Compiler::emitVcpuAsm("STW", "textLen", false);
+            handleStringParameter(numeric._params[0]);
+            Compiler::emitVcpuAsm("STW", "textOfs", false);
+            Compiler::emitVcpuAsm("%PrintAcMid", "", false);
+        }
+        else
+        {
+            // Create a new temporary string
+            if(!isFuncNested()) Compiler::nextStrWorkArea();
+            uint16_t dstAddr = Compiler::getStrWorkArea();
+
+            Compiler::emitStringAddress(numeric, srcAddr);
+            Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
+            handleStringParameter(numeric._params[1]);
+            Compiler::emitVcpuAsm("STW", "strDstLen", false);
+            handleStringParameter(numeric._params[0]);
+            Compiler::emitVcpuAsm("STW", "strOffset", false);
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+            Compiler::emitVcpuAsm("%StringMid", "", false);
+        }
+
+        return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+    }
+
+    Expression::Numeric LOWER$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Functions::LOWER$() : LOWER$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._params.size() != 0)
+        {
+            fprintf(stderr, "Functions::LOWER$() : Syntax error, 'LOWER$()' requires one string parameter : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+
+        // Literal string and parameter, (optimised case)
+        if(numeric._varType == Expression::String)
+        {
+            int index;
+            std::string name;
+            handleConstantString(numeric, Compiler::StrLower, name, index);
+            return Expression::Numeric(0, uint16_t(index), true, false, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+        }
+
+        // Non optimised case
+        std::string name;
+        uint16_t srcAddr;
+        int index = int(numeric._index);
+
+        // String input can be literal, const, var and temp
+        if(numeric._varType == Expression::TmpStrVar)
+        {
+            srcAddr = Compiler::getStrWorkArea();
+        }
+        else
+        {
+            Compiler::getOrCreateString(numeric, name, srcAddr, index);
+        }
+
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
+        {
+            Compiler::emitStringAddress(numeric, srcAddr);
+            Compiler::emitVcpuAsm("STW", "textStr", false);
+            Compiler::emitVcpuAsm("%PrintAcLower", "", false);
+        }
+        else
+        {
+            // Create a new temporary string
+            if(!isFuncNested()) Compiler::nextStrWorkArea();
+            uint16_t dstAddr = Compiler::getStrWorkArea();
+
+            Compiler::emitStringAddress(numeric, srcAddr);
+            Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+            Compiler::emitVcpuAsm("%StringLower", "", false);
+        }
+
+        return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+    }
+
+    Expression::Numeric UPPER$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Functions::UPPER$() : UPPER$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._params.size() != 0)
+        {
+            fprintf(stderr, "Functions::UPPER$() : Syntax error, 'UPPER$()' requires one string parameter : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+
+        // Literal string and parameter, (optimised case)
+        if(numeric._varType == Expression::String)
+        {
+            int index;
+            std::string name;
+            handleConstantString(numeric, Compiler::StrUpper, name, index);
+            return Expression::Numeric(0, uint16_t(index), true, false, false, Expression::StrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+        }
+
+        // Non optimised case
+        std::string name;
+        uint16_t srcAddr;
+        int index = int(numeric._index);
+
+        // String input can be literal, const, var and temp
+        if(numeric._varType == Expression::TmpStrVar)
+        {
+            srcAddr = Compiler::getStrWorkArea();
+        }
+        else
+        {
+            Compiler::getOrCreateString(numeric, name, srcAddr, index);
+        }
+
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
+        {
+            Compiler::emitStringAddress(numeric, srcAddr);
+            Compiler::emitVcpuAsm("STW", "textStr", false);
+            Compiler::emitVcpuAsm("%PrintAcUpper", "", false);
+        }
+        else
+        {
+            // Create a new temporary string
+            if(!isFuncNested()) Compiler::nextStrWorkArea();
+            uint16_t dstAddr = Compiler::getStrWorkArea();
+
+            Compiler::emitStringAddress(numeric, srcAddr);
+            Compiler::emitVcpuAsm("STW", "strSrcAddr", false);
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+            Compiler::emitVcpuAsm("%StringUpper", "", false);
+        }
+
+        return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
+    }
+
+    Expression::Numeric STRCAT$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Functions::STRCAT$() : STRCAT$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(Expression::getEnableOptimisedPrint())
+        {
+            fprintf(stderr, "Functions::STRCAT$() : Syntax error, STRCAT$() cannot be used in PRINT statements : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._params.size() == 0)
+        {
+            fprintf(stderr, "Functions::STRCAT$() : Syntax error, STRCAT$() requires at least two string parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        if(numeric._varType == Expression::TmpStrVar)
+        {
+            fprintf(stderr, "Functions::STRCAT$() : Syntax error, STRCAT$() requires string literals or string variables as ALL parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            numeric._isValid = false;
+            return numeric;
+        }
+        for(int i=0; i<int(numeric._params.size()); i++)
+        {
+            if(numeric._params[i]._varType == Expression::TmpStrVar)
+            {
+                fprintf(stderr, "Functions::STRCAT$() : Syntax error, STRCAT$() requires string literals or string variables as ALL parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                numeric._isValid = false;
+                return numeric;
+            }
+        }
+
+        // Source string addresses, (extra 0x0000 delimiter used by VASM runtime)
+        std::string name;
+        int index = int(numeric._index);
+        std::vector<uint16_t> strAddrs(numeric._params.size() + 2, 0x0000);
+        Compiler::getOrCreateString(numeric, name, strAddrs[0], index);
+        for(int i=0; i<int(numeric._params.size()); i++)
+        {
+            index = int(numeric._params[i]._index);
+            Compiler::getOrCreateString(numeric._params[i], name, strAddrs[i + 1], index);
+        }
+
+        // Source string addresses LUT
+        uint16_t lutAddress;
+        if(!Memory::getFreeRAM(Memory::FitDescending, int(strAddrs.size()*2), USER_CODE_START, Compiler::getStringsStart(), lutAddress))
+        {
+            fprintf(stderr, "Functions::STRCAT$() : Not enough RAM for string concatenation LUT of size %d : in '%s' on line %d\n", int(strAddrs.size()), codeLineText.c_str(), codeLineStart);
+            return false;
+        }
+        Compiler::getCodeLines()[Compiler::getCurrentCodeLineIndex()]._strConcatLut = {lutAddress, strAddrs};
+
+        // Concatenate multiple source strings to string work area
+        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(lutAddress), false);
+        Compiler::emitVcpuAsm("STW", "strLutAddr", false);
+        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false);
+        Compiler::emitVcpuAsm("%StringConcatLut", "", false);
+
+        return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
     }
 }

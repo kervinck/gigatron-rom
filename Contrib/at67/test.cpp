@@ -1,6 +1,3 @@
-#include "memory.h"
-#include "loader.h"
-#include "audio.h"
 #include "graphics.h"
 #include "test.h"
 
@@ -19,84 +16,6 @@ void drawPixelGiga(uint8_t x, uint8_t y, uint8_t colour)
     y = y % GIGA_HEIGHT;
     uint16_t address = GIGA_VRAM + x + (y <<8);
     Cpu::setRAM(address, colour);
-}
-
-
-namespace TestMidi
-{
-    int _scoreIndex = 0;
-    uint8_t* _score[] = {(uint8_t*)musicMidi00};
-    uint8_t* _scorePtr = (uint8_t*)_score[_scoreIndex];
-
-
-    void nextScore(void)
-    {
-        Audio::initialiseChannels();
-
-        if(++_scoreIndex >= 1) _scoreIndex = 0;
-        _scorePtr = (uint8_t*)_score[_scoreIndex];
-    }
-
-    void playMusic(void)
-    {
-        static bool firstTime = true;
-        if(firstTime)
-        {
-            firstTime = false;
-            Audio::initialiseChannels();            
-        }
-
-        static int16_t midiDelay = 0;
-        static uint64_t prevFrameCounter = 0;
-        double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
-        if(frameTime > VSYNC_TIMING_60)
-        {
-            prevFrameCounter = SDL_GetPerformanceCounter();        
-            if(midiDelay)
-            {
-                midiDelay--; 
-                frameTime = 0.0;
-
-                // Start audio
-                Cpu::setRAM(GIGA_SOUND_TIMER, 0x01);
-            }
-        }
-
-        while(midiDelay == 0)
-        {
-            uint8_t command = *_scorePtr++;
-            if(command & 0x80)
-            {
-                // Start note
-                if((command & 0xF0) == 0x90)
-                {
-                    uint8_t channel = command & (GIGA_SOUND_CHANNELS - 1);  // spec supports up to 16 channels, Gigatron supports 4
-                    uint16_t note = *_scorePtr++;
-                    note = (note - 11) * 2;
-                    note = Cpu::getROM16(note + 0x0900, 1);
-                    Cpu::setRAM16(GIGA_CH0_KEY_L + channel*GIGA_CHANNEL_OFFSET, note);
-                }
-                // Stop note
-                else if((command & 0xF0) == 0x80)
-                {
-                    uint8_t channel = command & (GIGA_SOUND_CHANNELS - 1);  // spec supports up to 16 channels, Gigatron supports 4
-                    Cpu::setRAM16(GIGA_CH0_KEY_L + channel*GIGA_CHANNEL_OFFSET, 0x0000);
-                }
-                // Segment command
-                else if((command & 0xF0) == 0xD0)
-                {
-                    uint16_t segment = *_scorePtr++;
-                    segment |= HI_MASK((*_scorePtr++) <<8);
-                    _scorePtr = (uint8_t*)(uintptr_t)segment;
-                }
-            }
-            // Delay n milliseconds where n = 8bit value
-            else
-            {
-                midiDelay = command;
-            }
-        }
-    }
 }
 
 

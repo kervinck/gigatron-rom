@@ -9,6 +9,8 @@
 #include "loader.h"
 #include "cpu.h"
 #include "audio.h"
+#include "midi.h"
+#include "gtmidi.h"
 #include "timing.h"
 #include "editor.h"
 #include "graphics.h"
@@ -29,8 +31,8 @@
 #define MAX_WAVE_Y 64
 #define BORDER_X1  15
 #define BORDER_X2  144
-#define BORDER_Y1  26
-#define BORDER_Y2  91
+#define BORDER_Y1  44
+#define BORDER_Y2  (BORDER_Y1 + MAX_WAVE_Y + 1)
 
 #define MAX_COMMAND_CHARS 79
 #define MAX_TEXT_ROWS ((SCREEN_HEIGHT - (FONT_HEIGHT+2)*1)/(FONT_HEIGHT+2))
@@ -139,70 +141,40 @@ namespace Audio
         initialiseEditor();
     }
 
-    void saveGigaWaveTables(void)
+    void saveWaveTables(void)
     {
         for(uint16_t i=0; i<256; i++) _waveTables[i] = Cpu::getRAM(0x0700 + i);
     }
 
-    void restoreGigaWaveTables(void)
+    void restoreWaveTables(void)
     {
         for(uint16_t i=0; i<256; i++) Cpu::setRAM(0x0700 + i, _waveTables[i]);
     }
 
-    void restoreGigaWaveTable(uint16_t waveTable)
+    void restoreWaveTable(uint16_t waveTable)
     {
-        waveTable = waveTable & 3;
-        for(uint16_t i=waveTable; i<256; i+=4) Cpu::setRAM(0x0700 + i, _waveTables[i]);
+        // Interlaced wavetables
+        for(uint16_t i=waveTable & 3; i<256; i+=4) Cpu::setRAM(0x0700 + i, _waveTables[i]);
     }
 
-    void initialiseChannels(bool coldBoot)
+    void initialiseChannels(void)
     {
-        // Stop audio
-        Cpu::setRAM(GIGA_SOUND_TIMER, 0x00);
-
-        // Enable all 4 audio channels by default
-        Cpu::setRAM(CHANNEL_MASK, uint8_t(Cpu::getRomType()) | 0x03);
+        // TODO: put this somewhere more appropriate
+        Cpu::setRAM(46, 0); // reset LED sequencer for ROMv2 and higher
 
         // Reset channels
-        for(uint16_t i=0; i<GIGA_SOUND_CHANNELS; i++)
+        for(uint16_t i=0; i<GIGA_NUM_CHANNELS; i++)
         {
             Cpu::setRAM(GIGA_CH0_WAV_A + i*GIGA_CHANNEL_OFFSET, 0x00); // ADD modulation, (volume)
-            Cpu::setRAM(GIGA_CH0_WAV_X + i*GIGA_CHANNEL_OFFSET, 0x03); // waveform index and XOR index modulation, (noise)
+            Cpu::setRAM(GIGA_CH0_WAV_X + i*GIGA_CHANNEL_OFFSET, 0x02); // waveform index and XOR index modulation, (noise)
             Cpu::setRAM(GIGA_CH0_KEY_L + i*GIGA_CHANNEL_OFFSET, 0x00); // low frequency look up from ROM
             Cpu::setRAM(GIGA_CH0_KEY_H + i*GIGA_CHANNEL_OFFSET, 0x00); // high frequency look up from ROM
             Cpu::setRAM(GIGA_CH0_OSC_L + i*GIGA_CHANNEL_OFFSET, 0x00); // low internal oscillator
             Cpu::setRAM(GIGA_CH0_OSC_H + i*GIGA_CHANNEL_OFFSET, 0x00); // high internal oscillator
         }
-
-        // ROM's V1 to V3 do not re-initialise RAM Audio Wave Tables on soft reboot, (we re-initialise them for ALL ROM versions)
-        //if(romType > Cpu::ROMERR  &&  romType < Cpu::ROMv4)
-        {
-            // Save Audio Wave Tables on cold reboot
-            if(coldBoot)
-            {
-                saveGigaWaveTables();
-            }
-            // Restore Audio Wave Tables on warm reboot
-            else
-            {
-                restoreGigaWaveTables();
-            }
-        }
-
-#if 0
-        // Audio channels are byte interlaced
-        for(int i=0; i<64; i++)
-        {
-            //float phase = powf(float(i) / 64.0f + 1.875f, 2.925f);
-            float phase = powf(float(i) / 64.0f + 1.8f, 3.13f);
-            //Cpu::setRAM(0x700+i*4, uint8_t(sinf(float(i) / 64.0f * 2.0f * 3.141529f)*31.0f + 31.0f));
-            Cpu::setRAM(0x701+uint16_t(i*4), uint8_t(sinf(phase)*31.0f + 31.0f));
-            //Cpu::setRAM(0x702+i*4, uint8_t(sinf(float(i) / 64.0f * 2.0f * 3.141529f)*31.0f + 31.0f));
-            //Cpu::setRAM(0x703+i*4, uint8_t(sinf(float(i) / 64.0f * 2.0f * 3.141529f)*31.0f + 31.0f));
-        }
-#endif
     }
 
+    
     void fillCallbackBuffer(void)
     {
         _audioSamples[_audioInIndex++ % AUDIO_BUFFER_SIZE] = (Cpu::getXOUT() & 0xf0) <<5;
@@ -243,9 +215,10 @@ namespace Audio
     enum MenuItem {MenuLoad=0, MenuSave, MenuErase};
     enum DialogItem {DialogFile=2, DialogNo=5, DialogYes=6};
     enum WaveIndex {WaveUser=0, Wave0, Wave1, Wave2, Wave3};
+    enum SuffixType {GtWav=0, GtMid, GtMidi};
 
     const std::vector<std::string> _waveStrs = {"User", "Wav0", "Wav1", "Wav2", "Wav3"};
-    const std::vector<std::string> _suffixes = {".gtwav"};
+    const std::vector<std::string> _suffixes = {".gtwav", ".gtmid", ".gtmidi"};
     const std::string _eraseLine = std::string(MAX_COMMAND_CHARS+1, 32);
 
     bool _firstTimeRender = true;
@@ -253,6 +226,9 @@ namespace Audio
 
     uint8_t _waveUser[MAX_WAVE_X] = {0};
     uint8_t _waveBuffer[MAX_WAVE_X] = {0};
+    uint8_t _midiBuffer[MIDI_MAX_BUFFER_SIZE] = {0};
+    uint16_t _midiBufferSize = 0;
+
     int _waveIndex = WaveUser;
     int _commandCharIndex = 0;
     std::string _commandLine;
@@ -277,31 +253,42 @@ namespace Audio
             Dialog::Item(true, "No", Dialog::Item::LeftX, Dialog::Item::Bd),
             Dialog::Item(true, "Yes", Dialog::Item::RightX, Dialog::Item::CurrentY, Dialog::Item::Bd)
         };
-        Dialog::createDialog("Overwrite", dialogItemsOw, 3, 5, Dialog::Dialog::DoubleWidth, 0, 1);
+        Dialog::createDialog("Overwrite", "Overwrite", dialogItemsOw, 3, 5, Dialog::Dialog::DoubleWidth, 0, 1);
 
         // Wave
-        std::vector<Dialog::Item> dialogItemsLa = {Dialog::Item(false, "User")};
-        Dialog::createDialog("Wave", dialogItemsLa, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
-        Dialog::positionDialog("Wave", 298, 86);
+        std::vector<Dialog::Item> dialogItemsWa = {Dialog::Item(false, "Wave")};
+        Dialog::createDialog("Wave", "Wave", dialogItemsWa, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
+        Dialog::positionDialog("Wave", 6, BORDER_Y1*4);
+        std::vector<Dialog::Item> dialogItemsLa = {Dialog::Item(false, "Load")};
+        Dialog::createDialog("LoadW", "Load", dialogItemsLa, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
+        Dialog::positionDialog("LoadW", 6, BORDER_Y1*4 + 24);
+
+        // Play Wave
+        std::vector<Dialog::Item> dialogItemsPl = {Dialog::Item(true, "Play", Dialog::Item::CenterX, Dialog::Item::NextY, Dialog::Item::Bd)};
+        Dialog::createDialog("PlayW", "Play", dialogItemsPl, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
 
         // Prev
         std::vector<Dialog::Item> dialogItemsPr = {Dialog::Item(true, "Prev", Dialog::Item::CenterX, Dialog::Item::NextY, Dialog::Item::Bd)};
-        Dialog::createDialog("Prev", dialogItemsPr, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
-        Dialog::positionDialog("Prev", 64, 376);
+        Dialog::createDialog("Prev", "Prev", dialogItemsPr, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
+        Dialog::positionDialog("Prev", 64, (BORDER_Y2 + 3)*4);
 
         // Next
         std::vector<Dialog::Item> dialogItemsNe = {Dialog::Item(true, "Next", Dialog::Item::CenterX, Dialog::Item::NextY, Dialog::Item::Bd)};
-        Dialog::createDialog("Next", dialogItemsNe, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
-        Dialog::positionDialog("Next", 528, 376);
+        Dialog::createDialog("Next", "Next", dialogItemsNe, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
+        Dialog::positionDialog("Next", 528, (BORDER_Y2 + 3)*4);
 
-        // Play
-        std::vector<Dialog::Item> dialogItemsPl = {Dialog::Item(true, "Play", Dialog::Item::CenterX, Dialog::Item::NextY, Dialog::Item::Bd)};
-        Dialog::createDialog("Play", dialogItemsPl, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
+        // Midi
+        std::vector<Dialog::Item> dialogItemsMi = {Dialog::Item(false, "Midi")};
+        Dialog::createDialog("Midi", "Midi", dialogItemsMi, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
+        Dialog::positionDialog("Midi", 6, 8);
+        std::vector<Dialog::Item> dialogItemsPm = {Dialog::Item(true, "Play", Dialog::Item::CenterX, Dialog::Item::NextY, Dialog::Item::Bd)};
+        Dialog::createDialog("PlayM", "Play", dialogItemsPm, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
+        Dialog::positionDialog("PlayM", 298, 8);
 
         // Reset
         std::vector<Dialog::Item> dialogItemsRe = {Dialog::Item(true, "Reset", Dialog::Item::CenterX, Dialog::Item::NextY, Dialog::Item::Bd)};
-        Dialog::createDialog("Reset", dialogItemsRe, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
-        Dialog::positionDialog("Reset", 324, 376);
+        Dialog::createDialog("Reset", "Reset", dialogItemsRe, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
+        Dialog::positionDialog("Reset", 324, (BORDER_Y2 + 3)*4);
     }
 
     void clearCommandLine(void)
@@ -345,7 +332,7 @@ namespace Audio
         }
     }
 
-    void loadGigaWaveTable(uint16_t wave)
+    void loadWaveTable(uint16_t wave)
     {
         wave = wave & 3;
         uint16_t address = 0x0700 + wave;
@@ -355,14 +342,14 @@ namespace Audio
         } 
     }
 
-    void uploadGigaWaveTable(uint16_t waveTable, uint8_t waveBuffer[])
+    void uploadWaveTable(uint16_t waveTable, uint8_t waveBuffer[])
     {
         int j = 0;
         waveTable = waveTable & 3;
         for(uint16_t i=waveTable; i<256; i+=4) Cpu::setRAM(0x0700 + i, waveBuffer[j++]);
     }
 
-    void playGigaNote(uint8_t wave, uint16_t note, int duration)
+    void playNote(uint8_t wave, uint16_t note, int duration)
     {
         wave = wave & 3;
         Cpu::setRAM(GIGA_CH0_WAV_X, wave);
@@ -385,10 +372,11 @@ namespace Audio
         _refreshScreen = false;
 
         Graphics::clearScreen(0x22222222, 0x00000000);
-        Graphics::drawLine(BORDER_X1,   BORDER_Y2, BORDER_X2, BORDER_Y2, 0x88888888);
-        Graphics::drawLine(BORDER_X1,   BORDER_Y1, BORDER_X1, BORDER_Y2, 0x88888888);
-        Graphics::drawLine(BORDER_X1-1, BORDER_Y1, BORDER_X2, BORDER_Y1, 0x88888888);
-        Graphics::drawLine(BORDER_X2,   BORDER_Y1, BORDER_X2, BORDER_Y2, 0x88888888);
+        Graphics::drawLine(0, 42, GIGA_WIDTH-1, 42, 0x00000000);
+        Graphics::drawLine(BORDER_X1, BORDER_Y2, BORDER_X2, BORDER_Y2, 0x88888888);
+        Graphics::drawLine(BORDER_X1, BORDER_Y1, BORDER_X1, BORDER_Y2, 0x88888888);
+        Graphics::drawLine(BORDER_X1, BORDER_Y1, BORDER_X2, BORDER_Y1, 0x88888888);
+        Graphics::drawLine(BORDER_X2, BORDER_Y1, BORDER_X2, BORDER_Y2, 0x88888888);
 
         Editor::browseDirectory(_suffixes);
     }
@@ -406,25 +394,30 @@ namespace Audio
     {
         // Update wave
         Dialog::Item dialogItem;
-        Dialog::getDialogItem("Wave", 0, dialogItem);
+        Dialog::getDialogItem("LoadW", 0, dialogItem);
         dialogItem.setText(_waveStrs[_waveIndex]);
-        Dialog::setDialogItem("Wave", 0, dialogItem);
+        Dialog::setDialogItem("LoadW", 0, dialogItem);
         Dialog::renderDialog("Wave", 0, 0);
+        Dialog::renderDialog("LoadW", 0, 0);
 
-        // Interactables
+        // Wave interactables
         Dialog::renderDialog("Prev", _mouseState._x, _mouseState._y);
         Dialog::renderDialog("Next", _mouseState._x, _mouseState._y);
         if(!_waveIndex)
         {
-            Dialog::positionDialog("Play", 298, 376);
-            Dialog::renderDialog("Play", _mouseState._x, _mouseState._y);
+            Dialog::positionDialog("PlayW", 298, (BORDER_Y2 + 3)*4);
+            Dialog::renderDialog("PlayW", _mouseState._x, _mouseState._y);
         }
         else
         {
-            Dialog::positionDialog("Play", 254, 376);
-            Dialog::renderDialog("Play", _mouseState._x, _mouseState._y);
+            Dialog::positionDialog("PlayW", 254, (BORDER_Y2 + 3)*4);
+            Dialog::renderDialog("PlayW", _mouseState._x, _mouseState._y);
             Dialog::renderDialog("Reset", _mouseState._x, _mouseState._y);
         }
+
+        // Midi
+        Dialog::renderDialog("Midi", 0, 0);
+        Dialog::renderDialog("PlayM", _mouseState._x, _mouseState._y);
 
         // Command line
         std::string commandLine = _commandLine;
@@ -433,12 +426,12 @@ namespace Audio
             _commandCharIndex = int(commandLine.size());
             commandLine += char(32);
         }
-        else
-        {
-            commandLine[_commandCharIndex] = char(32);
-        }
         Graphics::drawText(_eraseLine, 0, MAX_TEXT_ROWS*(FONT_HEIGHT+2)+1, 0x00000000, true, MAX_COMMAND_CHARS+1);
-        Graphics::drawText(commandLine, FONT_WIDTH, MAX_TEXT_ROWS*(FONT_HEIGHT+2)+1, 0xFFFFFFFF, true, 1, _commandCharIndex);
+
+        // Flash cursor, refreshUi() is run 60 times per second
+        static uint8_t toggle = 0;
+        bool invert = ((toggle++) >>4) & 1;
+        Graphics::drawText(commandLine, FONT_WIDTH, MAX_TEXT_ROWS*(FONT_HEIGHT+2)+1, 0xFFFFFFFF, invert, 1, _commandCharIndex);
     }
 
     bool isMouseInWave(int mouseX, int mouseY, int& pixelX, int& pixelY)
@@ -503,34 +496,38 @@ namespace Audio
         if(Dialog::getDialogItemIndex("Prev", _mouseState._x, _mouseState._y) != -1)
         {
             if(--_waveIndex < WaveUser) _waveIndex = Wave3;
-            if(_waveIndex) loadGigaWaveTable(uint16_t(_waveIndex - 1));
+            if(_waveIndex) loadWaveTable(uint16_t(_waveIndex - 1));
         }
         else if(Dialog::getDialogItemIndex("Next", _mouseState._x, _mouseState._y) != -1)
         {
             if(++_waveIndex > Wave3) _waveIndex = WaveUser;
-            if(_waveIndex) loadGigaWaveTable(uint16_t(_waveIndex - 1));
+            if(_waveIndex) loadWaveTable(uint16_t(_waveIndex - 1));
         }
-        else if(Dialog::getDialogItemIndex("Play", _mouseState._x, _mouseState._y) != -1)
+        else if(Dialog::getDialogItemIndex("PlayW", _mouseState._x, _mouseState._y) != -1)
         {
             // Play internal wave
             if(_waveIndex)
             {
-                playGigaNote(uint8_t(_waveIndex - 1), 60, 30);
+                playNote(uint8_t(_waveIndex - 1), 60, 30);
             }
             // Upload user wave to internal wave 0 play it, then restore
             else
             {
-                uploadGigaWaveTable(0, _waveBuffer);
-                playGigaNote(0, 60, 30);
-                restoreGigaWaveTable(0);
+                uploadWaveTable(0, _waveBuffer);
+                playNote(0, 60, 30);
+                restoreWaveTable(0);
             }
+        }
+        else if(Dialog::getDialogItemIndex("PlayM", _mouseState._x, _mouseState._y) != -1)
+        {
+            Midi::setStream(_midiBuffer, _midiBufferSize);
         }
         else if(Dialog::getDialogItemIndex("Reset", _mouseState._x, _mouseState._y) != -1)
         {
             if(_waveIndex)
             {
-                restoreGigaWaveTable(uint16_t(_waveIndex - 1));
-                loadGigaWaveTable(uint16_t(_waveIndex - 1));
+                restoreWaveTable(uint16_t(_waveIndex - 1));
+                loadWaveTable(uint16_t(_waveIndex - 1));
             }
         }
 
@@ -598,7 +595,7 @@ namespace Audio
             return false;
         }
 
-        if(_waveIndex) uploadGigaWaveTable(int16_t(_waveIndex - 1), _waveBuffer);
+        if(_waveIndex) uploadWaveTable(int16_t(_waveIndex - 1), _waveBuffer);
 
         //fprintf(stderr, "Audio::loadWaveFile() : Loaded wave file '%s'\n", filepath.c_str());
         return true;
@@ -657,6 +654,80 @@ namespace Audio
         return true;
     }
 
+    bool loadMidiFile(std::string* filenamePtr)
+    {
+        Audio::initialiseChannels();
+
+        std::string filename;
+        if(filenamePtr != nullptr)
+        {
+            filename = *filenamePtr;
+            _commandLine = filename;
+            _commandCharIndex = (_commandLine.size()) ? int(_commandLine.size()) : 0;
+        }
+
+        // Read
+        std::string filepath = Editor::getBrowserPath() + filename;
+        std::ifstream infile(filepath, std::ios::binary | std::ios::in);
+        if(!infile.is_open())
+        {
+            fprintf(stderr, "Audio::loadMidiFile() : failed to open file '%s' for reading\n", filepath.c_str());
+            return false;
+        }
+
+        infile.read((char *)&_midiBuffer, MIDI_MAX_BUFFER_SIZE - 1);
+        if(infile.bad())
+        {
+            fprintf(stderr, "Audio::loadMidiFile() : read error in file '%s'\n", filepath.c_str());
+            return false;
+        }
+
+        std::streamsize midiBufferSize = infile.gcount();
+        if(midiBufferSize < std::streamsize(GTMIDI_STREAM_OFFSET))
+        {
+            fprintf(stderr, "Audio::loadMidiFile() : malformed header in file '%s'\n", filepath.c_str());
+            return false;
+        }
+        if(midiBufferSize > MIDI_MAX_BUFFER_SIZE - 1)
+        {
+            fprintf(stderr, "Audio::loadMidiFile() : midi data too large in file '%s'\n", filepath.c_str());
+            return false;
+        }
+
+        _midiBufferSize = uint16_t(midiBufferSize);
+        if(!Midi::setStream(_midiBuffer, _midiBufferSize))
+        {
+            fprintf(stderr, "Audio::loadMidiFile() : malformed midi data in file '%s'\n", filepath.c_str());
+            return false;
+        }
+
+        return true;
+    }
+
+    bool loadCorrectFileType(std::string* filenamePtr)
+    {
+        if(filenamePtr == nullptr) return loadWaveFile(filenamePtr);
+
+        for(int i=0; i<int(_suffixes.size()); i++)
+        {
+            std::string name = Expression::strUpper(*filenamePtr);
+            std::string suffix = Expression::strUpper(_suffixes[i]);
+            if(name.find(suffix) != std::string::npos)
+            {
+                switch(i)
+                {
+                    case GtWav:  return loadWaveFile(filenamePtr); break;
+                    case GtMid:  return loadMidiFile(filenamePtr); break;
+                    case GtMidi: return loadMidiFile(filenamePtr); break;
+
+                    default: break;
+                }
+            }
+        }
+
+        return false;
+    }
+
     void handleMenu(void)
     {
         Menu::Menu menu;
@@ -697,7 +768,7 @@ namespace Audio
         if(isMouseInWave(_mouseState._x, _mouseState._y, pixelX, pixelY))
         {
             _waveBuffer[pixelX - (BORDER_X1/2 + 1)] = uint8_t(64 - (pixelY - BORDER_Y1));
-            if(_waveIndex) uploadGigaWaveTable(int16_t(_waveIndex - 1), _waveBuffer);
+            if(_waveIndex) uploadWaveTable(int16_t(_waveIndex - 1), _waveBuffer);
             _refreshScreen = true;
         }
     }
@@ -708,7 +779,7 @@ namespace Audio
         if(isMouseInWave(_mouseState._x, _mouseState._y, pixelX, pixelY))
         {
             _waveBuffer[pixelX - (BORDER_X1/2 + 1)] = 0;
-            if(_waveIndex) uploadGigaWaveTable(int16_t(_waveIndex - 1), _waveBuffer);
+            if(_waveIndex) uploadWaveTable(int16_t(_waveIndex - 1), _waveBuffer);
             _refreshScreen = true;
         }
         else
@@ -743,8 +814,8 @@ namespace Audio
                 Editor::FileType fileType = Editor::getCurrentFileEntryType();
                 switch(fileType)
                 {
-                    case Editor::File: loadWaveFile(Editor::getCurrentFileEntryName()); break;
-                    case Editor::Dir:  Editor::changeBrowseDirectory();                 break;
+                    case Editor::File: loadCorrectFileType(Editor::getCurrentFileEntryName()); break;
+                    case Editor::Dir:  Editor::changeBrowseDirectory();                        break;
 
                     default: break;
                 }
@@ -784,8 +855,8 @@ namespace Audio
         if(keyCode >= 32  &&  keyCode <= 126)
         {
             // Accept alpha for first char and alphanumeric or underscore or period for rest
-            if((_commandLine.size() == 0  &&  _commandCharIndex == 0  &&  isalpha(keyCode))  ||
-               (_commandLine.size() != 0  &&  (isalnum(keyCode)  ||  keyCode == '_'  ||  keyCode == '.')))
+            if((_commandLine.size() == 0  &&  _commandCharIndex == 0  &&  (isalpha(keyCode) ||  keyCode == 32))  ||
+               (_commandLine.size() != 0  &&  (isalnum(keyCode)  ||  keyCode == 32  ||  keyCode == '_'  ||  keyCode == '.')))
             {
                 // Max of one period in a filename
                 if(keyCode == '.'  &&  std::count(_commandLine.begin(), _commandLine.end(), '.') == 1) return;
@@ -914,16 +985,28 @@ namespace Audio
 
     void process(void)
     {
+        bool vBlank = false;
+
         if(_firstTimeRender  ||  _refreshScreen)
         {
             refreshScreen();
         }
 
-        refreshWave();
-        refreshUi();
+        if(Midi::getStream())
+        {
+            vBlank = Cpu::process(true);
+            if(vBlank) Midi::play();
+        }
 
-        handleInput();
-        Graphics::render(true);
+        if(Midi::getStream() == nullptr  ||  vBlank)
+        {
+
+            refreshWave();
+            refreshUi();
+
+            handleInput();
+            Graphics::render(!vBlank);
+        }
     }
 #endif
 }

@@ -1,0 +1,161 @@
+_startAddress_                    EQU                               0x0200
+
+; Internal Variables
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
+
+; Internal Constants
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
+
+; Internal Buffers
+regsWorkArea                      EQU                               0x0000
+textWorkArea                      EQU                               0x7fa0
+
+; Includes
+%includePath                      "../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros.i
+
+; Labels
+_entryPoint_                      EQU                               0x0200
+_flashLeds                        EQU                               0x0221
+_repeat_0x021a                    EQU                               0x021a
+_repeat_0x0238                    EQU                               0x0232
+
+; Global Variables
+_leds                             EQU                               0x0030
+
+; Local Variables
+
+; Arrays
+
+; Strings
+
+; Constant Strings
+
+; Data
+
+; Time
+
+; Define Bytes
+
+; Define Words
+
+; Define Images
+
+; Define Loader Image Chunks
+
+; Define Sprites
+
+; Define Fonts
+
+; Lookup Tables
+
+; Code
+_entryPoint_                      Initialise                                                    ; Main: INIT
+
+                                  LDI                               0
+                                  STW                               _leds                       ; Main: leds = 0
+
+                                  LDI                               1
+                                  ST                                46                          ; Main: poke &h2E, &h01
+
+_repeat_0x021a                    LDWI                              _flashLeds
+                                  CALL                              giga_vAC                    ; Main: gosub &flashLeds
+
+                                  BRA                               _repeat_0x021a              ; Main: &forever
+
+_flashLeds                        LDWI                              -1
+                                  XORW                              _leds
+                                  ANDI                              15
+                                  STW                               _leds                       ; Main: leds = (NOT leds) AND &h0F
+
+                                  LDW                               _leds
+                                  ST                                20                          ; Main: poke &h14, leds
+
+                                  LDI                               0
+                                  ST                                14                          ; Main: poke &h0E, 0
+
+_repeat_0x0238                    LD                                0x0e
+                                  XORI                              30
+                                  BNE                               _repeat_0x0238              ; Main: until peek(&h0E) &&= 30
+
+                                  RET                                                           ; Main: ret
+
+                                  HALT                                                          ; Main: END
+
+
+
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+
+resetVideoFlags                   EQU     0x7df3
+convertEqOpAddr                   EQU     0x00c0
+convertNeOpAddr                   EQU     0x00c2
+convertLeOpAddr                   EQU     0x00c4
+convertGeOpAddr                   EQU     0x00c6
+convertLtOpAddr                   EQU     0x00c8
+convertGtOpAddr                   EQU     0x00ca
+convert8Arr2dAddr                 EQU     0x00cc
+convert8Arr3dAddr                 EQU     0x00ce
+convert16Arr2dAddr                EQU     0x00d0
+convert16Arr3dAddr                EQU     0x00d2
+realTimeStubAddr                  EQU     0x00d4
+
+
+; do *NOT* use register4 to register7 during time slicing
+xreset              EQU     register0
+xcount              EQU     register1
+ycount              EQU     register2
+treset              EQU     register3
+breset              EQU     register8
+top                 EQU     register9
+bot                 EQU     register10
+vramAddr            EQU     register11
+evenAddr            EQU     register12
+clsAddress          EQU     register13
+varAddress          EQU     register13
+clrAddress          EQU     register10
+clrLines            EQU     register11
+clrWidth            EQU     register12
+clrStart            EQU     register13
+clrEnd              EQU     register14
+clrRem              EQU     register15
+
+
+resetVideoFlags     LDI     giga_CursorX                        ; cursor x start
+                    STW     cursorXY
+                    LDWI    ON_BOTTOM_ROW_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags                           ; reset on bottom row flag
+                    RET
+

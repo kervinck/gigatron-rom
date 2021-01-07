@@ -1,0 +1,19 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+cls
+
+value = &h0080
+gosub rshift1
+print value
+
+rshift1:
+    asm
+_breakpoint_    
+        LDWI    SYS_LSRW1_48
+        STW     giga_sysFn
+        LDW     _value
+        SYS     48
+        STW     _value
+    endasm
+return

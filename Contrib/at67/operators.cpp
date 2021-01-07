@@ -31,13 +31,11 @@ namespace Operators
         _operators.push_back(" AND ");
         _operators.push_back(" XOR ");
         _operators.push_back(" OR " );
-        _operators.push_back(" NOT ");
+        _operators.push_back("NOT " );
         _operators.push_back(" MOD ");
         _operators.push_back(" LSL ");
         _operators.push_back(" LSR ");
         _operators.push_back(" ASR ");
-        _operators.push_back("<<"   );
-        _operators.push_back(">>"   );
 
         return true;
     }
@@ -62,7 +60,7 @@ namespace Operators
             break;
 
             // User variable name
-            case Expression::IntVar:
+            case Expression::IntVar16:
             {
                 Compiler::emitVcpuAsmUserVar(opcodeStr, numeric, false);
             }
@@ -74,26 +72,21 @@ namespace Operators
 
     void handleSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric)
     {
-        switch(numeric._varType)
-        {
-            // Temporary variable address
-            case Expression::TmpVar:
-            {
-                Compiler::emitVcpuAsm(opcodeStr, Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
-            }
-            break;
-
-            // User variable name
-            case Expression::IntVar:
-            {
-                Compiler::emitVcpuAsmUserVar(opcodeStr, numeric, false);
-            }
-            break;
-
-            default: break;
-        }
-
+        createSingleOp(opcodeStr, numeric);
         createTmpVar(numeric);
+    }
+
+    void selectSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric)
+    {
+        if(numeric._varType == Expression::Number)
+        {
+            int16_t val = int16_t(std::lround(numeric._value));
+            (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
+        }
+        else
+        {
+            Operators::createSingleOp(opcodeStr, numeric);
+        }
     }
 
     bool handleDualOp(const std::string& opcodeStr, Expression::Numeric& lhs, Expression::Numeric& rhs, bool outputHex)
@@ -139,7 +132,7 @@ namespace Operators
                 break;
 
                 // User variable name
-                case Expression::IntVar:
+                case Expression::IntVar16:
                 {
                     if(!Compiler::emitVcpuAsmUserVar("LDW", lhs, true)) return false;
                     _nextTempVar = false;
@@ -167,7 +160,7 @@ namespace Operators
                 break;
 
                 // User variable name
-                case Expression::IntVar:
+                case Expression::IntVar16:
                 {
                     if(!Compiler::emitVcpuAsmUserVar(opcode + "W", rhs, _nextTempVar)) return false;
                     _nextTempVar = false;
@@ -197,7 +190,7 @@ namespace Operators
             break;
 
             // User variable name
-            case Expression::IntVar:
+            case Expression::IntVar16:
             {
                 if(!Compiler::emitVcpuAsmUserVar("LDW", lhs, true)) return false;
             }
@@ -206,7 +199,7 @@ namespace Operators
             default: break;
         }
 
-        if(opcode != "LSLW"  &&  opcode != "<<") Compiler::emitVcpuAsm("STW", "mathShift", false);
+        if(opcode != "LSLW") Compiler::emitVcpuAsm("STW", "mathShift", false);
 
         createTmpVar(lhs);
 
@@ -219,16 +212,16 @@ namespace Operators
         {
             case Expression::BooleanCC:
             {
+                // Init functions are not needed for ROMv5a and higher as CALLI is able to directly CALL them
                 if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
                 {
                     Compiler::emitVcpuAsm("CALLI", "convert" + cc + "Op", false);
                 }
                 else
+                // Enable system internal sub intialiser and mark system internal sub to be loaded
                 {
                     Compiler::emitVcpuAsm("CALL", "convert" + cc + "OpAddr", false);
-
-                    // Enable system internal sub intialiser and mark system internal sub to be loaded, (init functions are not needed for ROMv5a and higher as CALLI is able to directly CALL them)
-                    if(Compiler::getCodeRomType() < Cpu::ROMv5a) Compiler::enableSysInitFunc("Init" + cc + "Op");
+                    Compiler::enableSysInitFunc("Init" + cc + "Op");
                     Linker::setInternalSubToLoad("convert" + cc + "Op");
                 }
             }
@@ -239,6 +232,8 @@ namespace Operators
 
             default: break;
         }
+
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
     }
     bool handleConditionOp(Expression::Numeric& lhs, Expression::Numeric& rhs, Expression::CCType ccType, bool& invertedLogic, const std::string& opcode="SUB")
     {
@@ -282,7 +277,7 @@ namespace Operators
                 break;
 
                 // User variable name
-                case Expression::IntVar:
+                case Expression::IntVar16:
                 {
                     if(!Compiler::emitVcpuAsmUserVar("LDW", lhs, true)) return false;
                     _nextTempVar = false;
@@ -310,7 +305,7 @@ namespace Operators
                 break;
 
                 // User variable name
-                case Expression::IntVar:
+                case Expression::IntVar16:
                 {
                     if(!Compiler::emitVcpuAsmUserVar(opcode + "W", rhs, _nextTempVar)) return false;
                     _nextTempVar = false;
@@ -322,6 +317,206 @@ namespace Operators
         }
 
         createTmpVar(lhs);
+
+        return true;
+    }
+
+    bool handleStringCcOP(Expression::Numeric& lhs, Expression::Numeric& rhs, Expression::OPType opType)
+    {
+        if(lhs._varType != Expression::String  &&  lhs._varType != Expression::Constant  &&  lhs._varType != Expression::StrVar  &&  lhs._varType != Expression::Str2Var  &&
+           lhs._varType != Expression::TmpStrVar) return false;
+        if(rhs._varType != Expression::String  &&  rhs._varType != Expression::Constant  &&  rhs._varType != Expression::StrVar  &&  rhs._varType != Expression::Str2Var  &&
+           rhs._varType != Expression::TmpStrVar) return false;
+
+        if(lhs._varType == Expression::String  &&  rhs._varType == Expression::String)
+        {
+            switch(opType)
+            {
+                case Expression::EqOP: lhs._value = (int16_t(lhs._text.compare(rhs._text)) == 0); return true;
+                case Expression::NeOP: lhs._value = (int16_t(lhs._text.compare(rhs._text)) != 0); return true;
+                case Expression::LeOP: lhs._value = (int16_t(lhs._text.compare(rhs._text)) <= 0); return true;
+                case Expression::GeOP: lhs._value = (int16_t(lhs._text.compare(rhs._text)) >= 0); return true;
+                case Expression::LtOP: lhs._value = (int16_t(lhs._text.compare(rhs._text)) <  0); return true;
+                case Expression::GtOP: lhs._value = (int16_t(lhs._text.compare(rhs._text)) >  0); return true;
+
+                default: break;
+            }
+        }
+
+        // Get addresses of strings to be compared
+        int lhsIndex = int(lhs._index);
+        int rhsIndex = int(rhs._index);
+        std::string lhsName, rhsName;
+        uint16_t lhsAddr, rhsAddr;
+
+        // String inputs can be literal, const, var and temp
+        if(lhs._varType == Expression::TmpStrVar)
+        {
+            lhsAddr = Compiler::getStrWorkArea();
+        }
+        else
+        {
+            Compiler::getOrCreateString(lhs, lhsName, lhsAddr, lhsIndex);
+        }
+        if(rhs._varType == Expression::TmpStrVar)
+        {
+            rhsAddr = Compiler::getStrWorkArea();
+        }
+        else
+        {
+            Compiler::getOrCreateString(rhs, rhsName, rhsAddr, rhsIndex);
+        }
+
+        // By definition this must be a match
+        if(lhsAddr == rhsAddr)
+        {
+            Compiler::emitVcpuAsm("LDI", "1", false);
+        }
+        // Compare strings
+        else
+        {
+            Compiler::emitStringAddress(lhs, lhsAddr);
+            Compiler::emitVcpuAsm("STW",  "strSrcAddr", false);
+            Compiler::emitStringAddress(rhs, rhsAddr);
+            Compiler::emitVcpuAsm("%StringCmp", "", false);
+
+            // 0, 1, 2, (lesser, equal, greater)
+            switch(opType)
+            {
+                case Expression::EqOP:
+                {
+                    // 0, 1, 2 to 0, 1, 0
+                    Compiler::emitVcpuAsm("ANDI",  "1", false);
+                }
+                break;
+
+                case Expression::NeOP:
+                {
+                    // 0, 1, 2 to 1, 0, 1
+                    Compiler::emitVcpuAsm("ANDI",  "1", false);
+                    Compiler::emitVcpuAsm("XORI",  "1", false);
+                }
+                break;
+
+                case Expression::LeOP:
+                {
+                    // 0, 1 to 1 : 2 to 0
+                    Compiler::emitVcpuAsm("XORI",  "2", false);
+                    if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
+                    {
+                        Compiler::emitVcpuAsm("CALLI", "convertNeOpAddr", false);
+                    }
+                    else
+                    {
+                        Compiler::emitVcpuAsm("CALL", "convertNeOpAddr", false);
+                        Compiler::enableSysInitFunc("InitNeOp");
+                        Linker::setInternalSubToLoad("convertNeOp");
+                    }
+                }
+                break;
+
+                case Expression::GeOP:
+                {
+                    // 1, 2 to 1 : 0 to 0
+                    if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
+                    {
+                        Compiler::emitVcpuAsm("CALLI", "convertNeOpAddr", false);
+                    }
+                    else
+                    {
+                        Compiler::emitVcpuAsm("CALL", "convertNeOpAddr", false);
+                        Compiler::enableSysInitFunc("InitNeOp");
+                        Linker::setInternalSubToLoad("convertNeOp");
+                    }
+                }
+                break;
+
+                case Expression::LtOP:
+                {
+                    // 0 to 1 : 1, 2 to 0
+                    if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
+                    {
+                        Compiler::emitVcpuAsm("CALLI", "convertEqOpAddr", false);
+                    }
+                    else
+                    {
+                        Compiler::emitVcpuAsm("CALL", "convertEqOpAddr", false);
+                        Compiler::enableSysInitFunc("InitEqOp");
+                        Linker::setInternalSubToLoad("convertEqOp");
+                    }
+                }
+                break;
+
+                case Expression::GtOP:
+                {
+                    // 0, 1 to 0 : 2 to 1
+                    Compiler::emitVcpuAsm("ANDI",  "2", false);
+                    if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
+                    {
+                        Compiler::emitVcpuAsm("CALLI", "convertNeOpAddr", false);
+                    }
+                    else
+                    {
+                        Compiler::emitVcpuAsm("CALL", "convertNeOpAddr", false);
+                        Compiler::enableSysInitFunc("InitNeOp");
+                        Linker::setInternalSubToLoad("convertNeOp");
+                    }
+                }
+                break;
+
+                default: break;
+            }
+        }
+
+        createTmpVar(lhs);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+
+        return true;
+    }
+
+    bool handleStringAdd(Expression::Numeric& lhs, Expression::Numeric& rhs)
+    {
+        if(lhs._varType != Expression::String  &&  lhs._varType != Expression::Constant  &&  lhs._varType != Expression::StrVar  &&  lhs._varType != Expression::Str2Var  &&
+           lhs._varType != Expression::TmpStrVar) return false;
+        if(rhs._varType != Expression::String  &&  rhs._varType != Expression::Constant  &&  rhs._varType != Expression::StrVar  &&  rhs._varType != Expression::Str2Var  &&
+           rhs._varType != Expression::TmpStrVar) return false;
+
+        // Get addresses of strings to be compared
+        int lhsIndex = int(lhs._index);
+        int rhsIndex = int(rhs._index);
+        std::string lhsName, rhsName;
+        uint16_t lhsAddr, rhsAddr;
+
+        // String inputs can be literal, const, var and temp
+        if(lhs._varType == Expression::TmpStrVar)
+        {
+            lhsAddr = Compiler::getStrWorkArea();
+        }
+        else
+        {
+            Compiler::getOrCreateString(lhs, lhsName, lhsAddr, lhsIndex);
+        }
+        if(rhs._varType == Expression::TmpStrVar)
+        {
+            // If both lhs and rhs are temporaries then get next string work area and swap lhs and rhs, (stringConcat requires dst = src0)
+            if(lhs._varType == Expression::TmpStrVar) Compiler::nextStrWorkArea();
+            rhsAddr = Compiler::getStrWorkArea();
+            std::swap(lhs, rhs);
+            std::swap(lhsAddr, rhsAddr);
+        }
+        else
+        {
+            Compiler::getOrCreateString(rhs, rhsName, rhsAddr, rhsIndex);
+        }
+
+        Compiler::emitStringAddress(lhs, lhsAddr);
+        Compiler::emitVcpuAsm("STW",  "strSrcAddr", false);
+        Compiler::emitStringAddress(rhs, rhsAddr);
+        Compiler::emitVcpuAsm("STW",  "strSrcAddr2", false);
+        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(Compiler::getStrWorkArea()), false);
+        Compiler::emitVcpuAsm("%StringConcat", "", false);
+
+        lhs =  Expression::Numeric(0, -1, true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, "", std::string(""));
 
         return true;
     }
@@ -356,7 +551,7 @@ namespace Operators
                 break;
 
                 // User variable name
-                case Expression::IntVar:
+                case Expression::IntVar16:
                 {
                     if(!Compiler::emitVcpuAsmUserVar("LDW", lhs, true)) return false;
                     _nextTempVar = false;
@@ -393,7 +588,7 @@ namespace Operators
                 break;
 
                 // User variable name
-                case Expression::IntVar:
+                case Expression::IntVar16:
                 {
                     if(!Compiler::emitVcpuAsmUserVar("LDW", rhs, _nextTempVar)) return false;
                     _nextTempVar = false;
@@ -441,8 +636,11 @@ namespace Operators
     // ********************************************************************************************
     // Unary Operators
     // ********************************************************************************************
-    Expression::Numeric POS(Expression::Numeric& numeric)
+    Expression::Numeric POS(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = +numeric._value;
@@ -456,8 +654,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric NEG(Expression::Numeric& numeric)
+    Expression::Numeric NEG(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = -numeric._value;
@@ -472,8 +673,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric NOT(Expression::Numeric& numeric)
+    Expression::Numeric NOT(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = ~int16_t(std::lround(numeric._value));
@@ -482,7 +686,7 @@ namespace Operators
 
         Compiler::getNextTempVar();
         Compiler::emitVcpuAsm("LDWI", std::to_string(-1), false);
-        handleSingleOp("SUBW", numeric);
+        handleSingleOp("XORW", numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
@@ -492,8 +696,11 @@ namespace Operators
     // ********************************************************************************************
     // Unary Math Operators
     // ********************************************************************************************
-    Expression::Numeric CEIL(Expression::Numeric& numeric)
+    Expression::Numeric CEIL(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = ceil(numeric._value);
@@ -502,8 +709,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric FLOOR(Expression::Numeric& numeric)
+    Expression::Numeric FLOOR(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = floor(numeric._value);
@@ -512,18 +722,25 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric POWF(Expression::Numeric& numeric)
+    Expression::Numeric POWF(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
-        if(numeric._varType == Expression::Number  &&  numeric._parameters.size() > 0  &&  numeric._parameters[0]._varType == Expression::Number)
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
+        if(numeric._varType == Expression::Number  &&  numeric._params.size() > 0  &&  numeric._params[0]._varType == Expression::Number)
         {
-            numeric._value = pow(numeric._value, numeric._parameters[0]._value);
+            numeric._value = pow(numeric._value, numeric._params[0]._value);
         }
 
+        numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric SQRT(Expression::Numeric& numeric)
+    Expression::Numeric SQRT(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number  &&  numeric._value > 0.0)
         {
             numeric._value = sqrt(numeric._value);
@@ -532,8 +749,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric EXP(Expression::Numeric& numeric)
+    Expression::Numeric EXP(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = exp(numeric._value);
@@ -542,8 +762,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric EXP2(Expression::Numeric& numeric)
+    Expression::Numeric EXP2(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = exp2(numeric._value);
@@ -552,8 +775,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric LOG(Expression::Numeric& numeric)
+    Expression::Numeric LOG(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number  &&  numeric._value > 0.0)
         {
             numeric._value = log(numeric._value);
@@ -562,8 +788,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric LOG2(Expression::Numeric& numeric)
+    Expression::Numeric LOG2(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number  &&  numeric._value > 0.0)
         {
             numeric._value = log2(numeric._value);
@@ -572,8 +801,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric LOG10(Expression::Numeric& numeric)
+    Expression::Numeric LOG10(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number  &&  numeric._value > 0.0)
         {
             numeric._value = log10(numeric._value);
@@ -582,8 +814,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric SIN(Expression::Numeric& numeric)
+    Expression::Numeric SIN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = sin(numeric._value*MATH_PI/180.0);
@@ -592,8 +827,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric COS(Expression::Numeric& numeric)
+    Expression::Numeric COS(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = cos(numeric._value*MATH_PI/180.0);
@@ -602,8 +840,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric TAN(Expression::Numeric& numeric)
+    Expression::Numeric TAN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = tan(numeric._value*MATH_PI/180.0);
@@ -612,8 +853,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric ASIN(Expression::Numeric& numeric)
+    Expression::Numeric ASIN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = asin(numeric._value)/MATH_PI*180.0;
@@ -622,18 +866,24 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric ACOS(Expression::Numeric& numeric)
+    Expression::Numeric ACOS(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
-            numeric._value = acos(numeric._value)/MATH_PI*180.0;;
+            numeric._value = acos(numeric._value)/MATH_PI*180.0;
         }
 
         return numeric;
     }
 
-    Expression::Numeric ATAN(Expression::Numeric& numeric)
+    Expression::Numeric ATAN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = atan(numeric._value)/MATH_PI*180.0;
@@ -642,31 +892,42 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric ATAN2(Expression::Numeric& numeric)
+    Expression::Numeric ATAN2(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
-        if(numeric._varType == Expression::Number  &&  numeric._parameters.size() > 0  &&  numeric._parameters[0]._varType == Expression::Number)
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
+        if(numeric._varType == Expression::Number  &&  numeric._params.size() > 0  &&  numeric._params[0]._varType == Expression::Number)
         {
-            if(numeric._value != 0.0  ||  numeric._parameters[0]._value != 0.0)
+            if(numeric._value != 0.0  ||  numeric._params[0]._value != 0.0)
             {
-                numeric._value = atan2(numeric._value, numeric._parameters[0]._value)/MATH_PI*180.0;
+                numeric._value = atan2(numeric._value, numeric._params[0]._value)/MATH_PI*180.0;
             }
         }
 
+        numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric RAND(Expression::Numeric& numeric)
+    Expression::Numeric RAND(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
-            numeric._value = double(rand() % std::lround(numeric._value));
+            long value = std::lround(numeric._value);
+            numeric._value = (value <= 0) ? 0 : double(rand() % value);
         }
 
         return numeric;
     }
 
-    Expression::Numeric REV16(Expression::Numeric& numeric)
+    Expression::Numeric REV16(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = double(handleRevOp(uint32_t(std::lround(numeric._value)), 16));
@@ -675,8 +936,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric REV8(Expression::Numeric& numeric)
+    Expression::Numeric REV8(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = double(handleRevOp(uint32_t(std::lround(numeric._value)), 8));
@@ -685,8 +949,11 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric REV4(Expression::Numeric& numeric)
+    Expression::Numeric REV4(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(numeric._varType == Expression::Number)
         {
             numeric._value = double(handleRevOp(uint32_t(std::lround(numeric._value)), 4));
@@ -699,8 +966,13 @@ namespace Operators
     // ********************************************************************************************
     // Binary Operators
     // ********************************************************************************************
-    Expression::Numeric ADD(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric ADD(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
+        if(handleStringAdd(left, right)) return left;
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value += right._value;
@@ -711,8 +983,11 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric SUB(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric SUB(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value -= right._value;
@@ -723,8 +998,11 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric AND(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric AND(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = int16_t(std::lround(left._value)) & int16_t(std::lround(right._value));
@@ -735,8 +1013,11 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric XOR(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric XOR(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = int16_t(std::lround(left._value)) ^ int16_t(std::lround(right._value));
@@ -747,8 +1028,11 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric OR(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric OR(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = int16_t(std::lround(left._value)) | int16_t(std::lround(right._value));
@@ -763,8 +1047,11 @@ namespace Operators
     // ********************************************************************************************
     // Logical Operators
     // ********************************************************************************************
-    Expression::Numeric LSL(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric LSL(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = (int16_t(std::lround(left._value)) << int16_t(std::lround(right._value))) & 0x0000FFFF;
@@ -773,7 +1060,7 @@ namespace Operators
 
         Compiler::getNextTempVar();
 
-        if((left._varType == Expression::TmpVar  ||  left._varType == Expression::IntVar)  &&  right._varType == Expression::Number)
+        if((left._varType == Expression::TmpVar  ||  left._varType == Expression::IntVar16)  &&  right._varType == Expression::Number)
         {
             if(right._value == 8)
             {
@@ -787,7 +1074,7 @@ namespace Operators
                     break;
 
                     // User variable name
-                    case Expression::IntVar:
+                    case Expression::IntVar16:
                     {
                         int varIndex = Compiler::findVar(left._name);
                         if(varIndex == -1) fprintf(stderr, "Operator::LSL() : couldn't find variable name '%s'\n", left._name.c_str());
@@ -818,8 +1105,11 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric LSR(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric LSR(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = int16_t(std::lround(left._value)) >> int16_t(std::lround(right._value));
@@ -828,7 +1118,7 @@ namespace Operators
 
         Compiler::getNextTempVar();
 
-        if((left._varType == Expression::TmpVar  ||  left._varType == Expression::IntVar)  &&  right._varType == Expression::Number)
+        if((left._varType == Expression::TmpVar  ||  left._varType == Expression::IntVar16)  &&  right._varType == Expression::Number)
         {
             // Optimised high byte read
             if(right._value == 8)
@@ -843,7 +1133,7 @@ namespace Operators
                     break;
 
                     // User variable name
-                    case Expression::IntVar:
+                    case Expression::IntVar16:
                     {
                         int varIndex = Compiler::findVar(left._name);
                         if(varIndex == -1) fprintf(stderr, "Operator::LSR() : couldn't find variable name '%s'\n", left._name.c_str());
@@ -882,8 +1172,11 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric ASR(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric ASR(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value /= (1 << int16_t(std::lround(right._value))) & 0x0000FFFF;
@@ -892,7 +1185,7 @@ namespace Operators
 
         Compiler::getNextTempVar();
 
-        if((left._varType == Expression::TmpVar  ||  left._varType == Expression::IntVar)  &&  right._varType == Expression::Number)
+        if((left._varType == Expression::TmpVar  ||  left._varType == Expression::IntVar16)  &&  right._varType == Expression::Number)
         {
             std::string opcode;
             switch(int16_t(std::lround(right._value)))
@@ -922,8 +1215,13 @@ namespace Operators
     // ********************************************************************************************
     // Conditional Operators
     // ********************************************************************************************
-    Expression::Numeric EQ(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType)
+    Expression::Numeric EQ(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
+        if(handleStringCcOP(left, right, Expression::EqOP)) return left;
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = (left._value == right._value);
@@ -937,13 +1235,16 @@ namespace Operators
         std::string cc = (ccType == Expression::FastCC) ? "Ne" : "Eq"; //(!invertedLogic) ? "Eq" : "Ne";
         emitCcType(ccType, cc);
 
-        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-
         return left;
     }
 
-    Expression::Numeric NE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType)
+    Expression::Numeric NE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
+        if(handleStringCcOP(left, right, Expression::NeOP)) return left;
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = left._value != right._value;
@@ -957,13 +1258,16 @@ namespace Operators
         std::string cc = (ccType == Expression::FastCC) ? "Eq" : "Ne"; //(!invertedLogic) ? "Ne" : "Eq";
         emitCcType(ccType, cc);
 
-        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-
         return left;
     }
 
-    Expression::Numeric LE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType)
+    Expression::Numeric LE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
+        if(handleStringCcOP(left, right, Expression::LeOP)) return left;
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = left._value <= right._value;
@@ -977,13 +1281,16 @@ namespace Operators
         std::string cc = (!invertedLogic) ? "Le" : "Gt";
         emitCcType(ccType, cc);
 
-        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-
         return left;
     }
 
-    Expression::Numeric GE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType)
+    Expression::Numeric GE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
+        if(handleStringCcOP(left, right, Expression::GeOP)) return left;
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = left._value >= right._value;
@@ -997,13 +1304,16 @@ namespace Operators
         std::string cc = (!invertedLogic) ? "Ge" : "Lt";
         emitCcType(ccType, cc);
 
-        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-
         return left;
     }
 
-    Expression::Numeric LT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType)
+    Expression::Numeric LT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
+        if(handleStringCcOP(left, right, Expression::LtOP)) return left;
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = (left._value < right._value);
@@ -1017,13 +1327,16 @@ namespace Operators
         std::string cc = (!invertedLogic) ? "Lt" : "Ge";
         emitCcType(ccType, cc);
 
-        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-
         return left;
     }
 
-    Expression::Numeric GT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType)
+    Expression::Numeric GT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
+        if(handleStringCcOP(left, right, Expression::GtOP)) return left;
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = (left._value > right._value);
@@ -1037,8 +1350,6 @@ namespace Operators
         std::string cc = (!invertedLogic) ? "Gt" : "Le";
         emitCcType(ccType, cc);
 
-        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-
         return left;
     }
 
@@ -1046,8 +1357,11 @@ namespace Operators
     // ********************************************************************************************
     // Math Operators
     // ********************************************************************************************
-    Expression::Numeric POW(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric POW(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = pow(double(left._value), double(right._value));
@@ -1075,8 +1389,11 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric MUL(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric MUL(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value *= right._value;
@@ -1094,8 +1411,11 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric DIV(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric DIV(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = (right._value == 0) ? 0 : left._value / right._value;
@@ -1113,8 +1433,11 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric MOD(Expression::Numeric& left, Expression::Numeric& right)
+    Expression::Numeric MOD(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(codeLineText);
+        UNREFERENCED_PARAM(codeLineStart);
+
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
             left._value = (int16_t(std::lround(right._value)) == 0) ? 0 : int16_t(std::lround(left._value)) % int16_t(std::lround(right._value));

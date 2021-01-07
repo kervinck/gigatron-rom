@@ -11,6 +11,7 @@ namespace Linker
     bool setInternalSub(const std::string& name, const Compiler::InternalSub& internalSub);
     bool setInternalSubToLoad(const std::string& name);
 
+    void reset(void);
     bool initialise(void);
 
     bool enableFontLinking(void);
@@ -23,9 +24,6 @@ namespace Linker
     void collectInternalRuntime(void);
     void relinkInternalSubs(void);
     void outputInternalSubs(void);
-
-    void resetIncludeFiles(void);
-    void resetInternalSubs(void);
 }
 
 #endif

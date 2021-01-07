@@ -1,55 +1,54 @@
-_startAddress_                EQU                               0x0200
+_startAddress_                    EQU                               0x0200
 
 ; Internal Variables
-serialRawPrev                 EQU                               0x0081
-register0                     EQU                               0x0082
-register1                     EQU                               register0 + 0x02
-register2                     EQU                               register0 + 0x04
-register3                     EQU                               register0 + 0x06
-register4                     EQU                               register0 + 0x08
-register5                     EQU                               register0 + 0x0A
-register6                     EQU                               register0 + 0x0C
-register7                     EQU                               register0 + 0x0E
-register8                     EQU                               register0 + 0x10
-register9                     EQU                               register0 + 0x12
-register10                    EQU                               register0 + 0x14
-register11                    EQU                               register0 + 0x16
-register12                    EQU                               register0 + 0x18
-register13                    EQU                               register0 + 0x1A
-register14                    EQU                               register0 + 0x1C
-register15                    EQU                               register0 + 0x1E
-fgbgColour                    EQU                               register0 + 0x20
-cursorXY                      EQU                               register0 + 0x22
-midiStream                    EQU                               register0 + 0x24
-midiDelay                     EQU                               register0 + 0x26
-miscFlags                     EQU                               register0 + 0x28
-timerTick                     EQU                               register0 + 0x2A
-timerPrev                     EQU                               register0 + 0x2C
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
 
 ; Internal Constants
-ENABLE_SCROLL_BIT             EQU                               0x0001
-ON_BOTTOM_ROW_BIT             EQU                               0x0002
-ENABLE_SCROLL_MSK             EQU                               0xfffe
-ON_BOTTOM_ROW_MSK             EQU                               0xfffd
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
 
 ; Internal Buffers
-textWorkArea                  EQU                               0x7fa0
+regsWorkArea                      EQU                               0x0000
+textWorkArea                      EQU                               0x7fa0
 
 ; Includes
-%includePath                  "../runtime"
-%include                      util.i
-%include                      gigatron.i
-%include                      macros.i
+%includePath                      "../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros.i
 
 ; Labels
-_entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x022e
-_end_0x02de                   EQU                               0x029a
-_end_0x02e0                   EQU                               0x029c
+_entryPoint_                      EQU                               0x0200
+_loop                             EQU                               0x0229
 
 ; Global Variables
-_x                            EQU                               0x0030
-_y                            EQU                               0x0032
+_x                                EQU                               0x0030
+_y                                EQU                               0x0032
 
 ; Local Variables
 
@@ -69,6 +68,8 @@ _y                            EQU                               0x0032
 
 ; Define Images
 
+; Define Loader Image Chunks
+
 ; Define Sprites
 
 ; Define Fonts
@@ -76,63 +77,62 @@ _y                            EQU                               0x0032
 ; Lookup Tables
 
 ; Code
-_entryPoint_                  LDI                               0x20
-                              STW                               romType
-                              RomCheck                          
-                              Initialise                        
-                              InitRealTimeStub                                                  ; INIT
+_entryPoint_                      LDI                               0x20
+                                  STW                               romType
+                                  RomCheck                          
+                                  Initialise                                                    ; Main: INIT
 
-                              ClearVertBlinds                   
-                              LDI                               2
-                              STW                               graphicsMode
-                              ScanlineMode                                                      ; cls : mode 2
+                                  ClearVertBlinds                   
+                                  LDI                               2
+                                  STW                               graphicsMode
+                                  ScanlineMode                                                  ; Main: cls : mode 2
 
-_loop                         Rand                              
-                              ANDI                              127
-                              STW                               0xe8
-                              Rand                              
-                              ANDI                              31
-                              ADDW                              0xe8
-                              STW                               0xea
-                              Rand                              
-                              ANDI                              1
-                              ADDW                              0xea
-                              STW                               _x                              ; x = (rnd(0) AND &h7F) + (rnd(0) AND &h1F) + (rnd(0) AND &h01)
+_loop                             Rand                              
+                                  ANDI                              127
+                                  STW                               0xe8
+                                  Rand                              
+                                  ANDI                              31
+                                  ADDW                              0xe8
+                                  STW                               0xea
+                                  Rand                              
+                                  ANDI                              1
+                                  ADDW                              0xea
+                                  STW                               _x                          ; Main: x = (rnd(0) AND &h7F) + (rnd(0) AND &h1F) + (rnd(0) AND &h01)
 
-                              Rand                              
-                              ANDI                              63
-                              STW                               0xe8
-                              Rand                              
-                              ANDI                              31
-                              ADDW                              0xe8
-                              STW                               0xea
-                              Rand                              
-                              ANDI                              15
-                              ADDW                              0xea
-                              STW                               0xec
-                              Rand                              
-                              ANDI                              7
-                              ADDW                              0xec
-                              STW                               0xee
-                              Rand                              
-                              ANDI                              3
-                              ADDW                              0xee
-                              STW                               _y                              ; y = (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h0F) + (rnd(0) AND &h07) + (rnd(0) AND &h03)
+                                  Rand                              
+                                  ANDI                              63
+                                  STW                               0xe8
+                                  Rand                              
+                                  ANDI                              31
+                                  ADDW                              0xe8
+                                  STW                               0xea
+                                  Rand                              
+                                  ANDI                              15
+                                  ADDW                              0xea
+                                  STW                               0xec
+                                  Rand                              
+                                  ANDI                              7
+                                  ADDW                              0xec
+                                  STW                               0xee
+                                  Rand                              
+                                  ANDI                              3
+                                  ADDW                              0xee
+                                  STW                               _y                          ; Main: y = (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h0F) + (rnd(0) AND &h07) + (rnd(0) AND &h03)
 
-                              LDW                               _x
-                              ST                                drawPixel_xy
-                              LDW                               _y
-                              ST                                drawPixel_xy + 1
-                              Rand                              
-                              ANDI                              63
-                              ST                                fgbgColour + 1
-                              DrawPixel                                                         ; pset x, y, rnd(0) AND &h3F
+                                  LDW                               _x
+                                  ST                                drawPixel_xy
+                                  LDW                               _y
+                                  ST                                drawPixel_xy + 1
+                                  Rand                              
+                                  ANDI                              63
+                                  ST                                fgbgColour + 1
+                                  DrawPixel                                                     ; Main: pset x, y, rnd(0) AND &h3F
 
-                              BRA                               _loop                           ; goto &loop
+                                  BRA                               _loop                       ; Main: goto &loop
 
-_end_0x02de                   BRA                               _end_0x02de                     ; end
+                                  HALT                                                          ; Main: end
 
-_end_0x02e0                   BRA                               _end_0x02e0                     ; END
+                                  HALT                                                          ; Main: END
 
 
 
@@ -142,25 +142,24 @@ _end_0x02e0                   BRA                               _end_0x02e0     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                      EQU     0x7eb2
-realTimeStub                  EQU     0x7ea0
-rand16bit                     EQU     0x7dc3
-scanlineMode                  EQU     0x7dcb
-resetVideoFlags               EQU     0x7dd5
-initClearFuncs                EQU     0x7dee
-clearVertBlinds               EQU     0x7ec9
-drawPixel                     EQU     0x7de1
-convertEqOpAddr               EQU     0x00c2
-convertNeOpAddr               EQU     0x00c4
-convertLeOpAddr               EQU     0x00c6
-convertGeOpAddr               EQU     0x00c8
-convertLtOpAddr               EQU     0x00ca
-convertGtOpAddr               EQU     0x00cc
-convert8Arr2dAddr             EQU     0x00ce
-convert8Arr3dAddr             EQU     0x00d0
-convert16Arr2dAddr            EQU     0x00d2
-convert16Arr3dAddr            EQU     0x00d4
-realTimeStubAddr              EQU     0x00d6
+romCheck                          EQU     0x7db2
+rand16bit                         EQU     0x7cd4
+scanlineMode                      EQU     0x7cdc
+resetVideoFlags                   EQU     0x7ce6
+initClearFuncs                    EQU     0x7da1
+clearVertBlinds                   EQU     0x7dc9
+drawPixel                         EQU     0x7cf2
+convertEqOpAddr                   EQU     0x00c0
+convertNeOpAddr                   EQU     0x00c2
+convertLeOpAddr                   EQU     0x00c4
+convertGeOpAddr                   EQU     0x00c6
+convertLtOpAddr                   EQU     0x00c8
+convertGtOpAddr                   EQU     0x00ca
+convert8Arr2dAddr                 EQU     0x00cc
+convert8Arr3dAddr                 EQU     0x00ce
+convert16Arr2dAddr                EQU     0x00d0
+convert16Arr3dAddr                EQU     0x00d2
+realTimeStubAddr                  EQU     0x00d4
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -191,23 +190,6 @@ romC_loop           LD      romErrPixel
                     BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
                     
 romC_return         RET                    
-
-
-                    ; runs real time, (time sliced), code at regular intervals
-                    ; self modifying code allows for timer, midi and user procs
-realTimeStub        RET                                     ; RET gets replaced by PUSH
-                    LDWI    0x0000                          ; 0x0000 gets replaced by realTimeProc0 address
-                    CALL    giga_vAC
-realTimeStub1       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc1 address
-                    CALL    giga_vAC
-realTimeStub2       POP
-                    RET
-                    RET                                     ; POP + 2xRET gets replaced by LDWI realTimeProc2 address
-                    CALL    giga_vAC
-                    POP
-                    RET
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -375,7 +357,9 @@ clearVB_loopy       LDI     giga_xres
                     ST      giga_sysArg3                    ; bottom line
                     SYS     54                              ; fill memory
                     INC     top                             ; next top line
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      top
                     SUBI    giga_yres / 2 + 8
                     BLT     clearVB_loopy
@@ -383,7 +367,7 @@ clearVB_loopy       LDI     giga_xres
                     RET
 
 
-drawPixel           LD      drawPixel_xy + 1                ; xy = peek(256+2*y)*256 + x
+drawPixel           LD      drawPixel_xy + 1                ; poke peek(256 + 2*y)*256 + x, fg_colour
                     LSLW
                     INC     giga_vAC + 1
                     PEEK

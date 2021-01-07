@@ -16,8 +16,8 @@
 #include "../../linker.h"
 
 
-#define GTBASIC_MAJOR_VERSION "0.1"
-#define GTBASIC_MINOR_VERSION "2"
+#define GTBASIC_MAJOR_VERSION "1.0"
+#define GTBASIC_MINOR_VERSION "6R"
 #define GTBASIC_VERSION_STR "gtbasic v" GTBASIC_MAJOR_VERSION "." GTBASIC_MINOR_VERSION
 
 
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
 #endif
 
     if(!Compiler::compile(filename, output)) return 1;
-    if(!Assembler::assemble(output, address)) return 1;
+    if(!Assembler::assemble(output, address, true)) return 1;
 
     // Create gt1 format
     Loader::Gt1File gt1File;

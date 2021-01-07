@@ -125,10 +125,14 @@ multiply16_skip     LDW     mathX
                     STW     mathY               ; mathY = mathY >>1
                     BRA     multiply16_loop
 
+%if TIME_SLICING
 multiply16_exit     PUSH
                     CALL    realTimeStubAddr
                     POP
                     LDW     mathSum
+%else
+multiply16_exit     LDW     mathSum
+%endif
                     RET
 %ENDS   
     
@@ -151,9 +155,11 @@ multiply161_skip    LDW     mathX
                     LDW     mathMask
                     ADDW    mathMask
                     BNE     multiply161_loop
+%if TIME_SLICING
                     PUSH
                     CALL    realTimeStubAddr
                     POP
+%endif
                     LDW     mathSum
                     RET
 %ENDS   
@@ -199,9 +205,11 @@ divide16_incr       LDW     mathX
 divide16_incx       LDW     mathMask
                     LSLW
                     BNE     divide16_loop
+%if TIME_SLICING
                     PUSH
                     CALL    realTimeStubAddr
                     POP
+%endif
                     LDW     mathSign
                     BGE     divide16_exit
                     LDI     0
@@ -259,10 +267,14 @@ divide161_skip2     LDW     mathMask
                     SYS     48
                     BRA     divide161_loop
 
+%if TIME_SLICING
 divide161_exit      PUSH
                     CALL    realTimeStubAddr
                     POP
                     LDW     mathSign
+%else
+divide161_exit      LDW     mathSign
+%endif
                     BLT     divide161_sgn
                     LDW     mathQuot
                     RET

@@ -126,9 +126,9 @@ namespace Dialog
         return false;
     }
 
-    bool Dialog::create(const std::string& name, const std::vector<Item>& items, int numCols, int numRows, Size size, int offsetX, int offsetY, int maxCols, int maxRows)
+    bool Dialog::create(const std::string& text, const std::vector<Item>& items, int numCols, int numRows, Size size, int offsetX, int offsetY, int maxCols, int maxRows)
     {
-        _name     = name;
+        _text     = text;
         _items    = items;
         _numCols  = numCols;
         _numRows  = numRows;
@@ -172,9 +172,9 @@ namespace Dialog
             int size = int(_items[i].getText().size());
             if(size > w) w = size;
         }
-        if(_items.size() > 1  &&  (w == 0  ||  int(_name.size()) > w))
+        if(_items.size() > 1  &&  (w == 0  ||  int(_text.size()) > w))
         {
-            w = int(_name.size());
+            w = int(_text.size());
         }
         w += _offsetX*2;
 
@@ -184,13 +184,13 @@ namespace Dialog
         // Border and interior
         int x = _dialogX * FONT_WIDTH;
         int y = _dialogY * FONT_HEIGHT;
-        Graphics::drawDialog(x/4, y/4, w*2*scale, h, 0x55555555, 0x88888888);
+        Graphics::drawDialog(int16_t(x/4), int16_t(y/4), int16_t(w*2*scale), int16_t(h), 0x55555555, 0x88888888);
 
         int tx = int(float(x)*0.75) + 1;
         int ty = y + _offsetY*4 + 4;
 
         // Title
-        int ox = (w*FONT_WIDTH - int(_name.size())*FONT_WIDTH/2);
+        int ox = (w*FONT_WIDTH - int(_text.size())*FONT_WIDTH/2);
 
         // Items
         for(int i=0; i<int(_items.size()); i++)
@@ -222,6 +222,10 @@ namespace Dialog
             {
                 int index = getDialogItemIndex(mouseX, mouseY);
                 if(index == i) std::swap(fgColour, bgColour);
+            }
+            else
+            {
+                fgColour = 0xAAAAAAAA;
             }
 
             // Multiple items per line
@@ -279,12 +283,12 @@ namespace Dialog
         return _dialogMap[name].setDialogItem(index, item);
     }
 
-    bool createDialog(const std::string& name, const std::vector<Item>& items, int numCols, int numRows, Dialog::Size size, int offsetX, int offsetY, int maxCols, int maxRows)
+    bool createDialog(const std::string& name, const std::string& text, const std::vector<Item>& items, int numCols, int numRows, Dialog::Size size, int offsetX, int offsetY, int maxCols, int maxRows)
     {
         if(_dialogMap.find(name) != _dialogMap.end()) return false;
 
         Dialog dialog;
-        dialog.create(name, items, numCols, numRows, size, offsetX, offsetY, maxCols, maxRows);
+        dialog.create(text, items, numCols, numRows, size, offsetX, offsetY, maxCols, maxRows);
         _dialogMap[name] = dialog;
 
         return true;

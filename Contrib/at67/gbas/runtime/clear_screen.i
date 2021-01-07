@@ -45,9 +45,13 @@ resetVideoTable     PUSH
                     STW     vramAddr
                     LDWI    giga_videoTable
                     STW     evenAddr
-    
+
+%if TIME_SLICING
 resetVT_loop        CALL    realTimeStubAddr
                     LDW     vramAddr
+%else
+resetVT_loop        LDW     vramAddr
+%endif
                     DOKE    evenAddr
                     INC     evenAddr
                     INC     evenAddr
@@ -91,8 +95,12 @@ clearScreen         PUSH
                     ADDW    clsAddress
                     STW     clsAddress                          ; end address
 
+%if TIME_SLICING
 clearS_loop         CALL    realTimeStubAddr
                     LD      giga_sysArg4
+%else
+clearS_loop         LD      giga_sysArg4
+%endif
                     SYS     30
                     ADDI    0x04
                     ST      giga_sysArg4
@@ -151,9 +159,11 @@ clearLine           PUSH
                     ANDI    0xFC
                     BEQ     clearL_remloop
                     STW     clrRem
-                    
+
 clearL_modloop      SYS     30
+%if TIME_SLICING
                     CALL    realTimeStubAddr
+%endif
                     LD      giga_sysArg4
                     ADDI    4
                     ST      giga_sysArg4
@@ -186,9 +196,13 @@ clearVertBlinds     PUSH
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top
-    
+
+%if TIME_SLICING
 clearVB_loop        CALL    realTimeStubAddr
                     LD      top
+%else
+clearVB_loop        LD      top
+%endif
                     ST      giga_sysArg4 + 1                    ; top line
                     SYS     30
     

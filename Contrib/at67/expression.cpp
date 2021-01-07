@@ -9,6 +9,8 @@
 
 #include "expression.h"
 
+#define UNREFERENCED_PARAM(P) ((void)P)
+
 
 namespace Expression
 {
@@ -32,7 +34,7 @@ namespace Expression
 
 
     // Forward declarations
-    Numeric expression(void);
+    Numeric expression(bool);
 
     // Helpers
     uint32_t revHelper(uint32_t input, uint32_t n)
@@ -73,7 +75,8 @@ namespace Expression
     }
     Numeric& operatorPOWF(Numeric& numeric)
     {
-        if(numeric._parameters.size() > 0) numeric._value = pow(numeric._value, numeric._parameters[0]._value);
+        if(numeric._params.size() > 0) numeric._value = pow(numeric._value, numeric._params[0]._value);
+        numeric._params.clear();
         return numeric;
     }
     Numeric& operatorSQRT(Numeric& numeric)
@@ -138,7 +141,8 @@ namespace Expression
     }
     Numeric& operatorATAN2(Numeric& numeric)
     {
-        if(numeric._parameters.size() > 0  &&  (numeric._value != 0.0  ||  numeric._parameters[0]._value != 0.0)) numeric._value = atan2(numeric._value, numeric._parameters[0]._value)/MATH_PI*180.0;
+        if(numeric._params.size() > 0  &&  (numeric._value != 0.0  ||  numeric._params[0]._value != 0.0)) numeric._value = atan2(numeric._value, numeric._params[0]._value)/MATH_PI*180.0;
+        numeric._params.clear();
         return numeric;
     }
     Numeric& operatorRAND(Numeric& numeric)
@@ -279,6 +283,11 @@ namespace Expression
         return isspace((unsigned char)chr);
     }
 
+    bool isNumber(const std::string& input)
+    {
+        return !input.empty()  &&  std::find_if(input.begin(), input.end(), [](unsigned char c) { return !isdigit(c); }) == input.end();
+    }
+
     ExpressionType isExpression(const std::string& input)
     {
         if(input.find_first_of("[]") != std::string::npos) return IsInvalid;
@@ -290,31 +299,74 @@ namespace Expression
         return HasNumbers;
     }
 
-    // First char must be alpha, all chars except first can be numerics, all chars except first and last can be underscores, last char can be a dollar sign
-    bool isVarNameValid(const std::string& varName)
+    // First char must be alpha, all chars except first can be numerics, all chars except first and last can be underscores, can contain valid brackets as an array reference
+    TokType isVarNameValid(const std::string& varName)
     {
-        if(varName.size() == 0) return false;
-        if(!isalpha((unsigned char)varName[0])) return false;
-        if(!isalnum((unsigned char)varName[varName.size() - 1])  &&  varName[varName.size() - 1] != '$') return false;
+        TokType tokType = Invalid;
 
-        for(int i=1; i<int(varName.size())-1; i++)
+        if(varName.size() == 0) return Invalid;
+        if(!isalpha((unsigned char)varName[0])) return Invalid;
+
+        size_t lbra, rbra;
+        if(!findMatchingBrackets(varName, 0, lbra, rbra))
         {
-            if(!isalnum((unsigned char)varName[i])  &&  varName[i] != '_') return false;
+            tokType = Variable;
+            lbra = varName.size();
+        }
+        else
+        {
+            tokType = Array;
         }
 
-        return true;
+        if(!isalnum((unsigned char)varName[lbra - 1])) return Invalid;
+
+        for(int i=1; i<int(lbra-1); i++)
+        {
+            if(!isalnum((unsigned char)varName[i])  &&  varName[i] != '_') return Invalid;
+        }
+
+        return tokType;
+    }
+
+    // First char must be alpha, all chars except first can be numerics, all chars except first and last can be underscores, last char can be a dollar sign, can contain valid brackets as an array reference
+    TokType isStrNameValid(const std::string& strName)
+    {
+        TokType tokType = Invalid;
+
+        if(strName.size() == 0) return Invalid;
+        if(!isalpha((unsigned char)strName[0])) return Invalid;
+
+        size_t lbra, rbra;
+        if(!findMatchingBrackets(strName, 0, lbra, rbra))
+        {
+            tokType = Variable;
+            lbra = strName.size();
+        }
+        else
+        {
+            tokType = Array;
+        }
+
+        if(strName[lbra - 1] != '$') return Invalid;
+
+        for(int i=1; i<int(lbra-1); i++)
+        {
+            if(!isalnum((unsigned char)strName[i])  &&  strName[i] != '_') return Invalid;
+        }
+
+        return tokType;
     }
 
     // First char must be alpha, all chars except first can be numerics, all chars except first and last can be underscores
-    bool isLabNameValid(const std::string& varName)
+    bool isLabNameValid(const std::string& labName)
     {
-        if(varName.size() == 0) return false;
-        if(!isalpha((unsigned char)varName[0])) return false;
-        if(!isalnum((unsigned char)varName[varName.size() - 1])) return false;
+        if(labName.size() == 0) return false;
+        if(!isalpha((unsigned char)labName[0])) return false;
+        if(!isalnum((unsigned char)labName[labName.size() - 1])) return false;
 
-        for(int i=1; i<int(varName.size())-1; i++)
+        for(int i=1; i<int(labName.size())-1; i++)
         {
-            if(!isalnum((unsigned char)varName[i])  &&  varName[i] != '_') return false;
+            if(!isalnum((unsigned char)labName[i])  &&  labName[i] != '_') return false;
         }
 
         return true;
@@ -338,10 +390,12 @@ namespace Expression
         return false;
     }
 
+    int _chrBra = -1;
     int _chrPrev = -1;
     bool _containsQuotes = false;
-    void initHasHelpers(void)
+    void initHasHelpers(int bra=-1)
     {
+        _chrBra = bra;
         _chrPrev = -1;
         _containsQuotes = false;
     }
@@ -375,6 +429,23 @@ namespace Expression
         _chrPrev = chr;
         return result;
     }
+    bool hasNonStringBracket(int chr)
+    {
+        bool result = true;
+
+        if(chr == '"'  &&  _chrPrev != '\\') _containsQuotes = !_containsQuotes;
+        if(chr != _chrBra  ||  _containsQuotes) result = false;
+
+        _chrPrev = chr;
+        return result;
+    }
+
+    bool hasOnlyWhiteSpace(const std::string& input)
+    {
+        if(std::find_if_not(input.begin(), input.end(), isspace) != input.end()) return false;
+
+        return true;
+    }
 
     std::string::const_iterator findNonStringEquals(const std::string& input)
     {
@@ -388,6 +459,12 @@ namespace Expression
         return std::find_if(input.begin(), input.end(), hasNonStringColon);
     }
 
+    std::string::const_iterator findNonStringBracket(const std::string& input, int bra)
+    {
+        initHasHelpers(bra);
+        return std::find_if(input.begin(), input.end(), hasNonStringBracket);
+    }
+
     void stripNonStringWhitespace(std::string& input)
     {
         initHasHelpers();
@@ -399,20 +476,33 @@ namespace Expression
         input.erase(remove_if(input.begin(), input.end(), isSpace), input.end());
     }
 
+    bool stripChars(std::string& input, const std::string& chars)
+    {
+        std::string output = input;
+        for(int i=0; i<int(chars.size()); i++)
+        {
+            if(output.erase(std::remove(output.begin(), output.end(), chars[i]), output.end()) == output.end()) return false;
+        }
+
+        input = output;
+
+        return true;
+    }
+
     std::string stripStrings(const std::string& input)
     {
-        size_t start = 0, end = 0;
-
+        size_t start = 0, end = std::string::npos;
         std::string output = input;
 
-        while(start != std::string::npos  &&  end != std::string::npos)
+        for(;;)
         {
             start = output.find_first_of('"', end + 1);
             end = output.find_first_of('"', start + 1);
             if(start == std::string::npos  ||  end == std::string::npos) break;
 
             output.erase(start, end - start + 1);
-            start = 0, end = 0;
+            start = 0;
+            end = std::string::npos;
         }
 
         return output;
@@ -470,7 +560,11 @@ namespace Expression
     void trimWhitespace(std::string& input)
     {
         size_t start = input.find_first_not_of(" \n\r\f\t\v");
-        if(start == std::string::npos) return;
+        if(start == std::string::npos)
+        {
+            stripWhitespace(input);
+            return;
+        }
 
         size_t end = input.find_last_not_of(" \n\r\f\t\v");
         size_t size = end - start + 1;
@@ -529,7 +623,7 @@ namespace Expression
             // Check for string
             if(!inComment)
             {
-                if((i==0  &&  input[i] == '\"')  ||  (i > 0  &&  input[i] == '\"'  &&  input[i-1] != '\\')) inString = !inString;
+                if((i==0  &&  input[i] == '"')  ||  (i > 0  &&  input[i] == '"'  &&  input[i-1] != '\\')) inString = !inString;
             }
 
             // Check for comment, ' and REM
@@ -586,8 +680,18 @@ namespace Expression
         return length;
     }
 
-    bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra)
+    bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra, char obra)
     {
+        char cbra = 0;
+        switch(obra)
+        {
+            case '(': cbra = ')'; break;
+            case '{': cbra = '}'; break;
+            case '[': cbra = ']'; break;
+
+            default: return false;
+        }
+
         lbra = std::string::npos;
         rbra = std::string::npos;
 
@@ -596,7 +700,7 @@ namespace Expression
 
         for(size_t i=start; i<input.size(); i++)
         {
-            if(input[i] == '(')
+            if(input[i] == obra)
             {
                 if(!startMatching)
                 {
@@ -606,7 +710,7 @@ namespace Expression
                 matched++;
             }
 
-            if(input[i] == ')')
+            if(input[i] == cbra)
             {
                 rbra = i;
                 matched--;
@@ -619,6 +723,15 @@ namespace Expression
         rbra = std::string::npos;
 
         return false;
+    }
+
+    bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra, char obra, std::string& name, int& paramNum)
+    {
+        bool result = findMatchingBrackets(input, start, lbra, rbra, obra);
+        std::vector<std::string> params = Expression::tokenise(input.substr(lbra + 1, rbra - (lbra + 1)), ',', true);
+        name = (lbra) ? input.substr(0, lbra): input;
+        paramNum = (result) ? int(params.size()) : 0;
+        return result;
     }
 
     void operatorReduction(std::string& input)
@@ -676,6 +789,20 @@ namespace Expression
         return "0x" + ss.str();
     }
 
+    std::string strLower(const std::string& s)
+    {
+        std::string str = s;
+        std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) {return char(tolower(c));} );
+        return str;
+    }
+
+    std::string strUpper(const std::string& s)
+    {
+        std::string str = s;
+        std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) {return char(toupper(c));} );
+        return str;
+    }
+
     std::string& strToLower(std::string& s)
     {
         std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {return char(tolower(c));} );
@@ -690,7 +817,7 @@ namespace Expression
 
     bool subAlphaHelper(int i)
     {
-        // Valid chars are alpha, 'address of' and 'length of'
+        // Valid chars are alpha, 'address of' and 'size of'
         return (isalpha((unsigned char)i) || (i=='@') || (i=='#'));
     }
     std::string getSubAlpha(const std::string& s)
@@ -890,7 +1017,7 @@ namespace Expression
         }
     }
 
-    // Tokenise using any char as a delimiter, returns tokens, preserve strings
+    // Tokenise using any char as a delimiter, returns tokens, preserve strings, preserves bracketed expressions
     std::vector<std::string> tokenise(const std::string& text, char c, bool skipSpaces, bool toUpper)
     {
         std::vector<std::string> result;
@@ -901,9 +1028,12 @@ namespace Expression
             const char *begin = str;
 
             int numQuotes = 0;
-            while((*str  &&  *str != c)  ||  (numQuotes & 1))
+            int numBrackets = 0;
+            while(*str  &&  (*str != c  ||  (numQuotes & 1)  ||  numBrackets))
             {
-                if(*str == '"') numQuotes++;
+                if(*str == '"'  &&  (str == begin  ||  (str > begin  &&  *(str-1) != '\\'))) numQuotes++;
+                if(*str == '(') numBrackets++;
+                if(*str == ')') numBrackets--;
                 str++;
             }
 
@@ -914,7 +1044,7 @@ namespace Expression
                 result.push_back(s);
             }
         }
-        while (*str++ != 0);
+        while(*str++ != 0);
 
         return result;
     }
@@ -930,9 +1060,9 @@ namespace Expression
             const char *begin = str;
 
             int numQuotes = 0;
-            while((*str  &&  *str != c)  ||  (numQuotes & 1))
+            while(*str  &&  (*str != c  ||  (numQuotes & 1)))
             {
-                if(*str == '"') numQuotes++;
+                if(*str == '"'  &&  (str == begin  ||  (str > begin  &&  *(str-1) != '\\'))) numQuotes++;
                 str++;
             }
 
@@ -949,7 +1079,7 @@ namespace Expression
         return result;
     }
 
-    // Tokenise using delimiters and single or double quotes, preserves strings
+    // Tokenise using delimiters and single quotes, preserves strings
     std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiterStr)
     {
         std::string token = "";
@@ -985,14 +1115,8 @@ namespace Expression
                         delimiterStart = false;
                     }
                 }
-                // Single quote string delimiters
-                else if(line[i] == '\'')
-                {
-                    delimiterState = Quotes;
-                    stringStart = !stringStart;
-                }
-                // Double quote string delimiter
-                else if((i==0  &&  line[i] == '\"')  ||  (i > 0  &&  line[i] == '\"'  &&  line[i-1] != '\\'))
+                // Single quote string delimiters, skip escaped quotes
+                else if((i == 0  ||  (i > 0  &&  line[i-1] != '\\'))  &&  line[i] == '\'')
                 {
                     delimiterState = Quotes;
                     stringStart = !stringStart;
@@ -1079,7 +1203,7 @@ namespace Expression
                         delimiterStart = false;
                     }
                 }
-                // String delimiters
+                // String delimiters, skip escaped quotes
                 else if((i==0  &&  line[i] == '\"')  ||  (i > 0  &&  line[i] == '\"'  &&  line[i-1] != '\\'))
                 {
                     delimiterState = Quotes;
@@ -1424,8 +1548,10 @@ namespace Expression
         }
     }
 
-    Numeric expression(void)
+    Numeric expression(bool returnAddress)
     {
+        UNREFERENCED_PARAM(returnAddress);
+
         Numeric numeric, result = logical();
             
         for(;;)
@@ -1450,7 +1576,7 @@ namespace Expression
 
         _expression = (char*)_expressionToParse.c_str();
 
-        numeric = _exprFunc();
+        numeric = _exprFunc(numeric._returnAddress);
         return numeric._isValid;
     }
 }

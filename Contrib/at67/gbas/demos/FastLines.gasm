@@ -1,63 +1,63 @@
-_startAddress_                EQU                               0x0200
+_startAddress_                    EQU                               0x0200
 
 ; Internal Variables
-serialRawPrev                 EQU                               0x0081
-register0                     EQU                               0x0082
-register1                     EQU                               register0 + 0x02
-register2                     EQU                               register0 + 0x04
-register3                     EQU                               register0 + 0x06
-register4                     EQU                               register0 + 0x08
-register5                     EQU                               register0 + 0x0A
-register6                     EQU                               register0 + 0x0C
-register7                     EQU                               register0 + 0x0E
-register8                     EQU                               register0 + 0x10
-register9                     EQU                               register0 + 0x12
-register10                    EQU                               register0 + 0x14
-register11                    EQU                               register0 + 0x16
-register12                    EQU                               register0 + 0x18
-register13                    EQU                               register0 + 0x1A
-register14                    EQU                               register0 + 0x1C
-register15                    EQU                               register0 + 0x1E
-fgbgColour                    EQU                               register0 + 0x20
-cursorXY                      EQU                               register0 + 0x22
-midiStream                    EQU                               register0 + 0x24
-midiDelay                     EQU                               register0 + 0x26
-miscFlags                     EQU                               register0 + 0x28
-timerTick                     EQU                               register0 + 0x2A
-timerPrev                     EQU                               register0 + 0x2C
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
 
 ; Internal Constants
-ENABLE_SCROLL_BIT             EQU                               0x0001
-ON_BOTTOM_ROW_BIT             EQU                               0x0002
-ENABLE_SCROLL_MSK             EQU                               0xfffe
-ON_BOTTOM_ROW_MSK             EQU                               0xfffd
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
 
 ; Internal Buffers
-textWorkArea                  EQU                               0x7fa0
+regsWorkArea                      EQU                               0x0000
+textWorkArea                      EQU                               0x7fa0
 
 ; Includes
-%includePath                  "../runtime"
-%include                      util.i
-%include                      gigatron.i
-%include                      macros.i
+%includePath                      "../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros.i
 
 ; Labels
-_entryPoint_                  EQU                               0x0200
-_loop                         EQU                               0x0240
-_math                         EQU                               0x0315
-_next_0x024e                  EQU                               0x0244
-_next_0x0289                  EQU                               0x0273
-_next_0x02be                  EQU                               0x02a0
-_next_0x02f9                  EQU                               0x02cf
-_page_0x0300                  EQU                               0x0300
-_end_0x036e                   EQU                               0x0331
+_entryPoint_                      EQU                               0x0200
+_loop                             EQU                               0x0240
+_math                             EQU                               0x0315
+_next_0x0249                      EQU                               0x0244
+_next_0x0284                      EQU                               0x0273
+_next_0x02b9                      EQU                               0x02a0
+_next_0x02f4                      EQU                               0x02cf
+_page_0x0300                      EQU                               0x0300
 
 ; Global Variables
-_x                            EQU                               0x0030
-_y                            EQU                               0x0032
-_i                            EQU                               0x0034
-_i2                           EQU                               0x0036
-_i6                           EQU                               0x0038
+_x                                EQU                               0x0030
+_y                                EQU                               0x0032
+_i                                EQU                               0x0034
+_i2                               EQU                               0x0036
+_i6                               EQU                               0x0038
 
 ; Local Variables
 
@@ -72,572 +72,574 @@ _i6                           EQU                               0x0038
 ; Time
 
 ; Define Bytes
-def_bytes_0x10a0              EQU                               0x10a0
-def_bytes_0x10a0              DB                                30 144 74 145 69 61 128 129 31 145 74 144 69 61 128 129 
-def_bytes_0x10b0              EQU                               0x10b0
-def_bytes_0x10b0              DB                                61 144 74 145 69 61 145 72 128 116 145 71 3 144 70 3 
-def_bytes_0x10c0              EQU                               0x10c0
-def_bytes_0x10c0              DB                                144 69 129 61 144 74 145 69 61 128 129 61 145 74 144 69 
-def_bytes_0x10d0              EQU                               0x10d0
-def_bytes_0x10d0              DB                                46 128 129 76 144 74 145 69 61 145 72 128 61 145 69 55 
-def_bytes_0x10e0              EQU                               0x10e0
-def_bytes_0x10e0              DB                                145 71 3 144 70 3 144 69 129 61 144 74 145 69 61 128 
-def_bytes_0x10f0              EQU                               0x10f0
-def_bytes_0x10f0              DB                                129 61 145 74 144 69 46 128 129 76 144 74 208 160 17 
-def_bytes_0x11a0              EQU                               0x11a0
-def_bytes_0x11a0              DB                                145 69 61 145 72 128 61 145 69 55 145 71 3 144 70 3 
-def_bytes_0x11b0              EQU                               0x11b0
-def_bytes_0x11b0              DB                                144 69 129 61 144 74 145 69 146 65 61 128 129 130 61 146 
-def_bytes_0x11c0              EQU                               0x11c0
-def_bytes_0x11c0              DB                                74 144 69 145 65 46 128 129 130 76 145 74 144 69 146 64 
-def_bytes_0x11d0              EQU                               0x11d0
-def_bytes_0x11d0              DB                                61 146 72 128 129 61 146 69 144 64 55 144 71 130 3 145 
-def_bytes_0x11e0              EQU                               0x11e0
-def_bytes_0x11e0              DB                                70 3 145 69 128 62 145 74 144 69 146 65 61 128 129 130 
-def_bytes_0x11f0              EQU                               0x11f0
-def_bytes_0x11f0              DB                                61 146 74 144 69 145 65 45 128 129 130 77 208 160 18 
-def_bytes_0x12a0              EQU                               0x12a0
-def_bytes_0x12a0              DB                                145 74 144 69 146 64 61 146 72 128 129 61 146 69 144 64 
-def_bytes_0x12b0              EQU                               0x12b0
-def_bytes_0x12b0              DB                                55 144 71 130 2 145 70 4 145 69 128 61 145 74 144 69 
-def_bytes_0x12c0              EQU                               0x12c0
-def_bytes_0x12c0              DB                                146 65 61 128 129 130 61 146 74 144 69 145 65 45 128 129 
-def_bytes_0x12d0              EQU                               0x12d0
-def_bytes_0x12d0              DB                                130 77 145 74 144 69 146 64 61 146 72 128 129 61 146 69 
-def_bytes_0x12e0              EQU                               0x12e0
-def_bytes_0x12e0              DB                                144 64 61 144 64 130 122 144 65 61 144 64 61 144 26 145 
-def_bytes_0x12f0              EQU                               0x12f0
-def_bytes_0x12f0              DB                                74 146 69 147 65 7 144 38 4 128 12 208 160 19 
-def_bytes_0x13a0              EQU                               0x13a0
-def_bytes_0x13a0              DB                                144 38 4 128 11 144 26 8 144 38 7 144 26 8 144 72 
-def_bytes_0x13b0              EQU                               0x13b0
-def_bytes_0x13b0              DB                                129 130 131 7 145 38 4 129 12 145 26 7 145 38 8 145 
-def_bytes_0x13c0              EQU                               0x13c0
-def_bytes_0x13c0              DB                                26 8 129 7 145 38 4 129 4 145 26 144 69 146 65 147 
-def_bytes_0x13d0              EQU                               0x13d0
-def_bytes_0x13d0              DB                                64 7 145 38 4 129 12 145 38 4 129 11 145 26 8 145 
-def_bytes_0x13e0              EQU                               0x13e0
-def_bytes_0x13e0              DB                                38 7 145 26 8 145 69 144 65 146 62 131 8 147 38 3 
-def_bytes_0x13f0              EQU                               0x13f0
-def_bytes_0x13f0              DB                                131 12 147 26 7 147 38 8 147 26 8 131 7 208 160 20 
-def_bytes_0x14a0              EQU                               0x14a0
-def_bytes_0x14a0              DB                                147 38 4 131 4 147 26 144 72 145 67 146 64 8 147 38 
-def_bytes_0x14b0              EQU                               0x14b0
-def_bytes_0x14b0              DB                                3 131 12 147 38 4 131 11 147 26 8 147 38 7 147 26 
-def_bytes_0x14c0              EQU                               0x14c0
-def_bytes_0x14c0              DB                                8 147 65 144 62 129 130 8 145 38 3 129 12 145 26 7 
-def_bytes_0x14d0              EQU                               0x14d0
-def_bytes_0x14d0              DB                                145 38 8 145 26 8 129 7 145 38 4 129 4 145 26 144 
-def_bytes_0x14e0              EQU                               0x14e0
-def_bytes_0x14e0              DB                                72 146 69 147 64 8 145 38 3 129 12 145 38 4 129 11 
-def_bytes_0x14f0              EQU                               0x14f0
-def_bytes_0x14f0              DB                                145 26 8 145 38 7 145 26 8 145 72 208 160 21 
-def_bytes_0x15a0              EQU                               0x15a0
-def_bytes_0x15a0              DB                                144 69 146 67 131 8 147 38 3 131 12 147 26 7 147 38 
-def_bytes_0x15b0              EQU                               0x15b0
-def_bytes_0x15b0              DB                                8 147 26 8 131 7 147 38 4 131 4 147 26 144 74 145 
-def_bytes_0x15c0              EQU                               0x15c0
-def_bytes_0x15c0              DB                                69 146 65 8 147 38 3 131 12 147 38 4 131 11 147 26 
-def_bytes_0x15d0              EQU                               0x15d0
-def_bytes_0x15d0              DB                                8 147 38 7 147 26 8 147 72 128 129 130 8 144 38 3 
-def_bytes_0x15e0              EQU                               0x15e0
-def_bytes_0x15e0              DB                                128 12 144 26 7 144 38 8 144 26 8 128 7 144 38 4 
-def_bytes_0x15f0              EQU                               0x15f0
-def_bytes_0x15f0              DB                                128 4 144 26 145 69 146 65 147 64 8 208 160 22 
-def_bytes_0x16a0              EQU                               0x16a0
-def_bytes_0x16a0              DB                                144 38 3 128 12 144 38 4 128 11 144 26 8 144 38 7 
-def_bytes_0x16b0              EQU                               0x16b0
-def_bytes_0x16b0              DB                                144 26 8 144 69 145 65 146 62 131 8 147 38 3 131 12 
-def_bytes_0x16c0              EQU                               0x16c0
-def_bytes_0x16c0              DB                                147 26 8 147 38 7 147 26 8 131 7 147 38 4 131 4 
-def_bytes_0x16d0              EQU                               0x16d0
-def_bytes_0x16d0              DB                                147 26 144 72 145 67 146 64 8 147 38 3 131 12 147 38 
-def_bytes_0x16e0              EQU                               0x16e0
-def_bytes_0x16e0              DB                                4 131 11 147 26 8 147 38 7 147 26 8 147 65 144 62 
-def_bytes_0x16f0              EQU                               0x16f0
-def_bytes_0x16f0              DB                                129 130 8 145 38 3 129 12 145 26 8 208 160 23 
-def_bytes_0x17a0              EQU                               0x17a0
-def_bytes_0x17a0              DB                                145 38 7 145 26 8 129 7 145 38 4 129 4 145 26 144 
-def_bytes_0x17b0              EQU                               0x17b0
-def_bytes_0x17b0              DB                                72 146 69 147 64 8 145 38 4 129 11 145 38 4 129 11 
-def_bytes_0x17c0              EQU                               0x17c0
-def_bytes_0x17c0              DB                                145 26 8 145 38 7 145 26 8 145 72 144 69 146 67 131 
-def_bytes_0x17d0              EQU                               0x17d0
-def_bytes_0x17d0              DB                                8 147 38 4 131 11 147 26 8 147 38 7 147 26 8 131 
-def_bytes_0x17e0              EQU                               0x17e0
-def_bytes_0x17e0              DB                                7 147 38 4 131 4 147 69 144 65 145 62 146 74 61 146 
-def_bytes_0x17f0              EQU                               0x17f0
-def_bytes_0x17f0              DB                                72 61 146 69 144 65 145 64 131 61 145 62 61 208 160 24 
-def_bytes_0x18a0              EQU                               0x18a0
-def_bytes_0x18a0              DB                                145 69 144 64 146 60 147 72 61 144 65 61 144 69 145 64 
-def_bytes_0x18b0              EQU                               0x18b0
-def_bytes_0x18b0              DB                                146 60 131 61 145 67 147 72 61 147 26 144 74 145 69 146 
-def_bytes_0x18c0              EQU                               0x18c0
-def_bytes_0x18c0              DB                                65 8 147 38 7 131 8 147 38 8 131 7 147 26 8 147 
-def_bytes_0x18d0              EQU                               0x18d0
-def_bytes_0x18d0              DB                                38 8 147 26 7 147 72 128 129 130 8 144 38 8 128 7 
-def_bytes_0x18e0              EQU                               0x18e0
-def_bytes_0x18e0              DB                                144 26 8 144 38 7 144 26 8 128 8 144 38 7 144 26 
-def_bytes_0x18f0              EQU                               0x18f0
-def_bytes_0x18f0              DB                                145 69 146 65 147 64 8 144 38 8 128 7 208 160 25 
-def_bytes_0x19a0              EQU                               0x19a0
-def_bytes_0x19a0              DB                                144 38 8 128 7 144 26 8 144 38 8 144 26 7 144 69 
-def_bytes_0x19b0              EQU                               0x19b0
-def_bytes_0x19b0              DB                                145 65 146 62 131 8 147 38 8 131 7 147 26 8 147 38 
-def_bytes_0x19c0              EQU                               0x19c0
-def_bytes_0x19c0              DB                                7 147 26 8 131 8 147 38 7 147 72 144 69 145 64 146 
-def_bytes_0x19d0              EQU                               0x19d0
-def_bytes_0x19d0              DB                                60 61 145 65 61 145 69 144 64 146 60 131 61 144 67 61 
-def_bytes_0x19e0              EQU                               0x19e0
-def_bytes_0x19e0              DB                                144 46 145 34 146 62 147 58 122 147 38 144 26 145 65 146 
-def_bytes_0x19f0              EQU                               0x19f0
-def_bytes_0x19f0              DB                                62 122 146 43 144 31 145 62 147 58 122 208 160 26 
-def_bytes_0x1aa0              EQU                               0x1aa0
-def_bytes_0x1aa0              DB                                147 41 144 29 145 62 146 53 61 129 130 16 146 64 46 146 
-def_bytes_0x1ab0              EQU                               0x1ab0
-def_bytes_0x1ab0              DB                                46 144 34 145 62 147 58 122 147 38 144 26 145 65 146 62 
-def_bytes_0x1ac0              EQU                               0x1ac0
-def_bytes_0x1ac0              DB                                122 146 43 144 31 145 62 147 58 122 147 41 144 29 145 62 
-def_bytes_0x1ad0              EQU                               0x1ad0
-def_bytes_0x1ad0              DB                                146 53 61 129 130 15 146 64 46 146 46 144 34 145 62 147 
-def_bytes_0x1ae0              EQU                               0x1ae0
-def_bytes_0x1ae0              DB                                58 15 147 62 144 58 145 53 130 15 145 62 144 58 146 53 
-def_bytes_0x1af0              EQU                               0x1af0
-def_bytes_0x1af0              DB                                131 15 146 62 144 58 145 53 147 86 16 208 160 27 
-def_bytes_0x1ba0              EQU                               0x1ba0
-def_bytes_0x1ba0              DB                                144 62 145 58 146 53 15 146 62 144 58 145 53 147 88 15 
-def_bytes_0x1bb0              EQU                               0x1bb0
-def_bytes_0x1bb0              DB                                144 62 145 58 146 53 15 146 62 144 58 145 53 147 89 16 
-def_bytes_0x1bc0              EQU                               0x1bc0
-def_bytes_0x1bc0              DB                                144 38 145 26 130 15 145 57 144 53 146 50 147 93 15 147 
-def_bytes_0x1bd0              EQU                               0x1bd0
-def_bytes_0x1bd0              DB                                57 144 53 145 50 130 15 145 57 144 53 146 50 131 16 146 
-def_bytes_0x1be0              EQU                               0x1be0
-def_bytes_0x1be0              DB                                57 144 53 145 50 15 145 57 144 53 146 50 15 146 57 144 
-def_bytes_0x1bf0              EQU                               0x1bf0
-def_bytes_0x1bf0              DB                                53 145 50 15 145 57 144 53 146 50 16 208 160 28 
-def_bytes_0x1ca0              EQU                               0x1ca0
-def_bytes_0x1ca0              DB                                146 43 144 31 145 62 147 58 15 147 55 144 50 145 46 130 
-def_bytes_0x1cb0              EQU                               0x1cb0
-def_bytes_0x1cb0              DB                                15 145 55 144 50 146 46 131 15 146 55 144 50 145 46 147 
-def_bytes_0x1cc0              EQU                               0x1cc0
-def_bytes_0x1cc0              DB                                86 16 144 55 145 50 146 46 15 146 55 144 50 145 46 147 
-def_bytes_0x1cd0              EQU                               0x1cd0
-def_bytes_0x1cd0              DB                                88 15 144 55 145 50 146 46 15 146 55 144 50 145 46 147 
-def_bytes_0x1ce0              EQU                               0x1ce0
-def_bytes_0x1ce0              DB                                89 16 144 41 145 29 130 15 145 53 144 50 146 45 147 93 
-def_bytes_0x1cf0              EQU                               0x1cf0
-def_bytes_0x1cf0              DB                                15 144 53 145 50 146 45 16 146 53 144 50 208 160 29 
-def_bytes_0x1da0              EQU                               0x1da0
-def_bytes_0x1da0              DB                                145 45 147 86 15 144 53 145 50 146 45 15 146 53 144 50 
-def_bytes_0x1db0              EQU                               0x1db0
-def_bytes_0x1db0              DB                                145 45 15 145 53 144 50 146 45 16 146 53 144 50 145 45 
-def_bytes_0x1dc0              EQU                               0x1dc0
-def_bytes_0x1dc0              DB                                15 145 46 144 34 146 86 131 7 146 77 8 146 62 144 58 
-def_bytes_0x1dd0              EQU                               0x1dd0
-def_bytes_0x1dd0              DB                                145 53 147 79 8 147 81 7 147 62 144 58 145 53 146 86 
-def_bytes_0x1de0              EQU                               0x1de0
-def_bytes_0x1de0              DB                                8 146 77 8 146 62 144 58 145 53 147 86 7 147 81 8 
-def_bytes_0x1df0              EQU                               0x1df0
-def_bytes_0x1df0              DB                                147 62 144 58 145 53 146 86 7 146 77 8 208 160 30 
-def_bytes_0x1ea0              EQU                               0x1ea0
-def_bytes_0x1ea0              DB                                146 62 144 58 145 53 147 88 8 147 81 7 147 62 144 58 
-def_bytes_0x1eb0              EQU                               0x1eb0
-def_bytes_0x1eb0              DB                                145 53 146 86 8 146 77 8 146 62 144 58 145 53 147 89 
-def_bytes_0x1ec0              EQU                               0x1ec0
-def_bytes_0x1ec0              DB                                7 147 81 8 147 38 144 26 145 89 130 7 145 77 8 145 
-def_bytes_0x1ed0              EQU                               0x1ed0
-def_bytes_0x1ed0              DB                                57 144 53 146 50 147 93 8 147 81 7 147 57 144 53 145 
-def_bytes_0x1ee0              EQU                               0x1ee0
-def_bytes_0x1ee0              DB                                50 146 89 8 146 77 8 146 57 144 53 145 50 147 79 7 
-def_bytes_0x1ef0              EQU                               0x1ef0
-def_bytes_0x1ef0              DB                                147 81 8 147 57 144 53 145 50 146 89 7 208 160 31 
-def_bytes_0x1fa0              EQU                               0x1fa0
-def_bytes_0x1fa0              DB                                146 77 8 146 57 144 53 145 50 147 79 8 147 81 7 147 
-def_bytes_0x1fb0              EQU                               0x1fb0
-def_bytes_0x1fb0              DB                                57 144 53 145 50 146 89 8 146 77 8 146 57 144 53 145 
-def_bytes_0x1fc0              EQU                               0x1fc0
-def_bytes_0x1fc0              DB                                50 147 79 7 147 81 8 147 43 144 31 145 86 130 7 145 
-def_bytes_0x1fd0              EQU                               0x1fd0
-def_bytes_0x1fd0              DB                                74 8 145 55 144 50 146 46 147 79 8 147 81 7 147 55 
-def_bytes_0x1fe0              EQU                               0x1fe0
-def_bytes_0x1fe0              DB                                144 50 145 46 146 86 8 146 74 8 146 55 144 50 145 46 
-def_bytes_0x1ff0              EQU                               0x1ff0
-def_bytes_0x1ff0              DB                                147 86 7 147 81 8 147 55 144 50 145 46 208 160 32 
-def_bytes_0x20a0              EQU                               0x20a0
-def_bytes_0x20a0              DB                                146 86 7 146 74 8 146 55 144 50 145 46 147 88 8 147 
-def_bytes_0x20b0              EQU                               0x20b0
-def_bytes_0x20b0              DB                                81 7 147 55 144 50 145 46 146 86 8 146 74 8 146 55 
-def_bytes_0x20c0              EQU                               0x20c0
-def_bytes_0x20c0              DB                                144 50 145 46 147 89 7 147 81 8 147 41 144 29 145 88 
-def_bytes_0x20d0              EQU                               0x20d0
-def_bytes_0x20d0              DB                                130 8 145 81 7 145 53 144 50 146 45 147 93 8 147 77 
-def_bytes_0x20e0              EQU                               0x20e0
-def_bytes_0x20e0              DB                                7 147 53 144 50 145 45 146 88 8 146 81 8 146 53 144 
-def_bytes_0x20f0              EQU                               0x20f0
-def_bytes_0x20f0              DB                                50 145 45 147 86 7 147 77 8 147 53 208 160 33 
-def_bytes_0x21a0              EQU                               0x21a0
-def_bytes_0x21a0              DB                                144 50 145 45 146 88 8 146 81 7 146 53 144 50 145 45 
-def_bytes_0x21b0              EQU                               0x21b0
-def_bytes_0x21b0              DB                                147 79 8 147 77 7 147 53 144 50 145 45 146 88 8 146 
-def_bytes_0x21c0              EQU                               0x21c0
-def_bytes_0x21c0              DB                                81 8 146 53 144 50 145 45 147 79 7 147 77 8 147 26 
-def_bytes_0x21d0              EQU                               0x21d0
-def_bytes_0x21d0              DB                                144 74 145 69 146 65 8 147 38 3 131 12 147 38 4 131 
-def_bytes_0x21e0              EQU                               0x21e0
-def_bytes_0x21e0              DB                                11 147 26 8 147 38 7 147 26 8 147 72 128 129 130 8 
-def_bytes_0x21f0              EQU                               0x21f0
-def_bytes_0x21f0              DB                                144 38 3 128 12 144 26 7 144 38 8 208 160 34 
-def_bytes_0x22a0              EQU                               0x22a0
-def_bytes_0x22a0              DB                                144 26 8 128 7 144 38 4 128 4 144 26 145 69 146 65 
-def_bytes_0x22b0              EQU                               0x22b0
-def_bytes_0x22b0              DB                                147 64 8 144 38 3 128 12 144 38 4 128 11 144 26 8 
-def_bytes_0x22c0              EQU                               0x22c0
-def_bytes_0x22c0              DB                                144 38 7 144 26 8 144 69 145 65 146 62 131 8 147 38 
-def_bytes_0x22d0              EQU                               0x22d0
-def_bytes_0x22d0              DB                                3 131 12 147 26 7 147 38 8 147 26 8 131 7 147 38 
-def_bytes_0x22e0              EQU                               0x22e0
-def_bytes_0x22e0              DB                                4 131 4 147 29 144 72 145 67 146 64 8 147 41 3 131 
-def_bytes_0x22f0              EQU                               0x22f0
-def_bytes_0x22f0              DB                                12 147 41 4 131 11 147 29 8 147 41 7 208 160 35 
-def_bytes_0x23a0              EQU                               0x23a0
-def_bytes_0x23a0              DB                                147 29 8 147 65 144 62 129 130 8 145 41 3 129 12 145 
-def_bytes_0x23b0              EQU                               0x23b0
-def_bytes_0x23b0              DB                                29 8 145 41 7 145 29 8 129 7 145 41 4 129 4 145 
-def_bytes_0x23c0              EQU                               0x23c0
-def_bytes_0x23c0              DB                                33 144 72 146 69 147 64 8 145 45 3 129 12 145 45 4 
-def_bytes_0x23d0              EQU                               0x23d0
-def_bytes_0x23d0              DB                                129 11 145 33 8 145 45 7 145 33 8 145 72 144 69 146 
-def_bytes_0x23e0              EQU                               0x23e0
-def_bytes_0x23e0              DB                                67 131 8 147 45 3 131 12 147 33 8 147 45 7 147 33 
-def_bytes_0x23f0              EQU                               0x23f0
-def_bytes_0x23f0              DB                                8 131 7 147 45 4 131 4 147 26 144 74 208 160 36 
-def_bytes_0x24a0              EQU                               0x24a0
-def_bytes_0x24a0              DB                                145 69 146 65 8 147 38 3 131 12 147 38 4 131 11 147 
-def_bytes_0x24b0              EQU                               0x24b0
-def_bytes_0x24b0              DB                                26 8 147 38 7 147 26 8 147 72 128 129 130 8 144 38 
-def_bytes_0x24c0              EQU                               0x24c0
-def_bytes_0x24c0              DB                                4 128 11 144 26 8 144 38 7 144 26 8 128 7 144 38 
-def_bytes_0x24d0              EQU                               0x24d0
-def_bytes_0x24d0              DB                                4 128 4 144 26 145 69 146 65 147 64 8 144 38 4 128 
-def_bytes_0x24e0              EQU                               0x24e0
-def_bytes_0x24e0              DB                                11 144 38 4 128 11 144 26 8 144 38 7 144 26 8 144 
-def_bytes_0x24f0              EQU                               0x24f0
-def_bytes_0x24f0              DB                                69 145 65 146 62 131 8 147 38 4 131 11 208 160 37 
-def_bytes_0x25a0              EQU                               0x25a0
-def_bytes_0x25a0              DB                                147 26 8 147 38 7 147 26 8 131 7 147 38 4 131 4 
-def_bytes_0x25b0              EQU                               0x25b0
-def_bytes_0x25b0              DB                                147 29 144 72 145 67 146 64 8 147 41 4 131 11 147 41 
-def_bytes_0x25c0              EQU                               0x25c0
-def_bytes_0x25c0              DB                                4 131 11 147 29 8 147 41 8 147 29 7 147 65 144 62 
-def_bytes_0x25d0              EQU                               0x25d0
-def_bytes_0x25d0              DB                                129 130 8 145 41 4 129 11 145 29 8 145 41 7 145 29 
-def_bytes_0x25e0              EQU                               0x25e0
-def_bytes_0x25e0              DB                                8 129 8 145 41 3 129 4 145 33 144 72 146 69 147 64 
-def_bytes_0x25f0              EQU                               0x25f0
-def_bytes_0x25f0              DB                                8 145 45 4 129 11 145 45 4 129 11 208 160 38 
-def_bytes_0x26a0              EQU                               0x26a0
-def_bytes_0x26a0              DB                                145 33 8 145 45 8 145 33 7 145 72 144 69 146 67 131 
-def_bytes_0x26b0              EQU                               0x26b0
-def_bytes_0x26b0              DB                                8 147 45 4 131 11 147 33 8 147 45 7 147 33 8 131 
-def_bytes_0x26c0              EQU                               0x26c0
-def_bytes_0x26c0              DB                                8 147 45 3 131 4 147 58 144 46 145 86 130 8 145 77 
-def_bytes_0x26d0              EQU                               0x26d0
-def_bytes_0x26d0              DB                                7 145 79 8 145 81 8 145 86 7 145 77 8 145 86 146 
-def_bytes_0x26e0              EQU                               0x26e0
-def_bytes_0x26e0              DB                                79 8 146 81 129 7 146 62 144 58 145 53 147 86 8 147 
-def_bytes_0x26f0              EQU                               0x26f0
-def_bytes_0x26f0              DB                                77 7 147 88 8 147 81 8 147 86 7 208 160 39 
-def_bytes_0x27a0              EQU                               0x27a0
-def_bytes_0x27a0              DB                                147 77 8 147 89 8 147 81 7 147 50 144 38 145 89 130 
-def_bytes_0x27b0              EQU                               0x27b0
-def_bytes_0x27b0              DB                                8 145 77 7 145 93 146 81 8 146 81 129 8 146 89 7 
-def_bytes_0x27c0              EQU                               0x27c0
-def_bytes_0x27c0              DB                                146 77 8 146 79 8 146 81 7 146 57 144 53 145 50 147 
-def_bytes_0x27d0              EQU                               0x27d0
-def_bytes_0x27d0              DB                                89 8 147 77 7 147 79 8 147 81 8 147 89 7 147 77 
-def_bytes_0x27e0              EQU                               0x27e0
-def_bytes_0x27e0              DB                                8 147 79 8 147 81 7 147 55 144 43 145 86 130 8 145 
-def_bytes_0x27f0              EQU                               0x27f0
-def_bytes_0x27f0              DB                                74 8 145 79 7 145 81 8 145 86 7 208 160 40 
-def_bytes_0x28a0              EQU                               0x28a0
-def_bytes_0x28a0              DB                                145 74 8 145 86 146 79 8 146 81 129 7 146 55 144 50 
-def_bytes_0x28b0              EQU                               0x28b0
-def_bytes_0x28b0              DB                                145 46 147 86 8 147 74 8 147 88 7 147 81 8 147 86 
-def_bytes_0x28c0              EQU                               0x28c0
-def_bytes_0x28c0              DB                                7 147 74 8 147 89 8 147 81 7 147 53 144 41 145 88 
-def_bytes_0x28d0              EQU                               0x28d0
-def_bytes_0x28d0              DB                                130 8 145 81 8 145 93 146 81 7 146 77 129 8 146 88 
-def_bytes_0x28e0              EQU                               0x28e0
-def_bytes_0x28e0              DB                                7 146 81 8 146 86 145 79 8 145 77 130 7 145 53 144 
-def_bytes_0x28f0              EQU                               0x28f0
-def_bytes_0x28f0              DB                                50 146 45 147 88 8 147 81 8 147 88 7 208 160 41 
-def_bytes_0x29a0              EQU                               0x29a0
-def_bytes_0x29a0              DB                                147 77 8 147 88 7 147 81 8 147 86 8 147 77 7 147 
-def_bytes_0x29b0              EQU                               0x29b0
-def_bytes_0x29b0              DB                                58 144 46 145 86 130 8 145 77 8 145 79 7 145 81 8 
-def_bytes_0x29c0              EQU                               0x29c0
-def_bytes_0x29c0              DB                                145 86 7 145 77 8 145 86 146 79 8 146 81 129 7 146 
-def_bytes_0x29d0              EQU                               0x29d0
-def_bytes_0x29d0              DB                                62 144 58 145 53 147 86 8 147 77 8 147 88 7 147 81 
-def_bytes_0x29e0              EQU                               0x29e0
-def_bytes_0x29e0              DB                                8 147 86 7 147 77 8 147 89 8 147 81 7 147 50 144 
-def_bytes_0x29f0              EQU                               0x29f0
-def_bytes_0x29f0              DB                                38 145 89 130 8 145 77 8 145 93 146 81 7 208 160 42 
-def_bytes_0x2aa0              EQU                               0x2aa0
-def_bytes_0x2aa0              DB                                146 81 129 8 146 89 7 146 77 8 146 79 8 146 81 7 
-def_bytes_0x2ab0              EQU                               0x2ab0
-def_bytes_0x2ab0              DB                                146 57 144 53 145 50 147 89 8 147 77 8 147 79 7 147 
-def_bytes_0x2ac0              EQU                               0x2ac0
-def_bytes_0x2ac0              DB                                81 8 147 89 8 147 77 7 147 79 8 147 81 7 147 55 
-def_bytes_0x2ad0              EQU                               0x2ad0
-def_bytes_0x2ad0              DB                                144 43 145 86 130 8 145 74 8 145 79 7 145 81 8 145 
-def_bytes_0x2ae0              EQU                               0x2ae0
-def_bytes_0x2ae0              DB                                86 8 145 74 7 145 86 146 79 8 146 81 129 7 146 55 
-def_bytes_0x2af0              EQU                               0x2af0
-def_bytes_0x2af0              DB                                144 50 145 46 147 86 8 147 74 8 147 88 7 208 160 43 
-def_bytes_0x2ba0              EQU                               0x2ba0
-def_bytes_0x2ba0              DB                                147 81 8 147 86 8 147 74 7 147 89 8 147 81 7 147 
-def_bytes_0x2bb0              EQU                               0x2bb0
-def_bytes_0x2bb0              DB                                53 144 41 145 88 130 8 145 81 8 145 93 146 81 7 146 
-def_bytes_0x2bc0              EQU                               0x2bc0
-def_bytes_0x2bc0              DB                                77 129 8 146 88 8 146 81 7 146 86 145 79 8 145 77 
-def_bytes_0x2bd0              EQU                               0x2bd0
-def_bytes_0x2bd0              DB                                130 7 145 53 144 50 146 45 147 88 8 147 81 8 147 88 
-def_bytes_0x2be0              EQU                               0x2be0
-def_bytes_0x2be0              DB                                7 147 77 8 147 88 8 147 81 7 147 86 8 147 77 7 
-def_bytes_0x2bf0              EQU                               0x2bf0
-def_bytes_0x2bf0              DB                                147 50 144 43 145 74 130 61 145 72 61 208 160 44 
-def_bytes_0x2ca0              EQU                               0x2ca0
-def_bytes_0x2ca0              DB                                144 53 146 45 131 123 146 55 144 46 145 74 61 145 72 61 
-def_bytes_0x2cb0              EQU                               0x2cb0
-def_bytes_0x2cb0              DB                                145 41 144 65 146 60 147 57 61 128 130 131 15 147 64 46 
-def_bytes_0x2cc0              EQU                               0x2cc0
-def_bytes_0x2cc0              DB                                147 50 144 43 145 74 30 128 131 15 144 60 16 144 72 129 
-def_bytes_0x2cd0              EQU                               0x2cd0
-def_bytes_0x2cd0              DB                                30 145 57 31 145 50 146 45 30 129 130 15 146 60 16 130 
-def_bytes_0x2ce0              EQU                               0x2ce0
-def_bytes_0x2ce0              DB                                30 146 57 31 146 50 144 46 145 74 30 128 130 15 144 60 
-def_bytes_0x2cf0              EQU                               0x2cf0
-def_bytes_0x2cf0              DB                                16 144 72 129 30 145 57 31 145 53 144 41 208 160 45 
-def_bytes_0x2da0              EQU                               0x2da0
-def_bytes_0x2da0              DB                                146 65 147 60 30 128 129 31 130 131 15 147 64 15 147 53 
-def_bytes_0x2db0              EQU                               0x2db0
-def_bytes_0x2db0              DB                                15 147 50 16 147 50 144 43 145 62 15 145 62 15 145 62 
-def_bytes_0x2dc0              EQU                               0x2dc0
-def_bytes_0x2dc0              DB                                128 131 15 145 60 144 55 146 62 16 146 62 128 129 15 146 
-def_bytes_0x2dd0              EQU                               0x2dd0
-def_bytes_0x2dd0              DB                                62 15 146 57 144 62 16 144 62 15 144 50 145 45 146 65 
-def_bytes_0x2de0              EQU                               0x2de0
-def_bytes_0x2de0              DB                                15 146 65 15 146 65 128 129 16 146 60 144 57 145 65 15 
-def_bytes_0x2df0              EQU                               0x2df0
-def_bytes_0x2df0              DB                                145 65 128 130 15 145 65 15 145 57 144 65 16 208 160 46 
-def_bytes_0x2ea0              EQU                               0x2ea0
-def_bytes_0x2ea0              DB                                144 65 15 144 50 145 46 146 67 15 146 67 15 146 67 128 
-def_bytes_0x2eb0              EQU                               0x2eb0
-def_bytes_0x2eb0              DB                                129 16 146 60 144 58 145 67 15 145 67 128 130 15 145 67 
-def_bytes_0x2ec0              EQU                               0x2ec0
-def_bytes_0x2ec0              DB                                15 145 57 144 72 16 144 72 15 144 53 145 41 146 69 15 
-def_bytes_0x2ed0              EQU                               0x2ed0
-def_bytes_0x2ed0              DB                                146 69 15 146 69 128 129 16 146 53 144 69 15 144 69 130 
-def_bytes_0x2ee0              EQU                               0x2ee0
-def_bytes_0x2ee0              DB                                15 144 57 145 69 15 145 57 144 69 16 144 57 145 69 15 
-def_bytes_0x2ef0              EQU                               0x2ef0
-def_bytes_0x2ef0              DB                                145 43 144 62 146 50 15 146 43 144 62 129 15 208 160 47 
-def_bytes_0x2fa0              EQU                               0x2fa0
-def_bytes_0x2fa0              DB                                144 43 145 62 130 16 145 43 144 72 146 60 15 146 43 144 
-def_bytes_0x2fb0              EQU                               0x2fb0
-def_bytes_0x2fb0              DB                                72 129 15 144 43 145 72 130 15 145 43 144 69 146 57 16 
-def_bytes_0x2fc0              EQU                               0x2fc0
-def_bytes_0x2fc0              DB                                146 43 144 69 129 15 144 45 145 62 146 50 15 146 45 144 
-def_bytes_0x2fd0              EQU                               0x2fd0
-def_bytes_0x2fd0              DB                                62 129 15 144 45 145 62 130 16 145 45 144 72 146 60 15 
-def_bytes_0x2fe0              EQU                               0x2fe0
-def_bytes_0x2fe0              DB                                146 45 144 72 129 15 144 45 145 72 130 15 145 45 144 69 
-def_bytes_0x2ff0              EQU                               0x2ff0
-def_bytes_0x2ff0              DB                                146 65 147 57 16 147 45 144 69 129 130 15 208 160 48 
-def_bytes_0x30a0              EQU                               0x30a0
-def_bytes_0x30a0              DB                                144 46 145 62 146 50 131 15 146 46 144 62 129 15 144 46 
-def_bytes_0x30b0              EQU                               0x30b0
-def_bytes_0x30b0              DB                                145 62 130 16 145 46 144 72 146 60 15 146 46 144 72 129 
-def_bytes_0x30c0              EQU                               0x30c0
-def_bytes_0x30c0              DB                                15 144 46 145 72 130 15 145 46 144 69 146 57 16 146 46 
-def_bytes_0x30d0              EQU                               0x30d0
-def_bytes_0x30d0              DB                                144 69 129 15 144 53 145 41 146 69 147 57 15 147 41 144 
-def_bytes_0x30e0              EQU                               0x30e0
-def_bytes_0x30e0              DB                                69 129 130 15 144 41 145 69 131 16 145 41 144 69 15 144 
-def_bytes_0x30f0              EQU                               0x30f0
-def_bytes_0x30f0              DB                                41 145 69 15 145 40 144 69 15 144 40 208 160 49 
-def_bytes_0x31a0              EQU                               0x31a0
-def_bytes_0x31a0              DB                                145 69 16 145 40 144 69 15 144 43 145 31 146 77 147 74 
-def_bytes_0x31b0              EQU                               0x31b0
-def_bytes_0x31b0              DB                                15 147 43 144 77 145 65 130 16 145 43 144 77 146 65 131 
-def_bytes_0x31c0              EQU                               0x31c0
-def_bytes_0x31c0              DB                                15 146 43 144 31 145 77 147 72 15 147 43 144 77 145 65 
-def_bytes_0x31d0              EQU                               0x31d0
-def_bytes_0x31d0              DB                                130 15 145 43 144 77 146 65 131 16 146 41 144 29 145 77 
-def_bytes_0x31e0              EQU                               0x31e0
-def_bytes_0x31e0              DB                                147 69 15 147 43 144 31 145 77 146 65 15 146 45 144 33 
-def_bytes_0x31f0              EQU                               0x31f0
-def_bytes_0x31f0              DB                                145 74 147 64 15 147 45 144 76 145 64 130 16 208 160 50 
-def_bytes_0x32a0              EQU                               0x32a0
-def_bytes_0x32a0              DB                                145 45 144 76 146 64 131 15 146 45 144 33 145 76 147 72 
-def_bytes_0x32b0              EQU                               0x32b0
-def_bytes_0x32b0              DB                                15 147 45 144 76 145 64 130 15 145 45 144 76 146 64 131 
-def_bytes_0x32c0              EQU                               0x32c0
-def_bytes_0x32c0              DB                                16 146 43 144 31 145 76 147 69 15 147 45 144 33 145 76 
-def_bytes_0x32d0              EQU                               0x32d0
-def_bytes_0x32d0              DB                                146 64 15 146 46 144 34 145 72 147 62 15 147 46 144 72 
-def_bytes_0x32e0              EQU                               0x32e0
-def_bytes_0x32e0              DB                                145 60 130 16 145 46 144 72 146 60 131 15 146 46 144 34 
-def_bytes_0x32f0              EQU                               0x32f0
-def_bytes_0x32f0              DB                                145 72 147 60 15 147 46 144 72 145 60 130 15 208 160 51 
-def_bytes_0x33a0              EQU                               0x33a0
-def_bytes_0x33a0              DB                                145 46 144 72 146 60 131 16 146 46 144 34 145 74 147 69 
-def_bytes_0x33b0              EQU                               0x33b0
-def_bytes_0x33b0              DB                                15 147 46 144 34 145 74 146 62 15 146 41 144 29 145 69 
-def_bytes_0x33c0              EQU                               0x33c0
-def_bytes_0x33c0              DB                                147 62 15 147 41 144 69 145 57 130 16 145 41 144 69 146 
-def_bytes_0x33d0              EQU                               0x33d0
-def_bytes_0x33d0              DB                                57 131 15 146 41 144 29 145 69 147 60 15 147 41 144 69 
-def_bytes_0x33e0              EQU                               0x33e0
-def_bytes_0x33e0              DB                                145 57 130 15 145 41 144 69 146 57 131 16 146 41 144 29 
-def_bytes_0x33f0              EQU                               0x33f0
-def_bytes_0x33f0              DB                                145 69 147 57 15 147 41 144 29 145 69 208 160 52 
-def_bytes_0x34a0              EQU                               0x34a0
-def_bytes_0x34a0              DB                                146 57 15 146 43 144 31 145 77 147 74 15 147 43 144 77 
-def_bytes_0x34b0              EQU                               0x34b0
-def_bytes_0x34b0              DB                                145 65 130 16 145 43 144 77 146 65 131 15 146 43 144 31 
-def_bytes_0x34c0              EQU                               0x34c0
-def_bytes_0x34c0              DB                                145 77 147 72 15 147 43 144 77 145 65 130 15 145 43 144 
-def_bytes_0x34d0              EQU                               0x34d0
-def_bytes_0x34d0              DB                                77 146 65 131 16 146 41 144 29 145 77 147 69 15 147 43 
-def_bytes_0x34e0              EQU                               0x34e0
-def_bytes_0x34e0              DB                                144 31 145 77 146 65 15 146 45 144 33 145 74 147 64 15 
-def_bytes_0x34f0              EQU                               0x34f0
-def_bytes_0x34f0              DB                                147 45 144 76 145 64 130 16 145 45 144 76 208 160 53 
-def_bytes_0x35a0              EQU                               0x35a0
-def_bytes_0x35a0              DB                                146 64 131 15 146 45 144 33 145 76 147 72 15 147 45 144 
-def_bytes_0x35b0              EQU                               0x35b0
-def_bytes_0x35b0              DB                                76 145 64 130 15 145 45 144 76 146 64 131 16 146 43 144 
-def_bytes_0x35c0              EQU                               0x35c0
-def_bytes_0x35c0              DB                                31 145 76 147 69 15 147 45 144 33 145 76 146 64 15 146 
-def_bytes_0x35d0              EQU                               0x35d0
-def_bytes_0x35d0              DB                                46 144 34 145 72 147 62 15 147 46 144 72 145 60 130 16 
-def_bytes_0x35e0              EQU                               0x35e0
-def_bytes_0x35e0              DB                                145 46 144 72 146 60 131 15 146 46 144 34 145 72 147 60 
-def_bytes_0x35f0              EQU                               0x35f0
-def_bytes_0x35f0              DB                                15 147 46 144 72 145 60 130 15 145 46 208 160 54 
-def_bytes_0x36a0              EQU                               0x36a0
-def_bytes_0x36a0              DB                                144 72 146 60 131 16 146 46 144 34 145 74 147 69 15 147 
-def_bytes_0x36b0              EQU                               0x36b0
-def_bytes_0x36b0              DB                                46 144 34 145 74 146 62 15 146 41 144 29 145 69 147 62 
-def_bytes_0x36c0              EQU                               0x36c0
-def_bytes_0x36c0              DB                                15 147 41 144 69 145 57 130 16 145 41 144 69 146 57 131 
-def_bytes_0x36d0              EQU                               0x36d0
-def_bytes_0x36d0              DB                                15 146 41 144 29 145 69 147 60 15 147 41 144 69 145 57 
-def_bytes_0x36e0              EQU                               0x36e0
-def_bytes_0x36e0              DB                                130 16 145 41 144 69 146 57 131 15 146 41 144 29 145 69 
-def_bytes_0x36f0              EQU                               0x36f0
-def_bytes_0x36f0              DB                                147 57 15 147 41 144 29 145 69 146 57 15 208 160 55 
-def_bytes_0x37a0              EQU                               0x37a0
-def_bytes_0x37a0              DB                                146 43 144 31 145 81 147 77 16 147 43 144 74 145 62 130 
-def_bytes_0x37b0              EQU                               0x37b0
-def_bytes_0x37b0              DB                                15 145 43 144 74 146 62 131 15 146 43 144 31 145 76 147 
-def_bytes_0x37c0              EQU                               0x37c0
-def_bytes_0x37c0              DB                                65 15 147 43 144 76 145 64 130 16 145 43 144 77 146 65 
-def_bytes_0x37d0              EQU                               0x37d0
-def_bytes_0x37d0              DB                                131 15 146 41 144 29 145 77 147 65 15 147 43 144 31 145 
-def_bytes_0x37e0              EQU                               0x37e0
-def_bytes_0x37e0              DB                                77 146 67 15 146 45 144 33 145 79 147 76 16 147 45 144 
-def_bytes_0x37f0              EQU                               0x37f0
-def_bytes_0x37f0              DB                                74 145 62 130 15 145 45 144 74 146 62 131 15 208 160 56 
-def_bytes_0x38a0              EQU                               0x38a0
-def_bytes_0x38a0              DB                                146 45 144 33 145 76 147 64 15 147 45 144 76 145 64 130 
-def_bytes_0x38b0              EQU                               0x38b0
-def_bytes_0x38b0              DB                                16 145 45 144 77 146 65 131 15 146 43 144 31 145 77 147 
-def_bytes_0x38c0              EQU                               0x38c0
-def_bytes_0x38c0              DB                                65 15 147 45 144 33 145 81 146 76 15 146 46 144 34 145 
-def_bytes_0x38d0              EQU                               0x38d0
-def_bytes_0x38d0              DB                                81 147 72 16 147 46 144 74 145 62 130 15 145 46 144 74 
-def_bytes_0x38e0              EQU                               0x38e0
-def_bytes_0x38e0              DB                                146 62 131 15 146 46 144 34 145 76 147 72 15 147 46 144 
-def_bytes_0x38f0              EQU                               0x38f0
-def_bytes_0x38f0              DB                                76 145 64 130 16 145 46 144 77 146 65 131 15 208 160 57 
-def_bytes_0x39a0              EQU                               0x39a0
-def_bytes_0x39a0              DB                                146 46 144 34 145 77 147 74 15 147 46 144 34 145 84 130 
-def_bytes_0x39b0              EQU                               0x39b0
-def_bytes_0x39b0              DB                                15 145 41 144 29 146 84 147 81 16 147 41 144 84 145 72 
-def_bytes_0x39c0              EQU                               0x39c0
-def_bytes_0x39c0              DB                                130 15 145 41 144 84 146 72 131 15 146 41 144 29 145 84 
-def_bytes_0x39d0              EQU                               0x39d0
-def_bytes_0x39d0              DB                                147 72 15 147 41 144 82 145 79 146 70 16 146 41 144 82 
-def_bytes_0x39e0              EQU                               0x39e0
-def_bytes_0x39e0              DB                                145 70 131 15 145 41 144 29 146 82 147 79 15 147 41 144 
-def_bytes_0x39f0              EQU                               0x39f0
-def_bytes_0x39f0              DB                                29 145 82 146 70 15 146 43 144 31 145 81 208 160 58 
-def_bytes_0x3aa0              EQU                               0x3aa0
-def_bytes_0x3aa0              DB                                147 77 16 147 43 144 74 145 62 130 15 145 43 144 74 146 
-def_bytes_0x3ab0              EQU                               0x3ab0
-def_bytes_0x3ab0              DB                                62 131 15 146 43 144 31 145 76 147 65 15 147 43 144 76 
-def_bytes_0x3ac0              EQU                               0x3ac0
-def_bytes_0x3ac0              DB                                145 64 130 16 145 43 144 77 146 65 131 15 146 41 144 29 
-def_bytes_0x3ad0              EQU                               0x3ad0
-def_bytes_0x3ad0              DB                                145 77 147 65 15 147 43 144 31 145 77 146 67 15 146 45 
-def_bytes_0x3ae0              EQU                               0x3ae0
-def_bytes_0x3ae0              DB                                144 33 145 79 147 76 16 147 45 144 74 145 62 130 15 145 
-def_bytes_0x3af0              EQU                               0x3af0
-def_bytes_0x3af0              DB                                45 144 74 146 62 131 15 146 45 144 33 208 160 59 
-def_bytes_0x3ba0              EQU                               0x3ba0
-def_bytes_0x3ba0              DB                                145 76 147 64 15 147 45 144 76 145 64 130 16 145 45 144 
-def_bytes_0x3bb0              EQU                               0x3bb0
-def_bytes_0x3bb0              DB                                77 146 65 131 15 146 43 144 31 145 77 147 65 15 147 45 
-def_bytes_0x3bc0              EQU                               0x3bc0
-def_bytes_0x3bc0              DB                                144 33 145 81 146 76 15 146 46 144 34 145 81 147 72 16 
-def_bytes_0x3bd0              EQU                               0x3bd0
-def_bytes_0x3bd0              DB                                147 46 144 74 145 62 130 15 145 46 144 74 146 62 131 15 
-def_bytes_0x3be0              EQU                               0x3be0
-def_bytes_0x3be0              DB                                146 46 144 34 145 76 147 72 15 147 46 144 76 145 64 130 
-def_bytes_0x3bf0              EQU                               0x3bf0
-def_bytes_0x3bf0              DB                                16 145 46 144 77 146 65 131 15 146 46 208 160 60 
-def_bytes_0x3ca0              EQU                               0x3ca0
-def_bytes_0x3ca0              DB                                144 34 145 77 147 74 15 147 46 144 34 145 84 130 16 145 
-def_bytes_0x3cb0              EQU                               0x3cb0
-def_bytes_0x3cb0              DB                                41 144 29 146 84 147 81 15 147 41 144 84 145 72 130 15 
-def_bytes_0x3cc0              EQU                               0x3cc0
-def_bytes_0x3cc0              DB                                145 41 144 84 146 72 131 15 146 41 144 29 145 84 147 72 
-def_bytes_0x3cd0              EQU                               0x3cd0
-def_bytes_0x3cd0              DB                                16 147 41 144 86 145 79 146 74 15 146 41 144 86 145 79 
-def_bytes_0x3ce0              EQU                               0x3ce0
-def_bytes_0x3ce0              DB                                147 74 15 147 41 144 29 145 86 146 77 15 146 41 144 29 
-def_bytes_0x3cf0              EQU                               0x3cf0
-def_bytes_0x3cf0              DB                                145 86 147 77 16 147 58 144 46 145 74 208 160 61 
-def_bytes_0x3da0              EQU                               0x3da0
-def_bytes_0x3da0              DB                                146 70 61 146 72 129 61 146 50 144 38 145 65 147 62 122 
-def_bytes_0x3db0              EQU                               0x3db0
-def_bytes_0x3db0              DB                                147 55 144 43 145 64 146 62 147 55 61 147 65 129 130 61 
-def_bytes_0x3dc0              EQU                               0x3dc0
-def_bytes_0x3dc0              DB                                147 53 144 41 145 62 147 53 122 147 58 144 46 145 74 146 
-def_bytes_0x3dd0              EQU                               0x3dd0
-def_bytes_0x3dd0              DB                                70 61 146 72 129 61 146 50 144 38 145 65 147 62 122 147 
-def_bytes_0x3de0              EQU                               0x3de0
-def_bytes_0x3de0              DB                                55 144 43 145 64 146 62 147 55 61 147 65 129 130 61 147 
-def_bytes_0x3df0              EQU                               0x3df0
-def_bytes_0x3df0              DB                                53 144 41 145 62 147 53 122 147 46 144 34 208 160 62 
-def_bytes_0x3ea0              EQU                               0x3ea0
-def_bytes_0x3ea0              DB                                145 62 146 58 122 146 38 144 26 145 65 147 62 122 147 43 
-def_bytes_0x3eb0              EQU                               0x3eb0
-def_bytes_0x3eb0              DB                                144 31 145 62 146 58 122 146 41 144 29 145 62 147 53 122 
-def_bytes_0x3ec0              EQU                               0x3ec0
-def_bytes_0x3ec0              DB                                147 46 144 34 145 62 146 58 122 146 38 144 26 145 65 147 
-def_bytes_0x3ed0              EQU                               0x3ed0
-def_bytes_0x3ed0              DB                                62 122 147 43 144 31 145 62 146 58 122 146 41 144 29 145 
-def_bytes_0x3ee0              EQU                               0x3ee0
-def_bytes_0x3ee0              DB                                62 147 53 127 127 127 127 127 85 128 129 130 131 208 160 16 
+def_bytes_0x10a0                  EQU                               0x10a0
+def_bytes_0x10a0                  DB                                144 74 145 69 61 128 129 31 145 74 144 69 61 128 129 
+def_bytes_0x10af                  EQU                               0x10af
+def_bytes_0x10af                  DB                                61 144 74 145 69 61 145 72 128 116 145 71 3 144 70 3 
+def_bytes_0x10bf                  EQU                               0x10bf
+def_bytes_0x10bf                  DB                                144 69 129 61 144 74 145 69 61 128 129 61 145 74 144 69 
+def_bytes_0x10cf                  EQU                               0x10cf
+def_bytes_0x10cf                  DB                                46 128 129 76 144 74 145 69 61 145 72 128 61 145 69 55 
+def_bytes_0x10df                  EQU                               0x10df
+def_bytes_0x10df                  DB                                145 71 3 144 70 3 144 69 129 61 144 74 145 69 61 128 
+def_bytes_0x10ef                  EQU                               0x10ef
+def_bytes_0x10ef                  DB                                129 61 145 74 144 69 46 128 129 76 144 74 208 160 17 
+def_bytes_0x11a0                  EQU                               0x11a0
+def_bytes_0x11a0                  DB                                145 69 61 145 72 128 61 145 69 55 145 71 3 144 70 3 
+def_bytes_0x11b0                  EQU                               0x11b0
+def_bytes_0x11b0                  DB                                144 69 129 61 144 74 145 69 146 65 61 128 129 130 61 146 
+def_bytes_0x11c0                  EQU                               0x11c0
+def_bytes_0x11c0                  DB                                74 144 69 145 65 46 128 129 130 76 145 74 144 69 146 64 
+def_bytes_0x11d0                  EQU                               0x11d0
+def_bytes_0x11d0                  DB                                61 146 72 128 129 61 146 69 144 64 55 144 71 130 3 145 
+def_bytes_0x11e0                  EQU                               0x11e0
+def_bytes_0x11e0                  DB                                70 3 145 69 128 62 145 74 144 69 146 65 61 128 129 130 
+def_bytes_0x11f0                  EQU                               0x11f0
+def_bytes_0x11f0                  DB                                61 146 74 144 69 145 65 45 128 129 130 77 208 160 18 
+def_bytes_0x12a0                  EQU                               0x12a0
+def_bytes_0x12a0                  DB                                145 74 144 69 146 64 61 146 72 128 129 61 146 69 144 64 
+def_bytes_0x12b0                  EQU                               0x12b0
+def_bytes_0x12b0                  DB                                55 144 71 130 2 145 70 4 145 69 128 61 145 74 144 69 
+def_bytes_0x12c0                  EQU                               0x12c0
+def_bytes_0x12c0                  DB                                146 65 61 128 129 130 61 146 74 144 69 145 65 45 128 129 
+def_bytes_0x12d0                  EQU                               0x12d0
+def_bytes_0x12d0                  DB                                130 77 145 74 144 69 146 64 61 146 72 128 129 61 146 69 
+def_bytes_0x12e0                  EQU                               0x12e0
+def_bytes_0x12e0                  DB                                144 64 61 144 64 130 122 144 65 61 144 64 61 144 26 145 
+def_bytes_0x12f0                  EQU                               0x12f0
+def_bytes_0x12f0                  DB                                74 146 69 147 65 7 144 38 4 128 12 208 160 19 
+def_bytes_0x13a0                  EQU                               0x13a0
+def_bytes_0x13a0                  DB                                144 38 4 128 11 144 26 8 144 38 7 144 26 8 144 72 
+def_bytes_0x13b0                  EQU                               0x13b0
+def_bytes_0x13b0                  DB                                129 130 131 7 145 38 4 129 12 145 26 7 145 38 8 145 
+def_bytes_0x13c0                  EQU                               0x13c0
+def_bytes_0x13c0                  DB                                26 8 129 7 145 38 4 129 4 145 26 144 69 146 65 147 
+def_bytes_0x13d0                  EQU                               0x13d0
+def_bytes_0x13d0                  DB                                64 7 145 38 4 129 12 145 38 4 129 11 145 26 8 145 
+def_bytes_0x13e0                  EQU                               0x13e0
+def_bytes_0x13e0                  DB                                38 7 145 26 8 145 69 144 65 146 62 131 8 147 38 3 
+def_bytes_0x13f0                  EQU                               0x13f0
+def_bytes_0x13f0                  DB                                131 12 147 26 7 147 38 8 147 26 8 131 7 208 160 20 
+def_bytes_0x14a0                  EQU                               0x14a0
+def_bytes_0x14a0                  DB                                147 38 4 131 4 147 26 144 72 145 67 146 64 8 147 38 
+def_bytes_0x14b0                  EQU                               0x14b0
+def_bytes_0x14b0                  DB                                3 131 12 147 38 4 131 11 147 26 8 147 38 7 147 26 
+def_bytes_0x14c0                  EQU                               0x14c0
+def_bytes_0x14c0                  DB                                8 147 65 144 62 129 130 8 145 38 3 129 12 145 26 7 
+def_bytes_0x14d0                  EQU                               0x14d0
+def_bytes_0x14d0                  DB                                145 38 8 145 26 8 129 7 145 38 4 129 4 145 26 144 
+def_bytes_0x14e0                  EQU                               0x14e0
+def_bytes_0x14e0                  DB                                72 146 69 147 64 8 145 38 3 129 12 145 38 4 129 11 
+def_bytes_0x14f0                  EQU                               0x14f0
+def_bytes_0x14f0                  DB                                145 26 8 145 38 7 145 26 8 145 72 208 160 21 
+def_bytes_0x15a0                  EQU                               0x15a0
+def_bytes_0x15a0                  DB                                144 69 146 67 131 8 147 38 3 131 12 147 26 7 147 38 
+def_bytes_0x15b0                  EQU                               0x15b0
+def_bytes_0x15b0                  DB                                8 147 26 8 131 7 147 38 4 131 4 147 26 144 74 145 
+def_bytes_0x15c0                  EQU                               0x15c0
+def_bytes_0x15c0                  DB                                69 146 65 8 147 38 3 131 12 147 38 4 131 11 147 26 
+def_bytes_0x15d0                  EQU                               0x15d0
+def_bytes_0x15d0                  DB                                8 147 38 7 147 26 8 147 72 128 129 130 8 144 38 3 
+def_bytes_0x15e0                  EQU                               0x15e0
+def_bytes_0x15e0                  DB                                128 12 144 26 7 144 38 8 144 26 8 128 7 144 38 4 
+def_bytes_0x15f0                  EQU                               0x15f0
+def_bytes_0x15f0                  DB                                128 4 144 26 145 69 146 65 147 64 8 208 160 22 
+def_bytes_0x16a0                  EQU                               0x16a0
+def_bytes_0x16a0                  DB                                144 38 3 128 12 144 38 4 128 11 144 26 8 144 38 7 
+def_bytes_0x16b0                  EQU                               0x16b0
+def_bytes_0x16b0                  DB                                144 26 8 144 69 145 65 146 62 131 8 147 38 3 131 12 
+def_bytes_0x16c0                  EQU                               0x16c0
+def_bytes_0x16c0                  DB                                147 26 8 147 38 7 147 26 8 131 7 147 38 4 131 4 
+def_bytes_0x16d0                  EQU                               0x16d0
+def_bytes_0x16d0                  DB                                147 26 144 72 145 67 146 64 8 147 38 3 131 12 147 38 
+def_bytes_0x16e0                  EQU                               0x16e0
+def_bytes_0x16e0                  DB                                4 131 11 147 26 8 147 38 7 147 26 8 147 65 144 62 
+def_bytes_0x16f0                  EQU                               0x16f0
+def_bytes_0x16f0                  DB                                129 130 8 145 38 3 129 12 145 26 8 208 160 23 
+def_bytes_0x17a0                  EQU                               0x17a0
+def_bytes_0x17a0                  DB                                145 38 7 145 26 8 129 7 145 38 4 129 4 145 26 144 
+def_bytes_0x17b0                  EQU                               0x17b0
+def_bytes_0x17b0                  DB                                72 146 69 147 64 8 145 38 4 129 11 145 38 4 129 11 
+def_bytes_0x17c0                  EQU                               0x17c0
+def_bytes_0x17c0                  DB                                145 26 8 145 38 7 145 26 8 145 72 144 69 146 67 131 
+def_bytes_0x17d0                  EQU                               0x17d0
+def_bytes_0x17d0                  DB                                8 147 38 4 131 11 147 26 8 147 38 7 147 26 8 131 
+def_bytes_0x17e0                  EQU                               0x17e0
+def_bytes_0x17e0                  DB                                7 147 38 4 131 4 147 69 144 65 145 62 146 74 61 146 
+def_bytes_0x17f0                  EQU                               0x17f0
+def_bytes_0x17f0                  DB                                72 61 146 69 144 65 145 64 131 61 145 62 61 208 160 24 
+def_bytes_0x18a0                  EQU                               0x18a0
+def_bytes_0x18a0                  DB                                145 69 144 64 146 60 147 72 61 144 65 61 144 69 145 64 
+def_bytes_0x18b0                  EQU                               0x18b0
+def_bytes_0x18b0                  DB                                146 60 131 61 145 67 147 72 61 147 26 144 74 145 69 146 
+def_bytes_0x18c0                  EQU                               0x18c0
+def_bytes_0x18c0                  DB                                65 8 147 38 7 131 8 147 38 8 131 7 147 26 8 147 
+def_bytes_0x18d0                  EQU                               0x18d0
+def_bytes_0x18d0                  DB                                38 8 147 26 7 147 72 128 129 130 8 144 38 8 128 7 
+def_bytes_0x18e0                  EQU                               0x18e0
+def_bytes_0x18e0                  DB                                144 26 8 144 38 7 144 26 8 128 8 144 38 7 144 26 
+def_bytes_0x18f0                  EQU                               0x18f0
+def_bytes_0x18f0                  DB                                145 69 146 65 147 64 8 144 38 8 128 7 208 160 25 
+def_bytes_0x19a0                  EQU                               0x19a0
+def_bytes_0x19a0                  DB                                144 38 8 128 7 144 26 8 144 38 8 144 26 7 144 69 
+def_bytes_0x19b0                  EQU                               0x19b0
+def_bytes_0x19b0                  DB                                145 65 146 62 131 8 147 38 8 131 7 147 26 8 147 38 
+def_bytes_0x19c0                  EQU                               0x19c0
+def_bytes_0x19c0                  DB                                7 147 26 8 131 8 147 38 7 147 72 144 69 145 64 146 
+def_bytes_0x19d0                  EQU                               0x19d0
+def_bytes_0x19d0                  DB                                60 61 145 65 61 145 69 144 64 146 60 131 61 144 67 61 
+def_bytes_0x19e0                  EQU                               0x19e0
+def_bytes_0x19e0                  DB                                144 46 145 34 146 62 147 58 122 147 38 144 26 145 65 146 
+def_bytes_0x19f0                  EQU                               0x19f0
+def_bytes_0x19f0                  DB                                62 122 146 43 144 31 145 62 147 58 122 208 160 26 
+def_bytes_0x1aa0                  EQU                               0x1aa0
+def_bytes_0x1aa0                  DB                                147 41 144 29 145 62 146 53 61 129 130 16 146 64 46 146 
+def_bytes_0x1ab0                  EQU                               0x1ab0
+def_bytes_0x1ab0                  DB                                46 144 34 145 62 147 58 122 147 38 144 26 145 65 146 62 
+def_bytes_0x1ac0                  EQU                               0x1ac0
+def_bytes_0x1ac0                  DB                                122 146 43 144 31 145 62 147 58 122 147 41 144 29 145 62 
+def_bytes_0x1ad0                  EQU                               0x1ad0
+def_bytes_0x1ad0                  DB                                146 53 61 129 130 15 146 64 46 146 46 144 34 145 62 147 
+def_bytes_0x1ae0                  EQU                               0x1ae0
+def_bytes_0x1ae0                  DB                                58 15 147 62 144 58 145 53 130 15 145 62 144 58 146 53 
+def_bytes_0x1af0                  EQU                               0x1af0
+def_bytes_0x1af0                  DB                                131 15 146 62 144 58 145 53 147 86 16 208 160 27 
+def_bytes_0x1ba0                  EQU                               0x1ba0
+def_bytes_0x1ba0                  DB                                144 62 145 58 146 53 15 146 62 144 58 145 53 147 88 15 
+def_bytes_0x1bb0                  EQU                               0x1bb0
+def_bytes_0x1bb0                  DB                                144 62 145 58 146 53 15 146 62 144 58 145 53 147 89 16 
+def_bytes_0x1bc0                  EQU                               0x1bc0
+def_bytes_0x1bc0                  DB                                144 38 145 26 130 15 145 57 144 53 146 50 147 93 15 147 
+def_bytes_0x1bd0                  EQU                               0x1bd0
+def_bytes_0x1bd0                  DB                                57 144 53 145 50 130 15 145 57 144 53 146 50 131 16 146 
+def_bytes_0x1be0                  EQU                               0x1be0
+def_bytes_0x1be0                  DB                                57 144 53 145 50 15 145 57 144 53 146 50 15 146 57 144 
+def_bytes_0x1bf0                  EQU                               0x1bf0
+def_bytes_0x1bf0                  DB                                53 145 50 15 145 57 144 53 146 50 16 208 160 28 
+def_bytes_0x1ca0                  EQU                               0x1ca0
+def_bytes_0x1ca0                  DB                                146 43 144 31 145 62 147 58 15 147 55 144 50 145 46 130 
+def_bytes_0x1cb0                  EQU                               0x1cb0
+def_bytes_0x1cb0                  DB                                15 145 55 144 50 146 46 131 15 146 55 144 50 145 46 147 
+def_bytes_0x1cc0                  EQU                               0x1cc0
+def_bytes_0x1cc0                  DB                                86 16 144 55 145 50 146 46 15 146 55 144 50 145 46 147 
+def_bytes_0x1cd0                  EQU                               0x1cd0
+def_bytes_0x1cd0                  DB                                88 15 144 55 145 50 146 46 15 146 55 144 50 145 46 147 
+def_bytes_0x1ce0                  EQU                               0x1ce0
+def_bytes_0x1ce0                  DB                                89 16 144 41 145 29 130 15 145 53 144 50 146 45 147 93 
+def_bytes_0x1cf0                  EQU                               0x1cf0
+def_bytes_0x1cf0                  DB                                15 144 53 145 50 146 45 16 146 53 144 50 208 160 29 
+def_bytes_0x1da0                  EQU                               0x1da0
+def_bytes_0x1da0                  DB                                145 45 147 86 15 144 53 145 50 146 45 15 146 53 144 50 
+def_bytes_0x1db0                  EQU                               0x1db0
+def_bytes_0x1db0                  DB                                145 45 15 145 53 144 50 146 45 16 146 53 144 50 145 45 
+def_bytes_0x1dc0                  EQU                               0x1dc0
+def_bytes_0x1dc0                  DB                                15 145 46 144 34 146 86 131 7 146 77 8 146 62 144 58 
+def_bytes_0x1dd0                  EQU                               0x1dd0
+def_bytes_0x1dd0                  DB                                145 53 147 79 8 147 81 7 147 62 144 58 145 53 146 86 
+def_bytes_0x1de0                  EQU                               0x1de0
+def_bytes_0x1de0                  DB                                8 146 77 8 146 62 144 58 145 53 147 86 7 147 81 8 
+def_bytes_0x1df0                  EQU                               0x1df0
+def_bytes_0x1df0                  DB                                147 62 144 58 145 53 146 86 7 146 77 8 208 160 30 
+def_bytes_0x1ea0                  EQU                               0x1ea0
+def_bytes_0x1ea0                  DB                                146 62 144 58 145 53 147 88 8 147 81 7 147 62 144 58 
+def_bytes_0x1eb0                  EQU                               0x1eb0
+def_bytes_0x1eb0                  DB                                145 53 146 86 8 146 77 8 146 62 144 58 145 53 147 89 
+def_bytes_0x1ec0                  EQU                               0x1ec0
+def_bytes_0x1ec0                  DB                                7 147 81 8 147 38 144 26 145 89 130 7 145 77 8 145 
+def_bytes_0x1ed0                  EQU                               0x1ed0
+def_bytes_0x1ed0                  DB                                57 144 53 146 50 147 93 8 147 81 7 147 57 144 53 145 
+def_bytes_0x1ee0                  EQU                               0x1ee0
+def_bytes_0x1ee0                  DB                                50 146 89 8 146 77 8 146 57 144 53 145 50 147 79 7 
+def_bytes_0x1ef0                  EQU                               0x1ef0
+def_bytes_0x1ef0                  DB                                147 81 8 147 57 144 53 145 50 146 89 7 208 160 31 
+def_bytes_0x1fa0                  EQU                               0x1fa0
+def_bytes_0x1fa0                  DB                                146 77 8 146 57 144 53 145 50 147 79 8 147 81 7 147 
+def_bytes_0x1fb0                  EQU                               0x1fb0
+def_bytes_0x1fb0                  DB                                57 144 53 145 50 146 89 8 146 77 8 146 57 144 53 145 
+def_bytes_0x1fc0                  EQU                               0x1fc0
+def_bytes_0x1fc0                  DB                                50 147 79 7 147 81 8 147 43 144 31 145 86 130 7 145 
+def_bytes_0x1fd0                  EQU                               0x1fd0
+def_bytes_0x1fd0                  DB                                74 8 145 55 144 50 146 46 147 79 8 147 81 7 147 55 
+def_bytes_0x1fe0                  EQU                               0x1fe0
+def_bytes_0x1fe0                  DB                                144 50 145 46 146 86 8 146 74 8 146 55 144 50 145 46 
+def_bytes_0x1ff0                  EQU                               0x1ff0
+def_bytes_0x1ff0                  DB                                147 86 7 147 81 8 147 55 144 50 145 46 208 160 32 
+def_bytes_0x20a0                  EQU                               0x20a0
+def_bytes_0x20a0                  DB                                146 86 7 146 74 8 146 55 144 50 145 46 147 88 8 147 
+def_bytes_0x20b0                  EQU                               0x20b0
+def_bytes_0x20b0                  DB                                81 7 147 55 144 50 145 46 146 86 8 146 74 8 146 55 
+def_bytes_0x20c0                  EQU                               0x20c0
+def_bytes_0x20c0                  DB                                144 50 145 46 147 89 7 147 81 8 147 41 144 29 145 88 
+def_bytes_0x20d0                  EQU                               0x20d0
+def_bytes_0x20d0                  DB                                130 8 145 81 7 145 53 144 50 146 45 147 93 8 147 77 
+def_bytes_0x20e0                  EQU                               0x20e0
+def_bytes_0x20e0                  DB                                7 147 53 144 50 145 45 146 88 8 146 81 8 146 53 144 
+def_bytes_0x20f0                  EQU                               0x20f0
+def_bytes_0x20f0                  DB                                50 145 45 147 86 7 147 77 8 147 53 208 160 33 
+def_bytes_0x21a0                  EQU                               0x21a0
+def_bytes_0x21a0                  DB                                144 50 145 45 146 88 8 146 81 7 146 53 144 50 145 45 
+def_bytes_0x21b0                  EQU                               0x21b0
+def_bytes_0x21b0                  DB                                147 79 8 147 77 7 147 53 144 50 145 45 146 88 8 146 
+def_bytes_0x21c0                  EQU                               0x21c0
+def_bytes_0x21c0                  DB                                81 8 146 53 144 50 145 45 147 79 7 147 77 8 147 26 
+def_bytes_0x21d0                  EQU                               0x21d0
+def_bytes_0x21d0                  DB                                144 74 145 69 146 65 8 147 38 3 131 12 147 38 4 131 
+def_bytes_0x21e0                  EQU                               0x21e0
+def_bytes_0x21e0                  DB                                11 147 26 8 147 38 7 147 26 8 147 72 128 129 130 8 
+def_bytes_0x21f0                  EQU                               0x21f0
+def_bytes_0x21f0                  DB                                144 38 3 128 12 144 26 7 144 38 8 208 160 34 
+def_bytes_0x22a0                  EQU                               0x22a0
+def_bytes_0x22a0                  DB                                144 26 8 128 7 144 38 4 128 4 144 26 145 69 146 65 
+def_bytes_0x22b0                  EQU                               0x22b0
+def_bytes_0x22b0                  DB                                147 64 8 144 38 3 128 12 144 38 4 128 11 144 26 8 
+def_bytes_0x22c0                  EQU                               0x22c0
+def_bytes_0x22c0                  DB                                144 38 7 144 26 8 144 69 145 65 146 62 131 8 147 38 
+def_bytes_0x22d0                  EQU                               0x22d0
+def_bytes_0x22d0                  DB                                3 131 12 147 26 7 147 38 8 147 26 8 131 7 147 38 
+def_bytes_0x22e0                  EQU                               0x22e0
+def_bytes_0x22e0                  DB                                4 131 4 147 29 144 72 145 67 146 64 8 147 41 3 131 
+def_bytes_0x22f0                  EQU                               0x22f0
+def_bytes_0x22f0                  DB                                12 147 41 4 131 11 147 29 8 147 41 7 208 160 35 
+def_bytes_0x23a0                  EQU                               0x23a0
+def_bytes_0x23a0                  DB                                147 29 8 147 65 144 62 129 130 8 145 41 3 129 12 145 
+def_bytes_0x23b0                  EQU                               0x23b0
+def_bytes_0x23b0                  DB                                29 8 145 41 7 145 29 8 129 7 145 41 4 129 4 145 
+def_bytes_0x23c0                  EQU                               0x23c0
+def_bytes_0x23c0                  DB                                33 144 72 146 69 147 64 8 145 45 3 129 12 145 45 4 
+def_bytes_0x23d0                  EQU                               0x23d0
+def_bytes_0x23d0                  DB                                129 11 145 33 8 145 45 7 145 33 8 145 72 144 69 146 
+def_bytes_0x23e0                  EQU                               0x23e0
+def_bytes_0x23e0                  DB                                67 131 8 147 45 3 131 12 147 33 8 147 45 7 147 33 
+def_bytes_0x23f0                  EQU                               0x23f0
+def_bytes_0x23f0                  DB                                8 131 7 147 45 4 131 4 147 26 144 74 208 160 36 
+def_bytes_0x24a0                  EQU                               0x24a0
+def_bytes_0x24a0                  DB                                145 69 146 65 8 147 38 3 131 12 147 38 4 131 11 147 
+def_bytes_0x24b0                  EQU                               0x24b0
+def_bytes_0x24b0                  DB                                26 8 147 38 7 147 26 8 147 72 128 129 130 8 144 38 
+def_bytes_0x24c0                  EQU                               0x24c0
+def_bytes_0x24c0                  DB                                4 128 11 144 26 8 144 38 7 144 26 8 128 7 144 38 
+def_bytes_0x24d0                  EQU                               0x24d0
+def_bytes_0x24d0                  DB                                4 128 4 144 26 145 69 146 65 147 64 8 144 38 4 128 
+def_bytes_0x24e0                  EQU                               0x24e0
+def_bytes_0x24e0                  DB                                11 144 38 4 128 11 144 26 8 144 38 7 144 26 8 144 
+def_bytes_0x24f0                  EQU                               0x24f0
+def_bytes_0x24f0                  DB                                69 145 65 146 62 131 8 147 38 4 131 11 208 160 37 
+def_bytes_0x25a0                  EQU                               0x25a0
+def_bytes_0x25a0                  DB                                147 26 8 147 38 7 147 26 8 131 7 147 38 4 131 4 
+def_bytes_0x25b0                  EQU                               0x25b0
+def_bytes_0x25b0                  DB                                147 29 144 72 145 67 146 64 8 147 41 4 131 11 147 41 
+def_bytes_0x25c0                  EQU                               0x25c0
+def_bytes_0x25c0                  DB                                4 131 11 147 29 8 147 41 8 147 29 7 147 65 144 62 
+def_bytes_0x25d0                  EQU                               0x25d0
+def_bytes_0x25d0                  DB                                129 130 8 145 41 4 129 11 145 29 8 145 41 7 145 29 
+def_bytes_0x25e0                  EQU                               0x25e0
+def_bytes_0x25e0                  DB                                8 129 8 145 41 3 129 4 145 33 144 72 146 69 147 64 
+def_bytes_0x25f0                  EQU                               0x25f0
+def_bytes_0x25f0                  DB                                8 145 45 4 129 11 145 45 4 129 11 208 160 38 
+def_bytes_0x26a0                  EQU                               0x26a0
+def_bytes_0x26a0                  DB                                145 33 8 145 45 8 145 33 7 145 72 144 69 146 67 131 
+def_bytes_0x26b0                  EQU                               0x26b0
+def_bytes_0x26b0                  DB                                8 147 45 4 131 11 147 33 8 147 45 7 147 33 8 131 
+def_bytes_0x26c0                  EQU                               0x26c0
+def_bytes_0x26c0                  DB                                8 147 45 3 131 4 147 58 144 46 145 86 130 8 145 77 
+def_bytes_0x26d0                  EQU                               0x26d0
+def_bytes_0x26d0                  DB                                7 145 79 8 145 81 8 145 86 7 145 77 8 145 86 146 
+def_bytes_0x26e0                  EQU                               0x26e0
+def_bytes_0x26e0                  DB                                79 8 146 81 129 7 146 62 144 58 145 53 147 86 8 147 
+def_bytes_0x26f0                  EQU                               0x26f0
+def_bytes_0x26f0                  DB                                77 7 147 88 8 147 81 8 147 86 7 208 160 39 
+def_bytes_0x27a0                  EQU                               0x27a0
+def_bytes_0x27a0                  DB                                147 77 8 147 89 8 147 81 7 147 50 144 38 145 89 130 
+def_bytes_0x27b0                  EQU                               0x27b0
+def_bytes_0x27b0                  DB                                8 145 77 7 145 93 146 81 8 146 81 129 8 146 89 7 
+def_bytes_0x27c0                  EQU                               0x27c0
+def_bytes_0x27c0                  DB                                146 77 8 146 79 8 146 81 7 146 57 144 53 145 50 147 
+def_bytes_0x27d0                  EQU                               0x27d0
+def_bytes_0x27d0                  DB                                89 8 147 77 7 147 79 8 147 81 8 147 89 7 147 77 
+def_bytes_0x27e0                  EQU                               0x27e0
+def_bytes_0x27e0                  DB                                8 147 79 8 147 81 7 147 55 144 43 145 86 130 8 145 
+def_bytes_0x27f0                  EQU                               0x27f0
+def_bytes_0x27f0                  DB                                74 8 145 79 7 145 81 8 145 86 7 208 160 40 
+def_bytes_0x28a0                  EQU                               0x28a0
+def_bytes_0x28a0                  DB                                145 74 8 145 86 146 79 8 146 81 129 7 146 55 144 50 
+def_bytes_0x28b0                  EQU                               0x28b0
+def_bytes_0x28b0                  DB                                145 46 147 86 8 147 74 8 147 88 7 147 81 8 147 86 
+def_bytes_0x28c0                  EQU                               0x28c0
+def_bytes_0x28c0                  DB                                7 147 74 8 147 89 8 147 81 7 147 53 144 41 145 88 
+def_bytes_0x28d0                  EQU                               0x28d0
+def_bytes_0x28d0                  DB                                130 8 145 81 8 145 93 146 81 7 146 77 129 8 146 88 
+def_bytes_0x28e0                  EQU                               0x28e0
+def_bytes_0x28e0                  DB                                7 146 81 8 146 86 145 79 8 145 77 130 7 145 53 144 
+def_bytes_0x28f0                  EQU                               0x28f0
+def_bytes_0x28f0                  DB                                50 146 45 147 88 8 147 81 8 147 88 7 208 160 41 
+def_bytes_0x29a0                  EQU                               0x29a0
+def_bytes_0x29a0                  DB                                147 77 8 147 88 7 147 81 8 147 86 8 147 77 7 147 
+def_bytes_0x29b0                  EQU                               0x29b0
+def_bytes_0x29b0                  DB                                58 144 46 145 86 130 8 145 77 8 145 79 7 145 81 8 
+def_bytes_0x29c0                  EQU                               0x29c0
+def_bytes_0x29c0                  DB                                145 86 7 145 77 8 145 86 146 79 8 146 81 129 7 146 
+def_bytes_0x29d0                  EQU                               0x29d0
+def_bytes_0x29d0                  DB                                62 144 58 145 53 147 86 8 147 77 8 147 88 7 147 81 
+def_bytes_0x29e0                  EQU                               0x29e0
+def_bytes_0x29e0                  DB                                8 147 86 7 147 77 8 147 89 8 147 81 7 147 50 144 
+def_bytes_0x29f0                  EQU                               0x29f0
+def_bytes_0x29f0                  DB                                38 145 89 130 8 145 77 8 145 93 146 81 7 208 160 42 
+def_bytes_0x2aa0                  EQU                               0x2aa0
+def_bytes_0x2aa0                  DB                                146 81 129 8 146 89 7 146 77 8 146 79 8 146 81 7 
+def_bytes_0x2ab0                  EQU                               0x2ab0
+def_bytes_0x2ab0                  DB                                146 57 144 53 145 50 147 89 8 147 77 8 147 79 7 147 
+def_bytes_0x2ac0                  EQU                               0x2ac0
+def_bytes_0x2ac0                  DB                                81 8 147 89 8 147 77 7 147 79 8 147 81 7 147 55 
+def_bytes_0x2ad0                  EQU                               0x2ad0
+def_bytes_0x2ad0                  DB                                144 43 145 86 130 8 145 74 8 145 79 7 145 81 8 145 
+def_bytes_0x2ae0                  EQU                               0x2ae0
+def_bytes_0x2ae0                  DB                                86 8 145 74 7 145 86 146 79 8 146 81 129 7 146 55 
+def_bytes_0x2af0                  EQU                               0x2af0
+def_bytes_0x2af0                  DB                                144 50 145 46 147 86 8 147 74 8 147 88 7 208 160 43 
+def_bytes_0x2ba0                  EQU                               0x2ba0
+def_bytes_0x2ba0                  DB                                147 81 8 147 86 8 147 74 7 147 89 8 147 81 7 147 
+def_bytes_0x2bb0                  EQU                               0x2bb0
+def_bytes_0x2bb0                  DB                                53 144 41 145 88 130 8 145 81 8 145 93 146 81 7 146 
+def_bytes_0x2bc0                  EQU                               0x2bc0
+def_bytes_0x2bc0                  DB                                77 129 8 146 88 8 146 81 7 146 86 145 79 8 145 77 
+def_bytes_0x2bd0                  EQU                               0x2bd0
+def_bytes_0x2bd0                  DB                                130 7 145 53 144 50 146 45 147 88 8 147 81 8 147 88 
+def_bytes_0x2be0                  EQU                               0x2be0
+def_bytes_0x2be0                  DB                                7 147 77 8 147 88 8 147 81 7 147 86 8 147 77 7 
+def_bytes_0x2bf0                  EQU                               0x2bf0
+def_bytes_0x2bf0                  DB                                147 50 144 43 145 74 130 61 145 72 61 208 160 44 
+def_bytes_0x2ca0                  EQU                               0x2ca0
+def_bytes_0x2ca0                  DB                                144 53 146 45 131 123 146 55 144 46 145 74 61 145 72 61 
+def_bytes_0x2cb0                  EQU                               0x2cb0
+def_bytes_0x2cb0                  DB                                145 41 144 65 146 60 147 57 61 128 130 131 15 147 64 46 
+def_bytes_0x2cc0                  EQU                               0x2cc0
+def_bytes_0x2cc0                  DB                                147 50 144 43 145 74 30 128 131 15 144 60 16 144 72 129 
+def_bytes_0x2cd0                  EQU                               0x2cd0
+def_bytes_0x2cd0                  DB                                30 145 57 31 145 50 146 45 30 129 130 15 146 60 16 130 
+def_bytes_0x2ce0                  EQU                               0x2ce0
+def_bytes_0x2ce0                  DB                                30 146 57 31 146 50 144 46 145 74 30 128 130 15 144 60 
+def_bytes_0x2cf0                  EQU                               0x2cf0
+def_bytes_0x2cf0                  DB                                16 144 72 129 30 145 57 31 145 53 144 41 208 160 45 
+def_bytes_0x2da0                  EQU                               0x2da0
+def_bytes_0x2da0                  DB                                146 65 147 60 30 128 129 31 130 131 15 147 64 15 147 53 
+def_bytes_0x2db0                  EQU                               0x2db0
+def_bytes_0x2db0                  DB                                15 147 50 16 147 50 144 43 145 62 15 145 62 15 145 62 
+def_bytes_0x2dc0                  EQU                               0x2dc0
+def_bytes_0x2dc0                  DB                                128 131 15 145 60 144 55 146 62 16 146 62 128 129 15 146 
+def_bytes_0x2dd0                  EQU                               0x2dd0
+def_bytes_0x2dd0                  DB                                62 15 146 57 144 62 16 144 62 15 144 50 145 45 146 65 
+def_bytes_0x2de0                  EQU                               0x2de0
+def_bytes_0x2de0                  DB                                15 146 65 15 146 65 128 129 16 146 60 144 57 145 65 15 
+def_bytes_0x2df0                  EQU                               0x2df0
+def_bytes_0x2df0                  DB                                145 65 128 130 15 145 65 15 145 57 144 65 16 208 160 46 
+def_bytes_0x2ea0                  EQU                               0x2ea0
+def_bytes_0x2ea0                  DB                                144 65 15 144 50 145 46 146 67 15 146 67 15 146 67 128 
+def_bytes_0x2eb0                  EQU                               0x2eb0
+def_bytes_0x2eb0                  DB                                129 16 146 60 144 58 145 67 15 145 67 128 130 15 145 67 
+def_bytes_0x2ec0                  EQU                               0x2ec0
+def_bytes_0x2ec0                  DB                                15 145 57 144 72 16 144 72 15 144 53 145 41 146 69 15 
+def_bytes_0x2ed0                  EQU                               0x2ed0
+def_bytes_0x2ed0                  DB                                146 69 15 146 69 128 129 16 146 53 144 69 15 144 69 130 
+def_bytes_0x2ee0                  EQU                               0x2ee0
+def_bytes_0x2ee0                  DB                                15 144 57 145 69 15 145 57 144 69 16 144 57 145 69 15 
+def_bytes_0x2ef0                  EQU                               0x2ef0
+def_bytes_0x2ef0                  DB                                145 43 144 62 146 50 15 146 43 144 62 129 15 208 160 47 
+def_bytes_0x2fa0                  EQU                               0x2fa0
+def_bytes_0x2fa0                  DB                                144 43 145 62 130 16 145 43 144 72 146 60 15 146 43 144 
+def_bytes_0x2fb0                  EQU                               0x2fb0
+def_bytes_0x2fb0                  DB                                72 129 15 144 43 145 72 130 15 145 43 144 69 146 57 16 
+def_bytes_0x2fc0                  EQU                               0x2fc0
+def_bytes_0x2fc0                  DB                                146 43 144 69 129 15 144 45 145 62 146 50 15 146 45 144 
+def_bytes_0x2fd0                  EQU                               0x2fd0
+def_bytes_0x2fd0                  DB                                62 129 15 144 45 145 62 130 16 145 45 144 72 146 60 15 
+def_bytes_0x2fe0                  EQU                               0x2fe0
+def_bytes_0x2fe0                  DB                                146 45 144 72 129 15 144 45 145 72 130 15 145 45 144 69 
+def_bytes_0x2ff0                  EQU                               0x2ff0
+def_bytes_0x2ff0                  DB                                146 65 147 57 16 147 45 144 69 129 130 15 208 160 48 
+def_bytes_0x30a0                  EQU                               0x30a0
+def_bytes_0x30a0                  DB                                144 46 145 62 146 50 131 15 146 46 144 62 129 15 144 46 
+def_bytes_0x30b0                  EQU                               0x30b0
+def_bytes_0x30b0                  DB                                145 62 130 16 145 46 144 72 146 60 15 146 46 144 72 129 
+def_bytes_0x30c0                  EQU                               0x30c0
+def_bytes_0x30c0                  DB                                15 144 46 145 72 130 15 145 46 144 69 146 57 16 146 46 
+def_bytes_0x30d0                  EQU                               0x30d0
+def_bytes_0x30d0                  DB                                144 69 129 15 144 53 145 41 146 69 147 57 15 147 41 144 
+def_bytes_0x30e0                  EQU                               0x30e0
+def_bytes_0x30e0                  DB                                69 129 130 15 144 41 145 69 131 16 145 41 144 69 15 144 
+def_bytes_0x30f0                  EQU                               0x30f0
+def_bytes_0x30f0                  DB                                41 145 69 15 145 40 144 69 15 144 40 208 160 49 
+def_bytes_0x31a0                  EQU                               0x31a0
+def_bytes_0x31a0                  DB                                145 69 16 145 40 144 69 15 144 43 145 31 146 77 147 74 
+def_bytes_0x31b0                  EQU                               0x31b0
+def_bytes_0x31b0                  DB                                15 147 43 144 77 145 65 130 16 145 43 144 77 146 65 131 
+def_bytes_0x31c0                  EQU                               0x31c0
+def_bytes_0x31c0                  DB                                15 146 43 144 31 145 77 147 72 15 147 43 144 77 145 65 
+def_bytes_0x31d0                  EQU                               0x31d0
+def_bytes_0x31d0                  DB                                130 15 145 43 144 77 146 65 131 16 146 41 144 29 145 77 
+def_bytes_0x31e0                  EQU                               0x31e0
+def_bytes_0x31e0                  DB                                147 69 15 147 43 144 31 145 77 146 65 15 146 45 144 33 
+def_bytes_0x31f0                  EQU                               0x31f0
+def_bytes_0x31f0                  DB                                145 74 147 64 15 147 45 144 76 145 64 130 16 208 160 50 
+def_bytes_0x32a0                  EQU                               0x32a0
+def_bytes_0x32a0                  DB                                145 45 144 76 146 64 131 15 146 45 144 33 145 76 147 72 
+def_bytes_0x32b0                  EQU                               0x32b0
+def_bytes_0x32b0                  DB                                15 147 45 144 76 145 64 130 15 145 45 144 76 146 64 131 
+def_bytes_0x32c0                  EQU                               0x32c0
+def_bytes_0x32c0                  DB                                16 146 43 144 31 145 76 147 69 15 147 45 144 33 145 76 
+def_bytes_0x32d0                  EQU                               0x32d0
+def_bytes_0x32d0                  DB                                146 64 15 146 46 144 34 145 72 147 62 15 147 46 144 72 
+def_bytes_0x32e0                  EQU                               0x32e0
+def_bytes_0x32e0                  DB                                145 60 130 16 145 46 144 72 146 60 131 15 146 46 144 34 
+def_bytes_0x32f0                  EQU                               0x32f0
+def_bytes_0x32f0                  DB                                145 72 147 60 15 147 46 144 72 145 60 130 15 208 160 51 
+def_bytes_0x33a0                  EQU                               0x33a0
+def_bytes_0x33a0                  DB                                145 46 144 72 146 60 131 16 146 46 144 34 145 74 147 69 
+def_bytes_0x33b0                  EQU                               0x33b0
+def_bytes_0x33b0                  DB                                15 147 46 144 34 145 74 146 62 15 146 41 144 29 145 69 
+def_bytes_0x33c0                  EQU                               0x33c0
+def_bytes_0x33c0                  DB                                147 62 15 147 41 144 69 145 57 130 16 145 41 144 69 146 
+def_bytes_0x33d0                  EQU                               0x33d0
+def_bytes_0x33d0                  DB                                57 131 15 146 41 144 29 145 69 147 60 15 147 41 144 69 
+def_bytes_0x33e0                  EQU                               0x33e0
+def_bytes_0x33e0                  DB                                145 57 130 15 145 41 144 69 146 57 131 16 146 41 144 29 
+def_bytes_0x33f0                  EQU                               0x33f0
+def_bytes_0x33f0                  DB                                145 69 147 57 15 147 41 144 29 145 69 208 160 52 
+def_bytes_0x34a0                  EQU                               0x34a0
+def_bytes_0x34a0                  DB                                146 57 15 146 43 144 31 145 77 147 74 15 147 43 144 77 
+def_bytes_0x34b0                  EQU                               0x34b0
+def_bytes_0x34b0                  DB                                145 65 130 16 145 43 144 77 146 65 131 15 146 43 144 31 
+def_bytes_0x34c0                  EQU                               0x34c0
+def_bytes_0x34c0                  DB                                145 77 147 72 15 147 43 144 77 145 65 130 15 145 43 144 
+def_bytes_0x34d0                  EQU                               0x34d0
+def_bytes_0x34d0                  DB                                77 146 65 131 16 146 41 144 29 145 77 147 69 15 147 43 
+def_bytes_0x34e0                  EQU                               0x34e0
+def_bytes_0x34e0                  DB                                144 31 145 77 146 65 15 146 45 144 33 145 74 147 64 15 
+def_bytes_0x34f0                  EQU                               0x34f0
+def_bytes_0x34f0                  DB                                147 45 144 76 145 64 130 16 145 45 144 76 208 160 53 
+def_bytes_0x35a0                  EQU                               0x35a0
+def_bytes_0x35a0                  DB                                146 64 131 15 146 45 144 33 145 76 147 72 15 147 45 144 
+def_bytes_0x35b0                  EQU                               0x35b0
+def_bytes_0x35b0                  DB                                76 145 64 130 15 145 45 144 76 146 64 131 16 146 43 144 
+def_bytes_0x35c0                  EQU                               0x35c0
+def_bytes_0x35c0                  DB                                31 145 76 147 69 15 147 45 144 33 145 76 146 64 15 146 
+def_bytes_0x35d0                  EQU                               0x35d0
+def_bytes_0x35d0                  DB                                46 144 34 145 72 147 62 15 147 46 144 72 145 60 130 16 
+def_bytes_0x35e0                  EQU                               0x35e0
+def_bytes_0x35e0                  DB                                145 46 144 72 146 60 131 15 146 46 144 34 145 72 147 60 
+def_bytes_0x35f0                  EQU                               0x35f0
+def_bytes_0x35f0                  DB                                15 147 46 144 72 145 60 130 15 145 46 208 160 54 
+def_bytes_0x36a0                  EQU                               0x36a0
+def_bytes_0x36a0                  DB                                144 72 146 60 131 16 146 46 144 34 145 74 147 69 15 147 
+def_bytes_0x36b0                  EQU                               0x36b0
+def_bytes_0x36b0                  DB                                46 144 34 145 74 146 62 15 146 41 144 29 145 69 147 62 
+def_bytes_0x36c0                  EQU                               0x36c0
+def_bytes_0x36c0                  DB                                15 147 41 144 69 145 57 130 16 145 41 144 69 146 57 131 
+def_bytes_0x36d0                  EQU                               0x36d0
+def_bytes_0x36d0                  DB                                15 146 41 144 29 145 69 147 60 15 147 41 144 69 145 57 
+def_bytes_0x36e0                  EQU                               0x36e0
+def_bytes_0x36e0                  DB                                130 16 145 41 144 69 146 57 131 15 146 41 144 29 145 69 
+def_bytes_0x36f0                  EQU                               0x36f0
+def_bytes_0x36f0                  DB                                147 57 15 147 41 144 29 145 69 146 57 15 208 160 55 
+def_bytes_0x37a0                  EQU                               0x37a0
+def_bytes_0x37a0                  DB                                146 43 144 31 145 81 147 77 16 147 43 144 74 145 62 130 
+def_bytes_0x37b0                  EQU                               0x37b0
+def_bytes_0x37b0                  DB                                15 145 43 144 74 146 62 131 15 146 43 144 31 145 76 147 
+def_bytes_0x37c0                  EQU                               0x37c0
+def_bytes_0x37c0                  DB                                65 15 147 43 144 76 145 64 130 16 145 43 144 77 146 65 
+def_bytes_0x37d0                  EQU                               0x37d0
+def_bytes_0x37d0                  DB                                131 15 146 41 144 29 145 77 147 65 15 147 43 144 31 145 
+def_bytes_0x37e0                  EQU                               0x37e0
+def_bytes_0x37e0                  DB                                77 146 67 15 146 45 144 33 145 79 147 76 16 147 45 144 
+def_bytes_0x37f0                  EQU                               0x37f0
+def_bytes_0x37f0                  DB                                74 145 62 130 15 145 45 144 74 146 62 131 15 208 160 56 
+def_bytes_0x38a0                  EQU                               0x38a0
+def_bytes_0x38a0                  DB                                146 45 144 33 145 76 147 64 15 147 45 144 76 145 64 130 
+def_bytes_0x38b0                  EQU                               0x38b0
+def_bytes_0x38b0                  DB                                16 145 45 144 77 146 65 131 15 146 43 144 31 145 77 147 
+def_bytes_0x38c0                  EQU                               0x38c0
+def_bytes_0x38c0                  DB                                65 15 147 45 144 33 145 81 146 76 15 146 46 144 34 145 
+def_bytes_0x38d0                  EQU                               0x38d0
+def_bytes_0x38d0                  DB                                81 147 72 16 147 46 144 74 145 62 130 15 145 46 144 74 
+def_bytes_0x38e0                  EQU                               0x38e0
+def_bytes_0x38e0                  DB                                146 62 131 15 146 46 144 34 145 76 147 72 15 147 46 144 
+def_bytes_0x38f0                  EQU                               0x38f0
+def_bytes_0x38f0                  DB                                76 145 64 130 16 145 46 144 77 146 65 131 15 208 160 57 
+def_bytes_0x39a0                  EQU                               0x39a0
+def_bytes_0x39a0                  DB                                146 46 144 34 145 77 147 74 15 147 46 144 34 145 84 130 
+def_bytes_0x39b0                  EQU                               0x39b0
+def_bytes_0x39b0                  DB                                15 145 41 144 29 146 84 147 81 16 147 41 144 84 145 72 
+def_bytes_0x39c0                  EQU                               0x39c0
+def_bytes_0x39c0                  DB                                130 15 145 41 144 84 146 72 131 15 146 41 144 29 145 84 
+def_bytes_0x39d0                  EQU                               0x39d0
+def_bytes_0x39d0                  DB                                147 72 15 147 41 144 82 145 79 146 70 16 146 41 144 82 
+def_bytes_0x39e0                  EQU                               0x39e0
+def_bytes_0x39e0                  DB                                145 70 131 15 145 41 144 29 146 82 147 79 15 147 41 144 
+def_bytes_0x39f0                  EQU                               0x39f0
+def_bytes_0x39f0                  DB                                29 145 82 146 70 15 146 43 144 31 145 81 208 160 58 
+def_bytes_0x3aa0                  EQU                               0x3aa0
+def_bytes_0x3aa0                  DB                                147 77 16 147 43 144 74 145 62 130 15 145 43 144 74 146 
+def_bytes_0x3ab0                  EQU                               0x3ab0
+def_bytes_0x3ab0                  DB                                62 131 15 146 43 144 31 145 76 147 65 15 147 43 144 76 
+def_bytes_0x3ac0                  EQU                               0x3ac0
+def_bytes_0x3ac0                  DB                                145 64 130 16 145 43 144 77 146 65 131 15 146 41 144 29 
+def_bytes_0x3ad0                  EQU                               0x3ad0
+def_bytes_0x3ad0                  DB                                145 77 147 65 15 147 43 144 31 145 77 146 67 15 146 45 
+def_bytes_0x3ae0                  EQU                               0x3ae0
+def_bytes_0x3ae0                  DB                                144 33 145 79 147 76 16 147 45 144 74 145 62 130 15 145 
+def_bytes_0x3af0                  EQU                               0x3af0
+def_bytes_0x3af0                  DB                                45 144 74 146 62 131 15 146 45 144 33 208 160 59 
+def_bytes_0x3ba0                  EQU                               0x3ba0
+def_bytes_0x3ba0                  DB                                145 76 147 64 15 147 45 144 76 145 64 130 16 145 45 144 
+def_bytes_0x3bb0                  EQU                               0x3bb0
+def_bytes_0x3bb0                  DB                                77 146 65 131 15 146 43 144 31 145 77 147 65 15 147 45 
+def_bytes_0x3bc0                  EQU                               0x3bc0
+def_bytes_0x3bc0                  DB                                144 33 145 81 146 76 15 146 46 144 34 145 81 147 72 16 
+def_bytes_0x3bd0                  EQU                               0x3bd0
+def_bytes_0x3bd0                  DB                                147 46 144 74 145 62 130 15 145 46 144 74 146 62 131 15 
+def_bytes_0x3be0                  EQU                               0x3be0
+def_bytes_0x3be0                  DB                                146 46 144 34 145 76 147 72 15 147 46 144 76 145 64 130 
+def_bytes_0x3bf0                  EQU                               0x3bf0
+def_bytes_0x3bf0                  DB                                16 145 46 144 77 146 65 131 15 146 46 208 160 60 
+def_bytes_0x3ca0                  EQU                               0x3ca0
+def_bytes_0x3ca0                  DB                                144 34 145 77 147 74 15 147 46 144 34 145 84 130 16 145 
+def_bytes_0x3cb0                  EQU                               0x3cb0
+def_bytes_0x3cb0                  DB                                41 144 29 146 84 147 81 15 147 41 144 84 145 72 130 15 
+def_bytes_0x3cc0                  EQU                               0x3cc0
+def_bytes_0x3cc0                  DB                                145 41 144 84 146 72 131 15 146 41 144 29 145 84 147 72 
+def_bytes_0x3cd0                  EQU                               0x3cd0
+def_bytes_0x3cd0                  DB                                16 147 41 144 86 145 79 146 74 15 146 41 144 86 145 79 
+def_bytes_0x3ce0                  EQU                               0x3ce0
+def_bytes_0x3ce0                  DB                                147 74 15 147 41 144 29 145 86 146 77 15 146 41 144 29 
+def_bytes_0x3cf0                  EQU                               0x3cf0
+def_bytes_0x3cf0                  DB                                145 86 147 77 16 147 58 144 46 145 74 208 160 61 
+def_bytes_0x3da0                  EQU                               0x3da0
+def_bytes_0x3da0                  DB                                146 70 61 146 72 129 61 146 50 144 38 145 65 147 62 122 
+def_bytes_0x3db0                  EQU                               0x3db0
+def_bytes_0x3db0                  DB                                147 55 144 43 145 64 146 62 147 55 61 147 65 129 130 61 
+def_bytes_0x3dc0                  EQU                               0x3dc0
+def_bytes_0x3dc0                  DB                                147 53 144 41 145 62 147 53 122 147 58 144 46 145 74 146 
+def_bytes_0x3dd0                  EQU                               0x3dd0
+def_bytes_0x3dd0                  DB                                70 61 146 72 129 61 146 50 144 38 145 65 147 62 122 147 
+def_bytes_0x3de0                  EQU                               0x3de0
+def_bytes_0x3de0                  DB                                55 144 43 145 64 146 62 147 55 61 147 65 129 130 61 147 
+def_bytes_0x3df0                  EQU                               0x3df0
+def_bytes_0x3df0                  DB                                53 144 41 145 62 147 53 122 147 46 144 34 208 160 62 
+def_bytes_0x3ea0                  EQU                               0x3ea0
+def_bytes_0x3ea0                  DB                                145 62 146 58 122 146 38 144 26 145 65 147 62 122 147 43 
+def_bytes_0x3eb0                  EQU                               0x3eb0
+def_bytes_0x3eb0                  DB                                144 31 145 62 146 58 122 146 41 144 29 145 62 147 53 122 
+def_bytes_0x3ec0                  EQU                               0x3ec0
+def_bytes_0x3ec0                  DB                                147 46 144 34 145 62 146 58 122 146 38 144 26 145 65 147 
+def_bytes_0x3ed0                  EQU                               0x3ed0
+def_bytes_0x3ed0                  DB                                62 122 147 43 144 31 145 62 146 58 122 146 41 144 29 145 
+def_bytes_0x3ee0                  EQU                               0x3ee0
+def_bytes_0x3ee0                  DB                                62 147 53 127 127 127 127 127 85 128 129 130 131 208 160 16 
 
 ; Define Words
 
 ; Define Images
+
+; Define Loader Image Chunks
 
 ; Define Sprites
 
@@ -646,148 +648,149 @@ def_bytes_0x3ee0              DB                                62 147 53 127 12
 ; Lookup Tables
 
 ; Code
-_entryPoint_                  Initialise                        
-                              InitRealTimeStub                                                  ; INIT
+_entryPoint_                      Initialise                        
+                                  InitRealTimeStub                
+%define TIME_SLICING                                                                            ; Main: INIT
 
-                              LD                                0x21
-                              ORI                               3
-                              ST                                33                              ; poke &h21, peek(&h21) OR 3
+                                  LD                                0x21
+                                  ORI                               3
+                                  ST                                33                          ; Main: poke &h21, peek(&h21) OR 3
 
-                              ClearVertBlinds                                                   ; cls
+                                  ClearVertBlinds                                               ; Main: cls
 
-                              LDWI                              playMidi
-                              STW                               realTimeProc0
-                              LDWI                              setRealTimeProc0
-                              CALL                              giga_vAC                        ; init midi
+                                  LDWI                              playMidi
+                                  STW                               realTimeProc0
+                                  LDWI                              setRealTimeProc0
+                                  CALL                              giga_vAC                    ; Main: init midi
 
-                              LDI                               3
-                              ST                                waveType + 1
-                              LDWI                              4256
-                              PlayMidi                                                          ; play midi, &h10a0, 3
+                                  LDI                               3
+                                  ST                                waveType + 1
+                                  LDWI                              4256
+                                  PlayMidi                                                      ; Main: play midi, &h10a0, 3
 
-                              LDI                               0
-                              STW                               _x
-                              STW                               _y                              ; x=0 : y=x
+                                  LDI                               0
+                                  STW                               _x
+                                  STW                               _y                          ; Main: x=0 : y=x
 
-_loop                         LDI                               0
-                              STW                               _i                              ; for i=0 &to 19
+_loop                             LDI                               0
+                                  STW                               _i                          ; Main: for i=0 &to 19
 
-_next_0x024e                  LDWI                              _math
-                              CALL                              giga_vAC                        ; gosub math
+_next_0x0249                      LDWI                              _math
+                                  CALL                              giga_vAC                    ; Main: gosub math
 
-                              LD                                fgbgColour + 1
-                              ADDI                              7
-                              ST                                fgbgColour + 1                  ; set FG_COLOUR, get("FG_COLOUR") + 7
+                                  LD                                fgbgColour + 1
+                                  ADDI                              7
+                                  ST                                fgbgColour + 1              ; Main: set FG_COLOUR, get("FG_COLOUR") + 7
 
-                              LDW                               _x
-                              STW                               drawLine_x1
-                              LDI                               119
-                              STW                               drawLine_y1
-                              LDI                               159
-                              STW                               drawLine_x2
-                              LDI                               119
-                              SUBW                              _y
-                              STW                               drawLine_y2
-                              DrawLine                                                          ; line x,119, 159,119-y
+                                  LDW                               _x
+                                  STW                               drawLine_x1
+                                  LDI                               119
+                                  STW                               drawLine_y1
+                                  LDI                               159
+                                  STW                               drawLine_x2
+                                  LDI                               119
+                                  SUBW                              _y
+                                  STW                               drawLine_y2
+                                  DrawLine                                                      ; Main: line x,119, 159,119-y
 
-                              ForNextInc                        _i _next_0x024e 19              ; next i
+                                  ForNextInc                        _i _next_0x0249 19          ; Main: next i
 
-                              LDI                               19
-                              STW                               _i                              ; for i=19 &downto 0
+                                  LDI                               19
+                                  STW                               _i                          ; Main: for i=19 &downto 0
 
-_next_0x0289                  LDWI                              _math
-                              CALL                              giga_vAC                        ; gosub math
+_next_0x0284                      LDWI                              _math
+                                  CALL                              giga_vAC                    ; Main: gosub math
 
-                              LD                                fgbgColour + 1
-                              ADDI                              7
-                              ST                                fgbgColour + 1                  ; set FG_COLOUR, get("FG_COLOUR") + 7
+                                  LD                                fgbgColour + 1
+                                  ADDI                              7
+                                  ST                                fgbgColour + 1              ; Main: set FG_COLOUR, get("FG_COLOUR") + 7
 
-                              LDI                               159
-                              STW                               drawLine_x1
-                              LDW                               _y
-                              STW                               drawLine_y1
-                              LDW                               _x
-                              STW                               drawLine_x2
-                              LDI                               0
-                              STW                               drawLine_y2
-                              DrawLine                                                          ; line 159,y, x,0
+                                  LDI                               159
+                                  STW                               drawLine_x1
+                                  LDW                               _y
+                                  STW                               drawLine_y1
+                                  LDW                               _x
+                                  STW                               drawLine_x2
+                                  LDI                               0
+                                  STW                               drawLine_y2
+                                  DrawLine                                                      ; Main: line 159,y, x,0
 
-                              ForNextDecZero                    _i _next_0x0289                 ; next i
+                                  ForNextDecZero                    _i _next_0x0284             ; Main: next i
 
-                              LDI                               0
-                              STW                               _i                              ; for i=0 &to 19
+                                  LDI                               0
+                                  STW                               _i                          ; Main: for i=0 &to 19
 
-_next_0x02be                  LDWI                              _math
-                              CALL                              giga_vAC                        ; gosub math
+_next_0x02b9                      LDWI                              _math
+                                  CALL                              giga_vAC                    ; Main: gosub math
 
-                              LD                                fgbgColour + 1
-                              ADDI                              7
-                              ST                                fgbgColour + 1                  ; set FG_COLOUR, get("FG_COLOUR") + 7
+                                  LD                                fgbgColour + 1
+                                  ADDI                              7
+                                  ST                                fgbgColour + 1              ; Main: set FG_COLOUR, get("FG_COLOUR") + 7
 
-                              LDI                               0
-                              STW                               drawLine_x1
-                              LDW                               _y
-                              STW                               drawLine_y1
-                              LDI                               159
-                              SUBW                              _x
-                              STW                               drawLine_x2
-                              LDI                               0
-                              STW                               drawLine_y2
-                              DrawLine                                                          ; line 0,y, 159-x,0
+                                  LDI                               0
+                                  STW                               drawLine_x1
+                                  LDW                               _y
+                                  STW                               drawLine_y1
+                                  LDI                               159
+                                  SUBW                              _x
+                                  STW                               drawLine_x2
+                                  LDI                               0
+                                  STW                               drawLine_y2
+                                  DrawLine                                                      ; Main: line 0,y, 159-x,0
 
-                              ForNextInc                        _i _next_0x02be 19              ; next i
+                                  ForNextInc                        _i _next_0x02b9 19          ; Main: next i
 
-                              LDI                               19
-                              STW                               _i                              ; for i=19 downto 0
+                                  LDI                               19
+                                  STW                               _i                          ; Main: for i=19 downto 0
 
-_next_0x02f9                  LDWI                              _math
-                              CALL                              giga_vAC                        ; gosub math
+_next_0x02f4                      LDWI                              _math
+                                  CALL                              giga_vAC                    ; Main: gosub math
 
-                              LD                                fgbgColour + 1
-                              ADDI                              7
-                              ST                                fgbgColour + 1                  ; set FG_COLOUR, get("FG_COLOUR") + 7
+                                  LD                                fgbgColour + 1
+                                  ADDI                              7
+                                  ST                                fgbgColour + 1              ; Main: set FG_COLOUR, get("FG_COLOUR") + 7
 
-                              LDI                               159
-                              SUBW                              _x
-                              STW                               drawLine_x1
-                              LDI                               119
-                              STW                               drawLine_y1
-                              LDI                               0
-                              STW                               drawLine_x2
-                              LDI                               119
-                              SUBW                              _y
-                              STW                               drawLine_y2
-                              DrawLine                                                          ; line 159-x,119, 0,119-y
+                                  LDI                               159
+                                  SUBW                              _x
+                                  STW                               drawLine_x1
+                                  LDI                               119
+                                  STW                               drawLine_y1
+                                  LDI                               0
+                                  STW                               drawLine_x2
+                                  LDI                               119
+                                  SUBW                              _y
+                                  STW                               drawLine_y2
+                                  DrawLine                                                      ; Main: line 159-x,119, 0,119-y
 
-                              STW                               0xc0
-                              LDWI                              _page_0x0300
-                              CALL                              giga_vAC
-_page_0x0300                  LDW                               0xc0
-                              ForNextFarDecZero                 _i _next_0x02f9                 ; next i
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0300
+                                  CALL                              giga_vAC
+_page_0x0300                      LDLW                              0xFE
+                                  ForNextFarDecZero                 _i _next_0x02f4             ; Main: next i
 
-                              LDWI                              _loop
-                              CALL                              giga_vAC                        ; goto loop
+                                  LDWI                              _loop
+                                  CALL                              giga_vAC                    ; Main: goto loop
 
-_math                         PUSH                              
-                              LDW                               _i
-                              LSLW                              
-                              STW                               _i2
-                              ADDW                              _i2
-                              ADDW                              _i2
-                              STW                               _i6                             ; i2 = (i<<1) : i6 = i2 + i2 + i2
+_math                             PUSH                              
+                                  LDW                               _i
+                                  LSLW                              
+                                  STW                               _i2
+                                  ADDW                              _i2
+                                  ADDW                              _i2
+                                  STW                               _i6                         ; Main: i2 = i LSL 1 : i6 = i2 + i2 + i2
 
-                              LDW                               _i6
-                              ADDW                              _i2
-                              ADDI                              4
-                              STW                               _x                              ; x = i6 + i2 + 4
+                                  LDW                               _i6
+                                  ADDW                              _i2
+                                  ADDI                              4
+                                  STW                               _x                          ; Main: x = i6 + i2 + 4
 
-                              LDW                               _i6
-                              ADDI                              3
-                              STW                               _y                              ; y = i6 + 3
+                                  LDW                               _i6
+                                  ADDI                              3
+                                  STW                               _y                          ; Main: y = i6 + 3
 
-                              Return                                                            ; return
+                                  Return                                                        ; Main: return
 
-_end_0x036e                   BRA                               _end_0x036e                     ; END
+                                  HALT                                                          ; Main: END
 
 
 
@@ -797,29 +800,29 @@ _end_0x036e                   BRA                               _end_0x036e     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-realTimeStub                  EQU     0x7ca1
-setRealTimeProc0              EQU     0x7ab3
-resetVideoFlags               EQU     0x7da3
-initClearFuncs                EQU     0x7bae
-clearVertBlinds               EQU     0x7bc5
-drawLine                      EQU     0x7eaa
-drawLineExt                   EQU     0x79c6
-drawLineLoop                  EQU     0x7ac5
-drawLineLoadXY                EQU     0x78d4
-resetMidi                     EQU     0x78ac
-playMidi                      EQU     0x7daf
-midiStartNote                 EQU     0x7cb3
-convertEqOpAddr               EQU     0x00c2
-convertNeOpAddr               EQU     0x00c4
-convertLeOpAddr               EQU     0x00c6
-convertGeOpAddr               EQU     0x00c8
-convertLtOpAddr               EQU     0x00ca
-convertGtOpAddr               EQU     0x00cc
-convert8Arr2dAddr             EQU     0x00ce
-convert8Arr3dAddr             EQU     0x00d0
-convert16Arr2dAddr            EQU     0x00d2
-convert16Arr3dAddr            EQU     0x00d4
-realTimeStubAddr              EQU     0x00d6
+realTimeStub                      EQU     0x7ba3
+setRealTimeProc0                  EQU     0x79b1
+resetVideoFlags                   EQU     0x7ca3
+initClearFuncs                    EQU     0x7aac
+clearVertBlinds                   EQU     0x7ac3
+drawLine                          EQU     0x7daa
+drawLineExt                       EQU     0x78c6
+drawLineLoop                      EQU     0x79c3
+drawLineLoadXY                    EQU     0x77d4
+resetMidi                         EQU     0x77aa
+playMidi                          EQU     0x7caf
+midiStartNote                     EQU     0x7bb5
+convertEqOpAddr                   EQU     0x00c0
+convertNeOpAddr                   EQU     0x00c2
+convertLeOpAddr                   EQU     0x00c4
+convertGeOpAddr                   EQU     0x00c6
+convertLtOpAddr                   EQU     0x00c8
+convertGtOpAddr                   EQU     0x00ca
+convert8Arr2dAddr                 EQU     0x00cc
+convert8Arr3dAddr                 EQU     0x00ce
+convert16Arr2dAddr                EQU     0x00d0
+convert16Arr3dAddr                EQU     0x00d2
+realTimeStubAddr                  EQU     0x00d4
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -919,9 +922,13 @@ clearVertBlinds     PUSH
                     STW     giga_sysArg4
                     LD      giga_sysArg4 + 1
                     ST      top
-    
+
+%if TIME_SLICING
 clearVB_loop        CALL    realTimeStubAddr
                     LD      top
+%else
+clearVB_loop        LD      top
+%endif
                     ST      giga_sysArg4 + 1                    ; top line
                     SYS     30
     
@@ -1127,9 +1134,13 @@ drawL_flip          LDW     drawLine_xy1
                     LDW     drawLine_xy2        
                     SUBW    drawLine_dxy2
                     STW     drawLine_xy2                    ; xy2 -= dxy2
-                    
+
+%if TIME_SLICING
 drawL_count         CALL    realTimeStubAddr
                     LDW     drawLine_count
+%else
+drawL_count         LDW     drawLine_count
+%endif
                     SUBI    0x01
                     STW     drawLine_count
                     BGT     drawLineLoop
@@ -1179,8 +1190,11 @@ musicCommand        EQU     register10
 musicPtr            EQU     register11
 
 
-resetMidi           LD      giga_frameCount
-                    ADDI    1
+                    ; adds 10*16.66667ms delay between giga_frameCount and midiDelay so that if there ; is substantial processing between resetMidi and playMidi giga_frameCount will
+                    ; not overflow past midiDelay and cause an extra initial 256*16.66667ms delay
+resetMidi           LDI     0      
+                    ST      giga_frameCount
+                    ADDI    10
                     STW     midiDelay                       ; instant MIDI startup
                     LDI     giga_soundChan1 >>8
                     ST      audioAddr + 1
@@ -1219,8 +1233,8 @@ playM_process       LDW     midiStream
                     LDW     midiStream
                     ADDI    0x01
                     STW     midiStream
-                    LDI     0xF0
-                    ANDW    midiCommand
+                    LDW     midiCommand
+                    ANDI    0xF0                    
                     XORI    0x90                            ; check for start note
                     BNE     playM_endnote
     
@@ -1251,11 +1265,10 @@ playM_exit1         POP
                     RET
 
 
-midiStartNote       LDWI    giga_notesTable                 ; note table in ROM
+midiStartNote       LDWI    giga_notesTable - 22            ; giga_notesTable + (midi - 11)*2
                     STW     midiPtr
                     LDW     midiStream                      ; midi note
                     PEEK
-                    SUBI    11
                     LSLW
                     ADDW    midiPtr
                     STW     midiPtr

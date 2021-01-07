@@ -1,6 +1,6 @@
-memIndex0           EQU     register0
-memIndex1           EQU     register1
-memIndex2           EQU     register2
-memValue            EQU     register8
-memAddr             EQU     register9
-memDstAddr          EQU     register10
+memIndex0           EQU     register10
+memIndex1           EQU     register11
+memIndex2           EQU     register12
+memValue            EQU     register13
+memAddr             EQU     register14
+memDstAddr          EQU     register15
