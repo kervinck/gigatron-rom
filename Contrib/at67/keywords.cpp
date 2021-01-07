@@ -167,7 +167,7 @@ namespace Keywords
         if(findKeyword(key, _keywords[key]._name, foundPos)  &&  _keywords[key]._func)
         {
             // Module line offset
-            int codeLineStart = (Compiler::getModuleLines().size()  &&  (codeLineIndex < Compiler::getModuleLines().size())) ? Compiler::getModuleLines()[codeLineIndex]._index : codeLineIndex;
+            int codeLineStart = (Compiler::getModuleLines().size()  &&  (codeLineIndex < int(Compiler::getModuleLines().size()))) ? Compiler::getModuleLines()[codeLineIndex]._index : codeLineIndex;
 
             // Keyword
             bool success = _keywords[key]._func(codeLine, codeLineIndex, codeLineStart, tokenIndex, foundPos, result);

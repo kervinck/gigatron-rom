@@ -183,7 +183,7 @@ namespace Compiler
     void setCompilingError(bool compilingError) {_compilingError = compilingError;}
     void setArrayIndiciesOne(bool arrayIndiciesOne) {_arrayIndiciesOne = arrayIndiciesOne;}
 
-    void nextStrWorkArea(void) {_strWorkAreaIdx = ++_strWorkAreaIdx & 1;}
+    void nextStrWorkArea(void) {_strWorkAreaIdx = (_strWorkAreaIdx + 1) & 1;}
 
     int getNextJumpFalseUniqueId(void) {return _jumpFalseUniqueId++;}
 
@@ -3326,7 +3326,7 @@ namespace Compiler
 
         // Module line, Pragma parsing happens before any code has been parsed, so _codeLines[] may be empty
         _codeLineText = (int(_codeLines.size()) > _currentCodeLineIndex) ? _codeLines[_currentCodeLineIndex]._code : "PRAGMA";
-        _codeLineStart = (_moduleLines.size()  &&  (_currentCodeLineIndex < _moduleLines.size())) ? _moduleLines[_currentCodeLineIndex]._index : _currentCodeLineIndex;
+        _codeLineStart = (_moduleLines.size()  &&  (_currentCodeLineIndex < int(_moduleLines.size()))) ? _moduleLines[_currentCodeLineIndex]._index : _currentCodeLineIndex;
 
         for(;;)
         {
@@ -3728,7 +3728,7 @@ REDO_STATEMENT:
         for(int i=0; i<int(_codeLines.size()); i++)
         {
             _currentCodeLineIndex = i;
-            int codeLineStart = (_moduleLines.size()  &&  (_currentCodeLineIndex < _moduleLines.size())) ? _moduleLines[_currentCodeLineIndex]._index : _currentCodeLineIndex;
+            int codeLineStart = (_moduleLines.size()  &&  (_currentCodeLineIndex < int(_moduleLines.size()))) ? _moduleLines[_currentCodeLineIndex]._index : _currentCodeLineIndex;
 
             // First line of BASIC code is always a dummy INIT line, ignore it
             if(i > 0  &&  _codeLines[i]._code.size() >= 2)
@@ -4271,17 +4271,17 @@ REDO_STATEMENT:
         for(int i=0; i<int(input.size()); i++)
         {
             // Valid ASCII and not escape sequence
-            if(input[i] != '\\'  &&  input[i] >= 32  &&  input[i] <= 127) output.push_back(input[i]);
+            if(input.c_str()[i] != '\\'  &&  input.c_str()[i] >= 32  &&  input.c_str()[i] <= 127) output.push_back(input[i]);
 
             // Escape single quotes
-            if(input[i] == '\'')
+            if(input.c_str()[i] == '\'')
             {
                 numQuotes++;
                 output.insert(output.end() - 1, '\\');
             }
         }
 
-        if(output.size() > USER_STR_SIZE + numQuotes)
+        if(int(output.size()) > USER_STR_SIZE + numQuotes)
         {
             fprintf(stderr, "Expression::sanitiseString() : String '%s' of size '%d' is larger than '%d' chars\n", output.c_str(), int(output.size()), USER_STR_SIZE);
             return false;

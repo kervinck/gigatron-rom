@@ -683,7 +683,7 @@ namespace Audio
         }
 
         std::streamsize midiBufferSize = infile.gcount();
-        if(midiBufferSize < GTMIDI_STREAM_OFFSET)
+        if(midiBufferSize < std::streamsize(GTMIDI_STREAM_OFFSET))
         {
             fprintf(stderr, "Audio::loadMidiFile() : malformed header in file '%s'\n", filepath.c_str());
             return false;
