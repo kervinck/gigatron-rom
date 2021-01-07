@@ -4271,10 +4271,10 @@ REDO_STATEMENT:
         for(int i=0; i<int(input.size()); i++)
         {
             // Valid ASCII and not escape sequence
-            if(input.c_str()[i] != '\\'  &&  input.c_str()[i] >= 32  &&  input.c_str()[i] <= 127) output.push_back(input[i]);
+            if(input[i] != '\\') output.push_back(input[i]);
 
             // Escape single quotes
-            if(input.c_str()[i] == '\'')
+            if(input[i] == '\'')
             {
                 numQuotes++;
                 output.insert(output.end() - 1, '\\');
