@@ -37,6 +37,7 @@ gigatron-rom
        |                        demos and games
        +--- Crouze/             TinyBASIC scripts (including graphclock.gtb)
        +--- Cwiiis/             Gigatris game
+       +--- delpozzo/           VideoPoker game; Tools (CustomFish, sendFile)
        +--- dhkolf/             Fast emulator; Demos (SprPaint, PianoBeep,...)
        +--- flok99/             Simple (and slow) visualizer using SDL2
        +--- gigawalt/           Walter's script
