@@ -1,0 +1,934 @@
+_runtimePath_ "../../at67/gbas/runtime"
+_codeRomType_ ROMv3
+cls : mode 2
+
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
+sound off
+cls
+
+' ------------------
+'   Card Suits
+' ------------------
+const CLUBS = 0
+const DIAMONDS = 1
+const HEARTS = 2
+const SPADES = 3
+
+' ------------------
+'   Card States
+' ------------------
+const INDECK = 0
+const DRAWN = 1
+const HELD = 2
+const DISCARDED = 3
+
+' ------------------
+'   Face Cards
+' ------------------
+const JACK = 11
+const QUEEN = 12
+const KING = 13
+const ACE = 14
+
+' ------------------
+'   Rounds
+' ------------------
+const GAMEOVER = 0
+const DEAL = 1
+const DRAW = 2
+
+' ------------------
+'   Winning Hands
+' ------------------
+const NONE = 0
+const JACKSORBETTER = 1
+const TWOPAIR = 2
+const THREEOFAKIND = 3
+const STRAIGHT = 4
+const FLUSH = 5
+const FULLHOUSE = 6
+const FOUROFAKIND = 7
+const STRAIGHTFLUSH = 9
+const ROYALFLUSH = 10
+
+' ------------------
+'   Coordinates
+' ------------------
+const cardY = 61
+const cardY2 = cardY + 45
+const holdY = cardY - 10
+const cardBorderY = cardY - 1
+const cardBorderY2 = cardBorderY + 47
+const cardValueY = cardY + 2
+const cardSuitY = cardY + 17
+
+' ------------------
+'   Sprites
+' ------------------
+load sprite, ./graphics/club.tga, CLUBS
+load sprite, ./graphics/diamond.tga, DIAMONDS
+load sprite, ./graphics/heart.tga, HEARTS
+load sprite, ./graphics/spade.tga, SPADES
+
+' ------------------
+'   Card Deck
+' ------------------
+dim cardValue(52)
+dim cardSuit(52)
+dim cardState(52)
+dim hand(5)
+
+' ------------------
+'   Other Vars
+' ------------------
+balance = 25
+betAmount = 1
+winAmount = 0
+currentRound = DRAW
+selectedCard = 0
+pickedCard = 0
+tempCard = 0
+tempValue1 = 0
+tempValue2 = 0
+tempValue3 = 0
+straightFlag = 0
+flushFlag = 0
+winType = NONE
+holdX = 0
+inputDevice = 255
+
+' ------------------
+'   Game Setup
+' ------------------
+gosub initCards
+set BG_COLOUR, 16
+set FG_COLOUR, 16
+rectf 3, 0, 156, 47
+set FG_COLOUR, 63
+rect 3, 0, 156, 47
+gosub displayPayouts
+gosub displayCardBacks
+gosub displayBalance
+gosub displayBet
+
+' ------------------
+'   Main Loop
+' ------------------
+loop:
+    if currentRound &= GAMEOVER
+        gosub gameOverInput
+    else    
+        gosub handleInput
+    endif
+    goto &loop
+
+' ------------------
+'   Input
+' ------------------
+handleInput:
+    inputDevice = get("BUTTON_STATE")
+
+    if (inputDevice = 254) AND (currentRound = DEAL)
+        selectedCard = selectedCard + 1
+        if selectedCard &= 5
+            selectedCard = 0
+        endif
+        gosub selectCard
+        wait 10
+    endif
+
+    if (inputDevice = 253) AND (currentRound = DEAL)
+        selectedCard = selectedCard - 1
+        if selectedCard &= -1
+            selectedCard = 4
+        endif
+        gosub selectCard
+        wait 10
+    endif
+
+    if (inputDevice = 247) AND (currentRound = DRAW)
+        betAmount = betAmount + 1
+        if betAmount &> 5
+            betAmount = 1
+        endif
+        gosub displayBet
+        gosub playSndBet
+        wait 10
+    endif
+
+    if (inputDevice = 251) AND (currentRound = DRAW)
+        betAmount = betAmount - 1
+        if betAmount &< 1
+            betAmount = 5
+        endif
+        gosub displayBet
+        gosub playSndBet
+        wait 10
+    endif
+
+    if inputDevice &= 191
+        if currentRound &= DEAL
+            currentRound = DRAW
+            selectedCard = -1
+            gosub selectCard
+            gosub drawCards
+            gosub displayCards
+            gosub checkHand
+            gosub updateBalance
+            gosub displayPayouts
+        else
+            currentRound = DEAL
+            winType = NONE
+            gosub clearHand
+            gosub displayCardBacks
+            if betAmount &> balance
+                betAmount = balance
+                gosub displayBet
+            endif
+            balance = balance - betAmount
+            if balance &< 0
+                balance = 0
+            endif
+            gosub displayBalance
+            gosub displayPayouts
+            gosub dealCards
+            gosub displayCards
+            gosub selectCard
+        endif
+        wait 10
+    endif
+
+    if (inputDevice = 127) AND (currentRound = DEAL)
+        gosub holdCard
+        wait 10
+    endif
+return
+
+' ------------------
+'   Game Over
+' ------------------
+gameOverInput:
+    inputDevice = get("BUTTON_STATE")
+
+    if inputDevice &= 127
+        balance = 25
+        gosub clearHand
+        gosub displayCardBacks
+        gosub displayBalance
+        currentRound = DRAW
+    endif
+return
+
+displayGameOver:
+    set FG_COLOUR, 63
+    set BG_COLOUR, 3
+    at 20,holdY : print "Game Over. Press (A)"
+    gosub playSndUnHold
+return
+
+' ------------------
+'   Sound FX
+' ------------------
+playSndCardFlip:
+    note = 0 : notes = note
+    index = 40
+    set SOUND_TIMER, 2
+    gosub getRomNote
+    sound on, 1, note
+    WAIT 2
+    index = 45
+    set SOUND_TIMER, 2
+    gosub getRomNote
+    sound on, 1, note
+return
+
+playSndHold:
+    note = 0 : notes = note
+    index = 40
+    set SOUND_TIMER, 4
+    gosub getRomNote
+    sound on, 1, note
+    WAIT 4
+    index = 45
+    set SOUND_TIMER, 4
+    gosub getRomNote
+    sound on, 1, note
+return
+
+playSndUnHold:
+    note = 0 : notes = note
+    index = 45
+    set SOUND_TIMER, 4
+    gosub getRomNote
+    sound on, 1, note
+    WAIT 4
+    index = 40
+    set SOUND_TIMER, 4
+    gosub getRomNote
+    sound on, 1, note
+return
+
+playSndBet:
+    note = 0 : notes = note
+    index = betAmount + 60
+    set SOUND_TIMER, 5
+    gosub getRomNote
+    sound on, 1, note
+return
+
+playSndWin:
+    WAIT 10
+    note = 0 : notes = note
+    index = 60
+    set SOUND_TIMER, 4
+    gosub getRomNote
+    sound on, 1, note
+    WAIT 8
+    set SOUND_TIMER, 2
+    gosub getRomNote
+    sound on, 1, note
+    WAIT 4
+    index = 65
+    set SOUND_TIMER, 20
+    gosub getRomNote
+    sound on, 1, note
+    WAIT 20
+return
+
+getRomNote:
+    asm
+        LDWI    0x0900
+        ADDW    _index
+        ADDW    _index
+        STW     _notes
+        LUP     0
+        ST      _note
+        LDW     _notes
+        LUP     1
+        ST      _note + 1
+    endasm
+return
+
+' ------------------
+'   Init Cards
+' ------------------
+initCards:
+    suit = 0
+
+    for i = 0 to 51
+        cardSuit(i) = suit
+        cardValue(i) = 2+(i%13)
+        cardState(i) = INDECK
+
+        if(2+(i%13) &= 14)
+            suit = suit + 1
+        endif
+    next i
+return
+
+' ------------------
+'   Clear Hand
+' ------------------
+clearHand:
+    for i = 0 to 51
+        cardState(i) = INDECK
+    next i
+
+    set FG_COLOUR, 32
+    set BG_COLOUR, 32
+    selectedCard = 0
+    at 7,holdY : print "                         "
+    at 0,110 : print "         "
+return
+
+' ------------------
+'   Deal Cards
+' ------------------
+dealCards:
+    for i = 0 to 4
+retry1: pickedCard = rnd(52)
+        if(cardState(pickedCard) &= INDECK)
+            hand(i) = pickedCard
+            cardState(pickedCard) = DRAWN
+        else
+            goto retry1
+        endif
+    next i
+
+    selectedCard = 0
+return
+
+' For testing win conditions only:
+cheatDeal:
+    hand(0) = 12
+    cardState(12) = DRAWN
+
+    hand(1) = 11
+    cardState(11) = DRAWN
+
+    hand(2) = 10
+    cardState(10) = DRAWN
+
+    hand(3) = 8
+    cardState(8) = DRAWN
+
+    hand(4) = 9
+    cardState(9) = DRAWN
+
+    selectedCard = 0
+return
+
+' ------------------
+'   Draw Cards
+' ------------------
+drawCards:
+    for i = 0 to 4
+        tempCard = hand(i)
+        if(cardState(tempCard) &= DRAWN)
+retry2:     pickedCard = rnd(52)
+            if(cardState(pickedCard) &= INDECK)
+                cardState(tempCard) = DISCARDED
+                hand(i) = pickedCard
+                cardState(pickedCard) = DRAWN
+            else
+                goto retry2
+            endif
+        endif
+    next i
+return
+
+' ------------------
+'   Select Card
+' ------------------
+selectCard:
+    set FG_COLOUR, 0
+    rect 3, cardBorderY, 32, cardBorderY2
+    rect 34, cardBorderY, 63, cardBorderY2
+    rect 65, cardBorderY, 94, cardBorderY2
+    rect 96, cardBorderY, 125, cardBorderY2
+    rect 127, cardBorderY, 156, cardBorderY2
+
+    set FG_COLOUR, 3
+
+    if selectedCard &= 0
+        rect 3, cardBorderY, 32, cardBorderY2
+    elseif selectedCard &= 1
+        rect 34, cardBorderY, 63, cardBorderY2
+    elseif selectedCard &= 2
+        rect 65, cardBorderY, 94, cardBorderY2
+    elseif selectedCard &= 3
+        rect 96, cardBorderY, 125, cardBorderY2
+    elseif selectedCard &= 4
+        rect 127, cardBorderY, 156, cardBorderY2
+    endif
+return
+
+' ------------------
+'   Hold Card
+' ------------------
+holdCard:
+    set FG_COLOUR, 31
+    set BG_COLOUR, 32
+
+    if selectedCard &= 0
+        holdX = 7
+    elseif selectedCard &= 1
+        holdX = 38
+    elseif selectedCard &= 2
+        holdX = 69
+    elseif selectedCard &= 3
+        holdX = 100
+    elseif selectedCard &= 4
+        holdX = 131
+    endif
+
+    tempCard = hand(selectedCard)
+
+    if cardState(tempCard) &= DRAWN
+        cardState(tempCard) = HELD
+        at holdX,holdY : print "HELD"
+        gosub playSndHold
+    elseif cardState(tempCard) &= HELD
+        cardState(tempCard) = DRAWN
+        at holdX,holdY : print "    "
+        gosub playSndUnHold
+    endif
+return
+
+' ------------------
+'   Display Payouts
+' ------------------
+displayPayouts:
+    set BG_COLOUR, 16
+    set FG_COLOUR, 42
+    if winType &= ROYALFLUSH
+        set FG_COLOUR, 15
+    endif
+    at 32,2 :  print "Royal Flush x250"
+
+    set FG_COLOUR, 42
+    if winType &= STRAIGHTFLUSH
+        set FG_COLOUR, 15
+    endif
+    at 5,11 : print "S.Flush  x50"
+
+    set FG_COLOUR, 42
+    if winType &= FOUROFAKIND
+        set FG_COLOUR, 15
+    endif
+    at 5,20 : print "4-Kind   x25"
+
+    set FG_COLOUR, 42
+    if winType &= FULLHOUSE
+        set FG_COLOUR, 15
+    endif
+    at 5,29 : print "F.House  x9"
+
+    set FG_COLOUR, 42
+    if winType &= FLUSH
+        set FG_COLOUR, 15
+    endif
+    at 5,38 : print "Flush    x6"
+
+    set FG_COLOUR, 42
+    if winType &= STRAIGHT
+        set FG_COLOUR, 15
+    endif
+    at 90,11 : print "Straight x4"
+
+    set FG_COLOUR, 42
+    if winType &= THREEOFAKIND
+        set FG_COLOUR, 15
+    endif
+    at 90,20 : print "3-Kind   x3"
+
+    set FG_COLOUR, 42
+    if winType &= TWOPAIR
+        set FG_COLOUR, 15
+    endif
+    at 90,29 : print "Two Pair x2"
+
+    set FG_COLOUR, 42
+    if winType &= JACKSORBETTER
+        set FG_COLOUR, 15
+    endif
+    at 90,38 : print "Jacks+   x1"
+return
+
+' ------------------
+'   Display Balance
+' ------------------
+displayBalance:
+    set BG_COLOUR, 32
+    set FG_COLOUR, 63
+    if balance &< 10
+        at 106,110 : print "Bal:000"
+        at 148,110 : print balance
+    elseif balance &< 100
+        at 106,110 : print "Bal:00"
+        at 142,110 : print balance
+    elseif balance &< 999
+        at 106,110 : print "Bal:0"
+        at 136,110 : print balance
+    else
+        at 106,110 : print "Bal:"
+        at 130,110 : print balance
+    endif
+return
+
+' ------------------
+'   Update Balance
+' ------------------
+updateBalance:
+    if winAmount &> 0
+        set BG_COLOUR, 3
+        set FG_COLOUR, 15
+        at 3,110 : print "Win:"
+        at 26,110 : print winAmount
+        balance = balance + winAmount
+        if balance &> 9999
+            balance = 9999
+        endif
+        winAmount = 0
+        gosub displayBalance
+        gosub playSndWin
+    endif
+
+    if balance &< 1
+        currentRound = GAMEOVER
+        gosub clearHand
+        gosub displayGameOver
+    endif
+return
+
+' ------------------
+'   Display Bet
+' ------------------
+displayBet:
+    set BG_COLOUR, 32
+    set FG_COLOUR, 63
+    at 57,110 : print "Bet:"
+    at 80,110 : print betAmount
+return
+
+' ------------------
+' Display Card Backs
+' ------------------
+displayCardBacks:
+    set FG_COLOUR, 0
+    rectf 3, cardBorderY, 32, cardBorderY2
+    rectf 34, cardBorderY, 63, cardBorderY2
+    rectf 65, cardBorderY, 94, cardBorderY2
+    rectf 96, cardBorderY, 125, cardBorderY2
+    rectf 127, cardBorderY, 156, cardBorderY2
+    set FG_COLOUR, 21
+    rectf 4, cardY, 31, cardY2
+    rectf 35, cardY, 62, cardY2
+    rectf 66, cardY, 93, cardY2
+    rectf 97, cardY, 124, cardY2
+    rectf 128, cardY, 155, cardY2
+return
+
+' ------------------
+'   Display Cards
+' ------------------
+displayCards:
+    set FG_COLOUR, 0
+    set BG_COLOUR, 63
+
+' Card 1
+    if cardState(hand(0)) &= DRAWN
+        if currentRound &= DRAW
+            set FG_COLOUR, 0
+            rectf 3, cardBorderY, 32, cardBorderY2
+            set FG_COLOUR, 21
+            rectf 4, cardY, 31, cardY2
+        endif
+        WAIT 8
+        gosub playSndCardFlip
+        set FG_COLOUR, 63
+        rectf 4, cardY, 31, cardY2
+        if (cardSuit(hand(0)) = HEARTS) OR (cardSuit(hand(0)) = DIAMONDS)
+            set FG_COLOUR, 3
+        else
+            set FG_COLOUR, 0
+        endif
+        if cardValue(hand(0)) &= 14
+            at 7,cardValueY : print "A"
+        elseif cardValue(hand(0)) &= 13
+            at 7,cardValueY : print "K"
+        elseif cardValue(hand(0)) &= 12
+            at 7,cardValueY : print "Q"
+        elseif cardValue(hand(0)) &= 11
+            at 7,cardValueY : print "J"
+        else
+            at 7,cardValueY : print cardValue(hand(0))
+        endif
+        sprite noFlip, cardSuit(hand(0)), 11, cardSuitY
+    endif
+
+' Card 2
+    if cardState(hand(1)) &= DRAWN
+        if currentRound &= DRAW
+            set FG_COLOUR, 0
+            rectf 34, cardBorderY, 63, cardBorderY2
+            set FG_COLOUR, 21
+            rectf 35, cardY, 62, cardY2
+        endif
+        WAIT 8
+        gosub playSndCardFlip
+        set FG_COLOUR, 63
+        rectf 35, cardY, 62, cardY2
+        if (cardSuit(hand(1)) = HEARTS) OR (cardSuit(hand(1)) = DIAMONDS)
+            set FG_COLOUR, 3
+        else
+            set FG_COLOUR, 0
+        endif
+        if cardValue(hand(1)) &= 14
+            at 38,cardValueY : print "A"
+        elseif cardValue(hand(1)) &= 13
+            at 38,cardValueY : print "K"
+        elseif cardValue(hand(1)) &= 12
+            at 38,cardValueY : print "Q"
+        elseif cardValue(hand(1)) &= 11
+            at 38,cardValueY : print "J"
+        else
+            at 38,cardValueY : print cardValue(hand(1))
+        endif
+        sprite noFlip, cardSuit(hand(1)), 42, cardSuitY
+    endif
+
+' Card 3
+    if cardState(hand(2)) &= DRAWN
+        if currentRound &= DRAW
+            set FG_COLOUR, 0
+            rectf 65, cardBorderY, 94, cardBorderY2
+            set FG_COLOUR, 21
+            rectf 66, cardY, 93, cardY2
+        endif
+        WAIT 8
+        gosub playSndCardFlip
+        set FG_COLOUR, 63
+        rectf 66, cardY, 93, cardY2
+        if (cardSuit(hand(2)) = HEARTS) OR (cardSuit(hand(2)) = DIAMONDS)
+            set FG_COLOUR, 3
+        else
+            set FG_COLOUR, 0
+        endif
+        if cardValue(hand(2)) &= 14
+            at 69,cardValueY : print "A"
+        elseif cardValue(hand(2)) &= 13
+            at 69,cardValueY : print "K"
+        elseif cardValue(hand(2)) &= 12
+            at 69,cardValueY : print "Q"
+        elseif cardValue(hand(2)) &= 11
+            at 69,cardValueY : print "J"
+        else
+            at 69,cardValueY : print cardValue(hand(2))
+        endif
+        sprite noFlip, cardSuit(hand(2)), 73, cardSuitY
+    endif
+
+' Card 4
+    if cardState(hand(3)) &= DRAWN
+        if currentRound &= DRAW
+            set FG_COLOUR, 0
+            rectf 96, cardBorderY, 125, cardBorderY2
+            set FG_COLOUR, 21
+            rectf 97, cardY, 124, cardY2
+        endif
+        WAIT 8
+        gosub playSndCardFlip
+        set FG_COLOUR, 63
+        rectf 97, cardY, 124, cardY2
+        if (cardSuit(hand(3)) = HEARTS) OR (cardSuit(hand(3)) = DIAMONDS)
+            set FG_COLOUR, 3
+        else
+            set FG_COLOUR, 0
+        endif
+        if cardValue(hand(3)) &= 14
+            at 100,cardValueY : print "A"
+        elseif cardValue(hand(3)) &= 13
+            at 100,cardValueY : print "K"
+        elseif cardValue(hand(3)) &= 12
+            at 100,cardValueY : print "Q"
+        elseif cardValue(hand(3)) &= 11
+            at 100,cardValueY : print "J"
+        else
+            at 100,cardValueY : print cardValue(hand(3))
+        endif
+        sprite noFlip, cardSuit(hand(3)), 104, cardSuitY
+    endif
+
+' Card 5
+    if cardState(hand(4)) &= DRAWN
+        if currentRound &= DRAW
+            set FG_COLOUR, 0
+            rectf 127, cardBorderY, 156, cardBorderY2
+            set FG_COLOUR, 21
+            rectf 128, cardY, 155, cardY2
+        endif
+        WAIT 8
+        gosub playSndCardFlip
+        set FG_COLOUR, 63
+        rectf 128, cardY, 155, cardY2
+        if (cardSuit(hand(4)) = HEARTS) OR (cardSuit(hand(4)) = DIAMONDS)
+            set FG_COLOUR, 3
+        else
+            set FG_COLOUR, 0
+        endif
+        if cardValue(hand(4)) &= 14
+            at 131,cardValueY : print "A"
+        elseif cardValue(hand(4)) &= 13
+            at 131,cardValueY : print "K"
+        elseif cardValue(hand(4)) &= 12
+            at 131,cardValueY : print "Q"
+        elseif cardValue(hand(4)) &= 11
+            at 131,cardValueY : print "J"
+        else
+            at 131,cardValueY : print cardValue(hand(4))
+        endif
+        sprite noFlip, cardSuit(hand(4)), 135, cardSuitY
+    endif
+return
+
+' ------------------
+'   Sort Cards
+' ------------------
+sortCards:
+    for i = 0 to 3
+        for j = (1 + i) to 4
+            tempValue1 = hand(i)
+            tempValue2 = hand(j)
+            if cardValue(tempValue1) &> cardValue(tempValue2)
+                tempCard = hand(i)
+                hand(i) = hand(j)
+                hand(j) = tempCard
+            endif
+        next j
+    next i
+return
+
+' ------------------
+'   Check Hand
+' ------------------
+checkHand:
+' reset flags
+    straightFlag = 0
+    flushFlag = 0
+    winType = NONE
+    set FG_COLOUR, 31
+    set BG_COLOUR, 32
+
+' sort cards least to greatest
+    gosub sortCards
+    card0 = cardValue(hand(0))
+    card1 = cardValue(hand(1))
+    card2 = cardValue(hand(2))
+    card3 = cardValue(hand(3))
+    card4 = cardValue(hand(4))
+
+' check straight and flush flags first
+    gosub flush
+    gosub straight
+
+' Royal Flush
+    gosub royalFlush
+    if winType &= ROYALFLUSH
+        winAmount = 250 * betAmount
+        return
+    endif
+
+' Straight Flush
+    gosub straightFlush
+    if winType &= STRAIGHTFLUSH
+        winAmount = 50 * betAmount
+        return
+    endif
+
+' Four of a Kind
+    gosub fourOfAKind
+    if winType &= FOUROFAKIND
+        winAmount = 25 * betAmount
+        return
+    endif
+
+' Full House
+    gosub fullHouse
+    if winType &= FULLHOUSE
+        winAmount = 9 * betAmount
+        return
+    endif
+
+' Flush
+    if flushFlag &= 1
+        winType = FLUSH
+        winAmount = 6 * betAmount
+        return
+    endif
+
+' Straight
+    if straightFlag &= 1
+        winType = STRAIGHT
+        winAmount = 4 * betAmount
+        return
+    endif
+
+' Three of a Kind
+    gosub threeOfAKind
+    if winType &= THREEOFAKIND
+        winAmount = 3 * betAmount
+        return
+    endif
+
+' Two Pair
+    gosub twoPair
+    if winType &= TWOPAIR
+        winAmount = 2 * betAmount
+        return
+    endif
+
+' Jacks or Better
+    gosub jacksOrBetter
+    if winType &= JACKSORBETTER
+        winAmount = betAmount
+        return
+    endif
+return
+
+' ------------------
+'   Win Conditions
+' ------------------
+jacksOrBetter:
+    for i = 0 to 4
+        tempValue1 = hand(i)
+        tempValue2 = hand(i+1)
+        if (cardValue(tempValue1) = cardValue(tempValue2)) AND (cardValue(tempValue2) > 10)
+            winType = JACKSORBETTER
+        endif
+    next i
+return
+
+twoPair:
+    if (card0 = card1) AND (card2 = card3)
+        winType = TWOPAIR
+    elseif (card1 = card2) AND (card3 = card4) 
+        winType = TWOPAIR
+    elseif (card0 = card1) AND (card3 = card4) 
+        winType = TWOPAIR
+    endif
+return
+
+threeOfAKind:
+    for i = 0 to 2
+        tempValue1 = hand(i)
+        tempValue2 = hand(i+1)
+        tempValue3 = hand(i+2)
+        if (cardValue(tempValue1) = cardValue(tempValue2)) AND (cardValue(tempValue2) = cardValue(tempValue3))
+            winType = THREEOFAKIND
+        endif
+    next i
+return
+
+straight:
+    if (card4 = card3+1) AND (card3+1 = card2+2) AND (card2+2 = card1+3) AND (card1+3 = card0+4)
+        straightFlag = 1
+    elseif (card4 = ACE) AND (card0 = 2) AND (card1 = 3) AND (card2 = 4) AND (card3 = 5)
+        straightFlag = 1
+    endif
+return
+
+flush:
+    if (cardSuit(hand(0)) = cardSuit(hand(1))) AND (cardSuit(hand(1)) = cardSuit(hand(2))) AND (cardSuit(hand(2)) = cardSuit(hand(3))) AND (cardSuit(hand(3)) = cardSuit(hand(4)))
+        flushFlag = 1
+    endif
+return
+
+fullHouse:
+    if (card0 = card1) AND (card1 = card2) AND (card3 = card4)
+        winType = FULLHOUSE
+    elseif (card0 = card1) AND (card2 = card3) AND (card3 = card4)
+        winType = FULLHOUSE
+    endif
+return
+
+fourOfAKind:
+    if (card0 = card1) AND (card1 = card2) AND (card2 = card3)
+        winType = FOUROFAKIND
+    elseif (card1 = card2) AND (card2 = card3) AND (card3 = card4)
+        winType = FOUROFAKIND
+    endif
+return
+
+straightFlush:
+    if (straightFlag = 1) AND (flushFlag = 1)
+        winType = STRAIGHTFLUSH
+    endif
+return
+
+royalFlush:
+    if (flushFlag = 1) AND (card0 = 10) AND (card1 = JACK) AND (card2 = QUEEN) AND (card3 = KING) AND (card4 = ACE)
+        winType = ROYALFLUSH
+    endif
+return
