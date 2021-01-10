@@ -1747,46 +1747,56 @@ namespace Assembler
         return true;
     }
 
-    bool handleDefine(const std::string& filename, const LineToken& lineToken, const std::vector<std::string>& tokens, int adjustedLineIndex)
+    void clearDefines(void)
     {
-        UNREFERENCED_PARAM(lineToken);
+        _defines.clear();
+        while(!_currentDefine.empty()) _currentDefine.pop();
+    }
 
-        if(tokens.size() < 2)
+    bool createDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex)
+    {
+        if(tokens.size() < 2  ||  tokens.size() > 3)
         {
-            fprintf(stderr, "Assembler::handleDefine() : %%define requires at least one param : on '%d' : in '%s'\n", adjustedLineIndex, filename.c_str());
+            fprintf(stderr, "Assembler::createDefine() : %%define requires one or two params : on '%d' : in '%s'\n", adjustedLineIndex, filename.c_str());
             return false;
         }
 
-        // Allow multiple defines per line
-        for(int i=1; i<int(tokens.size()); i++)
+        // Define name
+        std::string defineName = tokens[1];
+        if(_defines.find(defineName) != _defines.end())
         {
-            std::string define = tokens[i];
-            if(_defines.find(define) != _defines.end())
+            fprintf(stderr, "Assembler::createDefine() : duplicate define '%s' found : on '%d' : in '%s'\n", defineName.c_str(), adjustedLineIndex, filename.c_str());
+            return false;
+        }
+
+        // Define value
+        int16_t defineValue = 0;
+        if(tokens.size() == 3)
+        {
+            if(!evaluateExpression(tokens[2], false, defineValue))
             {
-                fprintf(stderr, "Assembler::handleDefine() : duplicate define '%s' found : on '%d' : in '%s'\n", define.c_str(), adjustedLineIndex, filename.c_str());
+                fprintf(stderr, "Assembler::createDefine() : invalid define value '%s' found : on '%d' : in '%s'\n", tokens[2].c_str(), adjustedLineIndex, filename.c_str());
                 return false;
             }
-
-            _defines[define] = {true, false, define};
         }
+
+        _defines[defineName] = {true, false, defineValue, defineName};
 
         return true;
     }
 
-    bool handleIf(const std::string& filename, const LineToken& lineToken, const std::vector<std::string>& tokens, int adjustedLineIndex)
+    bool handleIfDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex)
     {
-        UNREFERENCED_PARAM(lineToken);
-
         if(tokens.size() != 2)
         {
-            fprintf(stderr, "Assembler::handleIf() : %%if requires one param : on '%d' : in '%s'\n", adjustedLineIndex, filename.c_str());
+            fprintf(stderr, "Assembler::handleIfDefine() : %%if requires one param : on '%d' : in '%s'\n", adjustedLineIndex, filename.c_str());
             return false;
         }
 
         std::string define = tokens[1];
         if(_defines.find(define) == _defines.end())
         {
-            _defines[define] = {false, false, define};
+            _defines[define] = {false, false, 0, define};
         }
 
         // Push current define to stack
@@ -1795,19 +1805,17 @@ namespace Assembler
         return true;
     }
 
-    bool handleEndIf(const std::string& filename, const LineToken& lineToken, const std::vector<std::string>& tokens, int adjustedLineIndex)
+    bool handleEndIfDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex)
     {
-        UNREFERENCED_PARAM(lineToken);
-
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Assembler::handleEndIf() : %%endif requires no params : on '%d' : in '%s'\n", adjustedLineIndex, filename.c_str());
+            fprintf(stderr, "Assembler::handleEndIfDefine() : %%endif requires no params : on '%d' : in '%s'\n", adjustedLineIndex, filename.c_str());
             return false;
         }
 
         if(_currentDefine.empty())
         {
-            fprintf(stderr, "Assembler::handleEndIf() : Syntax error, no valid define : on '%d' : in '%s'\n", adjustedLineIndex, filename.c_str());
+            fprintf(stderr, "Assembler::handleEndIfDefine() : Syntax error, no valid define : on '%d' : in '%s'\n", adjustedLineIndex, filename.c_str());
             return false;
         }
 
@@ -1825,19 +1833,17 @@ namespace Assembler
         return true;
     }
 
-    bool handleElse(const std::string& filename, const LineToken& lineToken, const std::vector<std::string>& tokens, int adjustedLineIndex)
+    bool handleElseDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex)
     {
-        UNREFERENCED_PARAM(lineToken);
-
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Assembler::handleElse() : %%else requires no params : on '%d' : in '%s'\n", adjustedLineIndex, filename.c_str());
+            fprintf(stderr, "Assembler::handleElseDefine() : %%else requires no params : on '%d' : in '%s'\n", adjustedLineIndex, filename.c_str());
             return false;
         }
 
         if(_currentDefine.empty())
         {
-            fprintf(stderr, "Assembler::handleElse() : Syntax error, no valid define : on '%d' : in '%s'\n", adjustedLineIndex, filename.c_str());
+            fprintf(stderr, "Assembler::handleElseDefine() : Syntax error, no valid define : on '%d' : in '%s'\n", adjustedLineIndex, filename.c_str());
             return false;
         }
 
@@ -1847,6 +1853,32 @@ namespace Assembler
         _defines[define]._toggle = true;
 
         return true;
+    }
+
+    bool isCurrentDefineDisabled(void)
+    {
+        // Check top of define stack
+        if(!_currentDefine.empty())
+        {
+            std::string define = _currentDefine.top();
+            if(_defines.find(define) != _defines.end()  &&  !_defines[define]._enabled)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    int16_t getRuntimeVersion(void)
+    {
+        int16_t runtimeVersion = 0;
+        if(_defines.find("RUNTIME_VERSION") != _defines.end())
+        {
+            runtimeVersion = _defines["RUNTIME_VERSION"]._value;
+        }
+
+        return runtimeVersion;
     }
 
     bool preProcess(const std::string& filename, std::vector<LineToken>& lineTokens, bool doMacros)
@@ -1939,7 +1971,7 @@ namespace Assembler
                 // Define
                 else if(tokens[0] == "%DEFINE")
                 {
-                    if(!handleDefine(filename, lineToken, tokens, 3)) return false;
+                    if(!createDefine(filename, tokens, 3)) return false;
 
                     itLine = lineTokens.erase(itLine);
                     eraseLine = true;
@@ -1947,7 +1979,7 @@ namespace Assembler
                 // If
                 else if(tokens[0] == "%IF")
                 {
-                    if(!handleIf(filename, lineToken, tokens, adjustedLineIndex)) return false;
+                    if(!handleIfDefine(filename, tokens, adjustedLineIndex)) return false;
 
                     itLine = lineTokens.erase(itLine);
                     eraseLine = true;
@@ -1955,7 +1987,7 @@ namespace Assembler
                 // EndIf
                 else if(tokens[0] == "%ENDIF")
                 {
-                    if(!handleEndIf(filename, lineToken, tokens, adjustedLineIndex)) return false;
+                    if(!handleEndIfDefine(filename, tokens, adjustedLineIndex)) return false;
 
                     itLine = lineTokens.erase(itLine);
                     eraseLine = true;
@@ -1963,7 +1995,7 @@ namespace Assembler
                 // Else
                 else if(tokens[0] == "%ELSE")
                 {
-                    if(!handleElse(filename, lineToken, tokens, adjustedLineIndex)) return false;
+                    if(!handleElseDefine(filename, tokens, adjustedLineIndex)) return false;
 
                     itLine = lineTokens.erase(itLine);
                     eraseLine = true;
@@ -2385,11 +2417,11 @@ namespace Assembler
         _byteCode.clear();
         _labels.clear();
         _equates.clear();
-        _defines.clear();
         _instructions.clear();
         _callTableEntries.clear();
         if(!dontClearGprintfs) _gprintfs.clear();
-        while(!_currentDefine.empty()) _currentDefine.pop();
+
+        clearDefines();        
 
         _vSpMin = 0x00;
         _callTablePtr = 0x0000;
@@ -2409,10 +2441,6 @@ namespace Assembler
             fprintf(stderr, "Assembler::assemble() : Failed to open file : '%s'\n", filename.c_str());
             return false;
         }
-
-        fprintf(stderr, "\n****************************************************************************************************\n");
-        fprintf(stderr, "* Assembling file '%s'\n", filename.c_str());
-        fprintf(stderr, "****************************************************************************************************\n");
 
         clearAssembler(dontClearGprintfs);
 
@@ -2443,6 +2471,15 @@ namespace Assembler
 
         // Pre-processor
         if(!preProcess(filename, lineTokens, true)) return false;
+
+        // Check runtime version
+        int16_t runtimeVersion = Assembler::getRuntimeVersion();
+        fprintf(stderr, "\n*************************************************************************************************\n");
+        fprintf(stderr, "* Assembling file : '%s'\n", filename.c_str());
+        fprintf(stderr, "*************************************************************************************************\n");
+        fprintf(stderr, "* Found runtime version %04d : Expected runtime version %04d\n", runtimeVersion, RUNTIME_VERSION);
+        fprintf(stderr, "*************************************************************************************************\n");
+        if(runtimeVersion != RUNTIME_VERSION) return false;
 
         numLines = int(lineTokens.size());
 

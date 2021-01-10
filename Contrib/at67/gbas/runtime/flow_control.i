@@ -18,13 +18,13 @@ romCheck            LD      giga_romType
                     ANDI    0xFC
                     SUBW    romType
                     BGE     romC_return
-                    LDWI    giga_vram
+                    LDWI    giga_vram + giga_yres/2*256 + giga_xres/2
                     STW     romErrAddr
                     
 romC_loop           LD      romErrPixel
                     POKE    romErrAddr
                     INC     romErrPixel
-                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    BRA     romC_loop                       ; flash center pixel indicating rom error
                     
 romC_return         RET                    
 %ENDS

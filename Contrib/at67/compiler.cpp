@@ -1193,7 +1193,7 @@ namespace Compiler
             {
                 std::string token = _codeLines[_codeLines.size() - 1]._tokens[i];
                 Expression::strToUpper(token);
-                if(token =="END")
+                if(token == "END")
                 {
                     foundEnd = true;
                     break;

@@ -18,11 +18,6 @@
 
 namespace Linker
 {
-    // Define handling is repeated here, as the Linker runs before the Assembler, (it's simpler here as error handling is performed in the Assembler)
-    // Make sure to keep the two in sync, e.g. if adding extra functionality such as %elseif
-    std::map<std::string, Assembler::Define> _defines;
-    std::stack<std::string> _currentDefine;
-
     std::map<std::string, std::vector<std::string>> _subIncludeFiles;
     std::map<int, uint16_t> _internalSubMap;
 
@@ -333,9 +328,6 @@ namespace Linker
     void reset(void)
     {
         resetIncludeFiles();
-
-        _defines.clear();
-        while(!_currentDefine.empty()) _currentDefine.pop();
 
         _internalSubMap.clear();
 
@@ -676,6 +668,8 @@ namespace Linker
         fprintf(stderr, "*        Name          : Address :    Size    \n");
         fprintf(stderr, "**********************************************\n");
 
+        Assembler::clearDefines();
+
         for(int i=0; i<int(Compiler::getCodeLines().size()); i++)
         {
             // Valid BASIC code
@@ -687,74 +681,35 @@ namespace Linker
                     std::vector<std::string> tokens = Expression::tokenise(Compiler::getCodeLines()[i]._vasm[j]._code, ' ');
                     for(int k=0; k<int(tokens.size()); k++) Expression::stripWhitespace(tokens[k]);
 
-                    // Handle %define, %if, %else and %endif, error handling is performed in Assembler::preProcess()
+                    // Handle %define, %if, %else and %endif
                     if(tokens.size())
                     {
                         std::string token = Expression::strUpper(tokens[0]);
                         if(token == "%DEFINE")
                         {
-                            // Create enabled defines
-                            if(tokens.size() > 1)
-                            {
-                                for(int k=1; k<int(tokens.size()); k++)
-                                {
-                                    std::string define = tokens[k];
-                                    _defines[define] = {true, false, define};
-                                }
-                            }
-
+                            // Create define
+                            if(!Assembler::createDefine(Compiler::getCodeLines()[i]._text, tokens, i)) return false;
                             continue;
                         }
                         else if(token == "%IF")
                         {
-                            // If define does not exist, create a disabled define
-                            if(tokens.size() > 1)
-                            {
-                                std::string define = tokens[1];
-                                if(_defines.find(define) == _defines.end()) _defines[define] = {false, false, define};
-                                _currentDefine.push(define);
-                            }
-
+                            if(!Assembler::handleIfDefine(Compiler::getCodeLines()[i]._text, tokens, i)) return false;
                             continue;
                         }
                         else if(token == "%ENDIF")
                         {
-                            // Pop current define from stack
-                            if(!_currentDefine.empty())
-                            {
-                                // If enabled was toggled by an else then reset it
-                                std::string define = _currentDefine.top();
-                                if(_defines[define]._toggle)
-                                {
-                                    _defines[define]._enabled = !_defines[define]._enabled;
-                                    _defines[define]._toggle = false;
-                                }
-
-                                _currentDefine.pop();
-                            }
-
+                            if(!Assembler::handleEndIfDefine(Compiler::getCodeLines()[i]._text, tokens, i)) return false;
                             continue;
                         }
                         else if(token == "%ELSE")
                         {
-                            // Toggle current define
-                            if(!_currentDefine.empty())
-                            {
-                                std::string define = _currentDefine.top();
-                                _defines[define]._enabled = !_defines[define]._enabled;
-                                _defines[define]._toggle = true;
-                            }
-
+                            if(!Assembler::handleElseDefine(Compiler::getCodeLines()[i]._text, tokens, i)) return false;
                             continue;
                         }
                     }
 
-                    // If a define exists and is disabled, then skip current line
-                    if(!_currentDefine.empty())
-                    {
-                        std::string define = _currentDefine.top();
-                        if(_defines.find(define) != _defines.end()  &&  !_defines[define]._enabled) continue;
-                    }
+                    // If current define exists and is disabled, then skip current line
+                    if(Assembler::isCurrentDefineDisabled()) continue;
 
                     // Check for internal subs in code and macros
                     for(int k=0; k<int(_internalSubs.size()); k++)
@@ -853,7 +808,7 @@ RESTART_COLLECTION:
         }
 
         fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "*                 Re-Linking                  \n");
+        fprintf(stderr, "*                Re-Linking                   \n");
         fprintf(stderr, "**********************************************\n");
         fprintf(stderr, "*    Start     :    End       :       Size    \n");
         fprintf(stderr, "**********************************************\n");
