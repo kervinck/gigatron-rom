@@ -1360,7 +1360,8 @@ namespace Loader
         // Upload vCPU assembly code
         else if(filename.find(".gasm") != filename.npos  ||  filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
         {
-            if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS, isGbasFile)) return;
+            uint16_t address = (isGbasFile) ? Compiler::getUserCodeStart() : DEFAULT_START_ADDRESS;
+            if(!Assembler::assemble(filepath, address, isGbasFile)) return;
 
             // Found a breakpoint in source code
             if(Editor::getVpcBreakPointsSize())
@@ -1371,9 +1372,9 @@ namespace Loader
             }
 
             executeAddress = Assembler::getStartAddress();
-            Editor::setLoadBaseAddress(executeAddress);
-            uint16_t address = executeAddress;
             uint16_t customAddress = executeAddress;
+            Editor::setLoadBaseAddress(executeAddress);
+            address = executeAddress;
 
             // Save to gt1 format
             gt1File._loStart = LO_BYTE(address);

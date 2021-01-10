@@ -40,19 +40,21 @@ namespace Compiler
 
 
     enum VarResult {VarError=-1, VarNotFound, VarCreated, VarUpdated, VarExists};
+    enum StrResult {StrError=-1, StrNotFound, StrCreated};
     enum FloatSize {Float16=2, Float32=4};
     enum LabelResult {LabelError=-1, LabelNotFound, LabelFound};
 
 
     uint16_t _vasmPC          = USER_CODE_START;
+    uint16_t _userCodeStart   = USER_CODE_START;
     uint16_t _tempVarSize     = TEMP_VAR_SIZE;
     uint16_t _tempVarStart    = TEMP_VAR_START;
     uint16_t _userVarStart    = USER_VAR_START;
-    uint16_t _userVarsAddr    = _userVarStart;
-    uint16_t _runtimeEnd      = 0x7FFF;
-    uint16_t _runtimeStart    = 0x7FFF;
-    uint16_t _arraysStart     = 0x7FFF;
-    uint16_t _stringsStart    = 0x7FFF;
+    uint16_t _userVarsAddr    = USER_VAR_START;
+    uint16_t _runtimeEnd      = RUN_TIME_START;
+    uint16_t _runtimeStart    = RUN_TIME_START;
+    uint16_t _arraysStart     = RUN_TIME_START;
+    uint16_t _stringsStart    = RUN_TIME_START;
     uint16_t _regWorkArea     = 0x0000;
     uint16_t _gprintfVarsAddr = 0x0000;
     uint16_t _strWorkAreaIdx  = 0;
@@ -71,7 +73,6 @@ namespace Compiler
 
 
     bool _codeIsAsm = false;
-    bool _compilingError = false;
     bool _arrayIndiciesOne = false;
     bool _createNumericLabelLut = false;
     bool _createTimeData = false;
@@ -84,7 +85,7 @@ namespace Compiler
     int _codeLineStart = 0;
     std::string _codeLineText;
 
-    std::string _runtimePath = ".";
+    std::string _runtimePath = "./runtime";
     std::string _tempVarStartStr;
     std::string _nextInternalLabel;
 
@@ -136,6 +137,7 @@ namespace Compiler
     std::vector<std::unique_ptr<DataObject>> _dataObjects;
 
     uint16_t getVasmPC(void) {return _vasmPC;}
+    uint16_t getUserCodeStart(void) {return _userCodeStart;}
     uint16_t getRuntimeEnd(void) {return _runtimeEnd;}
     uint16_t getRuntimeStart(void) {return _runtimeStart;}
     uint16_t getArraysStart(void) {return _arraysStart;}
@@ -153,7 +155,6 @@ namespace Compiler
     CodeOptimiseType getCodeOptimiseType(void) {return _codeOptimiseType;}
     Cpu::RomType getCodeRomType(void) {return _codeRomType;}
     const std::map<std::string, int>& getBranchTypes(void) {return _branchTypes;}
-    bool getCompilingError(void) {return _compilingError;}
     bool getArrayIndiciesOne(void) {return _arrayIndiciesOne;}
     int getCurrentLabelIndex(void) {return _currentLabelIndex;}
     int getCurrentCodeLineIndex(void) {return _currentCodeLineIndex;}
@@ -162,6 +163,7 @@ namespace Compiler
     const std::string& getNextInternalLabel(void) {return _nextInternalLabel;}
 
     void setCodeIsAsm(bool codeIsAsm) {_codeIsAsm = codeIsAsm;}
+    void setUserCodeStart(uint16_t userCodeStart) {_userCodeStart = userCodeStart;}
     void setRuntimeEnd(uint16_t runtimeEnd) {_runtimeEnd = runtimeEnd;}
     void setRuntimePath(const std::string& runtimePath) {_runtimePath = runtimePath;}
     void setRuntimeStart(uint16_t runtimeStart) {_runtimeStart = runtimeStart;}
@@ -180,7 +182,6 @@ namespace Compiler
     void setCodeRomType(Cpu::RomType codeRomType) {_codeRomType = codeRomType;}
     void setCreateNumericLabelLut(bool createNumericLabelLut) {_createNumericLabelLut = createNumericLabelLut;}
     void setCreateTimeData(bool createTimeData) {_createTimeData = createTimeData;}
-    void setCompilingError(bool compilingError) {_compilingError = compilingError;}
     void setArrayIndiciesOne(bool arrayIndiciesOne) {_arrayIndiciesOne = arrayIndiciesOne;}
 
     void nextStrWorkArea(void) {_strWorkAreaIdx = (_strWorkAreaIdx + 1) & 1;}
@@ -820,7 +821,7 @@ namespace Compiler
             Expression::strToUpper(token);
             if(Functions::getStringFunctions().find(token) != Functions::getStringFunctions().end())
             {
-                // If first token is a string keyword then don't create strings
+                // If first token is a string keyword then use optimised prints, (don't create strings)
                 if(i == 0) expressionType |= Expression::HasOptimisedPrint;
 
                 expressionType |= Expression::HasStringKeywords;
@@ -1146,6 +1147,66 @@ namespace Compiler
         return true;
     }
 
+    bool initialiseCode(void)
+    {
+        // Entry point initialisation
+        Label label;
+        createLabel(_vasmPC, "_entryPoint_", 0, label, false, false, false, false);
+
+        // BASIC INIT
+        CodeLine codeLine;
+        if(createCodeLine("INIT", 0, 0, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
+
+        // Rom check, (always used for versions greater than ROMv1)
+        if(_codeRomType > Cpu::ROMv1)
+        {
+            emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(_codeRomType)), false, 0);
+            emitVcpuAsm("STW", "romType", false, 0);
+            emitVcpuAsm("%RomCheck", "", false, 0);
+        }
+
+        // Initialise
+        emitVcpuAsm("%Initialise", "", false, 0);
+
+        // Realtime proc, relational operators and array helpers are CALLS from zero page for efficiency
+        if(_codeRomType < Cpu::ROMv5a)
+        {
+            // Linked only when actually used, the semi-colon is removed by enableSysInitFunc()
+            for(int i=0; i<int(_sysInitNames.size()); i++)
+            {
+                emitVcpuAsm(";%" + _sysInitNames[i], "", false, 0);
+            }
+        }
+
+        return true;
+    }
+
+    void finaliseCode(void)
+    {
+        CodeLine codeLine;
+
+        // Add END to code
+        if(_codeLines.size())
+        {
+            bool foundEnd = false;
+            for(int i=0; i<int(_codeLines[_codeLines.size() - 1]._tokens.size()); i++)
+            {
+                std::string token = _codeLines[_codeLines.size() - 1]._tokens[i];
+                Expression::strToUpper(token);
+                if(token =="END")
+                {
+                    foundEnd = true;
+                    break;
+                }
+            }
+
+            if(!foundEnd)
+            {
+                if(createCodeLine("END", 0, -1, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
+            }
+        }
+    }
+
 
     int createVcpuAsm(const std::string& opcodeStr, const std::string& operandStr, int codeLineIdx, std::string& line)
     {
@@ -1204,7 +1265,7 @@ namespace Compiler
 
     void emitVcpuPreProcessingCmd(const std::string& cmdStr)
     {
-        _codeLines[0]._vasm.push_back({USER_CODE_START, cmdStr, "", cmdStr, "", false, 0});
+        _codeLines[0]._vasm.push_back({_userCodeStart, cmdStr, "", cmdStr, "", false, 0});
     }
 
     void createVcpuAsmLabel(int codeLineIdxBra, int vcpuAsmBra, int codeLineIdxDst, int vcpuAsmDst, const std::string& label)
@@ -1218,8 +1279,9 @@ namespace Compiler
     // Array1d LDW expression parser
     uint32_t parseArray1dVarExpression(int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
-        int varIndex, constIndex, strIndex;
         if(!Expression::parse(expression, codeLineIndex, numeric)) return Expression::IsInvalid;
+
+        int varIndex, constIndex, strIndex;
         uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
         if(((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasFunctions)  ||
            (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords))
@@ -1246,6 +1308,7 @@ namespace Compiler
         Expression::Numeric arrIndex;
         std::string arrText = codeLine._code.substr(lbra + 1, rbra - (lbra + 1));
         uint32_t expressionType = parseArray1dVarExpression(codeLineIndex, arrText, arrIndex);
+        if(expressionType == Expression::IsInvalid) return false;
 
         // Constant index
         if(!(expressionType & Expression::HasIntVars))
@@ -1321,8 +1384,9 @@ namespace Compiler
     // ArrayXd LDW expression parser
     uint32_t parseArrayXdVarExpression(int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
-        int varIndex, constIndex, strIndex;
         if(!Expression::parse(expression, codeLineIndex, numeric)) return Expression::IsInvalid;
+
+        int varIndex, constIndex, strIndex;
         uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
         if(((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))  ||  (expressionType & Expression::HasFunctions)  ||
            (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords))
@@ -1363,7 +1427,7 @@ namespace Compiler
             Expression::Numeric arrIndex;
             std::string indexToken = indexTokens[i];
             Expression::stripWhitespace(indexToken);
-            parseArrayXdVarExpression(codeLineIndex, indexToken, arrIndex);
+            if(parseArrayXdVarExpression(codeLineIndex, indexToken, arrIndex) == Expression::IsInvalid) return false;
             emitVcpuAsm("STW", "memIndex" + std::to_string(i), false, codeLineIndex);
         }
 
@@ -1416,7 +1480,7 @@ namespace Compiler
             Expression::Numeric arrIndex;
             std::string indexToken = indexTokens[i];
             Expression::stripWhitespace(indexToken);
-            parseArrayXdVarExpression(codeLineIndex, indexToken, arrIndex);
+            if(parseArrayXdVarExpression(codeLineIndex, indexToken, arrIndex) == Expression::IsInvalid) return false;
             emitVcpuAsm("STW",  "memIndex" + std::to_string(i), false, codeLineIndex);
         }
 
@@ -1528,6 +1592,7 @@ namespace Compiler
         // Array index from expression
         Expression::Numeric arrIndex;
         uint32_t expressionType = parseArray1dVarExpression(codeLineIndex, arrText, arrIndex);
+        if(expressionType == Expression::IsInvalid) return false;
 
         // Constant index
         if(!(expressionType & Expression::HasIntVars))
@@ -1553,13 +1618,14 @@ namespace Compiler
         return true;
     }
 
-    void writeArrayStrNoAssign(std::string& arrText, int codeLineIndex, int strIndex)
+    bool writeArrayStrNoAssign(std::string& arrText, int codeLineIndex, int strIndex)
     {
         uint16_t arrayPtr = _stringVars[strIndex]._address;
 
         // Array index from expression
         Expression::Numeric arrIndex;
         uint32_t expressionType = parseArray1dVarExpression(codeLineIndex, arrText, arrIndex);
+        if(expressionType == Expression::IsInvalid) return false;
 
         // Constant index
         if(!(expressionType & Expression::HasIntVars))
@@ -1576,6 +1642,8 @@ namespace Compiler
         }
 
         emitVcpuAsm("DEEK", "", false, codeLineIndex);
+
+        return true;
     }
 
     void handleInt16Byte(const std::string& opcode, const std::string& operand, Expression::Numeric& numeric, bool nextTempVar)
@@ -1684,10 +1752,10 @@ namespace Compiler
     // Generic expression parser
     OperandType parseExpression(int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric)
     {
-        int varIndex, constIndex, strIndex;
         if(!Expression::parse(expression, codeLineIndex, numeric)) return OperandInvalid;
-        uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
 
+        int varIndex, constIndex, strIndex;
+        uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
         if(((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))       ||  
             ((expressionType & Expression::HasStrVars)  &&  (expressionType & Expression::HasOperators))      ||
             (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords)  ||  (expressionType & Expression::HasFunctions))
@@ -1708,10 +1776,10 @@ namespace Compiler
     // LDW expression parser
     uint32_t parseExpression(int codeLineIndex, std::string& expression, Expression::Numeric& numeric)
     {
-        int varIndex, constIndex, strIndex;
         if(!Expression::parse(expression, codeLineIndex, numeric)) return Expression::IsInvalid;
-        uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
 
+        int varIndex, constIndex, strIndex;
+        uint32_t expressionType = isExpression(expression, varIndex, constIndex, strIndex);
         if(((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))       ||  
             ((expressionType & Expression::HasStrVars)  &&  (expressionType & Expression::HasOperators))      ||
             (expressionType & Expression::HasKeywords)  ||  (expressionType & Expression::HasStringKeywords)  ||  (expressionType & Expression::HasFunctions))
@@ -1942,6 +2010,8 @@ namespace Compiler
             }
         }
 
+        _vasmPC = _userCodeStart;
+
         return true;
     }
 
@@ -2061,44 +2131,6 @@ namespace Compiler
         }
     }
 
-
-    bool initialiseCode(void)
-    {
-        // Relies on _codeRomType_, so make sure _codeRomType_ is already initialised
-        initialiseMacros();
-
-        // Entry point initialisation
-        Label label;
-        createLabel(_vasmPC, "_entryPoint_", 0, label, false, false, false, false);
-
-        // BASIC INIT
-        CodeLine codeLine;
-        if(createCodeLine("INIT", 0, 0, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
-
-        // Rom check, (always used for versions greater than ROMv1)
-        if(_codeRomType > Cpu::ROMv1)
-        {
-            emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(_codeRomType)), false, 0);
-            emitVcpuAsm("STW", "romType", false, 0);
-            emitVcpuAsm("%RomCheck", "", false, 0);
-        }
-
-        // Initialise
-        emitVcpuAsm("%Initialise", "", false, 0);
-
-        // Realtime proc, relational operators and array helpers are CALLS from zero page for efficiency
-        if(_codeRomType < Cpu::ROMv5a)
-        {
-            // Linked only when actually used, the semi-colon is removed by enableSysInitFunc()
-            for(int i=0; i<int(_sysInitNames.size()); i++)
-            {
-                emitVcpuAsm(";%" + _sysInitNames[i], "", false, 0);
-            }
-        }
-
-        return true;
-    }
-
     // Parse labels and generate codeLines 
     bool parseLabels(std::vector<Input>& input, int numLines)
     {
@@ -2110,7 +2142,7 @@ namespace Compiler
             if(!checkForGosubLabel(input[i]._text, i)) return false;
         }
 
-        // All labels
+        // All labels and code lines
         for(int i=0; i<numLines; i++)
         {
             if(!input[i]._parse)
@@ -2130,6 +2162,9 @@ namespace Compiler
                 default: break;
             }
         }
+
+        // Add END statement
+        finaliseCode();
 
         return true;
     }
@@ -2416,6 +2451,13 @@ namespace Compiler
         return false;
     }
 
+    void setCurrentCodeLine(void)
+    {
+        // Module line, Pragma parsing happens before any code has been parsed, so _codeLines[] may be empty
+        _codeLineText = (int(_codeLines.size()) > _currentCodeLineIndex) ? _codeLines[_currentCodeLineIndex]._text : "PRAGMA";
+        _codeLineStart = (_moduleLines.size()  &&  (_currentCodeLineIndex < int(_moduleLines.size()))) ? _moduleLines[_currentCodeLineIndex]._index : _currentCodeLineIndex;
+    }
+
     bool number(double& value)
     {
         char uchr;
@@ -2476,7 +2518,6 @@ namespace Compiler
         if(!peek(true)  ||  peek(true) != '"')
         {
             fprintf(stderr, "Compiler::getString() : Syntax error in string '%s' in '%s' on line %d\n", text.c_str(), _codeLineText.c_str(), _codeLineStart);
-            _compilingError = true;
             return Expression::Numeric();
         }
 
@@ -2492,9 +2533,18 @@ namespace Compiler
         std::string params;
         int indices[MAX_ARRAY_DIMS] = {0};
 
+        // Need to set the correct code line and code line index before parsing for correct error reporting, (takes into account pragmas and modules)
+        setCurrentCodeLine();
+
+        std::string varName = Expression::getExpression();
+        if(varName.size()  &&  !isalpha(varName[0]))
+        {
+            fprintf(stderr, "Compiler::sizeOf() : Syntax error in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
+            return Expression::Numeric();
+        }
+
         // Parse index params if they exist for arrays, (they must evaluate to literals)
         std::vector<std::string> indexTokens;
-        std::string varName = Expression::getExpression();
         size_t varEnd = varName.find_first_of("-+/*%&<>=();,."); // TODO: this needs to be done in as betterer way, repeated multiple times throughout the code
         if(Expression::findMatchingBrackets(varName, 0, lbra, rbra)  &&  lbra == varEnd)
         {
@@ -2503,7 +2553,6 @@ namespace Compiler
             if(indexTokens.size() < 1  ||  indexTokens.size() > MAX_ARRAY_DIMS)
             {
                 fprintf(stderr, "Compiler::addressOf() : Wrong number of indicies in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
-                _compilingError = true;
                 return Expression::Numeric();
             }
 
@@ -2520,12 +2569,11 @@ namespace Compiler
                 Expression::stripWhitespace(token);
 
                 std::string operand;
-                Expression::Numeric numeric;
-                parseExpression(_currentCodeLineIndex, token, operand, numeric);
+                Expression::Numeric numeric; // = expression(); // TODO: Find out why expression() can't be called instead of parseExpression()
+                if(parseExpression(_currentCodeLineIndex, token, operand, numeric) == OperandInvalid) return Expression::Numeric();
                 if(numeric._varType != Expression::Number)
                 {
                     fprintf(stderr, "Compiler::addressOf() : Indicies must be literal expressions in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
-                    _compilingError = true;
                     return Expression::Numeric();
                 }
 
@@ -2534,7 +2582,6 @@ namespace Compiler
                 if(indices[i + MAX_ARRAY_DIMS - indexTokens.size()] < 0)
                 {
                     fprintf(stderr, "Compiler::addressOf() : Indicies must be >= 0 in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
-                    _compilingError = true;
                     return Expression::Numeric();
                 }
             }
@@ -2577,7 +2624,6 @@ namespace Compiler
                 if(indices[i] > dim - 1)
                 {
                     fprintf(stderr, "Compiler::addressOf() : Index %d:%d greater than array dimension %d:%d in '%s' on line %d\n", i, indices[i], i, dim, _codeLineText.c_str(), _codeLineStart);
-                    _compilingError = true;
                     return Expression::Numeric();
                 }
             }
@@ -2615,7 +2661,6 @@ namespace Compiler
                         default:
                         {
                             fprintf(stderr, "Compiler::addressOf() : Too many indices for string array '%s(%s)' in '%s' on line %d\n", _stringVars[strIndex]._name.c_str(), params.c_str(), _codeLineText.c_str(), _codeLineStart);
-                            _compilingError = true;
                             return Expression::Numeric();
                         }
                         break;
@@ -2636,7 +2681,6 @@ namespace Compiler
                         default:
                         {
                             fprintf(stderr, "Compiler::addressOf() : Too many indices for string array '%s(%s)' in '%s' on line %d\n", _stringVars[strIndex]._name.c_str(), params.c_str(), _codeLineText.c_str(), _codeLineStart);
-                            _compilingError = true;
                             return Expression::Numeric();
                         }
                         break;
@@ -2660,7 +2704,6 @@ namespace Compiler
         else
         {
             fprintf(stderr, "Compiler::addressOf() : Syntax error in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
-            _compilingError = true;
             return Expression::Numeric();
         }
 
@@ -2670,7 +2713,16 @@ namespace Compiler
 
     Expression::Numeric sizeOf(void)
     {
+        // Need to set the correct code line and code line index before parsing for correct error reporting, (takes into account pragmas and modules)
+        setCurrentCodeLine();
+
         std::string varName = Expression::getExpression();
+        if(varName.size()  &&  !isalpha(varName[0]))
+        {
+            fprintf(stderr, "Compiler::sizeOf() : Syntax error in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
+            return Expression::Numeric();
+        }
+
         if(varName.back() == ')') varName.erase(varName.size()-1);
 
         std::string oldName;
@@ -2738,7 +2790,6 @@ namespace Compiler
         else
         {
             fprintf(stderr, "Compiler::sizeOf() : Syntax error in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
-            _compilingError = true;
             return Expression::Numeric();
         }
 
@@ -2793,7 +2844,7 @@ namespace Compiler
         {
             Expression::getOutputNumeric()._nestedCount++;
 
-            numeric = expression(returnAddress); if(_compilingError == true) return numeric;
+            numeric = expression(returnAddress); if(!numeric._isValid) return numeric;
             numeric._ccType = Expression::FastCC;
 
             // Parameters
@@ -2807,7 +2858,6 @@ namespace Compiler
             if(peek(true) != ')')
             {
                 fprintf(stderr, "Compiler::factor() : Found '%c' : expecting ')' in '%s' on line %d\n", peek(true), Expression::getExpressionToParse(), _codeLineStart);
-                _compilingError = true;
                 numeric = Expression::Numeric();
             }
             get(true);
@@ -2822,7 +2872,7 @@ namespace Compiler
             Expression::getOutputNumeric()._nestedCount++;
 
             get(true);
-            numeric = expression(returnAddress); if(_compilingError == true) return numeric;
+            numeric = expression(returnAddress); if(!numeric._isValid) return numeric;
 
             // Parameters
             while(peek(true)  &&  peek(true) != ')')
@@ -2835,7 +2885,6 @@ namespace Compiler
             if(peek(true) != ')')
             {
                 fprintf(stderr, "Compiler::factor() : Found '%c' : expecting ')' in '%s' on line %d\n", peek(true), Expression::getExpressionToParse(), _codeLineStart);
-                _compilingError = true;
                 numeric = Expression::Numeric();
             }
             get(true);
@@ -2850,7 +2899,6 @@ namespace Compiler
             else
             {
                 fprintf(stderr, "Compiler::factor() : Syntax error in number '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
-                _compilingError = true;
                 numeric = Expression::Numeric();
             }
         }
@@ -2865,7 +2913,7 @@ namespace Compiler
         {
             get(true); numeric = addressOf();
         }
-        // Length
+        // 'Size of' operator
         else if(peek(true) == '#')
         {
             get(true); numeric = sizeOf();
@@ -3233,23 +3281,19 @@ namespace Compiler
 
                         if(varName.size())
                         {
-                            fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n\n", varName.c_str(), _codeLineText.c_str(), _codeLineStart);
+                            fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n", varName.c_str(), _codeLineText.c_str(), _codeLineStart);
                         }
                         else
                         {
                             Expression::advance(-1);
-                            fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n\n", Expression::getExpression(), _codeLineText.c_str(), _codeLineStart);
+                            fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n", Expression::getExpression(), _codeLineText.c_str(), _codeLineStart);
                             Expression::advance(1);
                         }
-
-                        _compilingError = true;
                     }
                 }
                 break;
             }
         }
-
-        if(!numeric._isValid) _compilingError = true;
 
         return numeric;
     }
@@ -3324,9 +3368,8 @@ namespace Compiler
     {
         Expression::Numeric numeric, result = logical(returnAddress);
 
-        // Module line, Pragma parsing happens before any code has been parsed, so _codeLines[] may be empty
-        _codeLineText = (int(_codeLines.size()) > _currentCodeLineIndex) ? _codeLines[_currentCodeLineIndex]._code : "PRAGMA";
-        _codeLineStart = (_moduleLines.size()  &&  (_currentCodeLineIndex < int(_moduleLines.size()))) ? _moduleLines[_currentCodeLineIndex]._index : _currentCodeLineIndex;
+        // Need to set the correct code line and code line index before parsing for correct error reporting, (takes into account pragmas and modules)
+        setCurrentCodeLine();
 
         for(;;)
         {
@@ -3406,17 +3449,15 @@ namespace Compiler
         return srcAddr;
     }
 
-    bool assignString(CodeLine& codeLine, int codeLineIndex, int codeLineStart, Expression::Numeric& numeric, uint32_t expressionType)
+    StrResult assignString(CodeLine& codeLine, int codeLineIndex, int codeLineStart, Expression::Numeric& numeric, uint32_t expressionType)
     {
-        if(codeLine._text.size() < 2) return false;
+        if(codeLine._text.size() < 2) return StrNotFound;
 
         int dstIndex = codeLine._varIndex;
         if(dstIndex == -1)
         {
             fprintf(stderr, "Compiler::assignString() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
-            //_PAUSE_;
-            _compilingError = true;
-            return false;
+            return StrError;
         }
 
         bool isStrExpression = ((expressionType >= Expression::HasStrings)  &&  (expressionType <= Expression::IsStringExpression));
@@ -3427,9 +3468,7 @@ namespace Compiler
             if(srcAddr == 0x0000  &&  numeric._varType != Expression::Str2Var)
             {
                 fprintf(stderr, "Compiler::assignString() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
-                //_PAUSE_;
-                _compilingError = true;
-                return false;
+                return StrError;
             }
 
             // String assignment
@@ -3451,16 +3490,14 @@ namespace Compiler
                 if(!writeArrayStr(codeLine, codeLineIndex, numeric, dstIndex, srcAddr))
                 {
                     fprintf(stderr, "Compiler::assignString() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
-                    //_PAUSE_;
-                    _compilingError = true;
-                    return false;
+                    return StrError;
                 }
             }
 
-            return true;
+            return StrCreated;
         }
 
-        return false;
+        return StrNotFound;
     }
 
     bool assignInt(CodeLine& codeLine, int codeLineIndex, Expression::Numeric& numeric, uint32_t expressionType, int varIndexRhs)
@@ -3496,7 +3533,7 @@ namespace Compiler
                 if(_integerVars[codeLine._varIndex]._varType == Var1Arr8   ||  _integerVars[codeLine._varIndex]._varType == Var2Arr8   ||  _integerVars[codeLine._varIndex]._varType == Var3Arr8  ||
                    _integerVars[codeLine._varIndex]._varType == Var1Arr16  ||  _integerVars[codeLine._varIndex]._varType == Var2Arr16  ||  _integerVars[codeLine._varIndex]._varType == Var3Arr16)
                 {
-                    writeArrayVar(codeLine, codeLineIndex, codeLine._varIndex);
+                    if(!writeArrayVar(codeLine, codeLineIndex, codeLine._varIndex)) return false;
                 }
                 else
                 {
@@ -3531,7 +3568,7 @@ namespace Compiler
                 if(_integerVars[codeLine._varIndex]._varType == Var1Arr8   ||  _integerVars[codeLine._varIndex]._varType == Var2Arr8   ||  _integerVars[codeLine._varIndex]._varType == Var3Arr8  ||
                    _integerVars[codeLine._varIndex]._varType == Var1Arr16  ||  _integerVars[codeLine._varIndex]._varType == Var2Arr16  ||  _integerVars[codeLine._varIndex]._varType == Var3Arr16)
                 {
-                    writeArrayVar(codeLine, codeLineIndex, codeLine._varIndex);
+                    if(!writeArrayVar(codeLine, codeLineIndex, codeLine._varIndex)) return false;
                 }
                 else
                 {
@@ -3602,18 +3639,46 @@ namespace Compiler
             // Output variable, (functions can access this variable within parse())
             numeric = Expression::Numeric(0, int16_t(codeLine._varIndex), true, false, false, varType, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
         }
-        if(!Expression::parse(codeLine._expression, codeLineIndex, numeric)) return StatementError;
+        if(!Expression::parse(codeLine._expression, codeLineIndex, numeric))
+        {
+            fprintf(stderr, "Compiler::createVasmCode() : Syntax error '%s' in %s on line %d\n", Expression::getExpression(), _codeLineText.c_str(), _codeLineStart);
+            return StatementError;
+        }
 
         // String assignment
-        bool stringResult = assignString(codeLine, codeLineIndex, codeLineStart, numeric, expressionType);
-        if(stringResult  ||  isStringVar) return StringStatementParsed;
+        StrResult stringResult = assignString(codeLine, codeLineIndex, codeLineStart, numeric, expressionType);
+        if(stringResult == StrCreated  ||  isStringVar) return StringStatementParsed;
+        if(stringResult == StrError) return StatementError;
 
         // Int assignment
-        assignInt(codeLine, codeLineIndex, numeric, expressionType, varIndexRhs);
-
-        if(_compilingError) return StatementError;
+        if(!assignInt(codeLine, codeLineIndex, numeric, expressionType, varIndexRhs)) return StatementError;
 
         return StatementExpression;
+    }
+
+    // Very simple check, if the programmer goes out of his way to write gnarly code, e.g. ()()()()()()(((var((()()))))), then this will be accepted
+    bool checkMatchingBrackets(const std::string& statement)
+    {
+        int bracketCount = 0;
+
+        for(int i=0; i<int(statement.size()); i++)
+        {
+            switch(statement[i])
+            {
+                case '(': bracketCount++; break;
+                case ')': bracketCount--; break;
+
+                default: break;
+            }
+
+            // Too many closing brackets
+            if(bracketCount < 0) return false;
+        }
+
+        // Brackets don't match
+        if(bracketCount != 0) return false;
+
+        return true;
     }
 
     StatementResult parseMultiStatements(const std::string& code, int codeLineIndex, int codeLineStart, int& varIndex, int& strIndex)
@@ -3631,6 +3696,15 @@ REDO_STATEMENT:
             Keywords::restart();
 
             createCodeLine(tokens[j], 0, _codeLines[codeLineIndex]._labelIndex, -1, Expression::Int16Both, false, codeline, codeline._module);
+
+            // Check statement matching brackets
+            if(!checkMatchingBrackets(tokens[j]))
+            {
+                fprintf(stderr, "Compiler::parseMultiStatements() : Syntax error, brackets do not match in '%s' on line %d\n", _codeLines[codeLineIndex]._text.c_str(), codeLineStart);
+                statementResult = StatementError;
+                break;
+            }
+
             if(_codeLines[codeLineIndex]._dontParse) return StatementSuccess;
 
             // Skip empty lines
@@ -3697,32 +3771,8 @@ REDO_STATEMENT:
         }
     }
 
-
     bool parseCode(void)
     {
-        CodeLine codeLine;
-
-        // Add END to code
-        if(_codeLines.size())
-        {
-            bool foundEnd = false;
-            for(int i=0; i<int(_codeLines[_codeLines.size() - 1]._tokens.size()); i++)
-            {
-                std::string token = _codeLines[_codeLines.size() - 1]._tokens[i];
-                Expression::strToUpper(token);
-                if(token =="END")
-                {
-                    foundEnd = true;
-                    break;
-                }
-            }
-
-            if(!foundEnd)
-            {
-                if(createCodeLine("END", 0, -1, -1, Expression::Int16Both, false, codeLine)) _codeLines.push_back(codeLine);
-            }
-        }
-
         // Parse code creating vars and vasm code, (BASIC code lines were created in ParseLabels())
         int varIndex, strIndex;
         for(int i=0; i<int(_codeLines.size()); i++)
@@ -3766,7 +3816,7 @@ REDO_STATEMENT:
     {
         std::string line = "_startAddress_ ";
         Expression::addString(line, LABEL_TRUNC_SIZE - int(line.size()));
-        line += "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(USER_CODE_START) + "\n";
+        line += "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_userCodeStart) + "\n";
         _output.push_back(line);
     }
 
@@ -5249,14 +5299,15 @@ REDO_STATEMENT:
         _heapAllocations = 0;
 
         _vasmPC          = USER_CODE_START;
+        _userCodeStart   = USER_CODE_START;
         _tempVarSize     = TEMP_VAR_SIZE;
         _tempVarStart    = TEMP_VAR_START;
         _userVarStart    = USER_VAR_START;
-        _userVarsAddr    = _userVarStart;
-        _runtimeEnd      = 0x7FFF;
-        _runtimeStart    = 0x7FFF;
-        _arraysStart     = 0x7FFF;
-        _stringsStart    = 0x7FFF;
+        _userVarsAddr    = USER_VAR_START;
+        _runtimeEnd      = RUN_TIME_START;
+        _runtimeStart    = RUN_TIME_START;
+        _arraysStart     = RUN_TIME_START;
+        _stringsStart    = RUN_TIME_START;
         _regWorkArea     = 0x0000;
         _gprintfVarsAddr = 0x0000;
         _strWorkArea[0]  = 0x0000;
@@ -5271,7 +5322,6 @@ REDO_STATEMENT:
         _codeRomType = Cpu::ROMv3;
 
         _codeIsAsm = false;
-        _compilingError = false;
         _arrayIndiciesOne = false;
         _createNumericLabelLut = false;
         _createTimeData = false;
@@ -5364,6 +5414,9 @@ REDO_STATEMENT:
         // Pragmas
         if(!parsePragmas(_input, numLines)) return false;
 
+        // Relies on _codeRomType_, so make sure _codeRomType_ is already initialised
+        if(!initialiseMacros()) return false;
+
         // Initialise
         if(!initialiseCode()) return false;
 
@@ -5395,9 +5448,6 @@ REDO_STATEMENT:
 
         // Code
         if(!parseCode()) return false;
-
-        // Check for compiler errors
-        if(_compilingError) return false;
 
 #ifdef DEBUG_DATA
         std::ofstream ofile2("code.txt", std::ios::out);
@@ -5455,10 +5505,7 @@ REDO_STATEMENT:
         Linker::relinkInternalSubs();
         Linker::outputInternalSubs();
 
-        Validater::checkBranchLabels();
-
-        // Check for validation errors
-        if(_compilingError) return false;
+        if(!Validater::checkBranchLabels()) return false;
 
         //Memory::printFreeRamList(Memory::SizeDescending);
 

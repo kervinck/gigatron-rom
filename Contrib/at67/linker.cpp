@@ -724,7 +724,7 @@ namespace Linker
                             {
                                 // If enabled was toggled by an else then reset it
                                 std::string define = _currentDefine.top();
-                                if(_defines[define]._toggle == true)
+                                if(_defines[define]._toggle)
                                 {
                                     _defines[define]._enabled = !_defines[define]._enabled;
                                     _defines[define]._toggle = false;

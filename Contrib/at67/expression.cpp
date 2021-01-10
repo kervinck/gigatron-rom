@@ -447,6 +447,14 @@ namespace Expression
         return true;
     }
 
+    void isInComment(const std::string& input, int index, bool& output)
+    {
+        if((input[index] == '\'')  ||  (index <= int(input.size()) - 3  &&  toupper((unsigned char)input[index]) == 'R'  &&  toupper((unsigned char)input[index+1]) == 'E'  &&  toupper((unsigned char)input[index+2]) == 'M'))
+        {
+            output = true;
+        }
+    }
+
     std::string::const_iterator findNonStringEquals(const std::string& input)
     {
         initHasHelpers();
@@ -626,17 +634,11 @@ namespace Expression
                 if((i==0  &&  input[i] == '"')  ||  (i > 0  &&  input[i] == '"'  &&  input[i-1] != '\\')) inString = !inString;
             }
 
-            // Check for comment, ' and REM
             if(!inString)
             {
-                if((input[i] == '\'')  ||  (i <= int(input.size()) - 3  &&  toupper((unsigned char)input[i]) == 'R'  &&  toupper((unsigned char)input[i+1]) == 'E'  &&  toupper((unsigned char)input[i+2]) == 'M'))
-                {
-                    inComment = true;
-                }
-            }
+                // Check for comment, ' and REM
+                isInComment(input, i, inComment);
 
-            if(!inString)
-            {
                 // If not in string but in comment, skip char
                 if(inComment) continue;
 
@@ -1319,7 +1321,7 @@ namespace Expression
     {
         if(size_t(_expression + n - _expressionToParse.c_str()) >= _expressionToParse.size())
         {
-            _expression = (char*)_expressionToParse.c_str() + _expressionToParse.size() - 1;
+            _expression = (char*)_expressionToParse.c_str() + _expressionToParse.size();
             _advanceError = true;
             return false;
         }
@@ -1577,6 +1579,18 @@ namespace Expression
         _expression = (char*)_expressionToParse.c_str();
 
         numeric = _exprFunc(numeric._returnAddress);
+
+        // If there are trailing chars left over and they are not whitespace, then syntax error
+        char* chr = _expression;
+        while(*chr)
+        {
+            if(!isspace(*chr++))
+            {
+                numeric._isValid = false;
+                break;
+            }
+        }
+
         return numeric._isValid;
     }
 }

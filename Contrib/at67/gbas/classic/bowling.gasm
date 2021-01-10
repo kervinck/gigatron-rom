@@ -46,106 +46,105 @@ textWorkArea                      EQU                               0x7ea0
 _entryPoint_                      EQU                               0x0200
 _270                              EQU                               0x0242
 _360                              EQU                               0x0242
-_450                              EQU                               0x0251
-_540                              EQU                               0x0260
-_630                              EQU                               0x026f
-_720                              EQU                               0x0274
-_810                              EQU                               0x0283
+_450                              EQU                               0x024c
+_540                              EQU                               0x025b
+_630                              EQU                               0x026a
+_720                              EQU                               0x026f
+_810                              EQU                               0x027e
 _900                              EQU                               0x028d
 _960                              EQU                               0x02ba
 _990                              EQU                               0x02e7
-_1080                             EQU                               0x0307
+_1080                             EQU                               0x030c
 _1170                             EQU                               0x0316
-_1260                             EQU                               0x031b
-_1350                             EQU                               0x032a
-_1440                             EQU                               0x0339
-_1530                             EQU                               0x0348
-_1620                             EQU                               0x0352
-_1710                             EQU                               0x035c
-_1800                             EQU                               0x0361
-_1890                             EQU                               0x0370
-_1980                             EQU                               0x03a9
-_2070                             EQU                               0x03ad
-_2160                             EQU                               0x03b9
-_2250                             EQU                               0x03bd
-_2340                             EQU                               0x03c1
-_2430                             EQU                               0x03c9
-_2520                             EQU                               0x0234
-_2610                             EQU                               0x03e8
-_2700                             EQU                               0x0407
-_2790                             EQU                               0x0411
-_2880                             EQU                               0x0419
-_2970                             EQU                               0x041d
-_3060                             EQU                               0x0428
-_3150                             EQU                               0x042c
-_3240                             EQU                               0x044e
-_3330                             EQU                               0x045c
-_3420                             EQU                               0x047e
-_3510                             EQU                               0x0234
-_3600                             EQU                               0x048c
-_3690                             EQU                               0x04ae
-_3780                             EQU                               0x04b2
-_3870                             EQU                               0x04b7
-_3960                             EQU                               0x04c5
-_4050                             EQU                               0x04cb
-_4140                             EQU                               0x04e4
-_4230                             EQU                               0x050c
-_4320                             EQU                               0x0511
-_4410                             EQU                               0x0524
-_4500                             EQU                               0x0534
-_4590                             EQU                               0x0542
-_4680                             EQU                               0x0234
-_4770                             EQU                               0x0547
-_4860                             EQU                               0x054b
-_4950                             EQU                               0x0557
-_5040                             EQU                               0x0565
-_5130                             EQU                               0x057a
-_5220                             EQU                               0x0589
-_5310                             EQU                               0x05a6
-_5400                             EQU                               0x05b5
-_5490                             EQU                               0x05b9
-_5580                             EQU                               0x05d6
-_5670                             EQU                               0x05e5
-_5760                             EQU                               0x05e9
-_5850                             EQU                               0x0611
-_5940                             EQU                               0x0620
-_6030                             EQU                               0x0624
-_6120                             EQU                               0x08b5
-_6210                             EQU                               0x0234
-_6300                             EQU                               0x08c4
-_6390                             EQU                               0x08c9
-_6480                             EQU                               0x08e9
-_6570                             EQU                               0x09a7
-_6660                             EQU                               0x09ab
-_6750                             EQU                               0x09af
-_6840                             EQU                               0x09c2
-_6930                             EQU                               0x09e4
-_7020                             EQU                               0x0aa2
-_7110                             EQU                               0x0ac2
-_7200                             EQU                               0x0ad2
-_7290                             EQU                               0x0ad8
-_7295                             EQU                               0x0aeb
-_7380                             EQU                               0x0ba7
-_7470                             EQU                               0x0bab
-_7560                             EQU                               0x0bb4
-_7650                             EQU                               0x0bc2
-_7740                             EQU                               0x0bc7
-_7830                             EQU                               0x0bd3
-_7920                             EQU                               0x0bd7
-_8010                             EQU                               0x0bdb
-_8100                             EQU                               0x0ca9
-_8105                             EQU                               0x0cb7
-_8190                             EQU                               0x0cbc
-_8280                             EQU                               0x0cca
-_8370                             EQU                               0x0ccf
-_8460                             EQU                               0x0cdf
-_8550                             EQU                               0x0cee
-_8640                             EQU                               0x0da2
+_1260                             EQU                               0x0320
+_1261                             EQU                               0x032f
+_1350                             EQU                               0x033e
+_1351                             EQU                               0x034d
+_1352                             EQU                               0x035c
+_1530                             EQU                               0x036b
+_1531                             EQU                               0x037f
+_1620                             EQU                               0x0389
+_1710                             EQU                               0x0393
+_1800                             EQU                               0x0398
+_1890                             EQU                               0x03a7
+_1980                             EQU                               0x03e0
+_2070                             EQU                               0x03e4
+_2160                             EQU                               0x03f0
+_2250                             EQU                               0x0404
+_2340                             EQU                               0x0408
+_2430                             EQU                               0x0410
+_2610                             EQU                               0x042f
+_2700                             EQU                               0x043e
+_2790                             EQU                               0x0452
+_2880                             EQU                               0x045a
+_2970                             EQU                               0x045e
+_3060                             EQU                               0x0469
+_3150                             EQU                               0x046d
+_3240                             EQU                               0x048f
+_3330                             EQU                               0x049d
+_3420                             EQU                               0x04bf
+_3600                             EQU                               0x04cd
+_3690                             EQU                               0x051a
+_3780                             EQU                               0x051e
+_3870                             EQU                               0x0523
+_3960                             EQU                               0x0531
+_4050                             EQU                               0x0537
+_4140                             EQU                               0x0550
+_4230                             EQU                               0x0581
+_4320                             EQU                               0x0586
+_4410                             EQU                               0x05b7
+_4500                             EQU                               0x05c7
+_4590                             EQU                               0x05d5
+_4770                             EQU                               0x05da
+_4860                             EQU                               0x05de
+_4950                             EQU                               0x05ea
+_5040                             EQU                               0x0602
+_5130                             EQU                               0x0617
+_5220                             EQU                               0x0626
+_5310                             EQU                               0x08b7
+_5400                             EQU                               0x08c6
+_5490                             EQU                               0x08ca
+_5580                             EQU                               0x08e7
+_5670                             EQU                               0x08f6
+_5760                             EQU                               0x09a4
+_5850                             EQU                               0x09c1
+_5940                             EQU                               0x09d0
+_6030                             EQU                               0x09d4
+_6120                             EQU                               0x0aa2
+_6300                             EQU                               0x0ab1
+_6390                             EQU                               0x0ab6
+_6480                             EQU                               0x0ad6
+_6570                             EQU                               0x0ae9
+_6660                             EQU                               0x0aed
+_6750                             EQU                               0x0af1
+_6840                             EQU                               0x0baf
+_6930                             EQU                               0x0bd1
+_7020                             EQU                               0x0be4
+_7110                             EQU                               0x0caf
+_7200                             EQU                               0x0cbf
+_7290                             EQU                               0x0cc5
+_7295                             EQU                               0x0cd8
+_7380                             EQU                               0x0ce7
+_7470                             EQU                               0x0ceb
+_7560                             EQU                               0x0da2
+_7650                             EQU                               0x0db0
+_7740                             EQU                               0x0db5
+_7830                             EQU                               0x0dc1
+_7920                             EQU                               0x0dc5
+_8010                             EQU                               0x0dc9
+_8100                             EQU                               0x0de9
+_8105                             EQU                               0x0ea2
+_8190                             EQU                               0x0ea7
+_8280                             EQU                               0x0eb5
+_8370                             EQU                               0x0eba
+_8460                             EQU                               0x0eca
+_8550                             EQU                               0x0ed4
+_8640                             EQU                               0x0ee7
 _page_0x0300                      EQU                               0x0300
-_next_0x0352                      EQU                               0x0374
-_next_0x0356                      EQU                               0x0378
-_next_0x03ab                      EQU                               0x03cd
+_next_0x0384                      EQU                               0x03ab
+_next_0x0388                      EQU                               0x03af
 _page_0x0400                      EQU                               0x0400
+_next_0x03dd                      EQU                               0x0414
 _page_0x0500                      EQU                               0x0500
 _page_0x0600                      EQU                               0x0600
 _page_0x08a0                      EQU                               0x08a0
@@ -154,7 +153,9 @@ _page_0x0aa0                      EQU                               0x0aa0
 _page_0x0ba0                      EQU                               0x0ba0
 _page_0x0ca0                      EQU                               0x0ca0
 _page_0x0da0                      EQU                               0x0da0
-_else_0x0847                      EQU                               0x0de2
+_page_0x0ea0                      EQU                               0x0ea0
+_page_0x0fa0                      EQU                               0x0fa0
+_else_0x08f7                      EQU                               0x0fd6
 
 ; Global Variables
 _R                                EQU                               0x0030
@@ -382,18 +383,18 @@ _A_0x6cf2                         DW                                0x0000 0x000
 ; Strings
 _Z$                               EQU                               0x6aa0
 _Z$                               DB                                0 '' 0
-_N$                               EQU                               0x66a0
+_N$                               EQU                               0x65a0
 _N$                               DB                                0 '' 0
-_A$                               EQU                               0x64a0
+_A$                               EQU                               0x63a0
 _A$                               DB                                0 '' 0
 
 ; Constant Strings
-_str_0x6cdc                       EQU                               0x6cdc
-_str_0x6cdc                       DB                                20 'WELCOME TO THE ALLEY' 0
-_str_0x6cc8                       EQU                               0x6cc8
-_str_0x6cc8                       DB                                18 'BRING YOUR FRIENDS' 0
-_str_0x6ca6                       EQU                               0x6ca6
-_str_0x6ca6                       DB                                32 'OKAY LET US FIRST GET ACQUAINTED' 0
+_str_0x6cd6                       EQU                               0x6cd6
+_str_0x6cd6                       DB                                26 'WELCOME TO THE ALLEY BRING' 0
+_str_0x6cbb                       EQU                               0x6cbb
+_str_0x6cbb                       DB                                25 'YOUR FRIENDS! OKAY LET US' 0
+_str_0x6ca2                       EQU                               0x6ca2
+_str_0x6ca2                       DB                                23 'FIRST GET ACQUAINTED...' 0
 _str_0x6be8                       EQU                               0x6be8
 _str_0x6be8                       DB                                22 'THE INSTRUCTIONS (Y/N)' 0
 _str_0x7da5                       EQU                               0x7da5
@@ -403,43 +404,53 @@ _str_0x7ba9                       DB                                1 'Y' 0
 _str_0x7ba6                       EQU                               0x7ba6
 _str_0x7ba6                       DB                                1 'N' 0
 _str_0x69c6                       EQU                               0x69c6
-_str_0x69c6                       DB                                56 'THE GAME OF BOWLING TAKES MIND AND SKILL.DURING THE GAME' 0
+_str_0x69c6                       DB                                56 'THE GAME OF BOWLING TAKES MIND AND SKILL. DURING THEGAME' 0
+_str_0x68c7                       EQU                               0x68c7
+_str_0x68c7                       DB                                55 ' THE COMPUTER WILL    KEEP SCORE. YOU MAY       COMPETE' 0
+_str_0x67b7                       EQU                               0x67b7
+_str_0x67b7                       DB                                71 ' WITH OTHER PLAYERS(UP TO FOUR).YOU WILL BE  PLAYING TEN FRAMES. ON THE' 0
+_str_0x6bbf                       EQU                               0x6bbf
+_str_0x6bbf                       DB                                23 'PIN DIAGRAM O MEANS THE' 0
 _str_0x6ba5                       EQU                               0x6ba5
-_str_0x6ba5                       DB                                49 'THE COMPUTER WILL KEEP SCORE.YOU MAY COMPETE WITH' 0
-_str_0x68c6                       EQU                               0x68c6
-_str_0x68c6                       DB                                56 'ON THE PIN DIAGRAM O MEANS THE PIN IS DOWN...+ MEANS THE' 0
-_str_0x67c4                       EQU                               0x67c4
-_str_0x67c4                       DB                                58 'PIN IS STANDING.AFTER THE GAME THE COMPUTER WILL SHOW YOUR' 0
-_str_0x7aa2                       EQU                               0x7aa2
-_str_0x7aa2                       DB                                8 'SCORES .' 0
-_str_0x69a1                       EQU                               0x69a1
-_str_0x69a1                       DB                                35 'FIRST OF ALL...HOW MANY ARE PLAYING' 0
-_str_0x68b8                       EQU                               0x68b8
-_str_0x68b8                       DB                                12 'VERY GOOD...' 0
-_str_0x67a2                       EQU                               0x67a2
-_str_0x67a2                       DB                                32 'TYPE ROLL TO GET THE BALL GOING.' 0
-_str_0x77a4                       EQU                               0x77a4
-_str_0x77a4                       DB                                6 'FRAME:' 0
-_str_0x76a5                       EQU                               0x76a5
-_str_0x76a5                       DB                                5 'BALL:' 0
-_str_0x78a2                       EQU                               0x78a2
-_str_0x78a2                       DB                                2 '+ ' 0
-_str_0x77a0                       EQU                               0x77a0
-_str_0x77a0                       DB                                2 'O ' 0
+_str_0x6ba5                       DB                                24 'PIN IS DOWN, + MEANS THE' 0
+_str_0x69ad                       EQU                               0x69ad
+_str_0x69ad                       DB                                23 'PIN IS STANDING. AT THE' 0
+_str_0x68ad                       EQU                               0x68ad
+_str_0x68ad                       DB                                24 'END OF THE GAME YOU WILL' 0
+_str_0x67a0                       EQU                               0x67a0
+_str_0x67a0                       DB                                21 'BE SHOWN YOUR SCORES.' 0
+_str_0x66e7                       EQU                               0x66e7
+_str_0x66e7                       DB                                23 'FIRST OF ALL...HOW MANY' 0
+_str_0x66d4                       EQU                               0x66d4
+_str_0x66d4                       DB                                17 'PLAYERS ARE THERE' 0
+_str_0x66c6                       EQU                               0x66c6
+_str_0x66c6                       DB                                12 'VERY GOOD...' 0
+_str_0x66af                       EQU                               0x66af
+_str_0x66af                       DB                                21 'PRESS ENTER TO START.' 0
+_str_0x78a3                       EQU                               0x78a3
+_str_0x78a3                       DB                                7 'PLAYER:' 0
+_str_0x77a3                       EQU                               0x77a3
+_str_0x77a3                       DB                                7 ' FRAME:' 0
+_str_0x76a4                       EQU                               0x76a4
+_str_0x76a4                       DB                                6 ' BALL:' 0
+_str_0x79a0                       EQU                               0x79a0
+_str_0x79a0                       DB                                2 '+ ' 0
+_str_0x76a0                       EQU                               0x76a0
+_str_0x76a0                       DB                                2 'O ' 0
 _str_0x75a2                       EQU                               0x75a2
 _str_0x75a2                       DB                                8 'GUTTER!!' 0
-_str_0x68ab                       EQU                               0x68ab
-_str_0x68ab                       DB                                11 'STRIKE!!!!!' 0
+_str_0x69a0                       EQU                               0x69a0
+_str_0x69a0                       DB                                11 'STRIKE!!!!!' 0
 _str_0x74a1                       EQU                               0x74a1
 _str_0x74a1                       DB                                9 'SPARE!!!!' 0
-_str_0x73a2                       EQU                               0x73a2
-_str_0x73a2                       DB                                8 'ERROR!!!' 0
-_str_0x65ec                       EQU                               0x65ec
-_str_0x65ec                       DB                                18 'ROLL YOUR 2ND BALL' 0
+_str_0x73a1                       EQU                               0x73a1
+_str_0x73a1                       DB                                9 'FAILED!!!' 0
+_str_0x64ec                       EQU                               0x64ec
+_str_0x64ec                       DB                                18 'ROLL YOUR 2ND BALL' 0
 _str_0x72a4                       EQU                               0x72a4
 _str_0x72a4                       DB                                6 'FRAMES' 0
-_str_0x65d2                       EQU                               0x65d2
-_str_0x65d2                       DB                                24 'DO YOU WANT ANOTHER GAME' 0
+_str_0x64d4                       EQU                               0x64d4
+_str_0x64d4                       DB                                22 'DO YOU WANT ANOTHER GO' 0
 
 ; Data
 
@@ -468,28 +479,28 @@ _input_0x7ca6                     EQU                               0x7ca6
 _input_0x7ca6                     DW                                0x7da3 0x7da1 0x7ca2 
 _inputVars_0x7ca0                 EQU                               0x7ca0
 _inputVars_0x7ca0                 DW                                0x0030 
-_inputStrs_0x7aa0                 EQU                               0x7aa0
-_inputStrs_0x7aa0                 DW                                0x7da5 
-_inputTypes_0x79a8                EQU                               0x79a8
-_inputTypes_0x79a8                DW                                0x5f03 0x0000 
+_inputStrs_0x7aaa                 EQU                               0x7aaa
+_inputStrs_0x7aaa                 DW                                0x7da5 
+_inputTypes_0x7aa6                EQU                               0x7aa6
+_inputTypes_0x7aa6                DW                                0x5f03 0x0000 
 _input_0x7ba0                     EQU                               0x7ba0
-_input_0x7ba0                     DW                                0x7ca0 0x7aa0 0x79a8 
-_inputVars_0x79a0                 EQU                               0x79a0
-_inputVars_0x79a0                 DW                                0x66a0 
-_inputStrs_0x78aa                 EQU                               0x78aa
-_inputStrs_0x78aa                 DW                                0x7da5 
-_inputTypes_0x78a6                EQU                               0x78a6
-_inputTypes_0x78a6                DW                                0x5f05 0x0000 
-_input_0x79a2                     EQU                               0x79a2
-_input_0x79a2                     DW                                0x79a0 0x78aa 0x78a6 
-_inputVars_0x78a0                 EQU                               0x78a0
-_inputVars_0x78a0                 DW                                0x64a0 
-_inputStrs_0x76a3                 EQU                               0x76a3
-_inputStrs_0x76a3                 DW                                0x7da5 
+_input_0x7ba0                     DW                                0x7ca0 0x7aaa 0x7aa6 
+_inputVars_0x79aa                 EQU                               0x79aa
+_inputVars_0x79aa                 DW                                0x65a0 
+_inputStrs_0x79a8                 EQU                               0x79a8
+_inputStrs_0x79a8                 DW                                0x7da5 
+_inputTypes_0x79a4                EQU                               0x79a4
+_inputTypes_0x79a4                DW                                0x5f05 0x0000 
+_input_0x7aa0                     EQU                               0x7aa0
+_input_0x7aa0                     DW                                0x79aa 0x79a8 0x79a4 
+_inputVars_0x78a1                 EQU                               0x78a1
+_inputVars_0x78a1                 DW                                0x63a0 
+_inputStrs_0x77a1                 EQU                               0x77a1
+_inputStrs_0x77a1                 DW                                0x7da5 
 _inputTypes_0x72a0                EQU                               0x72a0
 _inputTypes_0x72a0                DW                                0x5f05 0x0000 
 _input_0x71a6                     EQU                               0x71a6
-_input_0x71a6                     DW                                0x78a0 0x76a3 0x72a0 
+_input_0x71a6                     DW                                0x78a1 0x77a1 0x72a0 
 
 ; Code
 _entryPoint_                      LDI                               0x20
@@ -507,14 +518,13 @@ _entryPoint_                      LDI                               0x20
                                   ScanlineMode                      
                                   ClearVertBlinds                                               ; Main: mode 2 : cls
 
-_360                              PrintString                       _str_0x6cdc
-                                  NewLine                                                       ; Main: PRINT "WELCOME TO THE ALLEY"
+_360                              PrintString                       _str_0x6cd6                 ; Main: PRINT "WELCOME TO THE ALLEY BRING";
 
-_450                              PrintString                       _str_0x6cc8
-                                  NewLine                                                       ; Main: PRINT "BRING YOUR FRIENDS"
+_450                              PrintString                       _str_0x6cbb
+                                  NewLine                                                       ; Main: PRINT "YOUR FRIENDS! OKAY LET US"
 
-_540                              PrintString                       _str_0x6ca6
-                                  NewLine                                                       ; Main: PRINT "OKAY LET US FIRST GET ACQUAINTED"
+_540                              PrintString                       _str_0x6ca2
+                                  NewLine                                                       ; Main: PRINT "FIRST GET ACQUAINTED..."
 
 _630                              NewLine                                                       ; Main: PRINT ""
 
@@ -522,7 +532,8 @@ _720                              PrintString                       _str_0x6be8
                                   NewLine                                                       ; Main: PRINT "THE INSTRUCTIONS (Y/N)"
 
 _810                              LDWI                              0x7ca6
-                                  Input                                                         ; Main: INPUT Z$
+                                  Input                             
+                                  NewLine                                                       ; Main: INPUT Z$ : PRINT
 
 _900                              LDWI                              0x6aa0
                                   STW                               strSrcAddr
@@ -550,42 +561,51 @@ _960                              LDWI                              0x6aa0
                                   LDWI                              _1530
                                   CALL                              giga_vAC                    ; Main: IF UPPER$(Z$) = "N" THEN 1530
 
-_990                              PrintString                       _str_0x69c6
+_990                              ClearVertBlinds                   
                                   STLW                              0xFE
                                   LDWI                              _page_0x0300
                                   CALL                              giga_vAC
 _page_0x0300                      LDLW                              0xFE
-                                  NewLine                                                       ; Main: PRINT "THE GAME OF BOWLING TAKES MIND AND SKILL.DURING THE GAME"
+                                  PrintString                       _str_0x69c6                 ; Main: CLS : PRINT "THE GAME OF BOWLING TAKES MIND AND SKILL. DURING THEGAME";
 
-_1080                             PrintString                       _str_0x6ba5
-                                  NewLine                                                       ; Main: PRINT "THE COMPUTER WILL KEEP SCORE.YOU MAY COMPETE WITH"
+_1080                             PrintString                       _str_0x68c7                 ; Main: PRINT " THE COMPUTER WILL    KEEP SCORE. YOU MAY       COMPETE";
 
-_1170                             NewLine                                                       ; Main: PRINT "OTHER PLAYERS[UP TO FOUR].YOU WILL BE PLAYING TEN FRAMES"
+_1170                             PrintString                       _str_0x67b7                 ; Main: PRINT " WITH OTHER PLAYERS(UP TO FOUR).YOU WILL BE  PLAYING TEN FRAMES. ON THE";
 
-_1260                             PrintString                       _str_0x68c6
-                                  NewLine                                                       ; Main: PRINT "ON THE PIN DIAGRAM O MEANS THE PIN IS DOWN...+ MEANS THE"
+_1260                             PrintString                       _str_0x6bbf
+                                  NewLine                                                       ; Main: PRINT "PIN DIAGRAM O MEANS THE"
 
-_1350                             PrintString                       _str_0x67c4
-                                  NewLine                                                       ; Main: PRINT "PIN IS STANDING.AFTER THE GAME THE COMPUTER WILL SHOW YOUR"
+_1261                             PrintString                       _str_0x6ba5
+                                  NewLine                                                       ; Main: PRINT "PIN IS DOWN, + MEANS THE"
 
-_1440                             PrintString                       _str_0x7aa2
-                                  NewLine                                                       ; Main: PRINT "SCORES ."
+_1350                             PrintString                       _str_0x69ad
+                                  NewLine                                                       ; Main: PRINT "PIN IS STANDING. AT THE"
 
-_1530                             PrintString                       _str_0x69a1                 ; Main: PRINT "FIRST OF ALL...HOW MANY ARE PLAYING";
+_1351                             PrintString                       _str_0x68ad
+                                  NewLine                                                       ; Main: PRINT "END OF THE GAME YOU WILL"
+
+_1352                             PrintString                       _str_0x67a0
+                                  NewLine                                                       ; Main: PRINT "BE SHOWN YOUR SCORES."
+
+_1530                             NewLine                           
+                                  PrintString                       _str_0x66e7
+                                  NewLine                                                       ; Main: PRINT : PRINT "FIRST OF ALL...HOW MANY"
+
+_1531                             PrintString                       _str_0x66d4                 ; Main: PRINT "PLAYERS ARE THERE";
 
 _1620                             LDWI                              0x7ba0
                                   Input                                                         ; Main: INPUT R
 
 _1710                             NewLine                                                       ; Main: PRINT
 
-_1800                             PrintString                       _str_0x68b8
+_1800                             PrintString                       _str_0x66c6
                                   NewLine                                                       ; Main: PRINT "VERY GOOD..."
 
 _1890                             LDI                               1
                                   STW                               _I
-_next_0x0352                      LDI                               1
+_next_0x0384                      LDI                               1
                                   STW                               _J
-_next_0x0356                      LDI                               0
+_next_0x0388                      LDI                               0
                                   STW                               memValue
                                   LDW                               _I
                                   STW                               memIndex0
@@ -595,8 +615,8 @@ _next_0x0356                      LDI                               0
                                   CALL                              convert16Arr2dAddr
                                   LDW                               memValue
                                   DOKE                              memAddr
-                                  ForNextFarInc                     _J _next_0x0356 6
-                                  ForNextFarInc                     _I _next_0x0352 100         ; Main: FOR I=1 TO 100: FOR J=1 TO 6: A(I,J)=0: NEXT J: NEXT I
+                                  ForNextFarInc                     _J _next_0x0388 6
+                                  ForNextFarInc                     _I _next_0x0384 100         ; Main: FOR I=1 TO 100: FOR J=1 TO 6: A(I,J)=0: NEXT J: NEXT I
 
 _1980                             LDI                               1
                                   STW                               _F                          ; Main: F=1
@@ -609,6 +629,10 @@ _2070                             LDI                               1
                                   STW                               0xb2                        ; Main: FOR P=1 TO R
 
 _2160                             LDI                               0
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0400
+                                  CALL                              giga_vAC
+_page_0x0400                      LDLW                              0xFE
                                   STW                               _M                          ; Main: M=0
 
 _2250                             LDI                               1
@@ -621,23 +645,21 @@ _2340                             LDI                               0
 
 _2430                             LDI                               1
                                   STW                               _I
-_next_0x03ab                      LDWI                              0x7de0
+_next_0x03dd                      LDWI                              0x7de0
                                   ADDW                              _I
                                   ADDW                              _I
                                   STW                               memAddr
                                   LDI                               0
                                   DOKE                              memAddr
-                                  ForNextFarInc                     _I _next_0x03ab 15          ; Main: FOR I=1 TO 15: C(I)=0: NEXT I
+                                  ForNextFarInc                     _I _next_0x03dd 15          ; Main: FOR I=1 TO 15: C(I)=0: NEXT I
 
-_2610                             PrintString                       _str_0x67a2
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x0400
-                                  CALL                              giga_vAC
-_page_0x0400                      LDLW                              0xFE
-                                  NewLine                                                       ; Main: PRINT "TYPE ROLL TO GET THE BALL GOING."
+_2610                             PrintString                       _str_0x66af
+                                  NewLine                                                       ; Main: PRINT "PRESS ENTER TO START."
 
-_2700                             LDWI                              0x79a2
-                                  Input                                                         ; Main: INPUT N$
+_2700                             LDWI                              0x7aa0
+                                  Input                             
+                                  NewLine                           
+                                  ClearVertBlinds                                               ; Main: INPUT N$ : print : cls
 
 _2790                             LDI                               0
                                   STW                               _K
@@ -666,7 +688,7 @@ _3150                             LDI                               15
                                   CALL                              convertLtOpAddr
                                   JumpFalse                         _3240 2
                                   LDWI                              _3330
-                                  CALL                              giga_vAC                    ; Main: IF X<15*J THEN 3330
+                                  CALL                              giga_vAC                    ; Main: IF X<(15*J) THEN 3330
 
 _3240                             ForNextFarInc                     _J _3150 10                 ; Main: NEXT J
 
@@ -689,11 +711,20 @@ _3330                             LDI                               1
 
 _3420                             ForNextFarInc                     _I _2970 20                 ; Main: NEXT I
 
-_3600                             LDW                               _P
+_3600                             PrintString                       _str_0x78a3
+                                  LDW                               _P
                                   PrintAcInt16                      
-                                  PrintString                       _str_0x77a4
-                                  PrintString                       _str_0x76a5
-                                  NewLine                                                       ; Main: PRINT "PLAYER:"P;"FRAME:";F"BALL:"B
+                                  PrintString                       _str_0x77a3
+                                  LDW                               _F
+                                  PrintAcInt16                      
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0500
+                                  CALL                              giga_vAC
+_page_0x0500                      LDLW                              0xFE
+                                  PrintString                       _str_0x76a4
+                                  LDW                               _B
+                                  PrintAcInt16                      
+                                  NewLine                                                       ; Main: PRINT "PLAYER:";P;" FRAME:";F;" BALL:";B
 
 _3690                             LDI                               0
                                   STW                               _I                          ; Main: FOR I=0 TO 3
@@ -722,22 +753,46 @@ _4050                             LDWI                              0x7de0
                                   LDWI                              _4320
                                   CALL                              giga_vAC                    ; Main: IF C(K)=1 THEN 4320
 
-_4140                             LDW                               _I
+_4140                             LDW                               _J
+                                  STW                               mathX
+                                  LDI                               6
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  STW                               0xe8
+                                  LDW                               _I
+                                  STW                               mathX
+                                  LDI                               3
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  ADDW                              0xe8
+                                  ADDI                              2
                                   ST                                cursorXY
                                   AtTextCursor                      
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x0500
-                                  CALL                              giga_vAC
-_page_0x0500                      LDLW                              0xFE
-                                  PrintString                       _str_0x78a2                 ; Main: AT I : PRINT "+ ";
+                                  PrintString                       _str_0x79a0                 ; Main: AT J*6 + I*3 + 2 : PRINT "+ ";
 
 _4230                             LDWI                              _4410
                                   CALL                              giga_vAC                    ; Main: GOTO 4410
 
-_4320                             LDW                               _I
+_4320                             LDW                               _J
+                                  STW                               mathX
+                                  LDI                               6
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  STW                               0xe8
+                                  LDW                               _I
+                                  STW                               mathX
+                                  LDI                               3
+                                  STW                               mathY
+                                  LDWI                              multiply16bit
+                                  CALL                              giga_vAC
+                                  ADDW                              0xe8
+                                  ADDI                              2
                                   ST                                cursorXY
                                   AtTextCursor                      
-                                  PrintString                       _str_0x77a0                 ; Main: AT I : PRINT "O ";
+                                  PrintString                       _str_0x76a0                 ; Main: AT J*6 + I*3 + 2 : PRINT "O ";
 
 _4410                             ForNextFarVarAdd                  _J _3960 0xb8 0xba          ; Main: NEXT J
 
@@ -757,13 +812,17 @@ _4860                             LDWI                              0x7de0
 
 _4950                             ForNextFarInc                     _I _4860 10                 ; Main: NEXT I
 
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0600
+                                  CALL                              giga_vAC
+_page_0x0600                      LDLW                              0xFE
 _5040                             LDW                               _D
                                   SUBW                              _M
                                   XORI                              0
                                   CALL                              convertNeOpAddr
                                   JumpFalse                         _5130 4
                                   LDWI                              _5220
-                                  CALL                              giga_vAC                    ; Main: IF D-M <> 0 THEN 5220
+                                  CALL                              giga_vAC                    ; Main: IF (D-M) <> 0 THEN 5220
 
 _5130                             PrintString                       _str_0x75a2
                                   NewLine                                                       ; Main: PRINT "GUTTER!!"
@@ -772,6 +831,10 @@ _5220                             LDW                               _B
                                   XORI                              1
                                   CALL                              convertNeOpAddr
                                   STW                               0xe8
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x08a0
+                                  CALL                              giga_vAC
+_page_0x08a0                      LDLW                              0xFE
                                   LDW                               _D
                                   XORI                              10
                                   CALL                              convertNeOpAddr
@@ -780,7 +843,7 @@ _5220                             LDW                               _B
                                   LDWI                              _5490
                                   CALL                              giga_vAC                    ; Main: IF (B<>1) OR (D<>10) THEN 5490
 
-_5310                             PrintString                       _str_0x68ab
+_5310                             PrintString                       _str_0x69a0
                                   NewLine                                                       ; Main: PRINT "STRIKE!!!!!"
 
 _5400                             LDI                               3
@@ -802,6 +865,10 @@ _5580                             PrintString                       _str_0x74a1
                                   NewLine                                                       ; Main: PRINT "SPARE!!!!"
 
 _5670                             LDI                               2
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x09a0
+                                  CALL                              giga_vAC
+_page_0x09a0                      LDLW                              0xFE
                                   STW                               _Q                          ; Main: Q=2
 
 _5760                             LDW                               _B
@@ -811,17 +878,13 @@ _5760                             LDW                               _B
                                   LDW                               _D
                                   SUBI                              10
                                   CALL                              convertGeOpAddr
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x0600
-                                  CALL                              giga_vAC
-_page_0x0600                      LDLW                              0xFE
                                   ORW                               0xe8
                                   JumpFalse                         _5850 7
                                   LDWI                              _6030
                                   CALL                              giga_vAC                    ; Main: IF (B<>2) OR (D>=10) THEN 6030
 
-_5850                             PrintString                       _str_0x73a2
-                                  NewLine                                                       ; Main: PRINT "ERROR!!!"
+_5850                             PrintString                       _str_0x73a1
+                                  NewLine                                                       ; Main: PRINT "FAILED!!!"
 
 _5940                             LDI                               1
                                   STW                               _Q                          ; Main: Q=1
@@ -831,18 +894,18 @@ _6030                             LDW                               _B
                                   CALL                              convertNeOpAddr
                                   STW                               0xe8
                                   LDW                               _D
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x08a0
-                                  CALL                              giga_vAC
-_page_0x08a0                      LDLW                              0xFE
                                   SUBI                              10
                                   CALL                              convertGeOpAddr
                                   ORW                               0xe8
                                   JumpFalse                         _6120 8
-                                  LDWI                              _6210
-                                  CALL                              giga_vAC                    ; Main: IF (B<>1) OR (D>=10) THEN 6210
+                                  LDWI                              _6300
+                                  CALL                              giga_vAC                    ; Main: IF (B<>1) OR (D>=10) THEN 6300
 
-_6120                             PrintString                       _str_0x65ec
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0aa0
+                                  CALL                              giga_vAC
+_page_0x0aa0                      LDLW                              0xFE
+_6120                             PrintString                       _str_0x64ec
                                   NewLine                                                       ; Main: PRINT "ROLL YOUR 2ND BALL"
 
 _6300                             NewLine                                                       ; Main: PRINT
@@ -867,10 +930,6 @@ _6480                             LDW                               _B
                                   XORI                              2
                                   CALL                              convertEqOpAddr
                                   JumpFalse                         _6570 9
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x09a0
-                                  CALL                              giga_vAC
-_page_0x09a0                      LDLW                              0xFE
                                   LDWI                              _7020
                                   CALL                              giga_vAC                    ; Main: IF B=2 THEN 7020
 
@@ -883,9 +942,13 @@ _6660                             LDW                               _D
 _6750                             LDW                               _Q
                                   XORI                              3
                                   CALL                              convertEqOpAddr
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0ba0
+                                  CALL                              giga_vAC
+_page_0x0ba0                      LDLW                              0xFE
                                   JumpFalse                         _6840 10
-                                  LDWI                              _6210
-                                  CALL                              giga_vAC                    ; Main: IF Q=3 THEN 6210
+                                  LDWI                              _6300
+                                  CALL                              giga_vAC                    ; Main: IF Q=3 THEN 6300
 
 _6840                             LDW                               _D
                                   SUBW                              _M
@@ -908,13 +971,9 @@ _6930                             LDW                               _Q
                                   XORI                              0
                                   CALL                              convertEqOpAddr
                                   JumpFalse                         _7020 11
-                                  LDWI                              _2520
-                                  CALL                              giga_vAC                    ; Main: IF Q=0 THEN 2520
+                                  LDWI                              _2610
+                                  CALL                              giga_vAC                    ; Main: IF Q=0 THEN 2610
 
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x0aa0
-                                  CALL                              giga_vAC
-_page_0x0aa0                      LDLW                              0xFE
 _7020                             LDW                               _Q
                                   STW                               memValue
                                   LDW                               _F
@@ -924,6 +983,10 @@ _7020                             LDW                               _Q
                                   LDWI                              multiply16bit
                                   CALL                              giga_vAC
                                   STW                               memIndex0
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0ca0
+                                  CALL                              giga_vAC
+_page_0x0ca0                      LDLW                              0xFE
                                   LDI                               3
                                   STW                               memIndex1
                                   LDWI                              0x0636
@@ -945,10 +1008,6 @@ _7290                             LDW                               _F
                                   CALL                              giga_vAC                    ; Main: IF F<11 THEN 2070
 
 _7295                             PrintString                       _str_0x72a4
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x0ba0
-                                  CALL                              giga_vAC
-_page_0x0ba0                      LDLW                              0xFE
                                   NewLine                                                       ; Main: PRINT "FRAMES"
 
 _7380                             LDI                               1
@@ -957,6 +1016,10 @@ _7380                             LDI                               1
 _7470                             LDW                               _I
                                   PrintAcInt16                                                  ; Main: PRINT I;
 
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0da0
+                                  CALL                              giga_vAC
+_page_0x0da0                      LDLW                              0xFE
 _7560                             ForNextFarInc                     _I _7470 10                 ; Main: NEXT I
 
 _7650                             NewLine                                                       ; Main: PRINT
@@ -986,14 +1049,14 @@ _8010                             LDW                               _J
                                   LDWI                              0x0636
                                   CALL                              convert16Arr2dAddr
                                   DEEK                              
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x0ca0
-                                  CALL                              giga_vAC
-_page_0x0ca0                      LDLW                              0xFE
                                   PrintAcInt16                                                  ; Main: PRINT A(J*P,I);
 
 _8100                             ForNextFarInc                     _J _8010 10                 ; Main: NEXT J
 
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0ea0
+                                  CALL                              giga_vAC
+_page_0x0ea0                      LDLW                              0xFE
 _8105                             NewLine                                                       ; Main: PRINT
 
 _8190                             ForNextFarInc                     _I _7920 3                  ; Main: NEXT I
@@ -1002,21 +1065,23 @@ _8280                             NewLine                                       
 
 _8370                             ForNextFarVarAdd                  _P _7830 0xb0 0xb2          ; Main: NEXT P
 
-_8460                             PrintString                       _str_0x65d2
-                                  NewLine                                                       ; Main: PRINT "DO YOU WANT ANOTHER GAME"
+_8460                             PrintString                       _str_0x64d4                 ; Main: PRINT "DO YOU WANT ANOTHER GO";
 
 _8550                             LDWI                              0x71a6
-                                  Input                                                         ; Main: INPUT A$
+                                  Input                             
+                                  NewLine                           
+                                  LDI                               1
+                                  STW                               _P                          ; Main: INPUT A$ : PRINT : P=1
 
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x0da0
-                                  CALL                              giga_vAC
-_page_0x0da0                      LDLW                              0xFE
-_8640                             LDWI                              0x64a0
+_8640                             LDWI                              0x63a0
                                   STW                               strSrcAddr
                                   LDI                               1
                                   STW                               strDstLen
                                   LDWI                              0x7ea0
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0fa0
+                                  CALL                              giga_vAC
+_page_0x0fa0                      LDLW                              0xFE
                                   StringLeft                        
                                   LDWI                              0x7ea0
                                   STW                               strSrcAddr
@@ -1027,11 +1092,11 @@ _8640                             LDWI                              0x64a0
                                   LDWI                              0x7ba9
                                   StringCmp                         
                                   ANDI                              1
-                                  JumpFalse                         _else_0x0847 13
-                                  LDWI                              _2610
-                                  CALL                              giga_vAC                    ; Main: IF UPPER$(LEFT$(A$,1)) = "Y" THEN 2610
+                                  JumpFalse                         _else_0x08f7 13
+                                  LDWI                              _1890
+                                  CALL                              giga_vAC                    ; Main: IF UPPER$(LEFT$(A$,1)) = "Y" THEN 1890
 
-_else_0x0847                      HALT                                                          ; Main: END
+_else_0x08f7                      HALT                                                          ; Main: END
 
                                   HALT                                                          ; Main: END
 
@@ -1043,45 +1108,45 @@ _else_0x0847                      HALT                                          
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                          EQU     0x5ca5
+romCheck                          EQU     0x5ba5
 convertEqOp                       EQU     0x6da3
-convertNeOp                       EQU     0x68a2
-convertGeOp                       EQU     0x57a0
-convertLtOp                       EQU     0x55a3
+convertNeOp                       EQU     0x66a6
+convertGeOp                       EQU     0x5da5
+convertLtOp                       EQU     0x54a3
 convert16Arr2d                    EQU     0x70a0
-loadRegs                          EQU     0x5ba2
-saveRegs                          EQU     0x55e1
-multiply16bit                     EQU     0x58cb
-divide16bit                       EQU     0x5fa8
-randMod16bit                      EQU     0x54ad
+loadRegs                          EQU     0x5aa2
+saveRegs                          EQU     0x54e1
+multiply16bit                     EQU     0x64a0
+divide16bit                       EQU     0x5ea8
+randMod16bit                      EQU     0x53ad
 scanlineMode                      EQU     0x6ea2
 resetVideoFlags                   EQU     0x6fa0
-initClearFuncs                    EQU     0x53ee
-clearVertBlinds                   EQU     0x59c9
-clearCursorRow                    EQU     0x65a2
-input                             EQU     0x59a5
-inputExt1                         EQU     0x61a6
-inputExt2                         EQU     0x56d3
-inputCursor                       EQU     0x55c3
-inputKeys                         EQU     0x62a4
-inputIntVar                       EQU     0x54c0
-inputStrVar                       EQU     0x55ac
-inputReturn                       EQU     0x5cbc
-inputDelete                       EQU     0x5db9
-inputPrint                        EQU     0x58a7
-inputNewline                      EQU     0x54d4
-printInit                         EQU     0x54e9
-printText                         EQU     0x5da0
-printDigit                        EQU     0x57a9
-printInt16                        EQU     0x5eae
-printChr                          EQU     0x5ea1
-printChar                         EQU     0x60a7
-atTextCursor                      EQU     0x5aa0
-newLineScroll                     EQU     0x63a2
-integerStr                        EQU     0x5bc0
-stringCmp                         EQU     0x5ac5
+initClearFuncs                    EQU     0x55a0
+clearVertBlinds                   EQU     0x58c9
+clearCursorRow                    EQU     0x56cf
+input                             EQU     0x58a5
+inputExt1                         EQU     0x60a6
+inputExt2                         EQU     0x56a3
+inputCursor                       EQU     0x54c3
+inputKeys                         EQU     0x61a4
+inputIntVar                       EQU     0x53c0
+inputStrVar                       EQU     0x54ac
+inputReturn                       EQU     0x5bbc
+inputDelete                       EQU     0x5cb9
+inputPrint                        EQU     0x57a7
+inputNewline                      EQU     0x53d4
+printInit                         EQU     0x53e9
+printText                         EQU     0x5ca0
+printDigit                        EQU     0x55b1
+printInt16                        EQU     0x5dae
+printChr                          EQU     0x68a0
+printChar                         EQU     0x5fa7
+atTextCursor                      EQU     0x59a0
+newLineScroll                     EQU     0x62a2
+integerStr                        EQU     0x5ac0
+stringCmp                         EQU     0x59c5
 stringLeft                        EQU     0x57cb
-stringUpper                       EQU     0x56a7
+stringUpper                       EQU     0x55d3
 convertEqOpAddr                   EQU     0x00c0
 convertNeOpAddr                   EQU     0x00c2
 convertLeOpAddr                   EQU     0x00c4

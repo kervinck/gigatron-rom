@@ -23,6 +23,7 @@ namespace Pragmas
         _pragmas["_codeRomType_"]        = {"_codeRomType_",        CODEROMTYPE       };
         _pragmas["_runtimePath_"]        = {"_runtimePath_",        RUNTIMEPATH       };
         _pragmas["_runtimeStart_"]       = {"_runtimeStart_",       RUNTIMESTART      };
+        _pragmas["_userCodeStart_"]      = {"_userCodeStart_",      USERCODESTART     };
         _pragmas["_arraysStart_"]        = {"_arraysStart_",        ARRAYSSTART       };
         _pragmas["_stringsStart_"]       = {"_stringsStart_",       STRINGSSTART      };
         _pragmas["_stringWorkArea_"]     = {"_stringWorkArea_",     STRINGWORKAREA    };
@@ -157,6 +158,34 @@ namespace Pragmas
             }
             Compiler::setStrWorkArea(strWorkArea, i);
         }
+
+        return true;
+    }
+
+    bool USERCODESTART(const std::string& input, int codeLineIndex, size_t foundPos)
+    {
+        std::string pragma = input.substr(foundPos);
+        Expression::stripNonStringWhitespace(pragma);
+        std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false);
+        if(tokens.size() != 1)
+        {
+            fprintf(stderr, "Pragmas::USERCODESTART() : Syntax error, _userCodeStart_ <address>, in '%s' on line %d\n", input.c_str(), codeLineIndex);
+            return false;
+        }
+
+        Expression::Numeric addrNumeric;
+        std::string addrOperand;
+        Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric);
+
+        uint16_t address = uint16_t(std::lround(addrNumeric._value));
+        if(address < DEFAULT_START_ADDRESS)
+        {
+            fprintf(stderr, "Pragmas::USERCODESTART() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str(),
+                                                                                                                                                                         codeLineIndex);
+            return false;
+        }
+
+        Compiler::setUserCodeStart(address);
 
         return true;
     }

@@ -425,8 +425,7 @@ namespace Keywords
             }
             if(++_numNumericGotosGosubs > Compiler::getNumNumericLabels())
             {
-                fprintf(stderr, "Keywords::GOTO() : There is a mismatch in Numeric labels for one or more GOTO <var> and GOSUB <var>. ");
-                fprintf(stderr, "Correct your line numbers and add appropriate trailers, ':' for GOTO <var> and '!' for GOSUB <var>\n");
+                fprintf(stderr, "Keywords::GOTO() : Numeric label '%s' does not exist : in '%s' on line %d\n", gotoToken.c_str(), codeLine._text.c_str(), codeLineStart);
                 return false;
             }
 
@@ -525,8 +524,7 @@ namespace Keywords
             }
             if(++_numNumericGotosGosubs > Compiler::getNumNumericLabels())
             {
-                fprintf(stderr, "Keywords::GOSUB() : There is a mismatch in Numeric labels for one or more GOTO <var> and GOSUB <var>. ");
-                fprintf(stderr, "Correct your line numbers and add appropriate trailers, ':' for GOTO <var> and '!' for GOSUB <var>\n");
+                fprintf(stderr, "Keywords::GOSUB() : Numeric label '%s' does not exist : in '%s' on line %d\n", gosubToken.c_str(), codeLine._text.c_str(), codeLineStart);
                 return false;
             }
             if(!usePush)
@@ -691,6 +689,7 @@ RESTART_PRINT:
             int varIndex = -1, constIndex = -1, strIndex = -1;
             uint32_t expressionType = Compiler::isExpression(tokens[i], varIndex, constIndex, strIndex);
 
+#if 1
             if((expressionType & Expression::HasStringKeywords)  &&  (expressionType & Expression::HasOptimisedPrint))
             {
                 // Prints text on the fly without creating strings
@@ -698,14 +697,43 @@ RESTART_PRINT:
                 if(!Expression::parse(tokens[i], codeLineIndex, numeric))
                 {
                     Expression::setEnableOptimisedPrint(false);
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
                     return false;
                 }
                 Expression::setEnableOptimisedPrint(false);
             }
+#else
+            // TODO: Fix this
+            if((expressionType & Expression::HasStringKeywords))
+            {
+                if(expressionType & Expression::HasOptimisedPrint)
+                {
+                    // Prints text on the fly without creating strings
+                    Expression::setEnableOptimisedPrint(true);
+                    if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                    {
+                        Expression::setEnableOptimisedPrint(false);
+                        fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                        return false;
+                    }
+                    Expression::setEnableOptimisedPrint(false);
+                }
+                // Leading chars before a string function
+                else
+                {
+                    //fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", tokens[i].c_str(), codeLine._text.c_str(), codeLineStart);
+                    //return false;
+                }
+            }
+#endif
             // Arrays are handled as functions
             else if(expressionType & Expression::HasFunctions)
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 if(numeric._varType == Expression::Number)
                 {
                     Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
@@ -718,7 +746,11 @@ RESTART_PRINT:
             }
             else if((expressionType & Expression::HasStrVars)  &&  (expressionType & Expression::HasOperators))
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 if(numeric._varType == Expression::Number)
                 {
                     Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
@@ -741,7 +773,11 @@ RESTART_PRINT:
             }
             else if((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 if(numeric._varType == Expression::Number)
                 {
                     Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
@@ -763,7 +799,11 @@ RESTART_PRINT:
             }
             else if(expressionType & Expression::HasIntVars)
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 if(varIndex >= 0)
                 {
                     if(numeric._varType != Expression::Str2Var)
@@ -803,7 +843,11 @@ RESTART_PRINT:
                     // String array with literal index
                     else
                     {
-                        if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                        if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                        {
+                            fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                            return false;
+                        }
                         Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
                         Compiler::emitVcpuAsm("%PrintAcString", "", false);
                     }
@@ -811,19 +855,55 @@ RESTART_PRINT:
             }
             else if(expressionType & Expression::HasKeywords)
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
                 Compiler::emitVcpuAsm("%PrintAcInt16", "", false);
             }
             else if(expressionType & Expression::HasOperators)
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
             }
             else if(expressionType & Expression::HasStrings)
             {
                 size_t lquote = tokens[i].find_first_of("\"");
                 size_t rquote = tokens[i].find_last_of("\"");
+#if 1
+                if(lquote > 0)
+                {
+                    // If there are leading chars that are not whitespace, then syntax error
+                    for(size_t j=0; j<lquote; j++)
+                    {
+                        if(!isspace(tokens[i][j]))
+                        {
+                            std::string error = tokens[i].substr(0, lquote);
+                            fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", error.c_str(), codeLine._text.c_str(), codeLineStart);
+                            return false;
+                        }
+                    }
+                }
+                if(rquote < tokens[i].size() - 1)
+                {
+                    // If there are trailing chars left over and they are not whitespace, then syntax error
+                    for(size_t j=rquote+1; j<tokens[i].size(); j++)
+                    {
+                        if(!isspace(tokens[i][j]))
+                        {
+                            std::string error = tokens[i].substr(rquote + 1);
+                            fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", error.c_str(), codeLine._text.c_str(), codeLineStart);
+                            return false;
+                        }
+                    }
+                }
+#endif
                 if(lquote != std::string::npos  &&  rquote != std::string::npos)
                 {
                     if(rquote == lquote + 1) continue; // skip empty strings
@@ -852,7 +932,11 @@ RESTART_PRINT:
             }
             else if(expressionType == Expression::HasNumbers)
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
             }
         }
@@ -1141,17 +1225,29 @@ RESTART_PRINT:
         if(optimise)
         {
             // Parse start
-            if(!Expression::parse(startToken, codeLineIndex, startNumeric)) return false;
+            if(!Expression::parse(startToken, codeLineIndex, startNumeric))
+            {
+                fprintf(stderr, "Keywords::FOR() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
             loopStart = int16_t(std::lround(startNumeric._value));
 
             // Parse end
-            if(!Expression::parse(endToken, codeLineIndex, endNumeric)) return false;
+            if(!Expression::parse(endToken, codeLineIndex, endNumeric))
+            {
+                fprintf(stderr, "Keywords::FOR() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
             loopEnd = int16_t(std::lround(endNumeric._value));
 
             // Parse step
             if(stepToken.size())
             {
-                if(!Expression::parse(stepToken, codeLineIndex, stepNumeric)) return false;
+                if(!Expression::parse(stepToken, codeLineIndex, stepNumeric))
+                {
+                    fprintf(stderr, "Keywords::FOR() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 loopStep = int16_t(std::lround(stepNumeric._value));
                 if(loopStep < 1  ||  loopStep > 255) optimise = false;
             }
@@ -1951,13 +2047,17 @@ RESTART_PRINT:
         return true;
     }
 
-    bool callHelper(Compiler::CodeLine& codeLine, int codeLineIndex, std::string& token, uint16_t localVarsAddr)
+    bool callHelper(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, std::string& token, uint16_t localVarsAddr)
     {
         UNREFERENCED_PARAM(codeLine);
 
         // If valid expression
         Expression::Numeric numeric;
-        if(!Expression::parse(token, codeLineIndex, numeric)) return false;
+        if(!Expression::parse(token, codeLineIndex, numeric))
+        {
+            fprintf(stderr, "Keywords::CALL() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
 
         if(numeric._varType == Expression::Number)
         {
@@ -2013,7 +2113,7 @@ RESTART_PRINT:
                     return false;
                 }
 
-                if(!callHelper(codeLine, codeLineIndex, callTokens[i], localVarsAddr))
+                if(!callHelper(codeLine, codeLineIndex, codeLineStart, callTokens[i], localVarsAddr))
                 {
                     return false;
                 }
@@ -2310,7 +2410,11 @@ RESTART_PRINT:
         else
         {
             Expression::Numeric numeric(true); // true = allow static init
-            if(!Expression::parse(tokens[1], codeLineIndex, numeric)) return false;
+            if(!Expression::parse(tokens[1], codeLineIndex, numeric))
+            {
+                fprintf(stderr, "Keywords::CONST() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
             if(tokens[1].size() == 0  ||  !numeric._isValid  ||  numeric._varType == Expression::TmpVar  ||  numeric._varType == Expression::IntVar16)
             {
                 fprintf(stderr, "Keywords::CONST() : Syntax error, invalid constant expression, in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
@@ -4315,7 +4419,11 @@ RESTART_PRINT:
             if(varsAddr.size())
             {
                 Expression::Numeric numeric(true); // true = allow static init
-                if(!Expression::parse(varsAddr, codeLineIndex, numeric)) return false;
+                if(!Expression::parse(varsAddr, codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::INIT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(int8_t(std::lround(numeric._value))), false);
             }
             else
@@ -4496,7 +4604,7 @@ RESTART_PRINT:
     }
     bool handleLOADchunk(Compiler::CodeLine& codeLine, int codeLineStart, const std::vector<uint8_t>& data, int row, uint16_t width, uint16_t address, uint8_t chunkSize, uint16_t& chunkOffset, uint16_t& chunkAddr)
     {
-        if(!Memory::getFreeRAM(Memory::FitDescending, chunkSize, 0x0200, Compiler::getRuntimeStart(), chunkAddr))
+        if(!Memory::getFreeRAM(Memory::FitDescending, chunkSize, USER_CODE_START, Compiler::getRuntimeStart(), chunkAddr))
         {
             usageLOAD(1, codeLine, codeLineStart);
             fprintf(stderr, "Keywords::LOAD() : Allocating RAM for offscreen pixel chunk on row %d failed, in '%s' on line %d\n", row, codeLine._text.c_str(), codeLineStart);
@@ -4705,7 +4813,7 @@ RESTART_PRINT:
                     for(int y=0; y<gtRgbFile._header._height; y++)
                     {
                         // Take offscreen memory from compiler for images wider than visible screen resolution, or images in offscreen memory
-                        if(address >= RAM_VIDEO_START  &&  address <= 0x7FFF)
+                        if(address >= RAM_VIDEO_START  &&  address <= RUN_TIME_START)
                         {
                             size = gtRgbFile._header._width + (address & 0x00FF) - RAM_SCANLINE_SIZE;
                             if(size > 0)
@@ -5107,7 +5215,7 @@ RESTART_PRINT:
                             return false;
                         }
 
-                        if(!Memory::getFreeRAM(Memory::FitDescending, MAPPING_SIZE, 0x0200, Compiler::getRuntimeStart(), mapAddr))
+                        if(!Memory::getFreeRAM(Memory::FitDescending, MAPPING_SIZE, USER_CODE_START, Compiler::getRuntimeStart(), mapAddr))
                         {
                             usageLOAD(3, codeLine, codeLineStart);
                             fprintf(stderr, "Keywords::LOAD() : Getting Mapping memory for Map size of %d failed, in '%s' on line %d\n", MAPPING_SIZE, codeLine._text.c_str(), codeLineStart);
@@ -5144,7 +5252,7 @@ RESTART_PRINT:
                             charData.clear();
 
                             uint16_t address = 0x0000;
-                            if(!Memory::getFreeRAM(Memory::FitDescending, (kCharHeight)*FONT_WIDTH + 1, 0x0200, Compiler::getRuntimeStart(), address))
+                            if(!Memory::getFreeRAM(Memory::FitDescending, (kCharHeight)*FONT_WIDTH + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
                             {
                                 usageLOAD(3, codeLine, codeLineStart);
                                 fprintf(stderr, "Keywords::LOAD() : Getting font memory for char %d failed, in '%s' on line %d\n", int(fontData.size() - 1), codeLine._text.c_str(), codeLineStart);
@@ -5164,7 +5272,7 @@ RESTART_PRINT:
 
                     // Create baseline for all chars in each font
                     uint16_t baseAddr = 0x0000;
-                    if(!Memory::getFreeRAM(Memory::FitDescending, FONT_WIDTH + 1, 0x0200, Compiler::getRuntimeStart(), baseAddr))
+                    if(!Memory::getFreeRAM(Memory::FitDescending, FONT_WIDTH + 1, USER_CODE_START, Compiler::getRuntimeStart(), baseAddr))
                     {
                         usageLOAD(3, codeLine, codeLineStart);
                         fprintf(stderr, "Keywords::LOAD() : Getting font memory for char %d failed, in '%s' on line %d\n", int(fontData.size() - 1), codeLine._text.c_str(), codeLineStart);
@@ -5840,7 +5948,11 @@ RESTART_PRINT:
             // Convert GBAS format to ASM format
             variables.push_back("*" + Expression::wordToHexString(address));
 
-            Expression::parse(tokens[i], codeLineIndex, numeric);
+            if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+            {
+                fprintf(stderr, "Keywords::GPRINTF() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
             if(numeric._varType == Expression::Number  ||  numeric._varType == Expression::IntVar16  ||  numeric._varType == Expression::StrVar)
             {
                 Compiler::handleExpression(codeLineIndex, tokens[i], numeric);
