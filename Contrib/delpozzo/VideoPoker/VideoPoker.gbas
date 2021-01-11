@@ -1,4 +1,6 @@
 _runtimePath_ "../../at67/gbas/runtime"
+_runtimeStart_ &h7FFF
+_spriteStripeChunks_ 15, &h7000, descending
 _codeRomType_ ROMv3
 cls : mode 2
 
@@ -74,10 +76,10 @@ load sprite, ./graphics/spade.tga, SPADES
 ' ------------------
 '   Card Deck
 ' ------------------
-dim cardValue(52)
-dim cardSuit(52)
-dim cardState(52)
-dim hand(5)
+dim cardValue%(52)
+dim cardSuit%(52)
+dim cardState%(52)
+dim hand%(5)
 
 ' ------------------
 '   Other Vars
