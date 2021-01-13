@@ -76,6 +76,7 @@ namespace Expression
     bool isLabNameValid(const std::string& labName);
     bool isStringValid(const std::string& input);
     bool hasOnlyWhiteSpace(const std::string& input);
+    void isInComment(const std::string& input, int index, bool& output);
 
     std::string::const_iterator findNonStringEquals(const std::string& input);
     std::string::const_iterator findNonStringColon(const std::string& input);

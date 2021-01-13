@@ -584,6 +584,115 @@ namespace Cpu
     }
 #endif
 
+    // Enable experimental 6bit sound
+    void enable6BitSound(RomType romType, bool enable)
+    {
+        const std::vector<uint16_t> romv5aAddrs    = {0x0056, 0x005E, 0x012C, 0x015C, 0x01A6, 0x01A7, 0x02D6, 0x02D7};
+        const std::vector<uint8_t>  romv5aOpcodes  = {0x00,   0x00,   0x00,   0x00,   0x40,   0x20,   0x40,   0x20  };
+        const std::vector<uint8_t>  romv5aOperands = {0x03,   0x03,   0x03,   0xFC,   0x03,   0xFC,   0x03,   0xFC  };
+
+        static bool firstTime = true;
+        static std::map<uint16_t, uint8_t[2]> romv5aBackup;
+
+        switch(romType)
+        {
+            case ROMv5a:
+            case DEVROM:
+            {
+                if(getRomType() < Cpu::ROMv5a)
+                {
+                    std::string romTypeStr;
+                    getRomTypeStr(getRomType(), romTypeStr);
+                    fprintf(stderr, "\nCpu::enable6BitSound() : Error, ROM version must be >= ROMv5a, current ROM is %s\n", romTypeStr.c_str());
+                    return;
+                }
+
+                if(firstTime) romv5aBackup.clear();
+
+                // LED pattern reduced to lower 2 LED's
+                for(uint16_t a=0x0130; a<=0x0147; a++)
+                {
+                    if(firstTime)
+                    {
+                        romv5aBackup[a][0] = _ROM[a][ROM_INST];
+                        romv5aBackup[a][1] = _ROM[a][ROM_DATA];
+                    }
+
+                    if(enable)
+                    {
+                        _ROM[a][ROM_INST] = 0x00;
+                        _ROM[a][ROM_DATA] = a & 0x03;
+                    }
+                    else
+                    {
+                        _ROM[a][ROM_INST] = romv5aBackup[a][0];
+                        _ROM[a][ROM_DATA] = romv5aBackup[a][1];
+                    }
+                }
+
+                // Codes
+                for(int i=0; i<int(romv5aAddrs.size()); i++)
+                {
+                    if(firstTime)
+                    {
+                        romv5aBackup[romv5aAddrs[i]][0] = _ROM[romv5aAddrs[i]][ROM_INST];
+                        romv5aBackup[romv5aAddrs[i]][1] = _ROM[romv5aAddrs[i]][ROM_DATA];
+                    }
+
+                    if(enable)
+                    {
+                        _ROM[romv5aAddrs[i]][ROM_INST] = romv5aOpcodes[i];
+                        _ROM[romv5aAddrs[i]][ROM_DATA] = (romv5aAddrs[i] == 0x005E) ? uint8_t(romType) | romv5aOperands[i] : romv5aOperands[i];
+                    }
+                    else
+                    {
+                        _ROM[romv5aAddrs[i]][ROM_INST] = romv5aBackup[romv5aAddrs[i]][0];
+                        _ROM[romv5aAddrs[i]][ROM_DATA] = romv5aBackup[romv5aAddrs[i]][1];
+                    }
+                }
+
+#if 0
+                // LED mask
+                _ROM[0x0056][ROM_INST] = 0x00;
+                _ROM[0x0056][ROM_DATA] = 0x03;
+        
+                // ROM version and enable all 4 channels
+                _ROM[0x005E][ROM_INST] = 0x00;
+                _ROM[0x005E][ROM_DATA] = uint8_t(romType) | 0x03;
+
+                // LED mask
+                _ROM[0x012C][ROM_INST] = 0x00;
+                _ROM[0x012C][ROM_DATA] = 0x03;
+        
+                // Audio mask
+                _ROM[0x015C][ROM_INST] = 0x00;
+                _ROM[0x015C][ROM_DATA] = 0xFC;
+        
+                // LED mask
+                _ROM[0x01A6][ROM_INST] = 0x40;
+                _ROM[0x01A6][ROM_DATA] = 0x03;
+
+                // Audio mask
+                _ROM[0x01A7][ROM_INST] = 0x20;
+                _ROM[0x01A7][ROM_DATA] = 0xFC;
+        
+                // LED mask
+                _ROM[0x02D6][ROM_INST] = 0x40;
+                _ROM[0x02D6][ROM_DATA] = 0x03;
+
+                // Audio mask
+                _ROM[0x02D7][ROM_INST] = 0x20;
+                _ROM[0x02D7][ROM_DATA] = 0xFC;
+#endif
+                firstTime = false;
+            }
+            break;
+
+            default: break;
+        }
+    }
+
+
     void initialise(void)
     {
 #ifdef _WIN32

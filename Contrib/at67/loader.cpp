@@ -38,6 +38,7 @@
 #include "assembler.h"
 #include "compiler.h"
 #include "keywords.h"
+#include "validater.h"
 
 
 #define DEFAULT_COM_BAUD_RATE 115200
@@ -248,7 +249,6 @@ namespace Loader
     {
         size_t nameSuffix = filename.find_last_of(".");
         std::string output = filename.substr(0, nameSuffix) + ".gt1";
-        fprintf(stderr, "\nOutput : %s\n\n", output.c_str());
 
         // Header
         uint16_t totalSize = 0;
@@ -264,14 +264,14 @@ namespace Loader
             }
         }
         uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
-        fprintf(stderr, "\n**********************************************\n");
-        fprintf(stderr, "*                   Loading                    \n");
-        fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "* %-20s : 0x%04x  : %5d bytes\n", output.c_str(), startAddress, totalSize);
+        fprintf(stderr, "\n*******************************************************\n");
+        fprintf(stderr, "*                     Creating .gt1                    \n");
+        fprintf(stderr, "*******************************************************\n");
+        fprintf(stderr, "* %-20s : 0x%04x  : %5d bytes                          \n", output.c_str(), startAddress, totalSize);
 #if 0
-        fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "*   Segment   :  Type  : Address : Memory Used\n");
-        fprintf(stderr, "**********************************************\n");
+        fprintf(stderr, "*******************************************************\n");
+        fprintf(stderr, "*   Segment   :  Type  : Address :    Size             \n");
+        fprintf(stderr, "*******************************************************\n");
 
         // Segments
         int contiguousSegments = 0;
@@ -288,7 +288,7 @@ namespace Loader
                 if(gt1File._segments.size() == 1)
                 {
                     fprintf(stderr, "*    %4d     :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, totalSize);
-                    fprintf(stderr, "**********************************************\n");
+                    fprintf(stderr, "*******************************************************\n");
                     return totalSize;
                 }
                 totalSize -= segmentSize;
@@ -328,9 +328,10 @@ namespace Loader
 #endif
         if(!isGbasFile) Memory::setSizeFreeRAM(Memory::getBaseFreeRAM() - totalSize); 
 
-        fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "* Free RAM after load  :  %5d\n", Memory::getSizeFreeRAM());
-        fprintf(stderr, "**********************************************\n");
+        int memSize = (Memory::getSizeRAM() == RAM_SIZE_LO) ? 32 : 64;
+        fprintf(stderr, "*******************************************************\n");
+        fprintf(stderr, "* Free RAM on %dK Gigatron       : %5d bytes           \n", memSize, Memory::getSizeFreeRAM());
+        fprintf(stderr, "*******************************************************\n");
 
         return totalSize;
     }
@@ -1271,6 +1272,8 @@ namespace Loader
         // Compile gbas to gasm
         if(filename.find(".gbas") != filename.npos)
         {
+            Cpu::enable6BitSound(Cpu::ROMv5a, false);
+
             std::string output = filepath.substr(0, pathSuffix) + ".gasm";
             if(!Compiler::compile(filepath, output))
             {
@@ -1360,7 +1363,9 @@ namespace Loader
         // Upload vCPU assembly code
         else if(filename.find(".gasm") != filename.npos  ||  filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
         {
-            if(!Assembler::assemble(filepath, DEFAULT_START_ADDRESS, isGbasFile)) return;
+            uint16_t address = (isGbasFile) ? Compiler::getUserCodeStart() : DEFAULT_START_ADDRESS;
+            if(!Assembler::assemble(filepath, address, isGbasFile)) return;
+            if(isGbasFile  &&  !Validater::checkRuntimeVersion()) return;
 
             // Found a breakpoint in source code
             if(Editor::getVpcBreakPointsSize())
@@ -1371,9 +1376,9 @@ namespace Loader
             }
 
             executeAddress = Assembler::getStartAddress();
-            Editor::setLoadBaseAddress(executeAddress);
-            uint16_t address = executeAddress;
             uint16_t customAddress = executeAddress;
+            Editor::setLoadBaseAddress(executeAddress);
+            address = executeAddress;
 
             // Save to gt1 format
             gt1File._loStart = LO_BYTE(address);

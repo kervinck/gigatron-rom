@@ -29,6 +29,7 @@ namespace Pragmas
     bool CODEROMTYPE(const std::string& input,        int codeLineIndex, size_t foundPos);
     bool RUNTIMEPATH(const std::string& input,        int codeLineIndex, size_t foundPos);
     bool RUNTIMESTART(const std::string& input,       int codeLineIndex, size_t foundPos);
+    bool USERCODESTART(const std::string& input,      int codeLineIndex, size_t foundPos);
     bool ARRAYSSTART(const std::string& input,        int codeLineIndex, size_t foundPos);
     bool STRINGSSTART(const std::string& input,       int codeLineIndex, size_t foundPos);
     bool STRINGWORKAREA(const std::string& input,     int codeLineIndex, size_t foundPos);
@@ -37,6 +38,7 @@ namespace Pragmas
     bool ARRAYINDICIESONE(const std::string& input,   int codeLineIndex, size_t foundPos);
     bool MAXNUMSPRITES(const std::string& input,      int codeLineIndex, size_t foundPos);
     bool SPRITESTRIPECHUNKS(const std::string& input, int codeLineIndex, size_t foundPos);
+    bool ENABLE6BITAUDIOEMU(const std::string& input, int codeLineIndex, size_t foundPos);
 }
 
 #endif

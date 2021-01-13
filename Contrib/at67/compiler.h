@@ -38,6 +38,7 @@
 #define TEMP_VAR_START   0x00E8  // 8 bytes,  (0x00E8 <-> 0x00EF), reserved for temporary expression variables
 #define TEMP_VAR_SIZE    8
 #define USER_CODE_START  0x0200
+#define RUN_TIME_START   0x7FFF
 #define USER_VAR_END     0x007F
 #define REG_WORK_SIZE    16
 #define GPRINT_VAR_ADDRS 16
@@ -45,10 +46,12 @@
 // Misc flags bits
 #define ENABLE_SCROLL_BIT 0x0001
 #define ON_BOTTOM_ROW_BIT 0x0002
+#define DISABLE_CLIP_BIT  0x0004
 
 // Misc flags masks
 #define ENABLE_SCROLL_MSK 0xFFFE
 #define ON_BOTTOM_ROW_MSK 0xFFFD
+#define DISABLE_CLIP_MSK  0xFFFB
 
 // Loader.gcl prohibited addresses
 #define LOADER_SCANLINE0_START 0x5900
@@ -335,6 +338,16 @@ namespace Compiler
         std::vector<uint8_t> _data;
     };
 
+    struct DefDataMidi
+    {
+        int _id;
+        bool _volume = false;
+        uint8_t _loops = 0;
+        std::vector<uint8_t> _data;
+        std::vector<uint16_t> _segmentSizes;
+        std::vector<uint16_t> _segmentAddrs;
+    };
+
     struct DefDataSprite
     {
         int _id;
@@ -398,6 +411,7 @@ namespace Compiler
 
 
     uint16_t getVasmPC(void);
+    uint16_t getUserCodeStart(void);
     uint16_t getRuntimeEnd(void);
     uint16_t getRuntimeStart(void);
     uint16_t getArraysStart(void);
@@ -415,8 +429,8 @@ namespace Compiler
     CodeOptimiseType getCodeOptimiseType(void);
     Cpu::RomType getCodeRomType(void);
     const std::map<std::string, int>& getBranchTypes(void);
-    bool getCompilingError(void);
     bool getArrayIndiciesOne(void);
+    bool getCreateTimeData(void);
     int getCurrentLabelIndex(void);
     int getCurrentCodeLineIndex(void); 
     int getNumNumericLabels(void);
@@ -425,6 +439,7 @@ namespace Compiler
     const std::string& getNextInternalLabel(void);
 
     void setCodeIsAsm(bool codeIsAsm);
+    void setUserCodeStart(uint16_t userCodeStart);
     void setRuntimeEnd(uint16_t runtimeEnd);
     void setRuntimePath(const std::string& runtimePath);
     void setRuntimeStart(uint16_t runtimeStart);
@@ -443,7 +458,6 @@ namespace Compiler
     void setCodeRomType(Cpu::RomType codeRomType);
     void setCreateNumericLabelLut(bool createNumericLabelLut);
     void setCreateTimeData(bool createTimeArrays);
-    void setCompilingError(bool compilingError);
     void setArrayIndiciesOne(bool arrayIndiciesOne);
 
     void nextStrWorkArea(void);
@@ -465,6 +479,8 @@ namespace Compiler
     std::vector<DefDataWord>& getDefDataWords(void);
     std::vector<DefDataImage>& getDefDataImages(void);
     std::vector<DefDataLoaderImageChunk>& getDefDataLoaderImageChunks(void);
+
+    std::map<int, DefDataMidi>& getDefDataMidis(void);
 
     std::map<int, DefDataSprite>& getDefDataSprites(void);
     SpritesAddrLut& getSpritesAddrLut(void);
@@ -511,7 +527,7 @@ namespace Compiler
     int findStr(std::string& strName);
 
     void writeArrayVarNoAssign(CodeLine& codeLine, int codeLineIndex, int varIndex);
-    void writeArrayStrNoAssign(std::string& arrText, int codeLineIndex, int strIndex);
+    bool writeArrayStrNoAssign(std::string& arrText, int codeLineIndex, int strIndex);
 
     bool createCodeLine(const std::string& code, int codeLineStart, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool vars, CodeLine& codeLine, const std::string& moduleName=MODULE_MAIN);
     void createLabel(uint16_t address, const std::string& name, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);

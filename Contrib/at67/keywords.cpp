@@ -16,6 +16,7 @@
 #include "functions.h"
 #include "operators.h"
 #include "linker.h"
+#include "midi.h"
 
 
 #define FONT_WIDTH   6
@@ -25,26 +26,35 @@
 
 namespace Keywords
 {
-    bool _constDimStrArray = false;
-    int _numNumericGotosGosubs = 0;
-
-    std::map<std::string, Keyword> _keywords;
-    std::map<std::string, std::string> _equalsKeywords;
+    enum LoadUsage {LoadType=0, LoadWave, LoadMidi, LoadImage, LoadSprite, LoadFont};
+    enum InitTypes {InitTime, InitMidi, InitMidiV, InitUser};
+    enum MidiTypes {MidiNone, Midi, MidiV, MidiId, MidiIdV};
 
     struct Gprintf
     {
         int codeLineIndex = 0;
         Assembler::Gprintf _gprintfAsm;
     };
-    std::vector<Gprintf> _gprintfs;
 
+
+    bool _constDimStrArray = false;
+    int _numNumericGotosGosubs = 0;
+    MidiTypes _midiType = MidiNone;
+    std::string _userRoutine;
+
+    std::map<std::string, Keyword> _keywords;
+    std::map<std::string, std::string> _equalsKeywords;
 
     std::map<std::string, Keyword>& getKeywords(void)           {return _keywords;      }
     std::map<std::string, std::string>& getEqualsKeywords(void) {return _equalsKeywords;}
 
+    std::vector<Gprintf> _gprintfs;
+
 
     void reset(void)
     {
+        _midiType = MidiNone;
+        _userRoutine = "";
         _gprintfs.clear();
     }
 
@@ -121,6 +131,7 @@ namespace Keywords
         _keywords["RECTF"   ] = {"RECTF",    RECTF,   Compiler::SingleStatementParsed};
         _keywords["POLY"    ] = {"POLY",     POLY,    Compiler::SingleStatementParsed};
         _keywords["POLYR"   ] = {"POLYR",    POLYR,   Compiler::SingleStatementParsed};
+        _keywords["TCLIP"   ] = {"TCLIP",    TCLIP,   Compiler::SingleStatementParsed};
         _keywords["SCROLL"  ] = {"SCROLL",   SCROLL,  Compiler::SingleStatementParsed};
         _keywords["POKE"    ] = {"POKE",     POKE,    Compiler::SingleStatementParsed};
         _keywords["DOKE"    ] = {"DOKE",     DOKE,    Compiler::SingleStatementParsed};
@@ -425,8 +436,7 @@ namespace Keywords
             }
             if(++_numNumericGotosGosubs > Compiler::getNumNumericLabels())
             {
-                fprintf(stderr, "Keywords::GOTO() : There is a mismatch in Numeric labels for one or more GOTO <var> and GOSUB <var>. ");
-                fprintf(stderr, "Correct your line numbers and add appropriate trailers, ':' for GOTO <var> and '!' for GOSUB <var>\n");
+                fprintf(stderr, "Keywords::GOTO() : Numeric label '%s' does not exist : in '%s' on line %d\n", gotoToken.c_str(), codeLine._text.c_str(), codeLineStart);
                 return false;
             }
 
@@ -525,8 +535,7 @@ namespace Keywords
             }
             if(++_numNumericGotosGosubs > Compiler::getNumNumericLabels())
             {
-                fprintf(stderr, "Keywords::GOSUB() : There is a mismatch in Numeric labels for one or more GOTO <var> and GOSUB <var>. ");
-                fprintf(stderr, "Correct your line numbers and add appropriate trailers, ':' for GOTO <var> and '!' for GOSUB <var>\n");
+                fprintf(stderr, "Keywords::GOSUB() : Numeric label '%s' does not exist : in '%s' on line %d\n", gosubToken.c_str(), codeLine._text.c_str(), codeLineStart);
                 return false;
             }
             if(!usePush)
@@ -691,6 +700,7 @@ RESTART_PRINT:
             int varIndex = -1, constIndex = -1, strIndex = -1;
             uint32_t expressionType = Compiler::isExpression(tokens[i], varIndex, constIndex, strIndex);
 
+#if 1
             if((expressionType & Expression::HasStringKeywords)  &&  (expressionType & Expression::HasOptimisedPrint))
             {
                 // Prints text on the fly without creating strings
@@ -698,14 +708,43 @@ RESTART_PRINT:
                 if(!Expression::parse(tokens[i], codeLineIndex, numeric))
                 {
                     Expression::setEnableOptimisedPrint(false);
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
                     return false;
                 }
                 Expression::setEnableOptimisedPrint(false);
             }
+#else
+            // TODO: Fix this
+            if((expressionType & Expression::HasStringKeywords))
+            {
+                if(expressionType & Expression::HasOptimisedPrint)
+                {
+                    // Prints text on the fly without creating strings
+                    Expression::setEnableOptimisedPrint(true);
+                    if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                    {
+                        Expression::setEnableOptimisedPrint(false);
+                        fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                        return false;
+                    }
+                    Expression::setEnableOptimisedPrint(false);
+                }
+                // Leading chars before a string function
+                else
+                {
+                    //fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", tokens[i].c_str(), codeLine._text.c_str(), codeLineStart);
+                    //return false;
+                }
+            }
+#endif
             // Arrays are handled as functions
             else if(expressionType & Expression::HasFunctions)
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 if(numeric._varType == Expression::Number)
                 {
                     Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
@@ -718,7 +757,11 @@ RESTART_PRINT:
             }
             else if((expressionType & Expression::HasStrVars)  &&  (expressionType & Expression::HasOperators))
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 if(numeric._varType == Expression::Number)
                 {
                     Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
@@ -741,7 +784,11 @@ RESTART_PRINT:
             }
             else if((expressionType & Expression::HasIntVars)  &&  (expressionType & Expression::HasOperators))
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 if(numeric._varType == Expression::Number)
                 {
                     Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
@@ -763,7 +810,11 @@ RESTART_PRINT:
             }
             else if(expressionType & Expression::HasIntVars)
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 if(varIndex >= 0)
                 {
                     if(numeric._varType != Expression::Str2Var)
@@ -803,7 +854,11 @@ RESTART_PRINT:
                     // String array with literal index
                     else
                     {
-                        if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                        if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                        {
+                            fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                            return false;
+                        }
                         Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
                         Compiler::emitVcpuAsm("%PrintAcString", "", false);
                     }
@@ -811,19 +866,55 @@ RESTART_PRINT:
             }
             else if(expressionType & Expression::HasKeywords)
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
                 Compiler::emitVcpuAsm("%PrintAcInt16", "", false);
             }
             else if(expressionType & Expression::HasOperators)
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
             }
             else if(expressionType & Expression::HasStrings)
             {
                 size_t lquote = tokens[i].find_first_of("\"");
                 size_t rquote = tokens[i].find_last_of("\"");
+#if 1
+                if(lquote > 0)
+                {
+                    // If there are leading chars that are not whitespace, then syntax error
+                    for(size_t j=0; j<lquote; j++)
+                    {
+                        if(!isspace(tokens[i][j]))
+                        {
+                            std::string error = tokens[i].substr(0, lquote);
+                            fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", error.c_str(), codeLine._text.c_str(), codeLineStart);
+                            return false;
+                        }
+                    }
+                }
+                if(rquote < tokens[i].size() - 1)
+                {
+                    // If there are trailing chars left over and they are not whitespace, then syntax error
+                    for(size_t j=rquote+1; j<tokens[i].size(); j++)
+                    {
+                        if(!isspace(tokens[i][j]))
+                        {
+                            std::string error = tokens[i].substr(rquote + 1);
+                            fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", error.c_str(), codeLine._text.c_str(), codeLineStart);
+                            return false;
+                        }
+                    }
+                }
+#endif
                 if(lquote != std::string::npos  &&  rquote != std::string::npos)
                 {
                     if(rquote == lquote + 1) continue; // skip empty strings
@@ -852,7 +943,11 @@ RESTART_PRINT:
             }
             else if(expressionType == Expression::HasNumbers)
             {
-                if(!Expression::parse(tokens[i], codeLineIndex, numeric)) return false;
+                if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::PRINT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 Compiler::emitVcpuAsm("%PrintInt16", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
             }
         }
@@ -1141,17 +1236,29 @@ RESTART_PRINT:
         if(optimise)
         {
             // Parse start
-            if(!Expression::parse(startToken, codeLineIndex, startNumeric)) return false;
+            if(!Expression::parse(startToken, codeLineIndex, startNumeric))
+            {
+                fprintf(stderr, "Keywords::FOR() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
             loopStart = int16_t(std::lround(startNumeric._value));
 
             // Parse end
-            if(!Expression::parse(endToken, codeLineIndex, endNumeric)) return false;
+            if(!Expression::parse(endToken, codeLineIndex, endNumeric))
+            {
+                fprintf(stderr, "Keywords::FOR() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
             loopEnd = int16_t(std::lround(endNumeric._value));
 
             // Parse step
             if(stepToken.size())
             {
-                if(!Expression::parse(stepToken, codeLineIndex, stepNumeric)) return false;
+                if(!Expression::parse(stepToken, codeLineIndex, stepNumeric))
+                {
+                    fprintf(stderr, "Keywords::FOR() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 loopStep = int16_t(std::lround(stepNumeric._value));
                 if(loopStep < 1  ||  loopStep > 255) optimise = false;
             }
@@ -1951,13 +2058,17 @@ RESTART_PRINT:
         return true;
     }
 
-    bool callHelper(Compiler::CodeLine& codeLine, int codeLineIndex, std::string& token, uint16_t localVarsAddr)
+    bool callHelper(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, std::string& token, uint16_t localVarsAddr)
     {
         UNREFERENCED_PARAM(codeLine);
 
         // If valid expression
         Expression::Numeric numeric;
-        if(!Expression::parse(token, codeLineIndex, numeric)) return false;
+        if(!Expression::parse(token, codeLineIndex, numeric))
+        {
+            fprintf(stderr, "Keywords::CALL() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
 
         if(numeric._varType == Expression::Number)
         {
@@ -2013,7 +2124,7 @@ RESTART_PRINT:
                     return false;
                 }
 
-                if(!callHelper(codeLine, codeLineIndex, callTokens[i], localVarsAddr))
+                if(!callHelper(codeLine, codeLineIndex, codeLineStart, callTokens[i], localVarsAddr))
                 {
                     return false;
                 }
@@ -2310,7 +2421,11 @@ RESTART_PRINT:
         else
         {
             Expression::Numeric numeric(true); // true = allow static init
-            if(!Expression::parse(tokens[1], codeLineIndex, numeric)) return false;
+            if(!Expression::parse(tokens[1], codeLineIndex, numeric))
+            {
+                fprintf(stderr, "Keywords::CONST() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
             if(tokens[1].size() == 0  ||  !numeric._isValid  ||  numeric._varType == Expression::TmpVar  ||  numeric._varType == Expression::IntVar16)
             {
                 fprintf(stderr, "Keywords::CONST() : Syntax error, invalid constant expression, in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
@@ -3955,6 +4070,42 @@ RESTART_PRINT:
         return true;
     }
 
+    bool TCLIP(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+        UNREFERENCED_PARAM(codeLineIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ' ', false);
+        if(tokens.size() != 1)
+        {
+            fprintf(stderr, "Keywords::TCLIP() : Syntax error, 'TCLIP ON' or 'TCLIP OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
+
+        std::string tclipToken = Expression::strToUpper(tokens[0]);
+        Expression::stripWhitespace(tclipToken);
+        if(tclipToken != "ON"  &&  tclipToken != "OFF")
+        {
+            fprintf(stderr, "Keywords::TCLIP() : Syntax error, 'TCLIP ON' or 'TCLIP OFF', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
+
+        if(tclipToken == "ON")
+        {
+            Compiler::emitVcpuAsm("LDWI", "0xFFFB",    false);
+            Compiler::emitVcpuAsm("ANDW", "miscFlags", false);
+        }
+        else
+        {
+            Compiler::emitVcpuAsm("LDWI", "0x0004",   false);
+            Compiler::emitVcpuAsm("ORW", "miscFlags", false);
+        }
+        Compiler::emitVcpuAsm("STW", "miscFlags", false);
+
+        return true;
+    }
+
     bool SCROLL(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAM(result);
@@ -4176,12 +4327,15 @@ RESTART_PRINT:
     }
     void midiInit(void)
     {
+        _midiType = Midi;
     }
     void midivInit(void)
     {
+        _midiType = MidiV;
     }
-    void userInit(void)
+    void userInit(const std::string& label)
     {
+        _userRoutine = label;
     }
     void timeAddr(int index)
     {
@@ -4195,7 +4349,7 @@ RESTART_PRINT:
     }
     void midivAddr(int index)
     {
-        Compiler::emitVcpuAsm("LDWI", "playMidiVol",                            false);
+        Compiler::emitVcpuAsm("LDWI", "playMidiVol",                          false);
         Compiler::emitVcpuAsm("STW",  "realTimeProc" + std::to_string(index), false);
     }
     void userAddr(const std::string& label, int index)
@@ -4205,14 +4359,13 @@ RESTART_PRINT:
     }
     void usageINIT(Compiler::CodeLine& codeLine, int codeLineStart)
     {
-        fprintf(stderr, "Keywords::INIT() : Syntax error, use 'INIT TIME, MIDI, <user proc>, NOUPDATE; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+        fprintf(stderr, "Keywords::INIT() : Syntax error, use 'INIT VARS, <optional var address>, TIME, MIDI/MIDIV, <user proc>, NOUPDATE; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
     }
     bool INIT(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        enum InitTypes {InitTime, InitMidi, InitMidiV, InitUser};
         static std::map<std::string, InitTypes> initTypesMap = {{"TIME", InitTime}, {"MIDI", InitMidi}, {"MIDIV", InitMidiV}};
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
@@ -4229,15 +4382,13 @@ RESTART_PRINT:
             Expression::strToUpper(token);
             if(token == "NOUPDATE")
             {
-                fprintf(stderr, "Keywords::INIT() : Syntax error, 'NOUPDATE' must be used with 'INIT TIME, MIDI, <user proc>' and only on ROMv4 or lower; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
-                fprintf(stderr, "Keywords::INIT() : Syntax error, use 'INIT VARS <optional starting var address>, TIME, MIDI, <user proc>, NOUPDATE; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+                fprintf(stderr, "Keywords::INIT() : Syntax error, 'NOUPDATE' must be used with 'INIT TIME, MIDI/MIDIV, <user proc>' and only on ROMv4 or lower; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
                 return false;
             }
         }
 
         // Search for init types and labels
         bool noUpdate = false;
-        bool foundMidi = false;
         bool resetVars = false;
         std::string varsAddr;
         std::vector<InitTypes> initTypes;
@@ -4285,12 +4436,11 @@ RESTART_PRINT:
             {
                 if(initTypesMap[token] == InitMidi  ||  initTypesMap[token] == InitMidiV)
                 {
-                    if(foundMidi)
+                    if(_midiType != MidiNone)
                     {
                         fprintf(stderr, "Keywords::INIT() : Syntax error, can only init one instance of MIDI or MIDIV, use 'INIT TIME, MIDI/MIDIV, <user proc>; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
                         return false;
                     }
-                    foundMidi = true;
                 }
                 initTypes.push_back(initTypesMap[token]);
             }
@@ -4301,10 +4451,10 @@ RESTART_PRINT:
         {
             switch(initTypes[i])
             {
-                case InitTime:  timeInit();  timeAddr(i);            break;
-                case InitMidi:  midiInit();  midiAddr(i);            break;
-                case InitMidiV: midivInit(); midivAddr(i);           break;
-                case InitUser:  userInit();  userAddr(tokens[i], i); break;
+                case InitTime:  timeInit();           timeAddr(i);            break;
+                case InitMidi:  midiInit();           midiAddr(i);            break;
+                case InitMidiV: midivInit();          midivAddr(i);           break;
+                case InitUser:  userInit(tokens[i]);  userAddr(tokens[i], i); break;
 
                 default: break;
             }
@@ -4315,7 +4465,11 @@ RESTART_PRINT:
             if(varsAddr.size())
             {
                 Expression::Numeric numeric(true); // true = allow static init
-                if(!Expression::parse(varsAddr, codeLineIndex, numeric)) return false;
+                if(!Expression::parse(varsAddr, codeLineIndex, numeric))
+                {
+                    fprintf(stderr, "Keywords::INIT() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
                 Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(int8_t(std::lround(numeric._value))), false);
             }
             else
@@ -4366,7 +4520,7 @@ RESTART_PRINT:
 
     void usageTICK(Compiler::CodeLine& codeLine, int codeLineStart)
     {
-        fprintf(stderr, "Keywords::INIT() : Syntax error, use 'TICK TIME/MIDI/MIDIV/ALL'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+        fprintf(stderr, "Keywords::INIT() : Syntax error, use one or more of, 'TICK TIME, MIDI, MIDIV, USER'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
     }
     bool TICK(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
@@ -4383,47 +4537,90 @@ RESTART_PRINT:
         }
 
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
-        if(tokens.size() > 1)
+        if(tokens.size() < 1  ||  tokens.size() > 4)
         {
             usageTICK(codeLine, codeLineStart);
             return false;
         }
 
-        std::string tickToken = Expression::strToUpper(tokens[0]);
-        Expression::stripWhitespace(tickToken);
+        std::map<std::string, InitTypes> initTypesMap;
+        for(int i=0; i<int(tokens.size()); i++)
+        {
+            std::string token = Expression::strToUpper(tokens[i]);
+            Expression::stripWhitespace(token);
+            if(initTypesMap.find(token) == initTypesMap.end())
+            {
+                if(token == "TIME")
+                {
+                    if(!Compiler::getCreateTimeData())
+                    {
+                        fprintf(stderr, "Keywords::TICK() : TIME not initialised using INIT, in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+                        return false;
+                    }
 
-        // Tick time
-        if(tickToken == "TIME") 
-        {
-            Compiler::emitVcpuAsm("%TickTime", "", false);
-            return true;
-        }
-        // Tick midi
-        else if(tickToken == "MIDI") 
-        {
-            Compiler::emitVcpuAsm("%TickMidi", "", false);
-            return true;
-        }
-        // Tick midi with volume
-        else if(tickToken == "MIDIV") 
-        {
-            Compiler::emitVcpuAsm("%TickMidiV", "", false);
-            return true;
-        }
-        // Tick everything
-        else if(tickToken == "ALL") 
-        {
-            Compiler::emitVcpuAsm("%Tick", "", false);
-            return true;
+                    initTypesMap[token] = InitTime;
+                    Compiler::emitVcpuAsm("%TickTime", "", false);
+                }
+                else if(token == "MIDI")
+                {
+                    if(_midiType != Midi)
+                    {
+                        fprintf(stderr, "Keywords::TICK() : MIDI not initialised using INIT, in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+                        return false;
+                    }
+
+                    initTypesMap[token] = InitMidi;
+                    Compiler::emitVcpuAsm("%TickMidi", "", false);
+                }
+                else if(token == "MIDIV")
+                {
+                    if(_midiType != MidiV)
+                    {
+                        fprintf(stderr, "Keywords::TICK() : MIDIV not initialised using INIT, in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+                        return false;
+                    }
+
+                    initTypesMap[token] = InitMidiV;
+                    Compiler::emitVcpuAsm("%TickMidiV", "", false);
+                }
+                else if(token == "USER")
+                {
+                    if(_userRoutine == "")
+                    {
+                        fprintf(stderr, "Keywords::TICK() : User routine not initialised using INIT, in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+                        return false;
+                    }
+
+                    initTypesMap[token] = InitUser;
+                    if(Compiler::getCodeRomType() < Cpu::ROMv5a)
+                    {
+                        Compiler::emitVcpuAsm("LDWI", "_" + _userRoutine, false);
+                        Compiler::emitVcpuAsm("CALL", "giga_vAC",         false);
+                    }
+                    else
+                    {
+                        Compiler::emitVcpuAsm("CALLI", "_" + _userRoutine, false);
+                    }
+                }
+                else
+                {
+                    usageTICK(codeLine, codeLineStart);
+                    return false;
+                }
+            }
+            else
+            {
+                usageTICK(codeLine, codeLineStart);
+                return false;
+            }
         }
 
-        usageTICK(codeLine, codeLineStart);
-        return false;
+        return true;
     }
 
     void usagePLAY(Compiler::CodeLine& codeLine, int codeLineStart)
     {
-        fprintf(stderr, "Keywords::PLAY() : Syntax error, use 'PLAY <TYPE>, <optional address>, <optional waveType>', where <TYPE> = 'MIDI', 'MIDIV' or 'MUSIC'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+        fprintf(stderr, "Keywords::PLAY() : Syntax error, use 'PLAY <TYPE>, <id/address>, <optional waveType>', where <TYPE> = 'MIDI', 'MIDID', 'MIDIV', 'MIDIDV' or 'MUSIC'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
     }
     bool PLAY(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
@@ -4437,68 +4634,271 @@ RESTART_PRINT:
             return false;
         }
 
-        std::string midiToken = Expression::strToUpper(tokens[0]);
-        Expression::stripWhitespace(midiToken);
-        if(midiToken != "MIDI"  &&  midiToken != "MIDIV"  &&  midiToken != "MUSIC")
-        {
-            usagePLAY(codeLine, codeLineStart);
-            return false;
-        }
-
         // Default wave type
         if(tokens.size() == 2)
         {
-            Compiler::emitVcpuAsm("LDI", "2",       false);
+            Compiler::emitVcpuAsm("LDI", "2",           false);
             Compiler::emitVcpuAsm("ST", "waveType + 1", false);
         }
         // Midi wave type, (optional)
         else if(tokens.size() == 3)
         {
             std::string waveTypeToken = tokens[2];
-            Expression::Numeric param;
-            Compiler::parseExpression(codeLineIndex, waveTypeToken, param);
+            Expression::Numeric waveTypeNumeric;
+            Compiler::parseExpression(codeLineIndex, waveTypeToken, waveTypeNumeric);
             Compiler::emitVcpuAsm("ST", "waveType + 1", false);
         }
 
         // Midi stream address
         std::string addressToken = tokens[1];
-        Expression::Numeric param;
-        Compiler::parseExpression(codeLineIndex, addressToken, param);
+        Expression::Numeric addressNumeric;
+        Compiler::parseExpression(codeLineIndex, tokens[1], addressNumeric);
+
+        std::string midiToken = Expression::strToUpper(tokens[0]);
+        Expression::stripWhitespace(midiToken);
         if(midiToken == "MIDI")
         {
             Compiler::emitVcpuAsm("%PlayMidi", "", false);
+            return true;
         }
-        else if(midiToken == "MIDIV")
+
+        if(midiToken == "MIDID")
+        {
+            Compiler::emitVcpuAsm("%SetMidiStream", "", false);
+            Compiler::emitVcpuAsm("%PlayMidi", "",      false);
+            return true;
+        }
+        
+        if(midiToken == "MIDIV")
         {
             Compiler::emitVcpuAsm("%PlayMidiV", "", false);
+            return true;
         }
-        else if(midiToken == "MUSIC")
+
+        if(midiToken == "MIDIDV")
+        {
+            Compiler::emitVcpuAsm("%SetMidiStream", "", false);
+            Compiler::emitVcpuAsm("%PlayMidiV", "",     false);
+            return true;
+        }
+
+        if(midiToken == "MUSIC")
         {
             Compiler::emitVcpuAsm("%PlayMusic", "", false);
+            return true;
         }
 
-        return true;
+        usagePLAY(codeLine, codeLineStart);
+        return false;
     }
 
-    void usageLOAD(int msgType, Compiler::CodeLine& codeLine, int codeLineStart)
+    void loadUsage(int msgType, Compiler::CodeLine& codeLine, int codeLineStart)
     {
         switch(msgType)
         {
-            case 0: fprintf(stderr, "Keywords::LOAD() : Syntax error, use 'LOAD <TYPE>, <filename>, where <TYPE> = 'IMAGE', 'SPRITE', 'FONT', 'MIDI', 'WAVE', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart); break;
-            case 1: fprintf(stderr, "Keywords::LOAD() : Syntax error, use 'LOAD IMAGE, <filename>, <optional address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);                                       break;
-            case 2: fprintf(stderr, "Keywords::LOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>, <optional overlap>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);               break;
-            case 3: fprintf(stderr, "Keywords::LOAD() : Syntax error, use 'LOAD FONT, <filename>, <id>, <optional 16 bit bg:fg colours>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);                     break;
-            case 4: fprintf(stderr, "Keywords::LOAD() : Syntax error, use 'LOAD MIDI, <filename>, <optional address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);                                        break;
-            case 5: fprintf(stderr, "Keywords::LOAD() : Syntax error, use 'LOAD WAVE, <filename>, <optional address>, <optional address offset>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);             break;
+            case LoadType:   fprintf(stderr, "Keywords::LOAD() : Syntax error, use 'LOAD <TYPE>, <filename>, where <TYPE> = 'IMAGE', 'SPRITE', 'FONT', 'MIDI', 'WAVE', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart); break;
+            case LoadWave:   fprintf(stderr, "Keywords::LOAD() : Syntax error, use 'LOAD WAVE, <filename>, <optional address>, <optional address offset>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);             break;
+            case LoadMidi:   fprintf(stderr, "Keywords::LOAD() : Syntax error, use 'LOAD MIDI, <filename>, <id>, <optional loop count 1<->255, 0=forever>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);            break;
+            case LoadImage:  fprintf(stderr, "Keywords::LOAD() : Syntax error, use 'LOAD IMAGE, <filename>, <optional address>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);                                       break;
+            case LoadSprite: fprintf(stderr, "Keywords::LOAD() : Syntax error, use 'LOAD SPRITE, <filename>, <id>, <optional flip>, <optional overlap>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);               break;
+            case LoadFont:   fprintf(stderr, "Keywords::LOAD() : Syntax error, use 'LOAD FONT, <filename>, <id>, <optional 16 bit bg:fg colours>', in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);                     break;
 
             default: break;
         }
     }
-    bool handleLOADchunk(Compiler::CodeLine& codeLine, int codeLineStart, const std::vector<uint8_t>& data, int row, uint16_t width, uint16_t address, uint8_t chunkSize, uint16_t& chunkOffset, uint16_t& chunkAddr)
+    /********************************************************************************************************************************/
+    /* Load Wave                                                                                                                    */
+    /********************************************************************************************************************************/
+    bool loadWave(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, const std::vector<std::string>& tokens)
     {
-        if(!Memory::getFreeRAM(Memory::FitDescending, chunkSize, 0x0200, Compiler::getRuntimeStart(), chunkAddr))
+        if(tokens.size() < 2  ||  tokens.size() > 4)
         {
-            usageLOAD(1, codeLine, codeLineStart);
+            loadUsage(LoadWave, codeLine, codeLineStart);
+            return false;
+        }
+
+        std::string filename = tokens[1];
+        Expression::stripWhitespace(filename);
+        std::string ext = filename;
+        Expression::strToUpper(ext);
+        if(ext.find(".GTWAV") != std::string::npos)
+        {
+            std::string filepath = Loader::getFilePath();
+            size_t slash = filepath.find_last_of("\\/");
+            filepath = (slash != std::string::npos) ? filepath.substr(0, slash) : ".";
+            filename = filepath + "/" + filename;
+
+            // Parse optional address
+            uint16_t address = RAM_AUDIO_START;
+            if(tokens.size() >= 3)
+            {
+                std::string addrToken = tokens[2];
+                Expression::Numeric addrNumeric;
+                std::string addrOperand;
+                Compiler::parseExpression(codeLineIndex, addrToken, addrOperand, addrNumeric);
+                address = uint16_t(std::lround(addrNumeric._value));
+                if(address < DEFAULT_START_ADDRESS)
+                {
+                    loadUsage(LoadWave, codeLine, codeLineStart);
+                    fprintf(stderr, "Keywords::LOAD() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, addrToken.c_str(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
+            }
+
+            // Parse optional address
+            uint16_t addrOffset = 0;
+            if(tokens.size() == 4)
+            {
+                std::string offsetToken = tokens[3];
+                Expression::Numeric offsetNumeric;
+                std::string offsetOperand;
+                Compiler::parseExpression(codeLineIndex, offsetToken, offsetOperand, offsetNumeric);
+                addrOffset = uint16_t(std::lround(offsetNumeric._value));
+            }
+
+            // Load wave file
+            std::vector<uint8_t> dataBytes(64);
+            std::ifstream infile(filename, std::ios::binary | std::ios::in);
+            if(!infile.is_open())
+            {
+                loadUsage(LoadWave, codeLine, codeLineStart);
+                fprintf(stderr, "Keywords::LOAD() : failed to open file '%s', in '%s' on line %d\n", filename.c_str(), codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
+            infile.read((char *)&dataBytes[0], 64);
+            if(infile.eof() || infile.bad() || infile.fail())
+            {
+                loadUsage(LoadWave, codeLine, codeLineStart);
+                fprintf(stderr, "Keywords::LOAD() : failed to read file '%s', in '%s' on line %d\n", filename.c_str(), codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
+
+            uint16_t addr = address;
+            for(int i=0; i<int(dataBytes.size()); i++)
+            {
+                if(addrOffset != 0)
+                {
+                    if(addr < RAM_AUDIO_START  ||  addr > RAM_AUDIO_END)
+                    {
+                        if(!Memory::takeFreeRAM(addr, 1)) return false;
+                        addr += addrOffset;
+                    }
+                }
+            }
+            if(addrOffset == 0)
+            {
+                if(!Memory::takeFreeRAM(address, int(dataBytes.size()))) return false;
+            }
+            Compiler::getDefDataBytes().push_back({address, addrOffset, dataBytes});
+        }
+
+        return true;
+    }
+    /********************************************************************************************************************************/
+    /* Load Midi                                                                                                                    */
+    /********************************************************************************************************************************/
+    bool loadMidi(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, const std::vector<std::string>& tokens)
+    {
+        if(tokens.size() < 3  ||  tokens.size() > 4)
+        {
+            loadUsage(LoadMidi, codeLine, codeLineStart);
+            return false;
+        }
+
+        std::string filename = tokens[1];
+        Expression::stripWhitespace(filename);
+        std::string ext = filename;
+        Expression::strToUpper(ext);
+        if(ext.find(".GTMID") != std::string::npos)
+        {
+            std::string filepath = Loader::getFilePath();
+            size_t slash = filepath.find_last_of("\\/");
+            filepath = (slash != std::string::npos) ? filepath.substr(0, slash) : ".";
+            filename = filepath + "/" + filename;
+
+            // Unique midi ID
+            std::string idToken = tokens[2];
+            Expression::Numeric idNumeric;
+            std::string idOperand;
+            Compiler::parseExpression(codeLineIndex, idToken, idOperand, idNumeric);
+            int midiId = int(std::lround(idNumeric._value));
+            if(Compiler::getDefDataMidis().find(midiId) != Compiler::getDefDataMidis().end())
+            {
+                loadUsage(LoadMidi, codeLine, codeLineStart);
+                fprintf(stderr, "Keywords::LOAD() : Midi id not unique, %d; in '%s' on line %d\n", midiId, codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
+
+            // Parse optional loop count
+            uint16_t loops = 0;
+            if(tokens.size() == 4)
+            {
+                std::string loopsToken = tokens[2];
+                Expression::Numeric loopsNumeric;
+                std::string loopsOperand;
+                Compiler::parseExpression(codeLineIndex, loopsToken, loopsOperand, loopsNumeric);
+                loops = uint16_t(std::lround(loopsNumeric._value));
+                if(loops > 255)
+                {
+                    loadUsage(LoadMidi, codeLine, codeLineStart);
+                    fprintf(stderr, "Keywords::LOAD() : Loops field must be between 0 and 255, found %s in '%s' on line %d\n", loopsToken.c_str(), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
+            }
+
+            // Load gtMID file
+            int midiSize = 0;
+            GtMidiHdr gtMidiHdr;
+            std::vector<uint8_t> midiBuffer(MIDI_MAX_BUFFER_SIZE);
+            if(!Midi::loadFile(filename, midiBuffer.data(), midiSize, &gtMidiHdr))
+            {
+                loadUsage(LoadMidi, codeLine, codeLineStart);
+                return false;
+            }
+            midiBuffer.resize(midiSize);
+
+            // Allocate memory for midi segments
+            int byteIndex = 0;
+            int segmentCount = 0;
+            std::vector<uint16_t> segSizes;
+            std::vector<uint16_t> segAddrs;
+            bool hasVolume = bool(gtMidiHdr._hasVolume);
+            while(midiSize)
+            {
+                uint16_t size = 0;
+                uint16_t address = 0;
+                if(!Memory::getFreeRAM(Memory::FitDescending, USER_CODE_START, Compiler::getRuntimeStart(), MIDI_MIN_SEGMENT_SIZE, address, uint16_t(midiSize + MIDI_CMD_JMP_SEG_SIZE), size, false))
+                {
+                    loadUsage(LoadMidi, codeLine, codeLineStart);
+                    fprintf(stderr, "Keywords::LOAD() : Getting Midi memory for segment %d failed, in '%s' on line %d\n", segmentCount, codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
+
+                byteIndex += size;
+
+                // Pad for jump segment command and adjust for start notes, start note can be either 3 bytes, (0x90, nn, vv) or 2 bytes, (0x90, nn), depending on hasVolume
+                if(hasVolume  &&  (midiBuffer[byteIndex - 5] & 0xF0) == MIDI_CMD_START_NOTE) {byteIndex -= 2; size -= 2; Memory::giveFreeRAM(address + size-2, 2);} // landed on volume, (vv)
+                else if((midiBuffer[byteIndex - 4] & 0xF0) == MIDI_CMD_START_NOTE)           {byteIndex -= 1; size -= 1; Memory::giveFreeRAM(address + size-1, 1);} // landed on note, (nn)
+                                                                                             {byteIndex -= 3; size -= 3;                                          } // jump segment, (0xD0, lo, hi)
+                midiSize -= size;
+                segSizes.push_back(size);
+                segAddrs.push_back(address);
+                segmentCount++;
+            }
+
+            Compiler::getDefDataMidis()[midiId] = {midiId, hasVolume, uint8_t(loops), midiBuffer, segSizes, segAddrs};
+        }
+
+        return true;
+    }
+    /********************************************************************************************************************************/
+    /* Load Image                                                                                                                   */
+    /********************************************************************************************************************************/
+    bool loadImageChunk(Compiler::CodeLine& codeLine, int codeLineStart, const std::vector<uint8_t>& data, int row, uint16_t width, uint16_t address, uint8_t chunkSize, uint16_t& chunkOffset, uint16_t& chunkAddr)
+    {
+        if(!Memory::getFreeRAM(Memory::FitDescending, chunkSize, USER_CODE_START, Compiler::getRuntimeStart(), chunkAddr))
+        {
+            loadUsage(LoadImage, codeLine, codeLineStart);
             fprintf(stderr, "Keywords::LOAD() : Allocating RAM for offscreen pixel chunk on row %d failed, in '%s' on line %d\n", row, codeLine._text.c_str(), codeLineStart);
             return false;
         }
@@ -4527,6 +4927,523 @@ RESTART_PRINT:
 
         return true;
     }
+    bool loadImage(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, const std::vector<std::string>& tokens, const std::string& filename, const Image::TgaFile& tgaFile, const Image::GtRgbFile& gtRgbFile)
+    {
+        const uint16_t stride = 256;
+
+        if(tokens.size() < 2  ||  tokens.size() > 3)
+        {
+            loadUsage(LoadImage, codeLine, codeLineStart);
+            return false;
+        }
+
+        // Parse optional address
+        uint16_t address = RAM_VIDEO_START;
+        if(tokens.size() == 3)
+        {
+            std::string addrToken = tokens[2];
+            Expression::Numeric addrNumeric;
+            std::string addrOperand;
+            Compiler::parseExpression(codeLineIndex, addrToken, addrOperand, addrNumeric);
+            address = uint16_t(std::lround(addrNumeric._value));
+            if(address < DEFAULT_START_ADDRESS)
+            {
+                loadUsage(LoadImage, codeLine, codeLineStart);
+                fprintf(stderr, "Keywords::LOAD() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, addrToken.c_str(), codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
+        }
+
+        if(gtRgbFile._header._width > stride  ||  gtRgbFile._header._width + (address & 0x00FF) > stride)
+        {
+            loadUsage(LoadImage, codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::LOAD() : Image width %d + starting address 0x%04x overflow, for %s; in '%s' on line %d\n", gtRgbFile._header._width, address, filename.c_str(), codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
+
+        Compiler::DefDataImage defDataImage = {address, tgaFile._header._width, tgaFile._header._height, stride, gtRgbFile._data};
+        Compiler::getDefDataImages().push_back(defDataImage);
+
+        int size = gtRgbFile._header._width;
+        for(int y=0; y<gtRgbFile._header._height; y++)
+        {
+            // Take offscreen memory from compiler for images wider than visible screen resolution, or images in offscreen memory
+            if(address >= RAM_VIDEO_START  &&  address <= RUN_TIME_START)
+            {
+                size = gtRgbFile._header._width + (address & 0x00FF) - RAM_SCANLINE_SIZE;
+                if(size > 0)
+                {
+                    if(!Memory::takeFreeRAM((address & 0xFF00) + RAM_SCANLINE_SIZE, size))
+                    {
+                        loadUsage(LoadImage, codeLine, codeLineStart);
+                        fprintf(stderr, "Keywords::LOAD() : Allocating RAM for pixel row %d failed, in '%s' on line %d\n", y, codeLine._text.c_str(), codeLineStart);
+                        return false;
+                    }
+                }
+            }
+
+            // 'Loader.gcl' is resident at these addresses when loading *.gt1 files, therefore you can overwrite these locations only AFTER the loading process has finished
+            // Split up image scanlines into offscreen chunks and load the offscreen chunks into the correct onscreen memory locations after 'Loader.gcl' is done
+            if((address >= LOADER_SCANLINE0_START  &&  address<= LOADER_SCANLINE0_END)  ||  (address >= LOADER_SCANLINE1_START  &&  address<= LOADER_SCANLINE1_END)  ||  
+                (address >= LOADER_SCANLINE2_START  &&  address<= LOADER_SCANLINE2_END))
+            {
+                uint16_t chunkOffset = 0x0000, chunkAddr = 0x0000;
+                for(int i=0; i<gtRgbFile._header._width / RAM_SEGMENTS_SIZE; i++)
+                {
+                    loadImageChunk(codeLine, codeLineStart, gtRgbFile._data, y, gtRgbFile._header._width, address, RAM_SEGMENTS_SIZE, chunkOffset, chunkAddr);
+                }
+                loadImageChunk(codeLine, codeLineStart, gtRgbFile._data, y, gtRgbFile._header._width, address, gtRgbFile._header._width % RAM_SEGMENTS_SIZE, chunkOffset, chunkAddr);
+            }
+
+            // Next destination row
+            address += stride; 
+        }
+
+        return true;
+    }
+    /********************************************************************************************************************************/
+    /* Load Sprite                                                                                                                  */
+    /********************************************************************************************************************************/
+    bool loadSprite(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, const std::vector<std::string>& tokens, const std::string& filename, const Image::TgaFile& tgaFile, const Image::GtRgbFile& gtRgbFile)
+    {
+        if(Compiler::getCodeRomType() < Cpu::ROMv3)
+        {
+            std::string romTypeStr;
+            getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
+            loadUsage(LoadSprite, codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::LOAD() : Version error, 'LOAD SPRITE' requires ROMv3 or higher, you are trying to link against '%s', in '%s' on line %d\n", romTypeStr.c_str(),  codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
+
+        if(tokens.size() < 3  ||  tokens.size() > 5)
+        {
+            loadUsage(LoadSprite, codeLine, codeLineStart);
+            return false;
+        }
+
+        if(gtRgbFile._header._width % SPRITE_CHUNK_SIZE != 0)
+        {
+            loadUsage(LoadSprite, codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::LOAD() : Sprite width not a multiple of %d, (%d x %d), for %s; in '%s' on line %d\n", SPRITE_CHUNK_SIZE, gtRgbFile._header._width, gtRgbFile._header._height, filename.c_str(),
+                                                                                                                                                codeLine._text.c_str(),
+                                                                                                                                                codeLineStart);
+            return false;
+        }
+
+        if(tokens.size() < 3)
+        {
+            loadUsage(LoadSprite, codeLine, codeLineStart);
+            return false;
+        }
+
+        // Unique sprite ID
+        std::string idToken = tokens[2];
+        Expression::Numeric idNumeric;
+        std::string idOperand;
+        Compiler::parseExpression(codeLineIndex, idToken, idOperand, idNumeric);
+        int spriteId = int(std::lround(idNumeric._value));
+        if(Compiler::getDefDataSprites().find(spriteId) != Compiler::getDefDataSprites().end())
+        {
+            loadUsage(LoadSprite, codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::LOAD() : Sprite id not unique, %d; in '%s' on line %d\n", spriteId, codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
+
+        // Parse optional sprite flip
+        Compiler::SpriteFlipType flipType = Compiler::NoFlip;
+        if(tokens.size() >= 4)
+        {
+            std::string flipToken = tokens[3];
+            Expression::stripWhitespace(flipToken);
+            Expression::strToUpper(flipToken);
+            if(flipToken == "NOFLIP")      flipType = Compiler::NoFlip;
+            else if(flipToken == "FLIPX")  flipType = Compiler::FlipX;
+            else if(flipToken == "FLIPY")  flipType = Compiler::FlipY;
+            else if(flipToken == "FLIPXY") flipType = Compiler::FlipXY;
+            else
+            {
+                loadUsage(LoadSprite, codeLine, codeLineStart);
+                fprintf(stderr, "Keywords::LOAD() : Unknown sprite flip type, %s; in '%s' on line %d\n", flipToken.c_str(), codeLine._text.c_str(), codeLineStart);
+                fprintf(stderr, "Keywords::LOAD() : Must use one of 'NOFLIP', 'FLIPX', 'FLIPY', 'FLIPXY'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
+        }
+
+        // Parse optional sprite overlap, (for last column)
+        uint16_t overlap = 0;
+        if(tokens.size() == 5)
+        {
+            std::string overlapToken = tokens[4];
+            Expression::Numeric overlapNumeric;
+            std::string overlapOperand;
+            Compiler::parseExpression(codeLineIndex, overlapToken, overlapOperand, overlapNumeric);
+            overlap = uint16_t(std::lround(overlapNumeric._value));
+        }
+
+        // Build sprite data from image data
+        uint16_t numColumns = gtRgbFile._header._width / SPRITE_CHUNK_SIZE;
+        uint16_t remStripeChunks = gtRgbFile._header._height % Compiler::getSpriteStripeChunks();
+        uint16_t numStripesPerCol = gtRgbFile._header._height / Compiler::getSpriteStripeChunks() + int(remStripeChunks > 0);
+        uint16_t numStripeChunks = (numStripesPerCol == 1) ? gtRgbFile._header._height : Compiler::getSpriteStripeChunks();
+        std::vector<uint16_t> stripeAddrs;
+        std::vector<uint8_t> spriteData;
+
+        if(numColumns == 1  &&  overlap)
+        {
+            loadUsage(LoadSprite, codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::LOAD() : Can't have a non zero overlap with a single column sprite; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
+
+        // Search sprite image for instancing
+        int parentInstance = 0;
+        bool isInstanced = false;
+        for(auto it=Compiler::getDefDataSprites().begin(); it!=Compiler::getDefDataSprites().end(); ++it)
+        {
+            if(it->second._filename == filename)
+            {
+                spriteData = it->second._data;
+                parentInstance = it->first;
+                isInstanced = true;
+                break;
+            }
+        }
+
+        // Allocate sprite memory
+        int addrIndex = 0;
+        uint16_t address = 0x0000;
+        for(int i=0; i<numColumns; i++)
+        {
+            // One stripe per column
+            if(numStripesPerCol == 1)
+            {
+                if(isInstanced)
+                {
+                    address = Compiler::getDefDataSprites()[parentInstance]._stripeAddrs[addrIndex];
+                    addrIndex += 2;
+                }
+                else
+                {
+                    if(!Memory::getFreeRAM(Compiler::getSpriteStripeFitType(), numStripeChunks*SPRITE_CHUNK_SIZE + 1, Compiler::getSpriteStripeMinAddress(), Compiler::getRuntimeStart(), address))
+                    {
+                        loadUsage(LoadSprite, codeLine, codeLineStart);
+                        fprintf(stderr, "Keywords::LOAD() : Getting Sprite memory for stripe %d failed, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineStart);
+                        return false;
+                    }
+                }
+                stripeAddrs.push_back(address);
+
+                // Destination offsets
+                switch(flipType)
+                {
+                    case Compiler::NoFlip: stripeAddrs.push_back(uint16_t(0 + i*6));
+                                           if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
+                    break;
+
+                    case Compiler::FlipX: stripeAddrs.push_back(uint16_t(0 + (numColumns-1-i)*6));
+                                          if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
+                    break;
+
+                    case Compiler::FlipY: stripeAddrs.push_back(uint16_t((numStripeChunks-1)*256 + i*6));
+                                          if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
+                    break;
+
+                    case Compiler::FlipXY: stripeAddrs.push_back(uint16_t((numStripeChunks-1)*256 + (numColumns-1-i)*6));
+                                           if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
+                    break;
+
+                    default: break;
+                }
+
+                // Copy sprite data and delimiter
+                for(int j=0; j<numStripeChunks; j++)
+                {
+                    for(int k=0; k<SPRITE_CHUNK_SIZE; k++)
+                    {
+                        spriteData.push_back(gtRgbFile._data[i*SPRITE_CHUNK_SIZE + j*SPRITE_CHUNK_SIZE*numColumns + k]);
+                    }
+                }
+                spriteData.push_back(uint8_t(-gtRgbFile._header._height));
+            }
+            // Multiple stripes per column
+            else
+            {
+                // MAX_SPRITE_CHUNKS_PER_STRIPE stripes
+                for(int j=0; j<numStripesPerCol-1; j++)
+                {
+                    if(isInstanced)
+                    {
+                        address = Compiler::getDefDataSprites()[parentInstance]._stripeAddrs[addrIndex];
+                        addrIndex += 2;
+                    }
+                    else
+                    {
+                        if(!Memory::getFreeRAM(Compiler::getSpriteStripeFitType(), numStripeChunks*SPRITE_CHUNK_SIZE + 1, Compiler::getSpriteStripeMinAddress(), Compiler::getRuntimeStart(), address))
+                        {
+                            loadUsage(LoadSprite, codeLine, codeLineStart);
+                            fprintf(stderr, "Keywords::LOAD() : Getting Sprite memory failed for stripe %d, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineStart);
+                            return false;
+                        }
+                    }
+                    stripeAddrs.push_back(address);
+
+                    // Destination offsets
+                    switch(flipType)
+                    {
+                        case Compiler::NoFlip: stripeAddrs.push_back(uint16_t(j*numStripeChunks*256 + i*6));
+                                               if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
+                        break;
+
+                        case Compiler::FlipX: stripeAddrs.push_back(uint16_t(j*numStripeChunks*256 + (numColumns-1-i)*6));
+                                              if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
+                        break;
+
+                        case Compiler::FlipY: stripeAddrs.push_back(uint16_t(((numStripesPerCol-1-j)*numStripeChunks+remStripeChunks-1)*256 + i*6));
+                                              if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
+                        break;
+
+                        case Compiler::FlipXY: stripeAddrs.push_back(uint16_t(((numStripesPerCol-1-j)*numStripeChunks+remStripeChunks-1)*256 + (numColumns-1-i)*6));
+                                               if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
+                        break;
+
+                        default: break;
+                    }
+
+                    // Copy sprite data and delimiter
+                    for(int k=0; k<numStripeChunks; k++)
+                    {
+                        for(int l=0; l<SPRITE_CHUNK_SIZE; l++)
+                        {
+                            spriteData.push_back(gtRgbFile._data[i*SPRITE_CHUNK_SIZE + j*numStripeChunks*SPRITE_CHUNK_SIZE*numColumns + k*SPRITE_CHUNK_SIZE*numColumns + l]);
+                        }
+                    }
+                    spriteData.push_back(255);
+                }
+
+                // Remainder stripe
+                if(isInstanced)
+                {
+                    address = Compiler::getDefDataSprites()[parentInstance]._stripeAddrs[addrIndex];
+                    addrIndex += 2;
+                }
+                else
+                {
+                    if(!Memory::getFreeRAM(Compiler::getSpriteStripeFitType(), remStripeChunks*SPRITE_CHUNK_SIZE + 1, Compiler::getSpriteStripeMinAddress(), Compiler::getRuntimeStart(), address))
+                    {
+                        loadUsage(LoadSprite, codeLine, codeLineStart);
+                        fprintf(stderr, "Keywords::LOAD() : Getting Sprite memory failed for stripe %d, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineStart);
+                        return false;
+                    }
+                }
+                stripeAddrs.push_back(address);
+
+                // Destination offsets
+                switch(flipType)
+                {
+                    case Compiler::NoFlip: stripeAddrs.push_back(uint16_t((numStripesPerCol-1)*numStripeChunks*256 + i*6));
+                                           if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
+                    break;
+
+                    case Compiler::FlipX: stripeAddrs.push_back(uint16_t((numStripesPerCol-1)*numStripeChunks*256 + (numColumns-1-i)*6));
+                                          if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
+                    break;
+
+                    case Compiler::FlipY: stripeAddrs.push_back(uint16_t((remStripeChunks-1)*256 + i*6));
+                                          if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
+                    break;
+
+                    case Compiler::FlipXY: stripeAddrs.push_back(uint16_t((remStripeChunks-1)*256 + (numColumns-1-i)*6));
+                                           if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
+                    break;
+
+                    default: break;
+                }
+
+                // Copy sprite data and delimiter
+                for(int j=0; j<remStripeChunks; j++)
+                {
+                    for(int k=0; k<SPRITE_CHUNK_SIZE; k++)
+                    {
+                        spriteData.push_back(gtRgbFile._data[i*SPRITE_CHUNK_SIZE + (numStripesPerCol-1)*numStripeChunks*SPRITE_CHUNK_SIZE*numColumns + j*SPRITE_CHUNK_SIZE*numColumns + k]);
+                    }
+                }
+                spriteData.push_back(255);
+            }
+        }
+
+        Compiler::getDefDataSprites()[spriteId] = {spriteId, filename, tgaFile._header._width, tgaFile._header._height, numColumns, numStripesPerCol, numStripeChunks, remStripeChunks, stripeAddrs, spriteData, flipType, isInstanced};
+
+        return true;
+    }
+    /********************************************************************************************************************************/
+    /* Load font                                                                                                                    */
+    /********************************************************************************************************************************/
+    bool loadFont(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, const std::vector<std::string>& tokens, const std::string& filename, const Image::TgaFile& tgaFile, const Image::GtRgbFile& gtRgbFile)
+    {
+        if(Compiler::getCodeRomType() < Cpu::ROMv3)
+        {
+            std::string romTypeStr;
+            getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
+            loadUsage(LoadFont, codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::LOAD() : Version error, 'LOAD FONT' requires ROMv3 or higher, you are trying to link against '%s', in '%s' on line %d\n", romTypeStr.c_str(), codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
+
+        if(tokens.size() < 3  ||  tokens.size() > 4)
+        {
+            loadUsage(LoadFont, codeLine, codeLineStart);
+            return false;
+        }
+
+        // Unique font ID
+        std::string idToken = tokens[2];
+        Expression::Numeric idNumeric;
+        std::string idOperand;
+        Compiler::parseExpression(codeLineIndex, idToken, idOperand, idNumeric);
+        int fontId = int(std::lround(idNumeric._value));
+        if(Compiler::getDefDataFonts().find(fontId) != Compiler::getDefDataFonts().end())
+        {
+            loadUsage(LoadFont, codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::LOAD() : Font id not unique, %d; in '%s' on line %d\n", fontId, codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
+
+        // Foreground/background colours
+        uint16_t fgbgColour = 0x0000;
+        if(tokens.size() == 4)
+        {
+            std::string fgbgToken = tokens[3];
+            Expression::Numeric fgbgNumeric;
+            std::string fgbgOperand;
+            Compiler::parseExpression(codeLineIndex, fgbgToken, fgbgOperand, fgbgNumeric);
+            fgbgColour = uint16_t(std::lround(fgbgNumeric._value));
+        }
+
+        // Width
+        if(gtRgbFile._header._width % FONT_WIDTH != 0)
+        {
+            loadUsage(LoadFont, codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::LOAD() : Font width %d is not a multiple of %d; in '%s' on line %d\n", gtRgbFile._header._width, FONT_WIDTH, codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
+
+        // Height
+        if(gtRgbFile._header._height % FONT_HEIGHT != 0)
+        {
+            loadUsage(LoadFont, codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::LOAD() : Font height %d is not a multiple of %d; in '%s' on line %d\n", gtRgbFile._header._height, FONT_HEIGHT, codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
+
+        // Load font mapping file
+        bool foundMapFile = true;
+        size_t nameSuffix = filename.find_last_of(".");
+        std::string filenameMap = filename.substr(0, nameSuffix) + ".map";
+        std::ifstream infile(filenameMap, std::ios::in);
+        if(!infile.is_open())
+        {
+            foundMapFile = false;
+        }
+
+        // Parse font mapping file
+        int maxIndex = -1;
+        uint16_t mapAddr = 0x0000;
+        std::vector<uint8_t> mapping(MAPPING_SIZE);
+        if(foundMapFile)
+        {
+            int ascii, index, line = 0;
+            while(!infile.eof())
+            {
+                infile >> ascii >> index;
+                if(index > maxIndex) maxIndex = index;
+                if(!infile.good() && !infile.eof())
+                {
+                    loadUsage(LoadFont, codeLine, codeLineStart);
+                    fprintf(stderr, "Keywords::LOAD() : error in Mapping file %s on line %d; in '%s' on line %d\n", filenameMap.c_str(), line + 1, codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
+
+                if(line >= MAPPING_SIZE) break;
+                mapping[line++] = uint8_t(index);
+            }
+
+            if(line != MAPPING_SIZE)
+            {
+                loadUsage(LoadFont, codeLine, codeLineStart);
+                fprintf(stderr, "Keywords::LOAD() : warning, found an incorrect number of map entries %d for file %s, should be %d; in '%s' on line %d\n", line - 1, filenameMap.c_str(), MAPPING_SIZE, codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
+
+            if(!Memory::getFreeRAM(Memory::FitDescending, MAPPING_SIZE, USER_CODE_START, Compiler::getRuntimeStart(), mapAddr))
+            {
+                loadUsage(LoadFont, codeLine, codeLineStart);
+                fprintf(stderr, "Keywords::LOAD() : Getting Mapping memory for Map size of %d failed, in '%s' on line %d\n", MAPPING_SIZE, codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
+        }
+
+        // 8th line is implemented as a separate sprite call, to save memory and allow for more efficient memory packing
+        const int kCharHeight = FONT_HEIGHT-1;
+
+        // Copy font data and create delimiter
+        std::vector<uint8_t> charData;
+        std::vector<uint16_t> charAddrs;
+        std::vector<std::vector<uint8_t>> fontData;
+        for(int j=0; j<tgaFile._header._height; j+=FONT_HEIGHT)
+        {
+            for(int i=0; i<tgaFile._header._width; i+=FONT_WIDTH)
+            {
+                for(int l=0; l<kCharHeight; l++)
+                {
+                    for(int k=0; k<FONT_WIDTH; k++)
+                    {
+                        uint8_t pixel = gtRgbFile._data[j*tgaFile._header._width + i + l*tgaFile._header._width + k];
+                        if(fgbgColour)
+                        {
+                            if(pixel == 0x00) pixel = fgbgColour & 0x00FF;
+                            if(pixel == 0x3F) pixel = fgbgColour >> 8;
+                        }
+                        charData.push_back(pixel);
+                    }
+                }
+                charData.push_back(uint8_t(-(kCharHeight)));
+                fontData.push_back(charData);
+                charData.clear();
+
+                uint16_t address = 0x0000;
+                if(!Memory::getFreeRAM(Memory::FitDescending, (kCharHeight)*FONT_WIDTH + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
+                {
+                    loadUsage(LoadFont, codeLine, codeLineStart);
+                    fprintf(stderr, "Keywords::LOAD() : Getting font memory for char %d failed, in '%s' on line %d\n", int(fontData.size() - 1), codeLine._text.c_str(), codeLineStart);
+                    return false;
+                }
+
+                charAddrs.push_back(address);
+            }
+        }
+
+        if(foundMapFile  &&  maxIndex + 1 != int(fontData.size()))
+        {
+            loadUsage(LoadFont, codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::LOAD() : Font mapping table does not match font data, found a mapping count of %d and a chars count of %d, in '%s' on line %d\n", maxIndex + 1, int(fontData.size()), codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
+
+        // Create baseline for all chars in each font
+        uint16_t baseAddr = 0x0000;
+        if(!Memory::getFreeRAM(Memory::FitDescending, FONT_WIDTH + 1, USER_CODE_START, Compiler::getRuntimeStart(), baseAddr))
+        {
+            loadUsage(LoadFont, codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::LOAD() : Getting font memory for char %d failed, in '%s' on line %d\n", int(fontData.size() - 1), codeLine._text.c_str(), codeLineStart);
+            return false;
+        }
+
+        Compiler::getDefDataFonts()[fontId] = {fontId, filenameMap, tgaFile._header._width, tgaFile._header._height, charAddrs, fontData, mapAddr, mapping, baseAddr, fgbgColour};
+
+        Linker::enableFontLinking();
+
+        return true;
+    }
     bool LOAD(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
     {
         UNREFERENCED_PARAM(result);
@@ -4535,106 +5452,27 @@ RESTART_PRINT:
         std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
         if(tokens.size() < 2  ||  tokens.size() > 5)
         {
-            usageLOAD(0, codeLine, codeLineStart);
+            loadUsage(LoadType, codeLine, codeLineStart);
             return false;
         }
 
         // Type
         Expression::strToUpper(tokens[0]);
         Expression::stripWhitespace(tokens[0]);
-        if(tokens[0] != "MIDI"  &&  tokens[0] != "IMAGE"  &&  tokens[0] != "SPRITE"  &&  tokens[0] != "FONT"  &&  tokens[0] != "WAVE")
+
+        // Load WAVE
+        if(tokens[0] == "WAVE")
         {
-            usageLOAD(0, codeLine, codeLineStart);
-            return false;
+            return loadWave(codeLine, codeLineIndex, codeLineStart, tokens);
         }
 
-        // Handle MIDI and WAVE
-        if(tokens[0] == "MIDI"  ||  tokens[0] == "WAVE")
+        // Load Midi
+        if(tokens[0] == "MIDI")
         {
-            if(tokens[0] == "MIDI")
-            {
-                usageLOAD(4, codeLine, codeLineStart);
-            }
-            else if(tokens[0] == "WAVE")
-            {
-                std::string filename = tokens[1];
-                Expression::stripWhitespace(filename);
-                std::string ext = filename;
-                Expression::strToUpper(ext);
-                if(ext.find(".GTWAV") != std::string::npos)
-                {
-                    std::string filepath = Loader::getFilePath();
-                    size_t slash = filepath.find_last_of("\\/");
-                    filepath = (slash != std::string::npos) ? filepath.substr(0, slash) : ".";
-                    filename = filepath + "/" + filename;
-
-                    // Parse optional address
-                    uint16_t address = RAM_AUDIO_START;
-                    if(tokens.size() >= 3)
-                    {
-                        std::string addrToken = tokens[2];
-                        Expression::Numeric addrNumeric;
-                        std::string addrOperand;
-                        Compiler::parseExpression(codeLineIndex, addrToken, addrOperand, addrNumeric);
-                        address = uint16_t(std::lround(addrNumeric._value));
-                        if(address < DEFAULT_START_ADDRESS)
-                        {
-                            usageLOAD(5, codeLine, codeLineStart);
-                            fprintf(stderr, "Keywords::LOAD() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, addrToken.c_str(), codeLine._text.c_str(), codeLineStart);
-                            return false;
-                        }
-                    }
-
-                    // Parse optional address
-                    uint16_t addrOffset = 0;
-                    if(tokens.size() == 4)
-                    {
-                        std::string offsetToken = tokens[3];
-                        Expression::Numeric offsetNumeric;
-                        std::string offsetOperand;
-                        Compiler::parseExpression(codeLineIndex, offsetToken, offsetOperand, offsetNumeric);
-                        addrOffset = uint16_t(std::lround(offsetNumeric._value));
-                    }
-
-                    // Load wave file
-                    std::vector<uint8_t> dataBytes(64);
-                    std::ifstream infile(filename, std::ios::binary | std::ios::in);
-                    if(!infile.is_open())
-                    {
-                        usageLOAD(5, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : failed to open file '%s', in '%s' on line %d\n", filename.c_str(), codeLine._text.c_str(), codeLineStart);
-                        return false;
-                    }
-                    infile.read((char *)&dataBytes[0], 64);
-                    if(infile.eof() || infile.bad() || infile.fail())
-                    {
-                        usageLOAD(5, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : failed to read file '%s', in '%s' on line %d\n", filename.c_str(), codeLine._text.c_str(), codeLineStart);
-                        return false;
-                    }
-
-                    uint16_t addr = address;
-                    for(int i=0; i<int(dataBytes.size()); i++)
-                    {
-                        if(addrOffset != 0)
-                        {
-                            if(addr < RAM_AUDIO_START  ||  addr > RAM_AUDIO_END)
-                            {
-                                if(!Memory::takeFreeRAM(addr, 1)) return false;
-                                addr += addrOffset;
-                            }
-                        }
-                    }
-                    if(addrOffset == 0)
-                    {
-                        if(!Memory::takeFreeRAM(address, int(dataBytes.size()))) return false;
-                    }
-                    Compiler::getDefDataBytes().push_back({address, addrOffset, dataBytes});
-                }
-            }
+            return loadMidi(codeLine, codeLineIndex, codeLineStart, tokens);
         }
 
-        // Handle Image, Sprite and Font
+        // Load Image, Sprite and Font
         if(tokens[0] == "IMAGE"  ||  tokens[0] == "SPRITE"  ||  tokens[0] == "FONT")
         {
             std::string filename = tokens[1];
@@ -4666,520 +5504,25 @@ RESTART_PRINT:
                 // Image
                 if(tokens[0] == "IMAGE")
                 {
-                    const uint16_t stride = 256;
-
-                    if(tokens.size() > 3)
-                    {
-                        usageLOAD(1, codeLine, codeLineStart);
-                        return false;
-                    }
-
-                    // Parse optional address
-                    uint16_t address = RAM_VIDEO_START;
-                    if(tokens.size() == 3)
-                    {
-                        std::string addrToken = tokens[2];
-                        Expression::Numeric addrNumeric;
-                        std::string addrOperand;
-                        Compiler::parseExpression(codeLineIndex, addrToken, addrOperand, addrNumeric);
-                        address = uint16_t(std::lround(addrNumeric._value));
-                        if(address < DEFAULT_START_ADDRESS)
-                        {
-                            usageLOAD(1, codeLine, codeLineStart);
-                            fprintf(stderr, "Keywords::LOAD() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, addrToken.c_str(), codeLine._text.c_str(), codeLineStart);
-                            return false;
-                        }
-                    }
-
-                    if(gtRgbFile._header._width > stride  ||  gtRgbFile._header._width + (address & 0x00FF) > stride)
-                    {
-                        usageLOAD(1, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : Image width %d + starting address 0x%04x overflow, for %s; in '%s' on line %d\n", gtRgbFile._header._width, address, filename.c_str(), codeLine._text.c_str(), codeLineStart);
-                        return false;
-                    }
-
-                    Compiler::DefDataImage defDataImage = {address, tgaFile._header._width, tgaFile._header._height, stride, gtRgbFile._data};
-                    Compiler::getDefDataImages().push_back(defDataImage);
-
-                    int size = gtRgbFile._header._width;
-                    for(int y=0; y<gtRgbFile._header._height; y++)
-                    {
-                        // Take offscreen memory from compiler for images wider than visible screen resolution, or images in offscreen memory
-                        if(address >= RAM_VIDEO_START  &&  address <= 0x7FFF)
-                        {
-                            size = gtRgbFile._header._width + (address & 0x00FF) - RAM_SCANLINE_SIZE;
-                            if(size > 0)
-                            {
-                                if(!Memory::takeFreeRAM((address & 0xFF00) + RAM_SCANLINE_SIZE, size))
-                                {
-                                    usageLOAD(1, codeLine, codeLineStart);
-                                    fprintf(stderr, "Keywords::LOAD() : Allocating RAM for pixel row %d failed, in '%s' on line %d\n", y, codeLine._text.c_str(), codeLineStart);
-                                    return false;
-                                }
-                            }
-                        }
-
-                        // 'Loader.gcl' is resident at these addresses when loading *.gt1 files, therefore you can overwrite these locations only AFTER the loading process has finished
-                        // Split up image scanlines into offscreen chunks and load the offscreen chunks into the correct onscreen memory locations after 'Loader.gcl' is done
-                        if((address >= LOADER_SCANLINE0_START  &&  address<= LOADER_SCANLINE0_END)  ||  (address >= LOADER_SCANLINE1_START  &&  address<= LOADER_SCANLINE1_END)  ||  
-                           (address >= LOADER_SCANLINE2_START  &&  address<= LOADER_SCANLINE2_END))
-                        {
-                            uint16_t chunkOffset = 0x0000, chunkAddr = 0x0000;
-                            for(int i=0; i<gtRgbFile._header._width / RAM_SEGMENTS_SIZE; i++)
-                            {
-                                handleLOADchunk(codeLine, codeLineStart, gtRgbFile._data, y, gtRgbFile._header._width, address, RAM_SEGMENTS_SIZE, chunkOffset, chunkAddr);
-                            }
-                            handleLOADchunk(codeLine, codeLineStart, gtRgbFile._data, y, gtRgbFile._header._width, address, gtRgbFile._header._width % RAM_SEGMENTS_SIZE, chunkOffset, chunkAddr);
-                        }
-
-                        // Next destination row
-                        address += stride; 
-                    }
+                    return loadImage(codeLine, codeLineIndex, codeLineStart, tokens, filename, tgaFile, gtRgbFile);
                 }
+
                 // Sprite
-                else if(tokens[0] == "SPRITE")
+                if(tokens[0] == "SPRITE")
                 {
-                    if(Compiler::getCodeRomType() < Cpu::ROMv3)
-                    {
-                        std::string romTypeStr;
-                        getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
-                        usageLOAD(2, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : Version error, 'LOAD SPRITE' requires ROMv3 or higher, you are trying to link against '%s', in '%s' on line %d\n", romTypeStr.c_str(),  codeLine._text.c_str(), codeLineStart);
-                        return false;
-                    }
-
-                    if(tokens.size() > 5)
-                    {
-                        usageLOAD(2, codeLine, codeLineStart);
-                        return false;
-                    }
-
-                    if(gtRgbFile._header._width % SPRITE_CHUNK_SIZE != 0)
-                    {
-                        usageLOAD(2, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : Sprite width not a multiple of %d, (%d x %d), for %s; in '%s' on line %d\n", SPRITE_CHUNK_SIZE, gtRgbFile._header._width, gtRgbFile._header._height, filename.c_str(),
-                                                                                                                                                            codeLine._text.c_str(),
-                                                                                                                                                            codeLineStart);
-                        return false;
-                    }
-
-                    if(tokens.size() < 3)
-                    {
-                        usageLOAD(2, codeLine, codeLineStart);
-                        return false;
-                    }
-
-                    // Unique sprite ID
-                    std::string idToken = tokens[2];
-                    Expression::Numeric idNumeric;
-                    std::string idOperand;
-                    Compiler::parseExpression(codeLineIndex, idToken, idOperand, idNumeric);
-                    int spriteId = int(std::lround(idNumeric._value));
-                    if(Compiler::getDefDataSprites().find(spriteId) != Compiler::getDefDataSprites().end())
-                    {
-                        usageLOAD(2, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : Sprite id not unique, %d; in '%s' on line %d\n", spriteId, codeLine._text.c_str(), codeLineStart);
-                        return false;
-                    }
-
-                    // Parse optional sprite flip
-                    Compiler::SpriteFlipType flipType = Compiler::NoFlip;
-                    if(tokens.size() >= 4)
-                    {
-                        std::string flipToken = tokens[3];
-                        Expression::stripWhitespace(flipToken);
-                        Expression::strToUpper(flipToken);
-                        if(flipToken == "NOFLIP")      flipType = Compiler::NoFlip;
-                        else if(flipToken == "FLIPX")  flipType = Compiler::FlipX;
-                        else if(flipToken == "FLIPY")  flipType = Compiler::FlipY;
-                        else if(flipToken == "FLIPXY") flipType = Compiler::FlipXY;
-                        else
-                        {
-                            usageLOAD(2, codeLine, codeLineStart);
-                            fprintf(stderr, "Keywords::LOAD() : Unknown sprite flip type, %s; in '%s' on line %d\n", flipToken.c_str(), codeLine._text.c_str(), codeLineStart);
-                            fprintf(stderr, "Keywords::LOAD() : Must use one of 'NOFLIP', 'FLIPX', 'FLIPY', 'FLIPXY'; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
-                            return false;
-                        }
-                    }
-
-                    // Parse optional sprite overlap, (for last column)
-                    uint16_t overlap = 0;
-                    if(tokens.size() == 5)
-                    {
-                        std::string overlapToken = tokens[4];
-                        Expression::Numeric overlapNumeric;
-                        std::string overlapOperand;
-                        Compiler::parseExpression(codeLineIndex, overlapToken, overlapOperand, overlapNumeric);
-                        overlap = uint16_t(std::lround(overlapNumeric._value));
-                    }
-
-                    // Build sprite data from image data
-                    uint16_t numColumns = gtRgbFile._header._width / SPRITE_CHUNK_SIZE;
-                    uint16_t remStripeChunks = gtRgbFile._header._height % Compiler::getSpriteStripeChunks();
-                    uint16_t numStripesPerCol = gtRgbFile._header._height / Compiler::getSpriteStripeChunks() + int(remStripeChunks > 0);
-                    uint16_t numStripeChunks = (numStripesPerCol == 1) ? gtRgbFile._header._height : Compiler::getSpriteStripeChunks();
-                    std::vector<uint16_t> stripeAddrs;
-                    std::vector<uint8_t> spriteData;
-
-                    if(numColumns == 1  &&  overlap)
-                    {
-                        usageLOAD(2, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : Can't have a non zero overlap with a single column sprite; in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
-                        return false;
-                    }
-
-                    // Search sprite image for instancing
-                    int parentInstance = 0;
-                    bool isInstanced = false;
-                    for(auto it=Compiler::getDefDataSprites().begin(); it!=Compiler::getDefDataSprites().end(); ++it)
-                    {
-                        if(it->second._filename == filename)
-                        {
-                            spriteData = it->second._data;
-                            parentInstance = it->first;
-                            isInstanced = true;
-                            break;
-                        }
-                    }
-
-                    // Allocate sprite memory
-                    int addrIndex = 0;
-                    uint16_t address = 0x0000;
-                    for(int i=0; i<numColumns; i++)
-                    {
-                        // One stripe per column
-                        if(numStripesPerCol == 1)
-                        {
-                            if(isInstanced)
-                            {
-                                address = Compiler::getDefDataSprites()[parentInstance]._stripeAddrs[addrIndex];
-                                addrIndex += 2;
-                            }
-                            else
-                            {
-                                if(!Memory::getFreeRAM(Compiler::getSpriteStripeFitType(), numStripeChunks*SPRITE_CHUNK_SIZE + 1, Compiler::getSpriteStripeMinAddress(), 
-                                                       Compiler::getRuntimeStart(), address))
-                                {
-                                    usageLOAD(2, codeLine, codeLineStart);
-                                    fprintf(stderr, "Keywords::LOAD() : Getting Sprite memory for stripe %d failed, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineStart);
-                                    return false;
-                                }
-                            }
-                            stripeAddrs.push_back(address);
-
-                            // Destination offsets
-                            switch(flipType)
-                            {
-                                case Compiler::NoFlip: stripeAddrs.push_back(uint16_t(0 + i*6));
-                                                       if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
-                                break;
-
-                                case Compiler::FlipX: stripeAddrs.push_back(uint16_t(0 + (numColumns-1-i)*6));
-                                                      if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
-                                break;
-
-                                case Compiler::FlipY: stripeAddrs.push_back(uint16_t((numStripeChunks-1)*256 + i*6));
-                                                      if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
-                                break;
-
-                                case Compiler::FlipXY: stripeAddrs.push_back(uint16_t((numStripeChunks-1)*256 + (numColumns-1-i)*6));
-                                                       if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
-                                break;
-
-                                default: break;
-                            }
-
-                            // Copy sprite data and delimiter
-                            for(int j=0; j<numStripeChunks; j++)
-                            {
-                                for(int k=0; k<SPRITE_CHUNK_SIZE; k++)
-                                {
-                                    spriteData.push_back(gtRgbFile._data[i*SPRITE_CHUNK_SIZE + j*SPRITE_CHUNK_SIZE*numColumns + k]);
-                                }
-                            }
-                            spriteData.push_back(uint8_t(-gtRgbFile._header._height));
-                        }
-                        // Multiple stripes per column
-                        else
-                        {
-                            // MAX_SPRITE_CHUNKS_PER_STRIPE stripes
-                            for(int j=0; j<numStripesPerCol-1; j++)
-                            {
-                                if(isInstanced)
-                                {
-                                    address = Compiler::getDefDataSprites()[parentInstance]._stripeAddrs[addrIndex];
-                                    addrIndex += 2;
-                                }
-                                else
-                                {
-                                    if(!Memory::getFreeRAM(Compiler::getSpriteStripeFitType(), numStripeChunks*SPRITE_CHUNK_SIZE + 1, Compiler::getSpriteStripeMinAddress(), 
-                                                           Compiler::getRuntimeStart(), address))
-                                    {
-                                        usageLOAD(2, codeLine, codeLineStart);
-                                        fprintf(stderr, "Keywords::LOAD() : Getting Sprite memory failed for stripe %d, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineStart);
-                                        return false;
-                                    }
-                                }
-                                stripeAddrs.push_back(address);
-
-                                // Destination offsets
-                                switch(flipType)
-                                {
-                                    case Compiler::NoFlip: stripeAddrs.push_back(uint16_t(j*numStripeChunks*256 + i*6));
-                                                           if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
-                                    break;
-
-                                    case Compiler::FlipX: stripeAddrs.push_back(uint16_t(j*numStripeChunks*256 + (numColumns-1-i)*6));
-                                                          if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
-                                    break;
-
-                                    case Compiler::FlipY: stripeAddrs.push_back(uint16_t(((numStripesPerCol-1-j)*numStripeChunks+remStripeChunks-1)*256 + i*6));
-                                                          if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
-                                    break;
-
-                                    case Compiler::FlipXY: stripeAddrs.push_back(uint16_t(((numStripesPerCol-1-j)*numStripeChunks+remStripeChunks-1)*256 + (numColumns-1-i)*6));
-                                                           if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
-                                    break;
-
-                                    default: break;
-                                }
-
-                                // Copy sprite data and delimiter
-                                for(int k=0; k<numStripeChunks; k++)
-                                {
-                                    for(int l=0; l<SPRITE_CHUNK_SIZE; l++)
-                                    {
-                                        spriteData.push_back(gtRgbFile._data[i*SPRITE_CHUNK_SIZE + j*numStripeChunks*SPRITE_CHUNK_SIZE*numColumns + k*SPRITE_CHUNK_SIZE*numColumns + l]);
-                                    }
-                                }
-                                spriteData.push_back(255);
-                            }
-
-                            // Remainder stripe
-                            if(isInstanced)
-                            {
-                                address = Compiler::getDefDataSprites()[parentInstance]._stripeAddrs[addrIndex];
-                                addrIndex += 2;
-                            }
-                            else
-                            {
-                                if(!Memory::getFreeRAM(Compiler::getSpriteStripeFitType(), remStripeChunks*SPRITE_CHUNK_SIZE + 1, Compiler::getSpriteStripeMinAddress(),
-                                                       Compiler::getRuntimeStart(), address))
-                                {
-                                    usageLOAD(2, codeLine, codeLineStart);
-                                    fprintf(stderr, "Keywords::LOAD() : Getting Sprite memory failed for stripe %d, in '%s' on line %d\n", int(stripeAddrs.size()/2 + 1), codeLine._text.c_str(), codeLineStart);
-                                    return false;
-                                }
-                            }
-                            stripeAddrs.push_back(address);
-
-                            // Destination offsets
-                            switch(flipType)
-                            {
-                                case Compiler::NoFlip: stripeAddrs.push_back(uint16_t((numStripesPerCol-1)*numStripeChunks*256 + i*6));
-                                                       if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
-                                break;
-
-                                case Compiler::FlipX: stripeAddrs.push_back(uint16_t((numStripesPerCol-1)*numStripeChunks*256 + (numColumns-1-i)*6));
-                                                      if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
-                                break;
-
-                                case Compiler::FlipY: stripeAddrs.push_back(uint16_t((remStripeChunks-1)*256 + i*6));
-                                                      if(i == numColumns - 1) stripeAddrs.back() -= overlap;  // push last column closer to all other columns
-                                break;
-
-                                case Compiler::FlipXY: stripeAddrs.push_back(uint16_t((remStripeChunks-1)*256 + (numColumns-1-i)*6));
-                                                       if(i != numColumns - 1) stripeAddrs.back() -= overlap;  // push all other columns closer to last column
-                                break;
-
-                                default: break;
-                            }
-
-                            // Copy sprite data and delimiter
-                            for(int j=0; j<remStripeChunks; j++)
-                            {
-                                for(int k=0; k<SPRITE_CHUNK_SIZE; k++)
-                                {
-                                    spriteData.push_back(gtRgbFile._data[i*SPRITE_CHUNK_SIZE + (numStripesPerCol-1)*numStripeChunks*SPRITE_CHUNK_SIZE*numColumns + j*SPRITE_CHUNK_SIZE*numColumns + k]);
-                                }
-                            }
-                            spriteData.push_back(255);
-                        }
-                    }
-
-                    Compiler::DefDataSprite defDataSprite = {spriteId, filename, tgaFile._header._width, tgaFile._header._height, numColumns, numStripesPerCol, numStripeChunks, remStripeChunks,
-                                                             stripeAddrs, spriteData, flipType, isInstanced};
-                    Compiler::getDefDataSprites()[spriteId] = defDataSprite;
+                    return loadSprite(codeLine, codeLineIndex, codeLineStart, tokens, filename, tgaFile, gtRgbFile);
                 }
-                else if(tokens[0] == "FONT")
+
+                // Font
+                if(tokens[0] == "FONT")
                 {
-                    if(Compiler::getCodeRomType() < Cpu::ROMv3)
-                    {
-                        std::string romTypeStr;
-                        getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
-                        usageLOAD(3, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : Version error, 'LOAD FONT' requires ROMv3 or higher, you are trying to link against '%s', in '%s' on line %d\n", romTypeStr.c_str(), codeLine._text.c_str(), codeLineStart);
-                        return false;
-                    }
-
-                    if(tokens.size() < 3  ||  tokens.size() > 4)
-                    {
-                        usageLOAD(3, codeLine, codeLineStart);
-                        return false;
-                    }
-
-                    // Unique font ID
-                    std::string idToken = tokens[2];
-                    Expression::Numeric idNumeric;
-                    std::string idOperand;
-                    Compiler::parseExpression(codeLineIndex, idToken, idOperand, idNumeric);
-                    int fontId = int(std::lround(idNumeric._value));
-                    if(Compiler::getDefDataFonts().find(fontId) != Compiler::getDefDataFonts().end())
-                    {
-                        usageLOAD(3, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : Font id not unique, %d; in '%s' on line %d\n", fontId, codeLine._text.c_str(), codeLineStart);
-                        return false;
-                    }
-
-                    // Foreground/background colours
-                    uint16_t fgbgColour = 0x0000;
-                    if(tokens.size() == 4)
-                    {
-                        std::string fgbgToken = tokens[3];
-                        Expression::Numeric fgbgNumeric;
-                        std::string fgbgOperand;
-                        Compiler::parseExpression(codeLineIndex, fgbgToken, fgbgOperand, fgbgNumeric);
-                        fgbgColour = uint16_t(std::lround(fgbgNumeric._value));
-                    }
-
-                    // Width
-                    if(gtRgbFile._header._width % FONT_WIDTH != 0)
-                    {
-                        usageLOAD(3, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : Font width %d is not a multiple of %d; in '%s' on line %d\n", gtRgbFile._header._width, FONT_WIDTH, codeLine._text.c_str(), codeLineStart);
-                        return false;
-                    }
-
-                    // Height
-                    if(gtRgbFile._header._height % FONT_HEIGHT != 0)
-                    {
-                        usageLOAD(3, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : Font height %d is not a multiple of %d; in '%s' on line %d\n", gtRgbFile._header._height, FONT_HEIGHT, codeLine._text.c_str(), codeLineStart);
-                        return false;
-                    }
-
-                    // Load font mapping file
-                    bool foundMapFile = true;
-                    size_t nameSuffix = filename.find_last_of(".");
-                    filename = filename.substr(0, nameSuffix) + ".map";
-                    std::ifstream infile(filename, std::ios::in);
-                    if(!infile.is_open())
-                    {
-                        foundMapFile = false;
-                    }
-
-                    // Parse font mapping file
-                    int maxIndex = -1;
-                    uint16_t mapAddr = 0x0000;
-                    std::vector<uint8_t> mapping(MAPPING_SIZE);
-                    if(foundMapFile)
-                    {
-                        int ascii, index, line = 0;
-                        while(!infile.eof())
-                        {
-                            infile >> ascii >> index;
-                            if(index > maxIndex) maxIndex = index;
-                            if(!infile.good() && !infile.eof())
-                            {
-                                usageLOAD(3, codeLine, codeLineStart);
-                                fprintf(stderr, "Keywords::LOAD() : error in Mapping file %s on line %d; in '%s' on line %d\n", filename.c_str(), line + 1, codeLine._text.c_str(), codeLineStart);
-                                return false;
-                            }
-
-                            if(line >= MAPPING_SIZE) break;
-                            mapping[line++] = uint8_t(index);
-                        }
-
-                        if(line != MAPPING_SIZE)
-                        {
-                            usageLOAD(3, codeLine, codeLineStart);
-                            fprintf(stderr, "Keywords::LOAD() : warning, found an incorrect number of map entries %d for file %s, should be %d; in '%s' on line %d\n", line - 1, filename.c_str(), MAPPING_SIZE, codeLine._text.c_str(), codeLineStart);
-                            return false;
-                        }
-
-                        if(!Memory::getFreeRAM(Memory::FitDescending, MAPPING_SIZE, 0x0200, Compiler::getRuntimeStart(), mapAddr))
-                        {
-                            usageLOAD(3, codeLine, codeLineStart);
-                            fprintf(stderr, "Keywords::LOAD() : Getting Mapping memory for Map size of %d failed, in '%s' on line %d\n", MAPPING_SIZE, codeLine._text.c_str(), codeLineStart);
-                            return false;
-                        }
-                    }
-
-                    // 8th line is implemented as a separate sprite call, to save memory and allow for more efficient memory packing
-                    const int kCharHeight = FONT_HEIGHT-1;
-
-                    // Copy font data and create delimiter
-                    std::vector<uint8_t> charData;
-                    std::vector<uint16_t> charAddrs;
-                    std::vector<std::vector<uint8_t>> fontData;
-                    for(int j=0; j<tgaFile._header._height; j+=FONT_HEIGHT)
-                    {
-                        for(int i=0; i<tgaFile._header._width; i+=FONT_WIDTH)
-                        {
-                            for(int l=0; l<kCharHeight; l++)
-                            {
-                                for(int k=0; k<FONT_WIDTH; k++)
-                                {
-                                    uint8_t pixel = gtRgbFile._data[j*tgaFile._header._width + i + l*tgaFile._header._width + k];
-                                    if(fgbgColour)
-                                    {
-                                        if(pixel == 0x00) pixel = fgbgColour & 0x00FF;
-                                        if(pixel == 0x3F) pixel = fgbgColour >> 8;
-                                    }
-                                    charData.push_back(pixel);
-                                }
-                            }
-                            charData.push_back(uint8_t(-(kCharHeight)));
-                            fontData.push_back(charData);
-                            charData.clear();
-
-                            uint16_t address = 0x0000;
-                            if(!Memory::getFreeRAM(Memory::FitDescending, (kCharHeight)*FONT_WIDTH + 1, 0x0200, Compiler::getRuntimeStart(), address))
-                            {
-                                usageLOAD(3, codeLine, codeLineStart);
-                                fprintf(stderr, "Keywords::LOAD() : Getting font memory for char %d failed, in '%s' on line %d\n", int(fontData.size() - 1), codeLine._text.c_str(), codeLineStart);
-                                return false;
-                            }
-
-                            charAddrs.push_back(address);
-                        }
-                    }
-
-                    if(foundMapFile  &&  maxIndex + 1 != int(fontData.size()))
-                    {
-                        usageLOAD(3, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : Font mapping table does not match font data, found a mapping count of %d and a chars count of %d, in '%s' on line %d\n", maxIndex + 1, int(fontData.size()), codeLine._text.c_str(), codeLineStart);
-                        return false;
-                    }
-
-                    // Create baseline for all chars in each font
-                    uint16_t baseAddr = 0x0000;
-                    if(!Memory::getFreeRAM(Memory::FitDescending, FONT_WIDTH + 1, 0x0200, Compiler::getRuntimeStart(), baseAddr))
-                    {
-                        usageLOAD(3, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : Getting font memory for char %d failed, in '%s' on line %d\n", int(fontData.size() - 1), codeLine._text.c_str(), codeLineStart);
-                        return false;
-                    }
-
-                    Compiler::DefDataFont defDataFont = {fontId, filename, tgaFile._header._width, tgaFile._header._height, charAddrs, fontData, mapAddr, mapping, baseAddr, fgbgColour};
-                    Compiler::getDefDataFonts()[fontId] = defDataFont;
-
-                    Linker::enableFontLinking();
+                    return loadFont(codeLine, codeLineIndex, codeLineStart, tokens, filename, tgaFile, gtRgbFile);
                 }
             }
         }
 
-        return true;
+        loadUsage(LoadType, codeLine, codeLineStart);
+        return false;
     }
 
     bool SPRITE(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
@@ -5840,7 +6183,11 @@ RESTART_PRINT:
             // Convert GBAS format to ASM format
             variables.push_back("*" + Expression::wordToHexString(address));
 
-            Expression::parse(tokens[i], codeLineIndex, numeric);
+            if(!Expression::parse(tokens[i], codeLineIndex, numeric))
+            {
+                fprintf(stderr, "Keywords::GPRINTF() : Syntax error in '%s' at '%s' on %d\n", Expression::getExpression(), codeLine._text.c_str(), codeLineStart);
+                return false;
+            }
             if(numeric._varType == Expression::Number  ||  numeric._varType == Expression::IntVar16  ||  numeric._varType == Expression::StrVar)
             {
                 Compiler::handleExpression(codeLineIndex, tokens[i], numeric);

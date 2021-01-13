@@ -507,6 +507,11 @@ _label_ CALLI   _label
         CALLI   atLineCursor
 %ENDM
 
+%MACRO  SetMidiStream
+        STW     midiId
+        CALLI   setMidiStream
+%ENDM
+
 %MACRO  PlayMidi
         STW     midiStream
         CALLI   resetMidi

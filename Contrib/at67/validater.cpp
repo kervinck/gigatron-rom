@@ -350,7 +350,7 @@ namespace Validater
                         if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                         {
                             fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i);
-                            Compiler::setCompilingError(true);
+                            return false;
                         }
                     }
                     // Check internal label
@@ -366,7 +366,7 @@ namespace Validater
                             if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                             {
                                 fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i);
-                                Compiler::setCompilingError(true);
+                                return false;
                             }
                         }
                     }
@@ -456,5 +456,20 @@ namespace Validater
         }
 
         return success;
+    }
+
+    bool checkRuntimeVersion(void)
+    {
+        int16_t runtimeVersion = Assembler::getRuntimeVersion();
+        if(runtimeVersion != RUNTIME_VERSION)
+        {
+            fprintf(stderr, "\n*************************************************************************************************\n");
+            fprintf(stderr, "* Expected runtime version %04d : Found runtime version %04d\n", RUNTIME_VERSION, runtimeVersion);
+            fprintf(stderr, "*************************************************************************************************\n\n");
+
+            return false;
+        }
+
+        return true;
     }
 }

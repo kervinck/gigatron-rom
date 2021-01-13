@@ -77,6 +77,8 @@ namespace Dialog
         int _dialogY = 0;
         int _offsetX = 2;
         int _offsetY = 5;
+        int _gigaX   = 0;
+        int _gigaY   = 0;
 
         std::string _text;
         std::vector<Item> _items;
@@ -90,6 +92,7 @@ namespace Dialog
         Size getSize(void);
         bool getDialogItem(int index, Item& item);
         bool setDialogItem(int index, Item& item);
+        bool setDialogItemText(int index, const std::string& text);
 
         std::vector<Item>& getItems(void);
 
@@ -99,7 +102,7 @@ namespace Dialog
 
         bool create(const std::string& name, const std::vector<Item>& items, int numCols, int numRows, Size size=DoubleWidth, int offsetX=2, int offsetY=5,
                                                                                                        int maxCols=MAX_SCREEN_COLS, int maxRows=MAX_SCREEN_ROWS);
-        void screenToDialog(int screenX, int screenY);
+        void gigaToDialog(int gigaX, int gigaY);
         void mouseToDialogSpace(int mouseX, int mouseY, int& dspaceX, int& dspaceY);
         int getDialogItemIndex(int mouseX, int mouseY);
 
@@ -114,10 +117,11 @@ namespace Dialog
     int getDialogItemIndex(const std::string& name, int mouseX, int mouseY);
 
     bool setDialogItem(const std::string& name, int index, Item& item);
+    bool setDialogItemText(const std::string& name, int index, const std::string& text);
 
     bool createDialog(const std::string& name, const std::string& text, const std::vector<Item>& items, int numCols, int numRows, Dialog::Size size=Dialog::DoubleWidth,
                                                                                                         int offsetX=2, int offsetY=5, int maxCols=MAX_SCREEN_COLS, int maxRows=MAX_SCREEN_ROWS);
-    bool positionDialog(const std::string& name, int screenX, int screenY);
+    bool positionDialog(const std::string& name, int gigaX, int gigaY);
     bool renderDialog(const std::string& name, int mouseX, int mouseY);
 }
 
