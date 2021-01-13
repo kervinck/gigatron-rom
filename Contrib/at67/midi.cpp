@@ -1,4 +1,5 @@
 #include <fstream>
+#include <cstring>
 
 #include "midi.h"
 
@@ -60,7 +61,7 @@ namespace Midi
         }
         else
         {
-            if(midiBufferSize < GTMIDI_STREAM_OFFSET)
+            if(midiBufferSize < int(GTMIDI_STREAM_OFFSET))
             {
                 fprintf(stderr, "Midi::loadFile() : malformed header in file '%s'\n", filepath.c_str());
                 return false;

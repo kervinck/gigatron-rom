@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    fprintf(stderr, "%s\n", GTBASIC_VERSION_STR);
+    fprintf(stderr, "\n%s\n", GTBASIC_VERSION_STR);
     if(argc != 2  &&  argc != 3)
     {
         fprintf(stderr, "Usage:   gtbasic <input filename> <optional include path>\n");
