@@ -11,6 +11,7 @@
 #define MAJOR_VERSION "1.0"
 #define MINOR_VERSION "6R"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
+#define RUNTIME_VERSION 101 // this must match RUNTIME_VERSION in runtime/util.i
  
 #define ROM_INST 0
 #define ROM_DATA 1
@@ -164,6 +165,9 @@ namespace Cpu
     void restoreWin32Console(void);
     void saveWin32Console(void);
 #endif
+
+    // Experimental, (emulation only, for now)
+    void enable6BitSound(RomType romType, bool enable);
 #endif
 }
 

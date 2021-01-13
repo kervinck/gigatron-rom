@@ -1,3 +1,4 @@
+midiId              EQU     register0
 audioAddr           EQU     register1
 waveType            EQU     register2
 midiNote            EQU     register4                       ; register4 to register7 are the only free registers during time slicing
@@ -12,6 +13,14 @@ musicNote           EQU     register9
 musicCommand        EQU     register10
 musicPtr            EQU     register11
 
+
+%SUB                setMidiStream
+setMidiStream       LDWI    _midisLut_
+                    ADDW    midiId
+                    ADDW    midiId
+                    DEEK
+                    RET
+%ENDS
 
 %SUB                resetMidi
                     ; adds 10*16.66667ms delay between giga_frameCount and midiDelay so that if there ; is substantial processing between resetMidi and playMidi giga_frameCount will

@@ -146,7 +146,8 @@ namespace Operators
         // RHS
         if(rhs._varType == Expression::Number)
         {
-            Compiler::emitVcpuAsm(opcode + "I", std::to_string(int16_t(std::lround(rhs._value))), false);
+            // Skip XOR if operand is 0, (n XOR 0 = n)
+            if(rhs._value  ||  opcode != "XOR") Compiler::emitVcpuAsm(opcode + "I", std::to_string(int16_t(std::lround(rhs._value))), false);
         }
         else
         {
@@ -291,7 +292,8 @@ namespace Operators
         // RHS
         if(rhs._varType == Expression::Number)
         {
-            Compiler::emitVcpuAsm(opcode + "I", std::to_string(int16_t(std::lround(rhs._value))), false);
+            // Skip XOR if operand is 0, (n XOR 0 = n)
+            if(rhs._value  ||  opcode != "XOR") Compiler::emitVcpuAsm(opcode + "I", std::to_string(int16_t(std::lround(rhs._value))), false);
         }
         else        
         {
@@ -386,22 +388,22 @@ namespace Operators
                 case Expression::EqOP:
                 {
                     // 0, 1, 2 to 0, 1, 0
-                    Compiler::emitVcpuAsm("ANDI",  "1", false);
+                    Compiler::emitVcpuAsm("ANDI", "1", false);
                 }
                 break;
 
                 case Expression::NeOP:
                 {
                     // 0, 1, 2 to 1, 0, 1
-                    Compiler::emitVcpuAsm("ANDI",  "1", false);
-                    Compiler::emitVcpuAsm("XORI",  "1", false);
+                    Compiler::emitVcpuAsm("ANDI", "1", false);
+                    Compiler::emitVcpuAsm("XORI", "1", false);
                 }
                 break;
 
                 case Expression::LeOP:
                 {
                     // 0, 1 to 1 : 2 to 0
-                    Compiler::emitVcpuAsm("XORI",  "2", false);
+                    Compiler::emitVcpuAsm("XORI", "2", false);
                     if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
                     {
                         Compiler::emitVcpuAsm("CALLI", "convertNeOpAddr", false);

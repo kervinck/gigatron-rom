@@ -366,6 +366,9 @@ printC_slice        ST      textSlice
                     ST      cursorXY
                     SUBI    giga_xres - giga_xfont          ; last possible char on line
                     BLE     printC_pop
+                    LDI     DISABLE_CLIP_BIT
+                    ANDW    miscFlags                       ; is text clipping disabled?
+                    BNE     printC_pop
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
                     

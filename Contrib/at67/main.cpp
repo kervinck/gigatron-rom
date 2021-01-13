@@ -40,12 +40,13 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    // TODO: the order of some of these is important
     Memory::initialise();
     Loader::initialise();
     Cpu::initialise();
-    Audio::initialise();
     Image::initialise();
     Editor::initialise();
+    Audio::initialise();
     Graphics::initialise();
     Menu::initialise();
     Terminal::initialise();

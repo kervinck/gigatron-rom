@@ -544,21 +544,28 @@ namespace Graphics
         }
     }
 
-    void clearScreen(uint32_t colour, uint32_t commandLineColour)
+    void clearScreen(uint32_t colour)
     {
-        for(int y=0; y<SCREEN_HEIGHT - (FONT_HEIGHT + 2); y++)
+        for(int y=0; y<SCREEN_HEIGHT; y++)
         {
             for(int x=0; x<SCREEN_WIDTH*3/4; x++)
             {
                 _pixels[y*SCREEN_WIDTH + x] = colour;
             }
         }
+    }
 
-        for(int y=SCREEN_HEIGHT - (FONT_HEIGHT + 2); y<SCREEN_HEIGHT; y++)
+    void rectFill(int x0, int y0, int x1, int y1, uint32_t colour)
+    {
+        x0 *= 3;
+        x1 *= 3;
+        y0 *= 4;
+        y1 *= 4;
+        for(int y=y0; y<y1; y++)
         {
-            for(int x=0; x<SCREEN_WIDTH*3/4; x++)
+            for(int x=x0; x<x1; x++)
             {
-                _pixels[y*SCREEN_WIDTH + x] = commandLineColour;
+                _pixels[y*SCREEN_WIDTH + x] = colour;
             }
         }
     }

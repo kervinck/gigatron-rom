@@ -125,6 +125,7 @@ namespace Assembler
     {
         bool _enabled = false;
         bool _toggle = false;
+        int16_t _value = 0;
         std::string _name;
     };
 
@@ -145,6 +146,14 @@ namespace Assembler
     int getAsmOpcodeSize(const std::string& opcodeStr);
     int getAsmOpcodeSizeText(const std::string& textStr);
     int getAsmOpcodeSizeFile(const std::string& filename);
+
+    void clearDefines(void);
+    bool createDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex);
+    bool handleIfDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex);
+    bool handleEndIfDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex);
+    bool handleElseDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex);
+    bool isCurrentDefineDisabled(void);
+    int16_t getRuntimeVersion(void);
 
     void initialise(void);
     void clearAssembler(bool dontClearGprintfs=false);

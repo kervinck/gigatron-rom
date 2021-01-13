@@ -81,7 +81,7 @@ namespace Menu
     void initialise(void);
 
     bool getMenu(const std::string& name, Menu& menu);
-    bool createMenu(const std::string& name, const std::vector<std::string>& items, int numCols, int numRows, int maxCols=MAX_SCREEN_COLS, int maxRows=MAX_SCREEN_ROWS);
+    bool createMenu(const std::string& name, const std::vector<std::string>& items, int numCols, int numRows, int maxCols=MAX_SCREEN_COLS, int maxRows=MAX_SCREEN_ROWS-1);
     bool captureMenu(const std::string& name, int mouseX, int mouseY);
     bool captureItem(const std::string& name, int mouseX, int mouseY);
     bool getMenuItemIndex(const std::string& name, int& itemIndex);

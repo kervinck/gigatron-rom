@@ -29,8 +29,10 @@ timerPrev                         EQU                               register0 + 
 ; Internal Constants
 ENABLE_SCROLL_BIT                 EQU                               0x0001
 ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+DISABLE_CLIP_BIT                  EQU                               0x0004
 ENABLE_SCROLL_MSK                 EQU                               0xfffe
 ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
+DISABLE_CLIP_MSK                  EQU                               0xfffb
 
 ; Internal Buffers
 regsWorkArea                      EQU                               0x0000
@@ -1009,11 +1011,13 @@ def_words_0x6ba0                  DW                                0 2361 3793
 def_words_0x69a0                  EQU                               0x69a0
 def_words_0x69a0                  DW                                3000 3300 3600 3900 4200 4500 3000 3300 3600 3900 4200 4500 
 def_words_0x6aa0                  EQU                               0x6aa0
-def_words_0x6aa0                  DW                                188 131 159 9 216 178 225 122 169 94 272 0 178 206 84 150 103 225 56 103 263 206 206 291 188 244 56 216 234 281 272 66 
+def_words_0x6aa0                  DW                                234 169 47 56 103 178 38 38 272 169 47 47 131 56 197 169 131 141 38 103 178 234 263 19 122 19 159 94 272 291 244 169 
 
 ; Define Images
 
 ; Define Loader Image Chunks
+
+; Define Midis
 
 ; Define Sprites
 def_sprites_0x0400                EQU                               0x0400
@@ -2454,9 +2458,9 @@ soundAllOff                       EQU     0x72b9
 soundOnV                          EQU     0x75a1
 printInit                         EQU     0x72a3
 printText                         EQU     0x72e6
-printChar                         EQU     0x79a7
+printChar                         EQU     0x7aa0
 atTextCursor                      EQU     0x73aa
-newLineScroll                     EQU     0x7aa2
+newLineScroll                     EQU     0x79a2
 convertEqOpAddr                   EQU     0x00c0
 convertNeOpAddr                   EQU     0x00c2
 convertLeOpAddr                   EQU     0x00c4
@@ -2489,13 +2493,13 @@ romCheck            LD      giga_romType
                     ANDI    0xFC
                     SUBW    romType
                     BGE     romC_return
-                    LDWI    giga_vram
+                    LDWI    giga_vram + giga_yres/2*256 + giga_xres/2
                     STW     romErrAddr
                     
 romC_loop           LD      romErrPixel
                     POKE    romErrAddr
                     INC     romErrPixel
-                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    BRA     romC_loop                       ; flash center pixel indicating rom error
                     
 romC_return         RET                    
 
@@ -2854,6 +2858,7 @@ getSpriteLUT        LDWI    _spritesLut_
 
 
 
+midiId              EQU     register0
 audioAddr           EQU     register1
 waveType            EQU     register2
 midiNote            EQU     register4                       ; register4 to register7 are the only free registers during time slicing
@@ -3187,6 +3192,9 @@ printC_slice        ST      textSlice
                     ST      cursorXY
                     SUBI    giga_xres - giga_xfont          ; last possible char on line
                     BLE     printC_pop
+                    LDI     DISABLE_CLIP_BIT
+                    ANDW    miscFlags                       ; is text clipping disabled?
+                    BNE     printC_pop
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
                     
