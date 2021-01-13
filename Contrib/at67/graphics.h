@@ -84,7 +84,8 @@ namespace Graphics
     void refreshPixel(const Cpu::State& S, int vgaX, int vgaY);
     void refreshScreen(void);
 
-    void clearScreen(uint32_t colour, uint32_t commandLineColour=0x22222222);
+    void clearScreen(uint32_t colour);
+    void rectFill(int x0, int y0, int x1, int y1, uint32_t colour);
 
     void pixelReticle(const Cpu::State& S, int vgaX, int vgaY);
     

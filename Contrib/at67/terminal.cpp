@@ -26,6 +26,7 @@
 namespace Terminal
 {
     const int _screenMaxIndex = (SCREEN_HEIGHT - (FONT_HEIGHT+2)*1)/(FONT_HEIGHT+2);
+    const std::string _eraseLine = std::string(MAX_COMMAND_CHARS+1, 32);
 
     enum MenuItem {MenuCopy=0, MenuAll, MenuCut, MenuDel};
 
@@ -192,7 +193,8 @@ namespace Terminal
         if(_scrollOffset >= _scrollIndex) _scrollOffset = _scrollIndex;
         if(_scrollOffset < 0) _scrollOffset = 0;
 
-        Graphics::clearScreen(0x22222222, 0x00000000);
+        Graphics::clearScreen(0x22222222);
+        Graphics::drawText(_eraseLine, 0, _screenMaxIndex*(FONT_HEIGHT+2)+1, 0x55555555, true, MAX_COMMAND_CHARS+1);
 
         // Terminal text
         for(int i=_scrollOffset; i<int(_terminalText.size()); i++)

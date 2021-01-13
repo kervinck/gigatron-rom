@@ -1246,43 +1246,55 @@ namespace Editor
             Cpu::shutdown();
             exit(0);
         }
-
         // Terminal mode
         else if(_sdlKeyScanCode == _emulator["Terminal"]._scanCode  &&  _sdlKeyModifier == _emulator["Terminal"]._keyMod)
         {
             Terminal::switchToTerminal();
         }
-
         // Image editor
         else if(_sdlKeyScanCode == _emulator["ImageEditor"]._scanCode  &&  _sdlKeyModifier == _emulator["ImageEditor"]._keyMod)
         {
             setEditorMode(Image);
         }
-
         // Audio editor
         else if(_sdlKeyScanCode == _emulator["AudioEditor"]._scanCode  &&  _sdlKeyModifier == _emulator["AudioEditor"]._keyMod)
         {
             setEditorMode(Audio);
         }
-
         // Emulator reset
-        else if(_sdlKeyScanCode == _emulator["Reset"]._scanCode  &&  _sdlKeyModifier == _emulator["Reset"]._keyMod) {resetDebugger(); Cpu::reset(); return;}
-
+        else if(_sdlKeyScanCode == _emulator["Reset"]._scanCode  &&  _sdlKeyModifier == _emulator["Reset"]._keyMod)
+        {
+            Cpu::enable6BitSound(Cpu::ROMv5a, false);
+            resetDebugger();
+            Cpu::reset();
+            return;
+        }
         // Hardware reset
-        else if(_sdlKeyScanCode == _hardware["Reset"]._scanCode  &&  _sdlKeyModifier == _hardware["Reset"]._keyMod) {Loader::sendCommandToGiga('R', false); return;}
-
+        else if(_sdlKeyScanCode == _hardware["Reset"]._scanCode  &&  _sdlKeyModifier == _hardware["Reset"]._keyMod)
+        {
+            Loader::sendCommandToGiga('R', false);
+            return;
+        }
         // Scanline handler
         else if(_sdlKeyScanCode == _emulator["ScanlineMode"]._scanCode  &&  _sdlKeyModifier == _emulator["ScanlineMode"]._keyMod)
         {
             // ROMS after v1 have their own inbuilt scanline handlers
-            if(Cpu::getRomType() != Cpu::ROMv1) {Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT); return;}
+            if(Cpu::getRomType() != Cpu::ROMv1)
+            {
+                Cpu::setIN(Cpu::getIN() & ~INPUT_SELECT);
+                return;
+            }
         }
-
         // PS2 Keyboard emulation mode
-        else if(gigaKeyValid  &&  handlePs2KeyDown()) return;
-
+        else if(gigaKeyValid  &&  handlePs2KeyDown())
+        {
+            return;
+        }
         // Gigatron Keyboard emulation mode
-        else if(gigaKeyValid  &&  handleGigaKeyDown()) return;
+        else if(gigaKeyValid  &&  handleGigaKeyDown())
+        {
+            return;
+        }
 #if 1
         else if(_sdlKeyScanCode == SDLK_PAGEUP)
         {

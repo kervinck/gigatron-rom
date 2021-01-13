@@ -46,10 +46,12 @@
 // Misc flags bits
 #define ENABLE_SCROLL_BIT 0x0001
 #define ON_BOTTOM_ROW_BIT 0x0002
+#define DISABLE_CLIP_BIT  0x0004
 
 // Misc flags masks
 #define ENABLE_SCROLL_MSK 0xFFFE
 #define ON_BOTTOM_ROW_MSK 0xFFFD
+#define DISABLE_CLIP_MSK  0xFFFB
 
 // Loader.gcl prohibited addresses
 #define LOADER_SCANLINE0_START 0x5900
@@ -336,6 +338,16 @@ namespace Compiler
         std::vector<uint8_t> _data;
     };
 
+    struct DefDataMidi
+    {
+        int _id;
+        bool _volume = false;
+        uint8_t _loops = 0;
+        std::vector<uint8_t> _data;
+        std::vector<uint16_t> _segmentSizes;
+        std::vector<uint16_t> _segmentAddrs;
+    };
+
     struct DefDataSprite
     {
         int _id;
@@ -418,6 +430,7 @@ namespace Compiler
     Cpu::RomType getCodeRomType(void);
     const std::map<std::string, int>& getBranchTypes(void);
     bool getArrayIndiciesOne(void);
+    bool getCreateTimeData(void);
     int getCurrentLabelIndex(void);
     int getCurrentCodeLineIndex(void); 
     int getNumNumericLabels(void);
@@ -466,6 +479,8 @@ namespace Compiler
     std::vector<DefDataWord>& getDefDataWords(void);
     std::vector<DefDataImage>& getDefDataImages(void);
     std::vector<DefDataLoaderImageChunk>& getDefDataLoaderImageChunks(void);
+
+    std::map<int, DefDataMidi>& getDefDataMidis(void);
 
     std::map<int, DefDataSprite>& getDefDataSprites(void);
     SpritesAddrLut& getSpritesAddrLut(void);

@@ -38,6 +38,7 @@ namespace Pragmas
     bool ARRAYINDICIESONE(const std::string& input,   int codeLineIndex, size_t foundPos);
     bool MAXNUMSPRITES(const std::string& input,      int codeLineIndex, size_t foundPos);
     bool SPRITESTRIPECHUNKS(const std::string& input, int codeLineIndex, size_t foundPos);
+    bool ENABLE6BITAUDIOEMU(const std::string& input, int codeLineIndex, size_t foundPos);
 }
 
 #endif

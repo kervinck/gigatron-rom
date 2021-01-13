@@ -374,7 +374,7 @@ int main(int argc, char* argv[])
         if(command & 0x80)
         {
             // Start note
-            if((command & 0xF0) == 0x90)
+            if((command & 0xF0) == MIDI_CMD_START_NOTE)
             {
                 noteOnCount++;
 
@@ -408,7 +408,7 @@ int main(int argc, char* argv[])
                 }
             }
             // Stop note
-            else if((command & 0xF0) == 0x80)
+            else if((command & 0xF0) == MIDI_CMD_STOP_NOTE)
             {
                 gigaSize += 1;
                 segmentCount += 1;
@@ -491,11 +491,11 @@ int main(int argc, char* argv[])
                 // Commands
                 switch(format)
                 {
-                    case Format::vCPU: outputVCPUcommand(outfile, 0xD0); outputVCPUcommand(outfile, LO_BYTE(segment)); outputVCPUcommand(outfile, HI_BYTE(segment), false); break;
-                    case Format::GBAS: outputGBAScommand(outfile, 0xD0); outputGBAScommand(outfile, LO_BYTE(segment)); outputGBAScommand(outfile, HI_BYTE(segment), false); break;
-                    case Format::GCL:  outputGCLcommand(outfile,  0xD0); outputGCLcommand(outfile,  LO_BYTE(segment)); outputGCLcommand(outfile,  HI_BYTE(segment), false); break;
-                    case Format::CPP:  outputCPPcommand(outfile,  0xD0); outputCPPcommand(outfile,  LO_BYTE(segment)); outputCPPcommand(outfile,  HI_BYTE(segment), false); break;
-                    case Format::PY:   outputPYcommand(outfile,   0xD0); outputPYcommand(outfile,   LO_BYTE(segment)); outputPYcommand(outfile,   HI_BYTE(segment), false); break;
+                    case Format::vCPU: outputVCPUcommand(outfile, MIDI_CMD_JMP_SEG); outputVCPUcommand(outfile, LO_BYTE(segment)); outputVCPUcommand(outfile, HI_BYTE(segment), false); break;
+                    case Format::GBAS: outputGBAScommand(outfile, MIDI_CMD_JMP_SEG); outputGBAScommand(outfile, LO_BYTE(segment)); outputGBAScommand(outfile, HI_BYTE(segment), false); break;
+                    case Format::GCL:  outputGCLcommand(outfile,  MIDI_CMD_JMP_SEG); outputGCLcommand(outfile,  LO_BYTE(segment)); outputGCLcommand(outfile,  HI_BYTE(segment), false); break;
+                    case Format::CPP:  outputCPPcommand(outfile,  MIDI_CMD_JMP_SEG); outputCPPcommand(outfile,  LO_BYTE(segment)); outputCPPcommand(outfile,  HI_BYTE(segment), false); break;
+                    case Format::PY:   outputPYcommand(outfile,   MIDI_CMD_JMP_SEG); outputPYcommand(outfile,   LO_BYTE(segment)); outputPYcommand(outfile,   HI_BYTE(segment), false); break;
 
                     default: break;
                 }
@@ -528,11 +528,11 @@ int main(int argc, char* argv[])
         {
             switch(format)
             {
-                case Format::vCPU: outputVCPUcommand(outfile, 0xD0); outputVCPUcommand(outfile, LO_BYTE(startAddress)); outputVCPUcommand(outfile, HI_BYTE(startAddress)); break;
-                case Format::GBAS: outputGBAScommand(outfile, 0xD0); outputGBAScommand(outfile, LO_BYTE(startAddress)); outputGBAScommand(outfile, HI_BYTE(startAddress)); break;
-                case Format::GCL:  outputGCLcommand(outfile,  0xD0); outputGCLcommand(outfile,  LO_BYTE(startAddress)); outputGCLcommand(outfile,  HI_BYTE(startAddress)); break;
-                case Format::CPP:  outputCPPcommand(outfile,  0xD0); outputCPPcommand(outfile,  LO_BYTE(startAddress)); outputCPPcommand(outfile,  HI_BYTE(startAddress)); break;
-                case Format::PY:   outputPYcommand(outfile,   0xD0); outputPYcommand(outfile,   LO_BYTE(startAddress)); outputPYcommand(outfile,   HI_BYTE(startAddress)); break;
+                case Format::vCPU: outputVCPUcommand(outfile, MIDI_CMD_JMP_SEG); outputVCPUcommand(outfile, LO_BYTE(startAddress)); outputVCPUcommand(outfile, HI_BYTE(startAddress)); break;
+                case Format::GBAS: outputGBAScommand(outfile, MIDI_CMD_JMP_SEG); outputGBAScommand(outfile, LO_BYTE(startAddress)); outputGBAScommand(outfile, HI_BYTE(startAddress)); break;
+                case Format::GCL:  outputGCLcommand(outfile,  MIDI_CMD_JMP_SEG); outputGCLcommand(outfile,  LO_BYTE(startAddress)); outputGCLcommand(outfile,  HI_BYTE(startAddress)); break;
+                case Format::CPP:  outputCPPcommand(outfile,  MIDI_CMD_JMP_SEG); outputCPPcommand(outfile,  LO_BYTE(startAddress)); outputCPPcommand(outfile,  HI_BYTE(startAddress)); break;
+                case Format::PY:   outputPYcommand(outfile,   MIDI_CMD_JMP_SEG); outputPYcommand(outfile,   LO_BYTE(startAddress)); outputPYcommand(outfile,   HI_BYTE(startAddress)); break;
 
                 default: break;
             }

@@ -52,9 +52,6 @@
 
 #define GIGA_V_AC 0x18
 
-// This must match RUNTIME_VERSION in runtime/util.i
-#define RUNTIME_VERSION 100
-
 
 namespace Assembler
 {

@@ -126,6 +126,17 @@ namespace Dialog
         return false;
     }
 
+    bool Dialog::setDialogItemText(int index, const std::string& text)
+    {
+        if(index >=0  &&  index < int(_items.size()))
+        {
+            _items[index].setText(text);
+            return true;
+        }
+
+        return false;
+    }
+
     bool Dialog::create(const std::string& text, const std::vector<Item>& items, int numCols, int numRows, Size size, int offsetX, int offsetY, int maxCols, int maxRows)
     {
         _text     = text;
@@ -141,11 +152,14 @@ namespace Dialog
         return true;
     }
 
-    void Dialog::screenToDialog(int screenX, int screenY)
+    void Dialog::gigaToDialog(int gigaX, int gigaY)
     {
         // Convert to dialog space
-        _dialogX = int(float(screenX) / FONT_WIDTH);
-        _dialogY = int(float(screenY) / FONT_HEIGHT);
+        _dialogX = int(float(gigaX) * 4.0f / FONT_WIDTH);
+        _dialogY = int(float(gigaY) * 4.0f / FONT_HEIGHT);
+
+        _gigaX = gigaX;
+        _gigaY = gigaY;
 
         if(_dialogX > (_maxCols-_numCols)) _dialogX = (_maxCols-_numCols);
         if(_dialogY > (_maxRows-_numRows)) _dialogY = (_maxRows-_numRows);
@@ -182,12 +196,10 @@ namespace Dialog
         int scale = (_size == DoubleWidth) ? 2 : 1;
 
         // Border and interior
-        int x = _dialogX * FONT_WIDTH;
-        int y = _dialogY * FONT_HEIGHT;
-        Graphics::drawDialog(int16_t(x/4), int16_t(y/4), int16_t(w*2*scale), int16_t(h), 0x55555555, 0x88888888);
+        Graphics::drawDialog(int16_t(_gigaX), int16_t(_gigaY), int16_t(w*2*scale), int16_t(h), 0x55555555, 0x88888888);
 
-        int tx = int(float(x)*0.75) + 1;
-        int ty = y + _offsetY*4 + 4;
+        int tx = _gigaX*3 + 1;
+        int ty = (_gigaY + _offsetY + 1)*4;
 
         // Title
         int ox = (w*FONT_WIDTH - int(_text.size())*FONT_WIDTH/2);
@@ -283,6 +295,13 @@ namespace Dialog
         return _dialogMap[name].setDialogItem(index, item);
     }
 
+    bool setDialogItemText(const std::string& name, int index, const std::string& text)
+    {
+        if(_dialogMap.find(name) == _dialogMap.end()) return false;
+
+        return _dialogMap[name].setDialogItemText(index, text);
+    }
+
     bool createDialog(const std::string& name, const std::string& text, const std::vector<Item>& items, int numCols, int numRows, Dialog::Size size, int offsetX, int offsetY, int maxCols, int maxRows)
     {
         if(_dialogMap.find(name) != _dialogMap.end()) return false;
@@ -294,11 +313,11 @@ namespace Dialog
         return true;
     }
 
-    bool positionDialog(const std::string& name, int screenX, int screenY)
+    bool positionDialog(const std::string& name, int gigaX, int gigaY)
     {
         if(_dialogMap.find(name) == _dialogMap.end()) return false;
 
-        _dialogMap[name].screenToDialog(screenX, screenY);
+        _dialogMap[name].gigaToDialog(gigaX, gigaY);
 
         return true;
     }

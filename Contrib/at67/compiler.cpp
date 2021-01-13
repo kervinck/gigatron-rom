@@ -21,6 +21,7 @@
 #include "optimiser.h"
 #include "validater.h"
 #include "linker.h"
+#include "midi.h"
 
 
 size_t _heapTotalUsage = 0;
@@ -126,6 +127,8 @@ namespace Compiler
     std::vector<DefDataImage> _defDataImages;
     std::vector<DefDataLoaderImageChunk> _defDataLoaderImageChunks;
 
+    std::map<int, DefDataMidi> _defDataMidis;
+
     std::map<int, DefDataSprite> _defDataSprites;
     SpritesAddrLut _spritesAddrLut;
 
@@ -156,6 +159,7 @@ namespace Compiler
     Cpu::RomType getCodeRomType(void) {return _codeRomType;}
     const std::map<std::string, int>& getBranchTypes(void) {return _branchTypes;}
     bool getArrayIndiciesOne(void) {return _arrayIndiciesOne;}
+    bool getCreateTimeData(void) {return _createTimeData;}
     int getCurrentLabelIndex(void) {return _currentLabelIndex;}
     int getCurrentCodeLineIndex(void) {return _currentCodeLineIndex;}
     const std::string& getRuntimePath(void) {return _runtimePath;}
@@ -203,6 +207,8 @@ namespace Compiler
     std::vector<DefDataWord>& getDefDataWords(void) {return _defDataWords;}
     std::vector<DefDataImage>& getDefDataImages(void) {return _defDataImages;}
     std::vector<DefDataLoaderImageChunk>& getDefDataLoaderImageChunks(void) {return _defDataLoaderImageChunks;}
+
+    std::map<int, DefDataMidi>& getDefDataMidis(void) {return _defDataMidis;}
 
     std::map<int, DefDataSprite>& getDefDataSprites(void) {return _defDataSprites;}
     SpritesAddrLut& getSpritesAddrLut(void) {return _spritesAddrLut;}
@@ -1993,18 +1999,8 @@ namespace Compiler
             Pragmas::PragmaResult pragmaResult = Pragmas::handlePragmas(inputText, j);
             switch(pragmaResult)
             {
-                case Pragmas::PragmaFound:
-                {
-                    input[j]._parse = false;
-                }
-                break;
-
-                case Pragmas::PragmaError:
-                {
-                    fprintf(stderr, "Compiler::parsePragmas() : Syntax error in Pragma, in %s on line %d\n", input[j]._text.c_str(), j + 1);
-                    return false;
-                }
-                break;
+                case Pragmas::PragmaFound: input[j]._parse = false; break;
+                case Pragmas::PragmaError: return false;            break;
 
                 default: break;
             }
@@ -3846,7 +3842,7 @@ REDO_STATEMENT:
                     // Warn about duplicate internal labels, (should not happen)
                     if(findInternalLabel(internalLabel) > -1)
                     {
-                        fprintf(stderr, "Compiler::outputLabels() : Warning duplicate internal label, '%s' at '0x%04x' on line '%d'\n", internalLabel.c_str(), address, i);
+                        fprintf(stderr, "\nCompiler::outputLabels() : Warning duplicate internal label, '%s' at '0x%04x' on line '%d'\n\n", internalLabel.c_str(), address, i);
                         continue;
                     }
 
@@ -3856,7 +3852,7 @@ REDO_STATEMENT:
                     {
                         if(internalLabel.substr(1) == _labels[k]._name) //  &&  address == _labels[k]._address)
                         {
-                            fprintf(stderr, "Compiler::outputLabels() : Warning duplicate internal label, (if mixing ASM with BASIC then safe to ignore), '%s' at '0x%04x' on line '%d'\n",
+                            fprintf(stderr, "\nCompiler::outputLabels() : Warning duplicate internal label, (if mixing ASM with BASIC then safe to ignore), '%s' at '0x%04x' on line '%d'\n\n",
                                             internalLabel.c_str(), address, i);
                             foundDuplicate = true;
                             break;
@@ -4531,6 +4527,24 @@ REDO_STATEMENT:
         return true;
     }
 
+    bool outputMidiDef(int midiId, uint16_t startAddr, uint16_t jmpAddr, int size, int& dataIndex)
+    {
+        std::string defName = "def_midis_" + Expression::wordToHexString(startAddr);
+        _output.push_back(defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(startAddr) + "\n");
+        std::string dbString = defName + std::string(LABEL_TRUNC_SIZE - defName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+        // Output a midi segment
+        for(int i=0; i<size; i++)
+        {
+            //dbString += std::to_string(_defDataMidis[midiId]._data[dataIndex++]) + " ";
+            dbString += Expression::byteToHexString(_defDataMidis[midiId]._data[dataIndex++]) + " ";
+        }
+        //dbString += std::to_string(MIDI_CMD_JMP_SEG) + " " + std::to_string(jmpAddr & 0x00FF) + " " + std::to_string((jmpAddr >>8) & 0x00FF);
+        dbString += Expression::byteToHexString(MIDI_CMD_JMP_SEG) + " " + Expression::byteToHexString(jmpAddr & 0x00FF) + " " + Expression::byteToHexString((jmpAddr >>8) & 0x00FF);
+        _output.push_back(dbString + "\n");
+
+        return true;
+    }
     bool outputSpriteDef(int spriteId, int numStripeChunks, uint16_t address, int& dataIndex)
     {
         std::string defName = "def_sprites_" + Expression::wordToHexString(address);
@@ -4640,6 +4654,24 @@ REDO_STATEMENT:
                 dbString += std::to_string(_defDataLoaderImageChunks[i]._data[j]) + " ";
             }
             _output.push_back(dbString + "\n");
+        }
+        _output.push_back("\n");
+
+        // Create def midi data
+        _output.push_back("; Define Midis\n");
+        for(auto it=_defDataMidis.begin(); it!=_defDataMidis.end(); ++it)
+        {
+            int dataIndex = 0;
+            int midiId = it->first;
+            //bool volume = it->second._volume;
+            int numSegments = int(it->second._segmentAddrs.size());
+            for(int i=0; i<numSegments; i++)
+            {
+                uint16_t segSize = it->second._segmentSizes[i];
+                uint16_t segAddr = it->second._segmentAddrs[i];
+                uint16_t jmpAddr = (i == numSegments-1) ? it->second._segmentAddrs[0] : it->second._segmentAddrs[i+1];
+                outputMidiDef(midiId, segAddr, jmpAddr, segSize, dataIndex);
+            }
         }
         _output.push_back("\n");
 
@@ -4983,6 +5015,30 @@ REDO_STATEMENT:
             _output.push_back(dbString + "0 0\n");
         }
 
+        // MIDIS LUT
+        if(_defDataMidis.size())
+        {
+            // Allocate RAM for midis LUT
+            uint16_t lutAddress;
+            int lutSize = int(_defDataMidis.size()) * 2;
+            if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, _runtimeStart, lutAddress))
+            {
+                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for midis LUT of size %d\n", lutSize);
+                return false;
+            }
+
+            std::string lutName = "_midisLut_";
+            _output.push_back(lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(lutAddress) + "\n");
+            
+            std::string dwString = lutName + std::string(LABEL_TRUNC_SIZE - lutName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+            for(auto it=_defDataMidis.begin(); it!=_defDataMidis.end(); ++it)
+            {
+                uint16_t address = it->second._segmentAddrs[0];
+                dwString += Expression::wordToHexString(address) + " ";
+            }
+            _output.push_back(dwString + "\n");
+        }
+
         // SPRITE ADDRESS LUTs
         for(auto it=_defDataSprites.begin(); it!=_defDataSprites.end(); ++it)
         {
@@ -5151,8 +5207,10 @@ REDO_STATEMENT:
         _output.push_back("; Internal Constants\n");
         _output.push_back("ENABLE_SCROLL_BIT" + std::string(LABEL_TRUNC_SIZE - strlen("ENABLE_SCROLL_BIT"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(ENABLE_SCROLL_BIT) + "\n");
         _output.push_back("ON_BOTTOM_ROW_BIT" + std::string(LABEL_TRUNC_SIZE - strlen("ON_BOTTOM_ROW_BIT"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(ON_BOTTOM_ROW_BIT) + "\n");
+        _output.push_back("DISABLE_CLIP_BIT"  + std::string(LABEL_TRUNC_SIZE - strlen("DISABLE_CLIP_BIT"), ' ')  + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(DISABLE_CLIP_BIT)  + "\n");
         _output.push_back("ENABLE_SCROLL_MSK" + std::string(LABEL_TRUNC_SIZE - strlen("ENABLE_SCROLL_MSK"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(ENABLE_SCROLL_MSK) + "\n");
         _output.push_back("ON_BOTTOM_ROW_MSK" + std::string(LABEL_TRUNC_SIZE - strlen("ON_BOTTOM_ROW_MSK"), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(ON_BOTTOM_ROW_MSK) + "\n");
+        _output.push_back("DISABLE_CLIP_MSK"  + std::string(LABEL_TRUNC_SIZE - strlen("DISABLE_CLIP_MSK"), ' ')  + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(DISABLE_CLIP_MSK)  + "\n");
         _output.push_back("\n");
 
         _output.push_back("; Internal Buffers\n");
@@ -5360,6 +5418,7 @@ REDO_STATEMENT:
         _defDataWords.clear();
         _defDataImages.clear();
         _defDataLoaderImageChunks.clear();
+        _defDataMidis.clear();
         _defDataSprites.clear();
         _defDataFonts.clear();
         _defFunctions.clear();
@@ -5407,9 +5466,9 @@ REDO_STATEMENT:
         for(int i=0; i<int(_input.size()); i++) _moduleLines.push_back({i, MODULE_MAIN});
 
 
-        fprintf(stderr, "\n\n****************************************************************************************************\n");
+        fprintf(stderr, "\n\n*******************************************************\n");
         fprintf(stderr, "* Compiling file '%s'\n", inputFilename.c_str());
-        fprintf(stderr, "****************************************************************************************************\n");
+        fprintf(stderr, "*******************************************************\n");
 
         // Pragmas
         if(!parsePragmas(_input, numLines)) return false;

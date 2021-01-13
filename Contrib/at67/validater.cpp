@@ -457,4 +457,19 @@ namespace Validater
 
         return success;
     }
+
+    bool checkRuntimeVersion(void)
+    {
+        int16_t runtimeVersion = Assembler::getRuntimeVersion();
+        if(runtimeVersion != RUNTIME_VERSION)
+        {
+            fprintf(stderr, "\n*************************************************************************************************\n");
+            fprintf(stderr, "* Expected runtime version %04d : Found runtime version %04d\n", RUNTIME_VERSION, runtimeVersion);
+            fprintf(stderr, "*************************************************************************************************\n\n");
+
+            return false;
+        }
+
+        return true;
+    }
 }

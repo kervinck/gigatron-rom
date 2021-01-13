@@ -2472,14 +2472,9 @@ namespace Assembler
         // Pre-processor
         if(!preProcess(filename, lineTokens, true)) return false;
 
-        // Check runtime version
-        int16_t runtimeVersion = Assembler::getRuntimeVersion();
-        fprintf(stderr, "\n*************************************************************************************************\n");
+        fprintf(stderr, "\n*******************************************************\n");
         fprintf(stderr, "* Assembling file : '%s'\n", filename.c_str());
-        fprintf(stderr, "*************************************************************************************************\n");
-        fprintf(stderr, "* Found runtime version %04d : Expected runtime version %04d\n", runtimeVersion, RUNTIME_VERSION);
-        fprintf(stderr, "*************************************************************************************************\n");
-        if(runtimeVersion != RUNTIME_VERSION) return false;
+        fprintf(stderr, "*******************************************************\n");
 
         numLines = int(lineTokens.size());
 

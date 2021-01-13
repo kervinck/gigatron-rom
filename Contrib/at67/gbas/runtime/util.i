@@ -1,5 +1,5 @@
 ; This must match RUNTIME_VERSION in assembler.h
-%define RUNTIME_VERSION 100
+%define RUNTIME_VERSION 101
 
 memIndex0           EQU     register10
 memIndex1           EQU     register11

@@ -132,6 +132,7 @@ namespace Linker
         {0x0000, 0x0000, "drawSpriteY"      , "", false, false},
         {0x0000, 0x0000, "drawSpriteXY"     , "", false, false},
         {0x0000, 0x0000, "getSpriteLUT"     , "", false, false},
+        {0x0000, 0x0000, "setMidiStream"    , "", false, false},
         {0x0000, 0x0000, "resetMidi"        , "", false, false},
         {0x0000, 0x0000, "playMidi"         , "", false, false},
         {0x0000, 0x0000, "playMidiVol"      , "", false, false},
@@ -662,11 +663,11 @@ namespace Linker
 
     bool linkInternalSubs(void)
     {
-        fprintf(stderr, "\n**********************************************\n");
-        fprintf(stderr, "*                   Linking                   \n");
-        fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "*        Name          : Address :    Size    \n");
-        fprintf(stderr, "**********************************************\n");
+        fprintf(stderr, "\n*******************************************************\n");
+        fprintf(stderr, "*                      Linking                         \n");
+        fprintf(stderr, "*******************************************************\n");
+        fprintf(stderr, "*        Name          : Address :    Size             \n");
+        fprintf(stderr, "*******************************************************\n");
 
         Assembler::clearDefines();
 
@@ -807,13 +808,13 @@ RESTART_COLLECTION:
             }
         }
 
-        fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "*                Re-Linking                   \n");
-        fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "*    Start     :    End       :       Size    \n");
-        fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "*    0x%04x    :    0x%04x    :    %5d bytes\n", Compiler::getRuntimeStart() & (Memory::getSizeRAM() - 1), Compiler::getRuntimeEnd(), runtimeSize);
-        fprintf(stderr, "**********************************************\n");
+        fprintf(stderr, "*******************************************************\n");
+        fprintf(stderr, "*                     Re-Linking                       \n");
+        fprintf(stderr, "*******************************************************\n");
+        fprintf(stderr, "*      Start           :  End    :    Size             \n");
+        fprintf(stderr, "*******************************************************\n");
+        fprintf(stderr, "*      0x%04x          : 0x%04x  : %5d bytes           \n", Compiler::getRuntimeStart() & (Memory::getSizeRAM() - 1), Compiler::getRuntimeEnd(), runtimeSize);
+        fprintf(stderr, "*******************************************************\n");
     }
 
     void outputInternalSubs(void)

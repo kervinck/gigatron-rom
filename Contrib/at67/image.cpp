@@ -666,7 +666,7 @@ namespace Image
         _firstTimeRender = false;
         _refreshScreen = false;
 
-        Graphics::clearScreen(0x22222222, 0x00000000);
+        Graphics::clearScreen(0x22222222);
         Graphics::drawText("TODO: Finish this some day", 28*FONT_WIDTH, 30*FONT_HEIGHT, 0xFFFFFFFF, false, 0);
 
         Editor::browseDirectory(_suffixes);

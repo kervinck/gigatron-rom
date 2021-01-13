@@ -99,6 +99,7 @@ namespace Keywords
     bool RECTF(Compiler::CodeLine& codeLine,   int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool POLY(Compiler::CodeLine& codeLine,    int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool POLYR(Compiler::CodeLine& codeLine,   int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool TCLIP(Compiler::CodeLine& codeLine,   int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool SCROLL(Compiler::CodeLine& codeLine,  int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool POKE(Compiler::CodeLine& codeLine,    int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool DOKE(Compiler::CodeLine& codeLine,    int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result);

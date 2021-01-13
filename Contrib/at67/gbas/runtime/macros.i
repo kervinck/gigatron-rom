@@ -620,6 +620,12 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
+%MACRO  SetMidiStream
+        STW     midiId
+        LDWI    setMidiStream
+        CALL    giga_vAC
+%ENDM
+
 %MACRO  PlayMidi
         STW     midiStream
         LDWI    resetMidi

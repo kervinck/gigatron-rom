@@ -83,6 +83,7 @@ namespace Memory
     bool takeFreeRAM(uint16_t address, int size, bool printError=true);
     bool getFreeRAMLargest(uint16_t& address, int& size);
     bool getFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address, bool withinPage=true, ParityType oddEven=ParityNone);
+    bool getFreeRAM(FitType fitType, uint16_t addrMin, uint16_t addrMax, uint16_t sizeMin, uint16_t& address, uint16_t inSize, uint16_t& outSize, bool withinPage=true);
 
     void printFreeRamList(SortType sortType=AddressAscending);
 }
