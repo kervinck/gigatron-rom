@@ -19,8 +19,6 @@ add_executable(gt1torom ${sources})
 
 if(MSVC)
     set_target_properties(gt1torom PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ..)
-else()
-    set_target_properties(gt1torom PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)
 endif()
 
 target_link_libraries(gt1torom)

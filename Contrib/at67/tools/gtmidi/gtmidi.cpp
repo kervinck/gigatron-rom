@@ -92,7 +92,7 @@ void outputVCPUheader(std::ofstream& outfile, const std::string& name, uint16_t 
     addString(_segmentName, 16 - _segmentName.size());
     outfile << _segmentName.c_str() << "EQU     0x" << std::hex << std::setw(4) << std::setfill('0') << address << std::endl;
     outfile << _segmentName.c_str() << "DB     ";
-};
+}
 void outputVCPUnewLine(std::ofstream& outfile, bool newLine)
 {
     if(!newLine)
@@ -118,7 +118,7 @@ void outputVCPUcommand(std::ofstream& outfile, uint8_t command, bool newLine=tru
 void outputGBASheader(std::ofstream& outfile, uint16_t address)
 {
     outfile << "def byte" << "(&h" << std::hex << std::setw(4) << std::setfill('0') << address << ") = ";
-};
+}
 void outputGBASnewLine(std::ofstream& outfile, bool newLine)
 {
     if(!newLine)
@@ -144,7 +144,7 @@ void outputGCLheader(std::ofstream& outfile, uint16_t address)
 {
     outfile << "$" << std::hex << std::setw(4) << std::setfill('0') << address << ":" << std::endl;
     outfile << "[def" << std::endl << " ";
-};
+}
 void outputGCLnewLine(std::ofstream& outfile, bool newLine)
 {
     if(!newLine)
@@ -182,7 +182,7 @@ void outputCPPheader(std::ofstream& outfile, const std::string& name, uint16_t s
     outfile << "uint8_t " << _segmentName.c_str() << std::endl;
     outfile << "{" << std::endl;
     outfile << "    ";
-};
+}
 void outputCPPnewLine(std::ofstream& outfile, bool newLine)
 {
     if(!newLine)
@@ -218,7 +218,7 @@ void outputPYheader(std::ofstream& outfile, const std::string& name, uint16_t se
     }
     outfile << _segmentName.c_str() << std::endl;
     outfile << "    ";
-};
+}
 void outputPYnewLine(std::ofstream& outfile, bool newLine)
 {
     if(!newLine)

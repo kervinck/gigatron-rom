@@ -20,8 +20,6 @@ add_executable(gtbasic ${headers} ${sources})
 
 if(MSVC)
     set_target_properties(gtbasic PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ..)
-else()
-    set_target_properties(gtbasic PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)
 endif()
 
 target_link_libraries(gtbasic)
