@@ -386,7 +386,7 @@ int main(int argc, char* argv[])
                 segmentCount += 2;
 
                 // Volume, (0 -> 127), needs to be scaled, inverted and offset into (127 -> 64)
-                uint8_t volume;
+                uint8_t volume = 0;
                 if(hasVolume)
                 {
                     volume = *midiPtr++; midiSize--;

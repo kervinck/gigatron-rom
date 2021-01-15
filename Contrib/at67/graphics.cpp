@@ -561,9 +561,9 @@ namespace Graphics
         x1 *= 3;
         y0 *= 4;
         y1 *= 4;
-        for(int y=y0; y<y1; y++)
+        for(int y=y0; y<=y1; y++)
         {
-            for(int x=x0; x<x1; x++)
+            for(int x=x0; x<=x1; x++)
             {
                 _pixels[y*SCREEN_WIDTH + x] = colour;
             }

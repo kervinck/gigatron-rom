@@ -40,27 +40,27 @@
 #define ROM_VCPU_DISPATCH 0x0309
 
 #if defined(_WIN32)
-#define _EXIT_(f)       \
-    do                  \
-    {                   \
-        system("pause");\
-        exit(f);        \
-    }                   \
+#define _EXIT_(f)              \
+    do                         \
+    {                          \
+        (void)!system("pause");\
+        exit(f);               \
+    }                          \
     while(0)
 #else
-#define _EXIT_(f)                                                    \
-    do                                                               \
-    {                                                                \
-        system("echo \"Press ENTER to continue . . .\"; read input");\
-        exit(f);                                                     \
-    }                                                                \
+#define _EXIT_(f)                                                           \
+    do                                                                      \
+    {                                                                       \
+        (void)!system("echo \"Press ENTER to continue . . .\"; read input");\
+        exit(f);                                                            \
+    }                                                                       \
     while(0)
 #endif
 
 #if defined(_WIN32)
-#define _PAUSE_ system("pause")
+#define _PAUSE_ (void)!system("pause")
 #else
-#define _PAUSE_ system("echo \"Press ENTER to continue . . .\"; read input")
+#define _PAUSE_ (void)!system("echo \"Press ENTER to continue . . .\"; read input")
 #endif
 
 // At least on Windows, _X is a constant defined somewhere before here

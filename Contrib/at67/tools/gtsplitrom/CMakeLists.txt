@@ -5,15 +5,23 @@ project(gtsplitrom)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
 
 add_definitions(-DSTAND_ALONE)
-if(MSVC)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-endif()
 
 set(headers ../../cpu.h)
 set(sources ../../cpu.cpp gtsplitrom.cpp)
 
+if(MSVC)
+    add_compile_options(/W4)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+else()
+    add_compile_options(-Wall -Wextra -pedantic)
+endif()
+
 add_executable(gtsplitrom ${headers} ${sources})
 
-target_link_libraries(gtsplitrom)
+if(MSVC)
+    set_target_properties(gtsplitrom PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ..)
+else()
+    set_target_properties(gtsplitrom PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)
+endif()
 
-set_target_properties(gtsplitrom PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ..)
+target_link_libraries(gtsplitrom)

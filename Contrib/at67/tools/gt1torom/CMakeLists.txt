@@ -5,14 +5,22 @@ project(gt1torom)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
 
 add_definitions(-DSTAND_ALONE)
-if(MSVC)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-endif()
 
 set(sources gt1torom.cpp)
 
+if(MSVC)
+    add_compile_options(/W4)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+else()
+    add_compile_options(-Wall -Wextra -pedantic)
+endif()
+
 add_executable(gt1torom ${sources})
 
-target_link_libraries(gt1torom)
+if(MSVC)
+    set_target_properties(gt1torom PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ..)
+else()
+    set_target_properties(gt1torom PROPERTIES RUNTIME_OUTPUT_DIRECTORY ..)
+endif()
 
-set_target_properties(gt1torom PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ..)
+target_link_libraries(gt1torom)

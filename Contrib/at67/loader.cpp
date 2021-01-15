@@ -1324,7 +1324,7 @@ namespace Loader
             // Build gcl
             int gt1FileDeleted = remove(filepath.c_str());
             fprintf(stderr, "\n");
-            system(command.c_str());
+            (void)!system(command.c_str());
 
             // Check for gt1
             std::ifstream infile(filepath, std::ios::binary | std::ios::in);

@@ -304,11 +304,11 @@ namespace Audio
         dialogItems = {Dialog::Item(true, "Play", Dialog::Item::CenterX, Dialog::Item::NextY, Dialog::Item::Bd)};
         Dialog::createDialog("PlayM", "Play", dialogItems, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
         Dialog::positionDialog("PlayM", 71, 1);
-        dialogItems = {Dialog::Item(true, "6Bit", Dialog::Item::CenterX, Dialog::Item::NextY, Dialog::Item::Bd)};
-        Dialog::createDialog("6Bit", "6Bit", dialogItems, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
+        dialogItems = {Dialog::Item(true, "4Bit", Dialog::Item::CenterX, Dialog::Item::NextY, Dialog::Item::Bd)};
+        Dialog::createDialog("6Bit", "4Bit", dialogItems, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
         Dialog::positionDialog("6Bit", 132, 1);
-        dialogItems = {Dialog::Item(true, "Line ", Dialog::Item::CenterX, Dialog::Item::NextY, Dialog::Item::Bd)};
-        Dialog::createDialog("LineM", "LineM", dialogItems, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
+        dialogItems = {Dialog::Item(true, "Pixel", Dialog::Item::CenterX, Dialog::Item::NextY, Dialog::Item::Bd)};
+        Dialog::createDialog("LineM", "Pixel", dialogItems, 4, 1, Dialog::Dialog::Regular, 1, 0, 106, 60);
         Dialog::positionDialog("LineM", 115, 1);
 
         _browserPath = Editor::getBrowserPath();
@@ -462,8 +462,9 @@ namespace Audio
 
     void refreshMidi(void)
     {
-        Graphics::rectFill(BORDER_X1+1, 7, BORDER_X2, 38, 0x33333333);
-        for(int i=0; i<127; i++) // AUDIO_BUFFER_SIZE = 2048
+        Graphics::rectFill(BORDER_X1+1, 7, BORDER_X2, 39, 0x33333333);
+        int end = (_midiLineMode) ? 127 : 128;
+        for(int i=0; i<end; i++) // AUDIO_BUFFER_SIZE = 2048
         {
             uint8_t sample0 = (_audioSamples[(i+0) <<2] >>9) & 31;
             uint8_t sample1 = (_audioSamples[(i+1) <<2] >>9) & 31;
@@ -667,21 +668,21 @@ namespace Audio
         {
             static bool quality = false;
             quality = !quality;
-            if(quality)
+            if(!quality)
             {
-                Cpu::enable6BitSound(Cpu::ROMv5a, true);
+                Cpu::enable6BitSound(Cpu::ROMv5a, false);
                 Dialog::setDialogItemText("6Bit", 0, "4Bit");
             }
             else
             {
-                Cpu::enable6BitSound(Cpu::ROMv5a, false);
+                Cpu::enable6BitSound(Cpu::ROMv5a, true);
                 Dialog::setDialogItemText("6Bit", 0, "6Bit");
             }
         }
         else if(Dialog::getDialogItemIndex("LineM", _mouseState._x, _mouseState._y) != -1)
         {
             _midiLineMode = !_midiLineMode;
-            (_midiLineMode) ? Dialog::setDialogItemText("LineM", 0, "Pixel") : Dialog::setDialogItemText("LineM", 0, "Line ");
+            (_midiLineMode) ? Dialog::setDialogItemText("LineM", 0, "Line ") : Dialog::setDialogItemText("LineM", 0, "Pixel");
         }
         else if(Dialog::getDialogItemIndex("Reset", _mouseState._x, _mouseState._y) != -1)
         {

@@ -468,6 +468,10 @@ namespace Pragmas
 
     bool ENABLE6BITAUDIOEMU(const std::string& input, int codeLineIndex, size_t foundPos)
     {
+#ifdef STAND_ALONE
+        UNREFERENCED_PARAM(foundPos);
+#endif
+
         if(Compiler::getCodeRomType() < Cpu::ROMv5a)
         {
             fprintf(stderr, "Pragmas::ENABLE6BITAUDIOEMU() : Version error, '_enable6BitAudioEmu_ <ON/OFF>' only works with ROMv5a or greater; try using '_codeRomType_ ROMv5a', before '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
