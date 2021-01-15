@@ -9,9 +9,9 @@
 
 
 #define MAJOR_VERSION "1.0"
-#define MINOR_VERSION "6R"
+#define MINOR_VERSION "7R"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
-#define RUNTIME_VERSION 101 // this must match RUNTIME_VERSION in runtime/util.i
+#define RUNTIME_VERSION 103 // this must match RUNTIME_VERSION in runtime/util.i
  
 #define ROM_INST 0
 #define ROM_DATA 1

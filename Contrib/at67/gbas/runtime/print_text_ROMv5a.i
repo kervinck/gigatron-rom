@@ -314,20 +314,27 @@ printC_slice        ST      textSlice
                     INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     
                     PUSH
-                    LD      cursorXY
+                    CALLI   printClip
+                    POP
+                    
+printC_exit         RET
+%ENDS
+
+%SUB                printClip
+printClip           LD      cursorXY
                     ADDI    giga_xfont
                     ST      cursorXY
                     SUBI    giga_xres - giga_xfont          ; last possible char on line
-                    BLE     printC_pop
+                    BLE     printCl_exit
                     LDI     DISABLE_CLIP_BIT
                     ANDW    miscFlags                       ; is text clipping disabled?
-                    BNE     printC_pop
+                    BNE     printCl_exit
+                    PUSH
                     CALLI   newLineScroll                   ; next row, scroll at bottom
+                    POP
                     
-printC_pop          POP
-
-printC_exit         RET
-%ENDS   
+printCl_exit        RET
+%ENDS
     
 %SUB                newLineScroll
                     ; print from top row to bottom row, then start scrolling 

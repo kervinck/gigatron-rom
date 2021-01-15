@@ -468,7 +468,7 @@ endproc
 proc drawInvaderBullets
     local bxy
     
-    if timeTicks.hi &&< 3 then return
+    if timeTicks.hi &< 3 then return
     
     for ibindex=0 to NUM_IBULLETS - 1
         bxy = ibxy(ibindex)
@@ -542,7 +542,7 @@ proc getNextInvaderShot, bxy
     local i, j, xy
 
     'list is empty, waiting for last invader to explode
-    if ishoot &= 0 then return
+    if ishoot &&= 0 then return
 
     'next shoot candidate
     ishoot = deek(ishoot + 6)
@@ -558,7 +558,7 @@ proc getNextInvaderShot, bxy
 
     'invaders checks for clear path before firing, (can fail if player manages to shoot out of order column invaders)
     if j &= 4
-        if (invaders(j, i) AND INVADER_DEAD) &&= 0
+        if (invaders(j, i) AND INVADER_DEAD) &= 0
             bxy = ixorigin + xy.lo + 5 + ((iyorigin - xy.hi + 14) LSL 8)
         endif
     elseif (invaders(j+1, i) AND INVADER_DEAD)
@@ -587,7 +587,7 @@ proc checkInvaderBullets
         for ibindex=0 to NUM_IBULLETS - 1
             bxy = ibxy(ibindex)
             if (bxy)
-                if bxy.lo &&= pbxy.lo
+                if bxy.lo &= pbxy.lo
                     call eraseInvaderBullet, bxy
                     ibxy(ibindex) = 0
                     bexplode = pbxy - (3 + 11*256)
@@ -688,7 +688,7 @@ proc playerDied
     livesLevel.hi = livesLevel.hi - 1
     call drawLives
     call playerExplode
-    if livesLevel.hi &&= 0 then endgame.hi = 1
+    if livesLevel.hi &= 0 then endgame.hi = 1
 endproc
 
 proc updateScore
@@ -711,7 +711,7 @@ proc updateSaucer
     local xy, odd, spoints, i, sy
 
     'wait until there is room for the saucer
-    if iyorigin &&= IORIGIN_Y then return
+    if iyorigin &= IORIGIN_Y then return
 
     'player hit saucer
     if &(sexplode)

@@ -397,7 +397,7 @@ proc div5
 endproc
 
 drawPucMon:
-    if mz &&= WALL
+    if mz &= WALL
         sprite NoFlip, PucLt + 2, px, py
         return
     endif

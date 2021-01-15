@@ -169,6 +169,7 @@ namespace Linker
         {0x0000, 0x0000, "printInt16"       , "", false, false},
         {0x0000, 0x0000, "printChr"         , "", false, false},
         {0x0000, 0x0000, "printChar"        , "", false, false},
+        {0x0000, 0x0000, "printClip"        , "", false, false},
         {0x0000, 0x0000, "printHex"         , "", false, false},
         {0x0000, 0x0000, "atTextCursor"     , "", false, false},
         {0x0000, 0x0000, "newLineScroll"    , "", false, false},

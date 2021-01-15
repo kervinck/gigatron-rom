@@ -1,5 +1,5 @@
-; This must match RUNTIME_VERSION in assembler.h
-%define RUNTIME_VERSION 101
+; This must match RUNTIME_VERSION in cpu.h
+%define RUNTIME_VERSION 103
 
 memIndex0           EQU     register10
 memIndex1           EQU     register11

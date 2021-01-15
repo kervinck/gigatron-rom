@@ -570,7 +570,7 @@ getWallDir:
         if maze(gj, gi - 1) &<> WALL
             gdir = 2 : if ti &&< gi then return
         endif
-        if maze(gj, gi + 1) &&<> WALL then gdir = 0
+        if maze(gj, gi + 1) &<> WALL then gdir = 0
     endif
 return
 
@@ -600,7 +600,7 @@ return
 254: if my &&= 3 then pyd = 0 : pxd = pyd+1
      return
 
-247: if mx &= 3 then pxd = 0 : pyd = pxd-1
+247: if mx &&= 3 then pxd = 0 : pyd = pxd-1
      return
 
 251: if mx &&= 3 then pxd = 0 : pyd = pxd+1
@@ -613,7 +613,7 @@ proc eatSound
     n = get("MIDI_NOTE", peek(@enotes + eatTicks.lo))
     sound on, 2, n, 63, 1
     inc eatTicks.lo
-    if eatTicks.lo &>= 4
+    if eatTicks.lo &&>= 4
         eatTicks.lo = 0
         sound off, 2
     endif
@@ -647,7 +647,7 @@ proc deadSound
     f = 1000
     sound off, 1
     repeat
-        for v=1 to 62 step 2
+        for v=1 &to 62 step 2
             sound on, 2, f, v, 2
             set SOUND_TIMER, 1
         next v
@@ -681,7 +681,7 @@ proc drawHigh
     local i, char
     
     char = HIGH_X+ORIGIN_X
-    for i=0 to SCORE_LEN-1
+    for i=0 &to SCORE_LEN-1
         sprite NoFlip, Digit + peek(@highBCD + SCORE_LEN-1 - i), char, HIGH_Y+ORIGIN_Y
         char = char + 6
     next i
@@ -692,7 +692,7 @@ proc drawLevel
     
     sprite NoFlip, Level, LEVEL_X+ORIGIN_X, LEVEL_Y+ORIGIN_Y
     char = LEVEL_X+ORIGIN_X + 6
-    for i=0 to LEVEL_LEN-4
+    for i=0 &to LEVEL_LEN-4
         sprite NoFlip, Digit + peek(@levelBCD + LEVEL_LEN-4 - i), char, LEVEL_Y+ORIGIN_Y
         char = char + 6
     next i
@@ -746,7 +746,7 @@ proc drawMaze
     local i
     
     set FG_COLOUR, &h30
-    for i=0 to (NUM_MAZE_PIECES*2 - 2) step 4
+    for i=0 &to (NUM_MAZE_PIECES*2 - 2) step 4
         set CURSOR_XY, deek(@MAZE_PIECES + i)     : polyR deek(@MAZE_ADDRS + i)
         set CURSOR_XY, deek(@MAZE_PIECES + i + 2) : polyR deek(@MAZE_ADDRS + i + 2), FLIPX
     next i
