@@ -1402,7 +1402,7 @@ namespace Expression
 
             if(peek() != ')')
             {
-                fprintf(stderr, "Expression::factor() : Missing ')' in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
+                fprintf(stderr, "Expression::factor() : '%s:%d' : missing ')'\n", _expressionToParse.c_str(), _lineNumber + 1);
                 numeric = Numeric();
             }
             get();
@@ -1411,7 +1411,7 @@ namespace Expression
         {
             if(!number(value))
             {
-                fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
+                fprintf(stderr, "Expression::factor() : '%s:%d' : bad numeric data\n", _expressionToParse.c_str(), _lineNumber + 1);
                 numeric = Numeric();
             }
             else

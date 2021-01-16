@@ -149,7 +149,7 @@ proc drawPlayerBullet
     if &(iexplode) then return
     
     'no bullet so exit
-    if &(pbullet.hi = 0) then return
+    if pbullet.hi &&= 0 then return
 
     asm 'setup SYS function
         LDWI    SYS_VDrawBits_134
@@ -360,7 +360,7 @@ proc checkInvaders
         return
     endif
 
-    if &(pbullet.hi = 0) then return
+    if pbullet.hi &&= 0 then return
 
     y = iyorigin - (pbxy.hi - (8 + 3))
     if y &&< 0 then return
@@ -375,7 +375,7 @@ proc checkInvaders
     if j &&>= INVADERS_J then return
     if j &&< 0 then return
     
-    iaddr = iaddress(j) + i + i : if &(peek(iaddr) = 0) then return
+    iaddr = iaddress(j) + i + i : if peek(iaddr) &= 0 then return
     
     'erase invader
     poke iaddr, 0

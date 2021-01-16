@@ -260,7 +260,8 @@ namespace Loader
                 uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
                 uint16_t segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
                 if((address + segmentSize - 1) < Memory::getSizeRAM()  &&  !Memory::isVideoRAM(address)) totalSize += segmentSize;
-                if((address & 0x00FF) + segmentSize > 256) fprintf(stderr, "Loader::printGt1Stats() : Page overflow, (ignore if non code segment), segment %d : address 0x%04x : segmentSize %3d\n", i, address, segmentSize);
+                if((address & 0x00FF) + segmentSize > 256) fprintf(stderr, "\nLoader::printGt1Stats() : Page overflow : segment %d : address 0x%04x : segmentSize %3d :" 
+                                                                           "ignore if non code segment and if data does not spill into allocated RAM, (video, audio, zero page, etc)\n", i, address, segmentSize);
             }
         }
         uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
@@ -1124,7 +1125,7 @@ namespace Loader
             std::getline(infile, line);
             if(!infile.good() && !infile.eof())
             {
-                fprintf(stderr, "Loader::loadGtbFile() : Bad line : '%s' : in '%s' on line %d\n", line.c_str(), filepath.c_str(), int(lines.size()+1));
+                fprintf(stderr, "Loader::loadGtbFile() : '%s:%d' : bad line '%s'\n", filepath.c_str(), int(lines.size()+1), line.c_str());
                 return false;
             }
 
@@ -1453,8 +1454,8 @@ namespace Loader
             return;
         }
 
-        if(uploadTarget == Emulator) fprintf(stderr, "\nTarget : Emulator");
-        else if(uploadTarget == Hardware) fprintf(stderr, "\nTarget : Gigatron");
+        if(uploadTarget == Emulator) fprintf(stderr, "\nTarget : Emulator\n");
+        else if(uploadTarget == Hardware) fprintf(stderr, "\nTarget : Gigatron\n");
 
         // BASIC calculates the correct value of free RAM as part of the compilation
         printGt1Stats(filename, gt1File, isGbasFile);

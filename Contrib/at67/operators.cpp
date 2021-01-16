@@ -638,8 +638,9 @@ namespace Operators
     // ********************************************************************************************
     // Unary Operators
     // ********************************************************************************************
-    Expression::Numeric POS(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric POS(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -656,8 +657,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric NEG(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric NEG(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -675,8 +677,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric NOT(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric NOT(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -698,8 +701,9 @@ namespace Operators
     // ********************************************************************************************
     // Unary Math Operators
     // ********************************************************************************************
-    Expression::Numeric CEIL(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric CEIL(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -711,8 +715,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric FLOOR(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric FLOOR(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -724,8 +729,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric POWF(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric POWF(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -738,8 +744,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric SQRT(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric SQRT(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -751,8 +758,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric EXP(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric EXP(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -764,8 +772,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric EXP2(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric EXP2(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -777,8 +786,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric LOG(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric LOG(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -790,8 +800,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric LOG2(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric LOG2(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -803,8 +814,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric LOG10(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric LOG10(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -816,8 +828,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric SIN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric SIN(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -829,8 +842,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric COS(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric COS(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -842,8 +856,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric TAN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric TAN(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -855,8 +870,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric ASIN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric ASIN(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -868,8 +884,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric ACOS(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric ACOS(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -881,8 +898,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric ATAN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric ATAN(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -894,8 +912,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric ATAN2(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric ATAN2(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -911,8 +930,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric RAND(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric RAND(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -925,8 +945,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric REV16(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric REV16(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -938,8 +959,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric REV8(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric REV8(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -951,8 +973,9 @@ namespace Operators
         return numeric;
     }
 
-    Expression::Numeric REV4(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric REV4(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -968,8 +991,9 @@ namespace Operators
     // ********************************************************************************************
     // Binary Operators
     // ********************************************************************************************
-    Expression::Numeric ADD(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric ADD(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -985,8 +1009,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric SUB(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric SUB(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1000,8 +1025,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric AND(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric AND(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1015,8 +1041,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric XOR(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric XOR(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1030,8 +1057,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric OR(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric OR(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1049,8 +1077,9 @@ namespace Operators
     // ********************************************************************************************
     // Logical Operators
     // ********************************************************************************************
-    Expression::Numeric LSL(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric LSL(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1079,7 +1108,7 @@ namespace Operators
                     case Expression::IntVar16:
                     {
                         int varIndex = Compiler::findVar(left._name);
-                        if(varIndex == -1) fprintf(stderr, "Operator::LSL() : couldn't find variable name '%s'\n", left._name.c_str());
+                        if(varIndex == -1) fprintf(stderr, "Operator::LSL() : '%s:%d' : couldn't find variable name '%s' : %s\n", moduleName.c_str(), codeLineStart, left._name.c_str(), codeLineText.c_str());
                         Compiler::emitVcpuAsm("LD", "_" + left._name, false);
                     }
 
@@ -1107,8 +1136,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric LSR(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric LSR(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1138,7 +1168,7 @@ namespace Operators
                     case Expression::IntVar16:
                     {
                         int varIndex = Compiler::findVar(left._name);
-                        if(varIndex == -1) fprintf(stderr, "Operator::LSR() : couldn't find variable name '%s'\n", left._name.c_str());
+                        if(varIndex == -1) fprintf(stderr, "Operator::LSR() : '%s:%d' : couldn't find variable name '%s' : %s\n", moduleName.c_str(), codeLineStart, left._name.c_str(), codeLineText.c_str());
                         Compiler::emitVcpuAsm("LD", "_" + left._name + " + 1", false);
                     }
                     break;
@@ -1174,8 +1204,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric ASR(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric ASR(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1217,8 +1248,9 @@ namespace Operators
     // ********************************************************************************************
     // Conditional Operators
     // ********************************************************************************************
-    Expression::Numeric EQ(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric EQ(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1240,8 +1272,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric NE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric NE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1263,8 +1296,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric LE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric LE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1286,8 +1320,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric GE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric GE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1309,8 +1344,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric LT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric LT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1332,8 +1368,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric GT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric GT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1359,8 +1396,9 @@ namespace Operators
     // ********************************************************************************************
     // Math Operators
     // ********************************************************************************************
-    Expression::Numeric POW(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric POW(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1391,8 +1429,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric MUL(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric MUL(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1413,8 +1452,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric DIV(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric DIV(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -1435,8 +1475,9 @@ namespace Operators
         return left;
     }
 
-    Expression::Numeric MOD(Expression::Numeric& left, Expression::Numeric& right, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric MOD(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 

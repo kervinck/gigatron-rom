@@ -215,7 +215,7 @@ namespace Compiler
         bool _containsVars = false;
         bool _pushEmitted = false;
         bool _dontParse = false;
-        std::string _module = MODULE_MAIN;
+        std::string _moduleName = MODULE_MAIN;
     };
 
     struct ModuleLine
@@ -437,6 +437,7 @@ namespace Compiler
     const std::string& getRuntimePath(void);
     const std::string& getTempVarStartStr(void);
     const std::string& getNextInternalLabel(void);
+    int getCodeLineStart(int index);
 
     void setCodeIsAsm(bool codeIsAsm);
     void setUserCodeStart(uint16_t userCodeStart);
