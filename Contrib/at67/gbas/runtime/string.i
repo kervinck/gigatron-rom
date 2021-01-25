@@ -22,7 +22,7 @@ strMult             EQU     register3
 %SUB                stringChr
                     ; create a char string, (parameter in strChr)
 stringChr           LDI     1
-                    POKE    strDstAddr                          ; set destination buffer length                    
+                    POKE    strDstAddr                          ; set destination buffer length
                     INC     strDstAddr
                     LD      strChr
                     POKE    strDstAddr                          ; copy char
@@ -30,6 +30,28 @@ stringChr           LDI     1
                     LDI     0
                     POKE    strDstAddr                          ; terminating 0
                     RET
+%ENDS
+
+%SUB                stringSpc
+                    ; create a spc string, (parameter in strLen)
+stringSpc           LD      strLen
+                    BEQ     stringS_exit
+                    SUBI    94
+                    BGT     stringS_exit
+                    POKE    strAddr                             ; set destination buffer length
+                    INC     strAddr
+                    
+stringS_loop        LDI     32
+                    POKE    strAddr                             ; copy char
+                    INC     strAddr
+                    LD      strLen
+                    SUBI    1
+                    ST      strLen
+                    BNE     stringS_loop
+                    LDI     0
+                    POKE    strAddr                             ; terminating 0
+                    
+stringS_exit        RET
 %ENDS
 
 %SUB                stringHex

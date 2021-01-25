@@ -3,6 +3,7 @@ textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
 textHex             EQU     register1
+textSpc             EQU     register1
 textLen             EQU     register2
 textOfs             EQU     register3
 textChr             EQU     register8
@@ -252,6 +253,35 @@ printI16_pos        LDWI    10000
                     RET
 %ENDS
 
+%SUB                printChr
+                    ; prints char in textChr for standalone calls
+printChr            PUSH
+                    ST      textChr
+                    CALLI   printInit
+                    CALLI   printChar
+                    POP
+                    RET
+%ENDS
+
+%SUB                printSpc
+                    ; prints textSpc spaces
+printSpc            PUSH
+                    BEQ     printS_exit
+                    ST      textSpc
+                    CALLI   printInit
+                    
+printS_loop         LDI     32
+                    STW     textChr
+                    CALLI   printChar
+                    LD      textSpc
+                    SUBI    1
+                    ST      textSpc
+                    BNE     printS_loop
+                    
+printS_exit         POP
+                    RET
+%ENDS
+
 %SUB                printHex
                     ; print textLen hex digits in textHex, (textStr, textHex, textLen = strAddr, strHex, strLen in string::stringHex)
 printHex            PUSH
@@ -260,16 +290,6 @@ printHex            PUSH
                     CALLI   stringHex
                     LDW     strAddr
                     CALLI   printText
-                    POP
-                    RET
-%ENDS
-
-%SUB                printChr
-                    ; prints char in textChr for standalone calls
-printChr            PUSH
-                    ST      textChr
-                    CALLI   printInit
-                    CALLI   printChar
                     POP
                     RET
 %ENDS

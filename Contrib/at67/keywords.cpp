@@ -149,6 +149,7 @@ namespace Keywords
         _keywords["BCDINT"  ] = {"BCDINT",   BCDINT,  Compiler::SingleStatementParsed};
         _keywords["BCDCPY"  ] = {"BCDCPY",   BCDCPY,  Compiler::SingleStatementParsed};
         _keywords["GPRINTF" ] = {"GPRINTF",  GPRINTF, Compiler::SingleStatementParsed};
+        _keywords["EXEC"    ] = {"EXEC",     EXEC,    Compiler::SingleStatementParsed};
 
         return true;
     }
@@ -333,12 +334,16 @@ namespace Keywords
         // Parse ON field
         Expression::Numeric onValue;
         std::string onToken = codeLine._code.substr(foundPos, gOffset - (foundPos + 1));
-        if(Compiler::parseExpression(codeLineIndex, onToken, onValue) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, onToken, onValue) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::ON() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, onToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("STW", "register0", false);
 
         // Parse labels
         std::vector<size_t> gOffsets;
-        std::vector<std::string> gTokens = Expression::tokenise(codeLine._code.substr(gOffset + gSize), ',', gOffsets, false);
+        std::vector<std::string> gTokens = Expression::tokeniseOffsets(codeLine._code.substr(gOffset + gSize), ',', gOffsets, false);
         if(gTokens.size() < 1)
         {
             fprintf(stderr, "Keywords::ON() : '%s:%d' : syntax error, must have at least one label after GOTO/GOSUB : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
@@ -407,7 +412,7 @@ namespace Keywords
 
         // Parse labels
         std::vector<size_t> gotoOffsets;
-        std::vector<std::string> gotoTokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', gotoOffsets, false);
+        std::vector<std::string> gotoTokens = Expression::tokeniseOffsets(codeLine._code.substr(foundPos), ',', gotoOffsets, false);
         if(gotoTokens.size() < 1  ||  gotoTokens.size() > 2)
         {
             fprintf(stderr, "Keywords::GOTO() : '%s:%d' : syntax error, must have one or two parameters, e.g. 'GOTO 200' or 'GOTO k+1,default' : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
@@ -441,7 +446,11 @@ namespace Keywords
             }
 
             Compiler::setCreateNumericLabelLut(true);
-            if(Compiler::parseExpression(codeLineIndex, gotoToken, gotoValue) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, gotoToken, gotoValue) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::GOTO() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, gotoToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("STW", "numericLabel", false);
 
             // Default label exists
@@ -500,7 +509,7 @@ namespace Keywords
 
         // Parse labels
         std::vector<size_t> gosubOffsets;
-        std::vector<std::string> gosubTokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', gosubOffsets, false);
+        std::vector<std::string> gosubTokens = Expression::tokeniseOffsets(codeLine._code.substr(foundPos), ',', gosubOffsets, false);
         if(gosubTokens.size() < 1  ||  gosubTokens.size() > 2)
         {
             fprintf(stderr, "Keywords::GOSUB() : '%s:%d' : syntax error, must have one or two parameters, e.g. 'GOSUB <label>' or 'GOSUB <expression>, <default label>' : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
@@ -545,7 +554,11 @@ namespace Keywords
             }
 
             Compiler::setCreateNumericLabelLut(true);
-            if(Compiler::parseExpression(codeLineIndex, gosubToken, gosubValue) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, gosubToken, gosubValue) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::GOSUB() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, gosubToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("STW", "numericLabel", false);
 
             // Default label exists
@@ -627,7 +640,7 @@ namespace Keywords
         UNREFERENCED_PARAM(foundPos);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() > 3)
         {
             fprintf(stderr, "Keywords::CLS() : '%s:%d' : syntax error, expected 'CLS INIT' or 'CLS <address>, <optional width>, <optional height>' : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
@@ -646,10 +659,14 @@ namespace Keywords
             }
             else
             {
-                if(Compiler::parseExpression(codeLineIndex, tokens[0], param) == Expression::IsInvalid) return false;
-                if(param._varType == Expression::Number  &&  uint16_t(std::lround(param._value)) < DEFAULT_START_ADDRESS)
+                if(Compiler::parseExpression(codeLineIndex, tokens[0], param) == Expression::IsInvalid)
                 {
-                    fprintf(stderr, "Keywords::CLS() : '%s:%d' : address field must be above &h%04x, found %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, DEFAULT_START_ADDRESS, tokens[0].c_str(), codeLine._text.c_str());
+                    fprintf(stderr, "Keywords::CLS() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[0].c_str(), codeLine._text.c_str());
+                    return false;
+                }
+                if(param._varType == Expression::Number  &&  uint16_t(std::lround(param._value)) < DEFAULT_EXEC_ADDRESS)
+                {
+                    fprintf(stderr, "Keywords::CLS() : '%s:%d' : address field must be above &h%04x, found %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, DEFAULT_EXEC_ADDRESS, tokens[0].c_str(), codeLine._text.c_str());
                     return false;
                 }
                 Compiler::emitVcpuAsm("STW", "clsAddress", false);
@@ -658,9 +675,17 @@ namespace Keywords
         }
         else if(tokens.size() > 1)
         {
-            if(Compiler::parseExpression(codeLineIndex, tokens[0], param) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, tokens[0], param) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::CLS() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[0].c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("STW", "clrAddress", false);
-            if(Compiler::parseExpression(codeLineIndex, tokens[1], param) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, tokens[1], param) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::CLS() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[1].c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("STW", "clrWidth", false); // runtime uses clrWidth in arithmetic, so make sure all of it is valid
 
             if(tokens.size() == 2)
@@ -669,7 +694,11 @@ namespace Keywords
             }
             else
             {
-                if(Compiler::parseExpression(codeLineIndex, tokens[2], param) == Expression::IsInvalid) return false;
+                if(Compiler::parseExpression(codeLineIndex, tokens[2], param) == Expression::IsInvalid)
+                {
+                    fprintf(stderr, "Keywords::CLS() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[2].c_str(), codeLine._text.c_str());
+                    return false;
+                }
             }
 
             Compiler::emitVcpuAsm("STW", "clrLines", false); // runtime uses clrLines in arithmetic, so make sure all of it is valid
@@ -719,7 +748,7 @@ RESTART_PRINT:
                 Expression::setEnableOptimisedPrint(false);
             }
 #else
-            // TODO: Fix this
+            // TODO: Fix this, (checks for syntax errors)
             if((expressionType & Expression::HasStringKeywords))
             {
                 if(expressionType & Expression::HasOptimisedPrint)
@@ -893,6 +922,7 @@ RESTART_PRINT:
                 size_t lquote = tokens[i].find_first_of("\"");
                 size_t rquote = tokens[i].find_last_of("\"");
 #if 1
+                // TODO: Test this thoroughly
                 if(lquote > 0)
                 {
                     // If there are leading chars that are not whitespace, then syntax error
@@ -1217,7 +1247,7 @@ RESTART_PRINT:
         std::string var = codeLine._code.substr(foundPos, equals - foundPos);
         Expression::stripWhitespace(var);
         int varCounter = Compiler::findVar(var);
-        (varCounter < 0) ? Compiler::createIntVar(var, loopStart, 0, codeLine, codeLineIndex, false, varCounter) : Compiler::updateVar(loopStart, codeLine, varCounter, false);
+        (varCounter < 0) ? Compiler::createIntVar(var, loopStart, 0, codeLine, codeLineIndex, false, varCounter) : Compiler::updateIntVar(loopStart, codeLine, varCounter, false);
 
         // Loop end
         int16_t loopEnd = 0;
@@ -1271,7 +1301,11 @@ RESTART_PRINT:
             // Variable start
             if(optimise  &&  varStart  &&  endNumeric._isValid  &&  loopEnd >= 0  &&  loopEnd <= 255)
             {
-                if(Compiler::parseExpression(codeLineIndex, startToken, startNumeric) == Expression::IsInvalid) return false;
+                if(Compiler::parseExpression(codeLineIndex, startToken, startNumeric) == Expression::IsInvalid)
+                {
+                    fprintf(stderr, "Keywords::FOR() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, startToken.c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 loopStart = int16_t(std::lround(startNumeric._value));
                 Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false);
             }
@@ -1297,19 +1331,31 @@ RESTART_PRINT:
         else
         {
             // Parse start
-            if(Compiler::parseExpression(codeLineIndex, startToken, startNumeric) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, startToken, startNumeric) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::FOR() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, startToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             loopStart = int16_t(std::lround(startNumeric._value));
             Compiler::emitVcpuAsm("STW", "_" + Compiler::getIntegerVars()[varCounter]._name, false);
 
             // Parse end
-            if(Compiler::parseExpression(codeLineIndex, endToken, endNumeric) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, endToken, endNumeric) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::FOR() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, endToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             loopEnd = int16_t(std::lround(endNumeric._value));
             Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(varEnd)), false);
 
             // Parse step
             if(stepToken.size())
             {
-                if(Compiler::parseExpression(codeLineIndex, stepToken, stepNumeric) == Expression::IsInvalid) return false;
+                if(Compiler::parseExpression(codeLineIndex, stepToken, stepNumeric) == Expression::IsInvalid)
+                {
+                    fprintf(stderr, "Keywords::FOR() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, stepToken.c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 loopStep = int16_t(std::lround(stepNumeric._value));
             }
             else
@@ -1473,7 +1519,11 @@ RESTART_PRINT:
         // Condition
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos, offsetTHEN - foundPos);
-        if(Compiler::parseExpression(codeLineIndex, conditionToken, condition) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, conditionToken, condition) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::IF() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, conditionToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         if(condition._ccType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false); // Boolean condition requires this extra check
         int jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
 
@@ -1589,7 +1639,11 @@ RESTART_PRINT:
         // Condition
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos);
-        if(Compiler::parseExpression(codeLineIndex, conditionToken, condition) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, conditionToken, condition) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::ELSEIF() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, conditionToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         if(condition._ccType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false); // Boolean condition requires this extra check
         jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
 
@@ -1758,7 +1812,11 @@ RESTART_PRINT:
         // Condition
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos);
-        if(Compiler::parseExpression(codeLineIndex, conditionToken, condition) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, conditionToken, condition) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::WHILE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, conditionToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         if(condition._ccType == Expression::BooleanCC) Compiler::emitVcpuAsm("%JumpFalse", "", false); // Boolean condition requires this extra check
         Compiler::getWhileWendDataStack().top()._jmpIndex = int(Compiler::getCodeLines()[codeLineIndex]._vasm.size()) - 1;
         Compiler::getWhileWendDataStack().top()._ccType = condition._ccType;
@@ -1862,7 +1920,11 @@ RESTART_PRINT:
         // Condition
         Expression::Numeric condition;
         std::string conditionToken = codeLine._code.substr(foundPos);
-        if(Compiler::parseExpression(codeLineIndex, conditionToken, condition) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, conditionToken, condition) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::UNTIL() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, conditionToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
 
         // Branch if condition false to instruction after REPEAT
         switch(condition._ccType)
@@ -2202,7 +2264,7 @@ RESTART_PRINT:
 
                 int localVarIndex = -1;
                 std::string localVarName = procData._name + "_" + procTokens[i];
-                createIntVar(localVarName, 0, 0, codeLine, codeLineIndex, false, localVarsAddr, localVarIndex);
+                Compiler::createProcIntVar(localVarName, 0, 0, codeLine, codeLineIndex, false, localVarsAddr, localVarIndex);
                 if(localVarIndex == -1)
                 {
                     fprintf(stderr, "Keywords::PROC() : '%s:%d' : can't create local integer var '%s'\n", codeLine._moduleName.c_str(), codeLineStart, localVarName.c_str());
@@ -2298,7 +2360,7 @@ RESTART_PRINT:
 
             int localVarIndex = -1;
             std::string localVarName = procData._name + "_" + localTokens[i];
-            createIntVar(localVarName, 0, 0, codeLine, codeLineIndex, false, localVarsAddr, localVarIndex);
+            Compiler::createProcIntVar(localVarName, 0, 0, codeLine, codeLineIndex, false, localVarsAddr, localVarIndex);
             if(localVarIndex == -1)
             {
                 fprintf(stderr, "Keywords::LOCAL() : '%s:%d' : couldn't create local integer var '%s' : %s\n", codeLine._moduleName.c_str(), codeLineStart, localVarName.c_str(), codeLine._text.c_str());
@@ -2443,16 +2505,22 @@ RESTART_PRINT:
         return true;
     }
 
-    bool initDIM(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, std::string& varName, int intIndex, int arrSizeTotal, int16_t& intInit, std::vector<int16_t>& intInits)
+    bool initDIM(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, std::string& varName, int arrSizeTotal, int16_t& intInit, std::vector<int16_t>& intInits, bool& isInit)
     {
-        intIndex = Compiler::findVar(varName);
-        if(intIndex >= 0)
+        std::string constName = varName;
+        if(Compiler::findConst(constName) >= 0)
+        {
+            fprintf(stderr, "Keywords::initDIM() : '%s:%d' : const '%s' already exists : %s\n", codeLine._moduleName.c_str(), codeLineStart, varName.c_str(), codeLine._text.c_str());
+            return false;
+        }
+        if(Compiler::findVar(varName) >= 0)
         {
             fprintf(stderr, "Keywords::initDIM() : '%s:%d' : var '%s' already exists : %s\n", codeLine._moduleName.c_str(), codeLineStart, varName.c_str(), codeLine._text.c_str());
             return false;
         }
 
         // Optional array int init values
+        isInit = false;
         size_t equalsPos = codeLine._code.find("=");
         if(equalsPos != std::string::npos)
         {
@@ -2468,7 +2536,11 @@ RESTART_PRINT:
             {
                 std::string operand;
                 Expression::Numeric numeric(true); // true = allow static init
-                if(Compiler::parseExpression(codeLineIndex, initTokens[0], operand, numeric) == Compiler::OperandInvalid) return false;
+                if(Compiler::parseStaticExpression(codeLineIndex, initTokens[0], operand, numeric) == Compiler::OperandInvalid)
+                {
+                    fprintf(stderr, "Keywords::initDIM() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, initTokens[0].c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 intInit = int16_t(std::lround(numeric._value));
             }
             else if(int(initTokens.size()) > arrSizeTotal)
@@ -2483,10 +2555,16 @@ RESTART_PRINT:
             std::vector<Expression::Numeric> funcParams(initTokens.size(), Expression::Numeric(true)); // true = allow static init
             for(int i=0; i<int(initTokens.size()); i++)
             {
-                if(Compiler::parseExpression(codeLineIndex, initTokens[i], operand, funcParams[i]) == Compiler::OperandInvalid) return false;
+                if(Compiler::parseStaticExpression(codeLineIndex, initTokens[i], operand, funcParams[i]) == Compiler::OperandInvalid)
+                {
+                    fprintf(stderr, "Keywords::initDIM() : '%s:%d' : bad initialiser %s at index %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, Expression::getExpression(), i, codeLine._text.c_str());
+                    return false;
+                }
                 intInits[i] = int16_t(std::lround(funcParams[i]._value));
             }
             intInit = intInits.back();
+
+            isInit = true;
         }
 
         return true;
@@ -2622,7 +2700,11 @@ RESTART_PRINT:
             {
                 std::string operand;
                 Expression::Numeric numeric(true); // true = allow static init
-                if(Compiler::parseExpression(codeLineIndex, sizeToken, operand, numeric) == Compiler::OperandInvalid) return false;
+                if(Compiler::parseStaticExpression(codeLineIndex, sizeToken, operand, numeric) == Compiler::OperandInvalid)
+                {
+                    fprintf(stderr, "Keywords::DIM() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, sizeToken.c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 int16_t data = int16_t(std::lround(numeric._value));
                 arrSizes.push_back(data);
             }
@@ -2650,18 +2732,17 @@ RESTART_PRINT:
         std::string varName = codeLine._code.substr(foundPos, lbra - foundPos);
         Expression::stripWhitespace(varName);
 
-        int intIndex = -1;
-        int strIndex = -1;
         int16_t intInit = 0;
+        bool isIntInit = false;
         std::vector<int16_t> intInits;
         std::vector<std::string> strInits;
         Compiler::VarType varType = Compiler::Var1Arr16;
 
         // Str array
+        bool isStrInit = false;
         if(Expression::isStrNameValid(varName))
         {
-            strIndex = Compiler::findStr(varName);
-            if(strIndex >= 0)
+            if(Compiler::findStr(varName) >= 0)
             {
                 fprintf(stderr, "Keywords::DIM() : '%s:%d' : str %s already exists : %s\n", codeLine._moduleName.c_str(), codeLineStart, varName.c_str(), codeLine._text.c_str());
                 return false;
@@ -2713,6 +2794,8 @@ RESTART_PRINT:
                     initTokens[i].erase(initTokens[i].size() - 1, 1);
                     strInits.push_back(initTokens[i]);
                 }
+
+                isStrInit = true;
             }
 
             varType = Compiler::VarStr2;
@@ -2722,13 +2805,13 @@ RESTART_PRINT:
         {
             // % is only used within DIM keyword
             varName.erase(varName.size()-1, 1);
-            if(!initDIM(codeLine, codeLineIndex, codeLineStart, varName, intIndex, arrSizeTotal, intInit, intInits)) return false;
+            if(!initDIM(codeLine, codeLineIndex, codeLineStart, varName, arrSizeTotal, intInit, intInits, isIntInit)) return false;
             varType = Compiler::Var1Arr8;
         }
         // Int16 array
         else
         {
-            if(!initDIM(codeLine, codeLineIndex, codeLineStart, varName, intIndex, arrSizeTotal, intInit, intInits)) return false;
+            if(!initDIM(codeLine, codeLineIndex, codeLineStart, varName, arrSizeTotal, intInit, intInits, isIntInit)) return false;
             varType = Compiler::Var1Arr16;
         }
 
@@ -2763,12 +2846,12 @@ RESTART_PRINT:
                 {
                     // Constant array of strings
                     _constDimStrArray = false;
-                    if(Compiler::createStringArray(codeLine, codeLineIndex, varName, 0, strInits, strAddrs) == -1) return false;
+                    if(Compiler::createStringArray(codeLine, codeLineIndex, varName, 0, isStrInit, strInits, strAddrs) == -1) return false;
                 }
                 else
                 {
                     // Variable array of strings
-                    if(Compiler::createStringArray(codeLine, codeLineIndex, varName, USER_STR_SIZE, strInits, strAddrs) == -1) return false;
+                    if(Compiler::createStringArray(codeLine, codeLineIndex, varName, USER_STR_SIZE, isStrInit, strInits, strAddrs) == -1) return false;
                 }
             }
             break;
@@ -2776,16 +2859,18 @@ RESTART_PRINT:
             // Int8 arrays, (allocDIM returns var type based on arrSizes)
             case Compiler::Var1Arr8:
             {
+                int intIndex = -1;
                 if(!allocDIM(codeLine, codeLineIndex, codeLineStart, address, varType, arrLut, arrSizes, arrAddrs)) return false;
-                Compiler::createIntVar(varName, 0, intInit, codeLine, codeLineIndex, false, intIndex, varType, Compiler::Int8, address, arrSizes, intInits, arrAddrs, arrLut);
+                Compiler::createArrIntVar(varName, 0, intInit, codeLine, codeLineIndex, false, isIntInit, intIndex, varType, Compiler::Int8, address, arrSizes, intInits, arrAddrs, arrLut);
             }
             break;
 
             // Int16 arrays, (allocDIM returns var type based on arrSizes)
             case Compiler::Var1Arr16:
             {
+                int intIndex = -1;
                 if(!allocDIM(codeLine, codeLineIndex, codeLineStart, address, varType, arrLut, arrSizes, arrAddrs)) return false;
-                Compiler::createIntVar(varName, 0, intInit, codeLine, codeLineIndex, false, intIndex, varType, Compiler::Int16, address, arrSizes, intInits, arrAddrs, arrLut);
+                Compiler::createArrIntVar(varName, 0, intInit, codeLine, codeLineIndex, false, isIntInit, intIndex, varType, Compiler::Int16, address, arrSizes, intInits, arrAddrs, arrLut);
             }
             break;
 
@@ -2858,7 +2943,7 @@ RESTART_PRINT:
         Expression::replaceText(Compiler::getCodeLines()[codeLineIndex]._text,       funcText, func);
         Expression::replaceText(Compiler::getCodeLines()[codeLineIndex]._expression, funcText, func);
         std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokeniseLine(Compiler::getCodeLines()[codeLineIndex]._code, " (),=", offsets);
+        std::vector<std::string> tokens = Expression::tokeniseLineOffsets(Compiler::getCodeLines()[codeLineIndex]._code, " (),=", offsets);
         codeLine._tokens = tokens;
         codeLine._offsets = offsets;
         Compiler::getCodeLines()[codeLineIndex]._tokens = tokens;
@@ -3012,7 +3097,11 @@ RESTART_PRINT:
                 fprintf(stderr, "Keywords::DEF() : '%s:%d' : address field does not exist, found %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, addrText.c_str(), codeLine._text.c_str());
                 return false;
             }
-            if(Compiler::parseExpression(codeLineIndex, addrTokens[0], operand, addrNumeric) == Compiler::OperandInvalid) return false;
+            if(Compiler::parseStaticExpression(codeLineIndex, addrTokens[0], operand, addrNumeric) == Compiler::OperandInvalid)
+            {
+                fprintf(stderr, "Keywords::DEF() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, addrTokens[0].c_str(), codeLine._text.c_str());
+                return false;
+            }
             address = uint16_t(std::lround(addrNumeric._value));
             typePos = lbra;
             foundAddress = true;
@@ -3037,7 +3126,11 @@ RESTART_PRINT:
         if(addrTokens.size() == 2  &&  !foundLutGenerator)
         {
             Expression::Numeric offsetNumeric(true);  // true = allow static init
-            if(Compiler::parseExpression(codeLineIndex, addrTokens[1], operand, offsetNumeric) == Compiler::OperandInvalid) return false;
+            if(Compiler::parseStaticExpression(codeLineIndex, addrTokens[1], operand, offsetNumeric) == Compiler::OperandInvalid)
+            {
+                fprintf(stderr, "Keywords::DEF() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, addrTokens[1].c_str(), codeLine._text.c_str());
+                return false;
+            }
             addrOffset = uint16_t(std::lround(offsetNumeric._value));
         }
         
@@ -3102,7 +3195,11 @@ RESTART_PRINT:
             std::vector<Expression::Numeric> lutGenParams = {Expression::Numeric(true), Expression::Numeric(true), Expression::Numeric(true)}; // true = allow static init
             for(int i=0; i<int(lutGenParams.size()); i++)
             {
-                if(Compiler::parseExpression(codeLineIndex, addrTokens[i + paramsOffset], operand, lutGenParams[i]) == Compiler::OperandInvalid) return false;
+                if(Compiler::parseStaticExpression(codeLineIndex, addrTokens[i + paramsOffset], operand, lutGenParams[i]) == Compiler::OperandInvalid)
+                {
+                    fprintf(stderr, "Keywords::DEF() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, addrTokens[i + paramsOffset].c_str(), codeLine._text.c_str());
+                    return false;
+                }
             }
             if(lutGenParams[2]._value <= 0.0)
             {
@@ -3114,7 +3211,11 @@ RESTART_PRINT:
             if(addrTokens.size() == 6  ||  (addrTokens.size() == 5  &&  !foundVar))
             {
                 Expression::Numeric offsetNumeric;
-                if(Compiler::parseExpression(codeLineIndex, addrTokens[3 + paramsOffset], operand, offsetNumeric) == Compiler::OperandInvalid) return false;
+                if(Compiler::parseStaticExpression(codeLineIndex, addrTokens[3 + paramsOffset], operand, offsetNumeric) == Compiler::OperandInvalid)
+                {
+                    fprintf(stderr, "Keywords::DEF() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, addrTokens[3 + paramsOffset].c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 addrOffset = uint16_t(std::lround(offsetNumeric._value));
             }
 
@@ -3138,7 +3239,11 @@ RESTART_PRINT:
                 }
 
                 Expression::Numeric lutGenResult = Expression::Numeric(true); // true = allow static init
-                if(Compiler::parseExpression(codeLineIndex, lutGenerator, operand, lutGenResult) == Compiler::OperandInvalid) return false;
+                if(Compiler::parseStaticExpression(codeLineIndex, lutGenerator, operand, lutGenResult) == Compiler::OperandInvalid)
+                {
+                    fprintf(stderr, "Keywords::DEF() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, lutGenerator.c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 lutGenData.push_back(int16_t(std::lround(lutGenResult._value)));
 
                 if(foundVar)
@@ -3218,7 +3323,11 @@ RESTART_PRINT:
             for(int i=0; i<int(dataTokens.size()); i++)
             {
                 Expression::Numeric numeric(true); // true = allow static init
-                if(Compiler::parseExpression(codeLineIndex, dataTokens[i], operand, numeric) == Compiler::OperandInvalid) return false;
+                if(Compiler::parseStaticExpression(codeLineIndex, dataTokens[i], operand, numeric) == Compiler::OperandInvalid)
+                {
+                    fprintf(stderr, "Keywords::DEF() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, dataTokens[i].c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 dataBytes.push_back(uint8_t(std::lround(numeric._value)));
             }
 
@@ -3233,7 +3342,7 @@ RESTART_PRINT:
             // No address offset so take memory as one chunk
             if(addrOffset == 0)
             {
-                if(address >= DEFAULT_START_ADDRESS  &&  !Memory::takeFreeRAM(address, int(dataBytes.size())))
+                if(address >= DEFAULT_EXEC_ADDRESS  &&  !Memory::takeFreeRAM(address, int(dataBytes.size())))
                 {
                     fprintf(stderr, "Keywords::DEF() : '%s:%d' : memory error, byte chunk allocation at '0x%04x of size '%d' failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, address, int(dataBytes.size()), codeLine._text.c_str());
                     return false;
@@ -3266,7 +3375,11 @@ RESTART_PRINT:
             for(int i=0; i<int(dataTokens.size()); i++)
             {
                 Expression::Numeric numeric(true); // true = allow static init
-                if(Compiler::parseExpression(codeLineIndex, dataTokens[i], operand, numeric) == Compiler::OperandInvalid) return false;
+                if(Compiler::parseStaticExpression(codeLineIndex, dataTokens[i], operand, numeric) == Compiler::OperandInvalid)
+                {
+                    fprintf(stderr, "Keywords::DEF() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, dataTokens[i].c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 dataWords.push_back(int16_t(std::lround(numeric._value)));
             }
 
@@ -3281,7 +3394,7 @@ RESTART_PRINT:
             // No address offset so take memory as one chunk
             if(addrOffset == 0)
             {
-                if(address >= DEFAULT_START_ADDRESS  &&  !Memory::takeFreeRAM(address, int(dataWords.size()) * 2))
+                if(address >= DEFAULT_EXEC_ADDRESS  &&  !Memory::takeFreeRAM(address, int(dataWords.size()) * 2))
                 {
                     fprintf(stderr, "Keywords::DEF() : '%s:%d' : memory error, word chunk allocation at '0x%04x of size '%d' failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, address, int(dataWords.size()) * 2, codeLine._text.c_str());
                     return false;
@@ -3343,7 +3456,11 @@ RESTART_PRINT:
             {
                 // Parse and add int to list, (ints can be constants, complex expressions or functions that return statics, hence the parsing)
                 Expression::Numeric numeric(true); // true = allow static init
-                if(Compiler::parseExpression(codeLineIndex, dataTokens[i], operand, numeric) == Compiler::OperandInvalid) return false;
+                if(Compiler::parseStaticExpression(codeLineIndex, dataTokens[i], operand, numeric) == Compiler::OperandInvalid)
+                {
+                    fprintf(stderr, "Keywords::DATA() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, dataTokens[i].c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 int16_t data = int16_t(std::lround(numeric._value));
                 std::unique_ptr<Compiler::DataObject> pObject = std::make_unique<Compiler::DataInt>(data);
                 Compiler::getDataObjects().push_back(std::move(pObject));
@@ -3501,7 +3618,11 @@ RESTART_PRINT:
         if(tokens.size() == 1)
         {
             Expression::Numeric numeric;
-            if(Compiler::parseExpression(codeLineIndex, tokens[0], numeric) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, tokens[0], numeric) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::RESTORE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[0].c_str(), codeLine._text.c_str());
+                return false;
+            }
         }
         else
         {
@@ -3529,20 +3650,36 @@ RESTART_PRINT:
         uint16_t address, end, size = 0x0000, offset = 0x0100;
         std::string addrOperand, sizeOperand, countOperand, offsetOperand;
         Expression::Numeric addrNumeric(true), sizeNumeric(true), countNumeric(true), offsetNumeric(true);
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid) return false;
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
+        {
+            fprintf(stderr, "Keywords::ALLOC() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[0].c_str(), codeLine._text.c_str());
+            return false;
+        }
         if(tokens.size() >= 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, tokens[1], sizeOperand, sizeNumeric) == Compiler::OperandInvalid) return false;
+            if(Compiler::parseStaticExpression(codeLineIndex, tokens[1], sizeOperand, sizeNumeric) == Compiler::OperandInvalid)
+            {
+                fprintf(stderr, "Keywords::ALLOC() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[1].c_str(), codeLine._text.c_str());
+                return false;
+            }
             size = uint16_t(std::lround(sizeNumeric._value));
         }
         if(tokens.size() >= 3)
         {
-            if(Compiler::parseExpression(codeLineIndex, tokens[2], countOperand, countNumeric) == Compiler::OperandInvalid) return false;
+            if(Compiler::parseStaticExpression(codeLineIndex, tokens[2], countOperand, countNumeric) == Compiler::OperandInvalid)
+            {
+                fprintf(stderr, "Keywords::ALLOC() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[2].c_str(), codeLine._text.c_str());
+                return false;
+            }
             count = std::lround(countNumeric._value);
         }
         if(tokens.size() >= 4)
         {
-            if(Compiler::parseExpression(codeLineIndex, tokens[3], offsetOperand, offsetNumeric) == Compiler::OperandInvalid) return false;
+            if(Compiler::parseStaticExpression(codeLineIndex, tokens[3], offsetOperand, offsetNumeric) == Compiler::OperandInvalid)
+            {
+                fprintf(stderr, "Keywords::ALLOC() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[3].c_str(), codeLine._text.c_str());
+                return false;
+            }
             offset = uint16_t(std::lround(offsetNumeric._value));
             if(count == 0  ||  offset == 0)
             {
@@ -3552,9 +3689,9 @@ RESTART_PRINT:
         }
 
         address = uint16_t(std::lround(addrNumeric._value));
-        if(address < DEFAULT_START_ADDRESS)
+        if(address < DEFAULT_EXEC_ADDRESS)
         {
-            fprintf(stderr, "Keywords::ALLOC() : '%s:%d' : address field must be above &h%04x, found %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, DEFAULT_START_ADDRESS, tokens[0].c_str(), codeLine._text.c_str());
+            fprintf(stderr, "Keywords::ALLOC() : '%s:%d' : address field must be above &h%04x, found %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, DEFAULT_EXEC_ADDRESS, tokens[0].c_str(), codeLine._text.c_str());
             return false;
         }
 
@@ -3616,8 +3753,16 @@ RESTART_PRINT:
 
         Expression::Numeric addrNumeric(true), sizeNumeric(true);  // true = allow static init
         std::string addrOperand, sizeOperand;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid) return false;
-        if(Compiler::parseExpression(codeLineIndex, tokens[1], sizeOperand, sizeNumeric) == Compiler::OperandInvalid) return false;
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
+        {
+            fprintf(stderr, "Keywords::FREE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[0].c_str(), codeLine._text.c_str());
+            return false;
+        }
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[1], sizeOperand, sizeNumeric) == Compiler::OperandInvalid)
+        {
+            fprintf(stderr, "Keywords::FREE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[1].c_str(), codeLine._text.c_str());
+            return false;
+        }
         uint16_t address = uint16_t(std::lround(addrNumeric._value));
         uint16_t size = uint16_t(std::lround(sizeNumeric._value));
 
@@ -3645,12 +3790,20 @@ RESTART_PRINT:
         }
 
         Expression::Numeric numeric;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], numeric) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, tokens[0], numeric) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::AT() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[0].c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("ST", "cursorXY", false);
 
         if(tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, tokens[1], numeric) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, tokens[1], numeric) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::AT() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[1].c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "cursorXY + 1", false);
         }
 
@@ -3671,8 +3824,12 @@ RESTART_PRINT:
         }
 
         Expression::Numeric numeric;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], numeric) == Expression::IsInvalid) return false;
-        Compiler::emitVcpuAsm("%PrintAcChar", "", false);
+        if(Compiler::parseExpression(codeLineIndex, tokens[0], numeric) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::PUT() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[0].c_str(), codeLine._text.c_str());
+            return false;
+        }
+        Compiler::emitVcpuAsm("%PrintAcChr", "", false);
 
         return true;
     }
@@ -3698,7 +3855,11 @@ RESTART_PRINT:
         }
 
         Expression::Numeric numeric;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], numeric) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, tokens[0], numeric) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::MODE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[0].c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("STW", "graphicsMode", false);
         Compiler::emitVcpuAsm("%ScanlineMode", "",   false);
 
@@ -3724,7 +3885,11 @@ RESTART_PRINT:
         }
 
         Expression::Numeric numeric;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], numeric) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, tokens[0], numeric) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::WAIT() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[0].c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("STW", "waitVBlankNum", false);
         Compiler::emitVcpuAsm("%WaitVBlanks", "",     false);
 
@@ -3744,14 +3909,26 @@ RESTART_PRINT:
         }
 
         Expression::Numeric numeric;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], numeric) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, tokens[0], numeric) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::PSET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[0].c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("ST", "drawPixel_xy", false);
-        if(Compiler::parseExpression(codeLineIndex, tokens[1], numeric) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, tokens[1], numeric) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::PSET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[1].c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("ST", "drawPixel_xy + 1", false);
 
         if(tokens.size() == 3)
         {
-            if(Compiler::parseExpression(codeLineIndex, tokens[2], numeric) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, tokens[2], numeric) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::PSET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[2].c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "fgbgColour + 1", false);
         }
 
@@ -3776,7 +3953,11 @@ RESTART_PRINT:
             std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric()};
             for(int i=0; i<int(tokens.size()); i++)
             {
-                if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid) return false;
+                if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid)
+                {
+                    fprintf(stderr, "Keywords::LINE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[i].c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 switch(i)
                 {
                     case 0: Compiler::emitVcpuAsm("STW", "drawLine_x2", false); break;
@@ -3794,7 +3975,11 @@ RESTART_PRINT:
             std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
             for(int i=0; i<int(tokens.size()); i++)
             {
-                if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid) return false;
+                if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid)
+                {
+                    fprintf(stderr, "Keywords::LINE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[i].c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 switch(i)
                 {
                     case 0: Compiler::emitVcpuAsm("STW", "drawLine_x1", false); break;
@@ -3827,7 +4012,11 @@ RESTART_PRINT:
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
         for(int i=0; i<int(tokens.size()); i++)
         {
-            if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::HLINE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[i].c_str(), codeLine._text.c_str());
+                return false;
+            }
             switch(i)
             {
                 case 0: Compiler::emitVcpuAsm("STW", "drawHLine_x1", false); break;
@@ -3858,7 +4047,11 @@ RESTART_PRINT:
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
         for(int i=0; i<int(tokens.size()); i++)
         {
-            if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::VLINE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[i].c_str(), codeLine._text.c_str());
+                return false;
+            }
             switch(i)
             {
                 case 0: Compiler::emitVcpuAsm("STW", "drawVLine_x1", false); break;
@@ -3889,7 +4082,11 @@ RESTART_PRINT:
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
         for(int i=0; i<int(tokens.size()); i++)
         {
-            if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::CIRCLE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[i].c_str(), codeLine._text.c_str());
+                return false;
+            }
             switch(i)
             {
                 case 0: Compiler::emitVcpuAsm("STW",  "drawCircle_cx", false);                                           break;
@@ -3920,7 +4117,11 @@ RESTART_PRINT:
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
         for(int i=0; i<int(tokens.size()); i++)
         {
-            if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::CIRCLEF() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[i].c_str(), codeLine._text.c_str());
+                return false;
+            }
             switch(i)
             {
                 case 0: Compiler::emitVcpuAsm("STW", "drawCircleF_cx", false); break;
@@ -3951,7 +4152,11 @@ RESTART_PRINT:
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
         for(int i=0; i<int(tokens.size()); i++)
         {
-            if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::RECT() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[i].c_str(), codeLine._text.c_str());
+                return false;
+            }
             switch(i)
             {
                 case 0: Compiler::emitVcpuAsm("STW", "drawRect_x1", false); break;
@@ -3983,7 +4188,11 @@ RESTART_PRINT:
         std::vector<Expression::Numeric> params = {Expression::Numeric(), Expression::Numeric(), Expression::Numeric(), Expression::Numeric()};
         for(int i=0; i<int(tokens.size()); i++)
         {
-            if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, tokens[i], params[i]) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::RECTF() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[i].c_str(), codeLine._text.c_str());
+                return false;
+            }
             switch(i)
             {
                 case 0: Compiler::emitVcpuAsm("STW", "drawRectF_x1", false); break;
@@ -4013,7 +4222,11 @@ RESTART_PRINT:
         }
 
         Expression::Numeric param;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], param) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, tokens[0], param) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::POLY() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[0].c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("STW", "drawPoly_addr", false);
         Compiler::emitVcpuAsm("%DrawPoly", "",        false);
 
@@ -4068,7 +4281,11 @@ RESTART_PRINT:
         }
 
         Expression::Numeric param;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], param) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, tokens[0], param) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::POLYR() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[0].c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("STW", "drawPoly_addr", false);
         Compiler::emitVcpuAsm("%DrawPolyRel", "", false);
 
@@ -4165,8 +4382,12 @@ RESTART_PRINT:
 
         for(int i=0; i<int(tokens.size()); i++)
         {
-            operandTypes[i] = Compiler::parseExpression(codeLineIndex, tokens[i], operands[i], numerics[i]);
-            if(operandTypes[i] == Compiler::OperandInvalid) return false;
+            operandTypes[i] = Compiler::parseStaticExpression(codeLineIndex, tokens[i], operands[i], numerics[i]);
+            if(operandTypes[i] == Compiler::OperandInvalid)
+            {
+                fprintf(stderr, "Keywords::POKE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[i].c_str(), codeLine._text.c_str());
+                return false;
+            }
         }
 
         std::string opcode, operand;
@@ -4246,8 +4467,12 @@ RESTART_PRINT:
 
         for(int i=0; i<int(tokens.size()); i++)
         {
-            operandTypes[i] = Compiler::parseExpression(codeLineIndex, tokens[i], operands[i], numerics[i]);
-            if(operandTypes[i] == Compiler::OperandInvalid) return false;
+            operandTypes[i] = Compiler::parseStaticExpression(codeLineIndex, tokens[i], operands[i], numerics[i]);
+            if(operandTypes[i] == Compiler::OperandInvalid)
+            {
+                fprintf(stderr, "Keywords::DOKE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[i].c_str(), codeLine._text.c_str());
+                return false;
+            }
         }
 
         std::string opcode, operand;
@@ -4373,7 +4598,7 @@ RESTART_PRINT:
 
         static std::map<std::string, InitTypes> initTypesMap = {{"TIME", InitTime}, {"MIDI", InitMidi}, {"MIDIV", InitMidiV}};
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() < 1  ||  tokens.size() > 4)
         {
             usageINIT(codeLine, codeLineStart);
@@ -4541,7 +4766,7 @@ RESTART_PRINT:
             return false;
         }
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() < 1  ||  tokens.size() > 4)
         {
             usageTICK(codeLine, codeLineStart);
@@ -4632,7 +4857,7 @@ RESTART_PRINT:
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() < 2  ||  tokens.size() > 3)
         {
             usagePLAY(codeLine, codeLineStart);
@@ -4650,14 +4875,22 @@ RESTART_PRINT:
         {
             std::string waveTypeToken = tokens[2];
             Expression::Numeric waveTypeNumeric;
-            if(Compiler::parseExpression(codeLineIndex, waveTypeToken, waveTypeNumeric) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, waveTypeToken, waveTypeNumeric) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::PLAY() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, waveTypeToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "waveType + 1", false);
         }
 
         // Midi stream address
         std::string addressToken = tokens[1];
         Expression::Numeric addressNumeric;
-        if(Compiler::parseExpression(codeLineIndex, tokens[1], addressNumeric) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, tokens[1], addressNumeric) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::PLAY() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, tokens[1].c_str(), codeLine._text.c_str());
+            return false;
+        }
 
         std::string midiToken = Expression::strToUpper(tokens[0]);
         Expression::stripWhitespace(midiToken);
@@ -4740,12 +4973,16 @@ RESTART_PRINT:
                 std::string addrToken = tokens[2];
                 Expression::Numeric addrNumeric;
                 std::string addrOperand;
-                if(Compiler::parseExpression(codeLineIndex, addrToken, addrOperand, addrNumeric) == Compiler::OperandInvalid) return false;
+                if(Compiler::parseStaticExpression(codeLineIndex, addrToken, addrOperand, addrNumeric) == Compiler::OperandInvalid)
+                {
+                    fprintf(stderr, "Keywords::loadWave() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, addrToken.c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 address = uint16_t(std::lround(addrNumeric._value));
-                if(address < DEFAULT_START_ADDRESS)
+                if(address < DEFAULT_EXEC_ADDRESS)
                 {
                     loadUsage(LoadWave, codeLine, codeLineStart);
-                    fprintf(stderr, "Keywords::LOAD() : '%s:%d' : address field must be above &h%04x, found %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, DEFAULT_START_ADDRESS, addrToken.c_str(), codeLine._text.c_str());
+                    fprintf(stderr, "Keywords::loadWave() : '%s:%d' : address field must be above &h%04x, found %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, DEFAULT_EXEC_ADDRESS, addrToken.c_str(), codeLine._text.c_str());
                     return false;
                 }
             }
@@ -4757,7 +4994,11 @@ RESTART_PRINT:
                 std::string offsetToken = tokens[3];
                 Expression::Numeric offsetNumeric;
                 std::string offsetOperand;
-                if(Compiler::parseExpression(codeLineIndex, offsetToken, offsetOperand, offsetNumeric) == Compiler::OperandInvalid) return false;
+                if(Compiler::parseStaticExpression(codeLineIndex, offsetToken, offsetOperand, offsetNumeric) == Compiler::OperandInvalid)
+                {
+                    fprintf(stderr, "Keywords::loadWave() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, offsetToken.c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 addrOffset = uint16_t(std::lround(offsetNumeric._value));
             }
 
@@ -4767,14 +5008,14 @@ RESTART_PRINT:
             if(!infile.is_open())
             {
                 loadUsage(LoadWave, codeLine, codeLineStart);
-                fprintf(stderr, "Keywords::LOAD() : '%s:%d' : failed to open file '%s' : %s\n", codeLine._moduleName.c_str(), codeLineStart, filename.c_str(), codeLine._text.c_str());
+                fprintf(stderr, "Keywords::loadWave() : '%s:%d' : failed to open file '%s' : %s\n", codeLine._moduleName.c_str(), codeLineStart, filename.c_str(), codeLine._text.c_str());
                 return false;
             }
             infile.read((char *)&dataBytes[0], 64);
             if(infile.eof() || infile.bad() || infile.fail())
             {
                 loadUsage(LoadWave, codeLine, codeLineStart);
-                fprintf(stderr, "Keywords::LOAD() : '%s:%d' : failed to read file '%s' : %s\n", codeLine._moduleName.c_str(), codeLineStart, filename.c_str(), codeLine._text.c_str());
+                fprintf(stderr, "Keywords::loadWave() : '%s:%d' : failed to read file '%s' : %s\n", codeLine._moduleName.c_str(), codeLineStart, filename.c_str(), codeLine._text.c_str());
                 return false;
             }
 
@@ -4825,12 +5066,16 @@ RESTART_PRINT:
             std::string idToken = tokens[2];
             Expression::Numeric idNumeric;
             std::string idOperand;
-            if(Compiler::parseExpression(codeLineIndex, idToken, idOperand, idNumeric) == Compiler::OperandInvalid) return false;
+            if(Compiler::parseStaticExpression(codeLineIndex, idToken, idOperand, idNumeric) == Compiler::OperandInvalid)
+            {
+                fprintf(stderr, "Keywords::loadMidi() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, idToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             int midiId = int(std::lround(idNumeric._value));
             if(Compiler::getDefDataMidis().find(midiId) != Compiler::getDefDataMidis().end())
             {
                 loadUsage(LoadMidi, codeLine, codeLineStart);
-                fprintf(stderr, "Keywords::LOAD() : '%s:%d' : MIDI id %d not unique : %s\n", codeLine._moduleName.c_str(), codeLineStart, midiId, codeLine._text.c_str());
+                fprintf(stderr, "Keywords::loadMidi() : '%s:%d' : MIDI id %d not unique : %s\n", codeLine._moduleName.c_str(), codeLineStart, midiId, codeLine._text.c_str());
                 return false;
             }
 
@@ -4841,12 +5086,16 @@ RESTART_PRINT:
                 std::string loopsToken = tokens[2];
                 Expression::Numeric loopsNumeric;
                 std::string loopsOperand;
-                if(Compiler::parseExpression(codeLineIndex, loopsToken, loopsOperand, loopsNumeric) == Compiler::OperandInvalid) return false;
+                if(Compiler::parseStaticExpression(codeLineIndex, loopsToken, loopsOperand, loopsNumeric) == Compiler::OperandInvalid)
+                {
+                    fprintf(stderr, "Keywords::loadMidi() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, loopsToken.c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 loops = uint16_t(std::lround(loopsNumeric._value));
                 if(loops > 255)
                 {
                     loadUsage(LoadMidi, codeLine, codeLineStart);
-                    fprintf(stderr, "Keywords::LOAD() : '%s:%d' : loops field must be between 0 and 255, found %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, loopsToken.c_str(), codeLine._text.c_str());
+                    fprintf(stderr, "Keywords::loadMidi() : '%s:%d' : loops field must be between 0 and 255, found %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, loopsToken.c_str(), codeLine._text.c_str());
                     return false;
                 }
             }
@@ -4875,7 +5124,7 @@ RESTART_PRINT:
                 if(!Memory::getFreeRAM(Memory::FitDescending, USER_CODE_START, Compiler::getRuntimeStart(), MIDI_MIN_SEGMENT_SIZE, address, uint16_t(midiSize + MIDI_CMD_JMP_SEG_SIZE), size, false))
                 {
                     loadUsage(LoadMidi, codeLine, codeLineStart);
-                    fprintf(stderr, "Keywords::LOAD() : '%s:%d' : getting MIDI memory for segment %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, segmentCount, codeLine._text.c_str());
+                    fprintf(stderr, "Keywords::loadMidi() : '%s:%d' : getting MIDI memory for segment %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, segmentCount, codeLine._text.c_str());
                     return false;
                 }
 
@@ -4904,7 +5153,7 @@ RESTART_PRINT:
         if(!Memory::getFreeRAM(Memory::FitDescending, chunkSize, USER_CODE_START, Compiler::getRuntimeStart(), chunkAddr))
         {
             loadUsage(LoadImage, codeLine, codeLineStart);
-            fprintf(stderr, "Keywords::LOAD() : '%s:%d' : allocating RAM for offscreen pixel chunk on row %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, row, codeLine._text.c_str());
+            fprintf(stderr, "Keywords::loadImageChunk() : '%s:%d' : allocating RAM for offscreen pixel chunk on row %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, row, codeLine._text.c_str());
             return false;
         }
 
@@ -4949,12 +5198,16 @@ RESTART_PRINT:
             std::string addrToken = tokens[2];
             Expression::Numeric addrNumeric;
             std::string addrOperand;
-            if(Compiler::parseExpression(codeLineIndex, addrToken, addrOperand, addrNumeric) == Compiler::OperandInvalid) return false;
+            if(Compiler::parseStaticExpression(codeLineIndex, addrToken, addrOperand, addrNumeric) == Compiler::OperandInvalid)
+            {
+                fprintf(stderr, "Keywords::loadImage() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, addrToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             address = uint16_t(std::lround(addrNumeric._value));
-            if(address < DEFAULT_START_ADDRESS)
+            if(address < DEFAULT_EXEC_ADDRESS)
             {
                 loadUsage(LoadImage, codeLine, codeLineStart);
-                fprintf(stderr, "Keywords::LOAD() : '%s:%d' : address field must be above &h%04x, found %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, DEFAULT_START_ADDRESS, addrToken.c_str(), codeLine._text.c_str());
+                fprintf(stderr, "Keywords::loadImage() : '%s:%d' : address field must be above &h%04x, found %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, DEFAULT_EXEC_ADDRESS, addrToken.c_str(), codeLine._text.c_str());
                 return false;
             }
         }
@@ -4962,7 +5215,7 @@ RESTART_PRINT:
         if(gtRgbFile._header._width > stride  ||  gtRgbFile._header._width + (address & 0x00FF) > stride)
         {
             loadUsage(LoadImage, codeLine, codeLineStart);
-            fprintf(stderr, "Keywords::LOAD() : '%s:%d' : image width %d + starting address 0x%04x overflow, for %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, gtRgbFile._header._width, address, filename.c_str(), codeLine._text.c_str());
+            fprintf(stderr, "Keywords::loadImage() : '%s:%d' : image width %d + starting address 0x%04x overflow, for %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, gtRgbFile._header._width, address, filename.c_str(), codeLine._text.c_str());
             return false;
         }
 
@@ -4981,7 +5234,7 @@ RESTART_PRINT:
                     if(!Memory::takeFreeRAM((address & 0xFF00) + RAM_SCANLINE_SIZE, size))
                     {
                         loadUsage(LoadImage, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : '%s:%d' : allocating RAM for pixel row %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, y, codeLine._text.c_str());
+                        fprintf(stderr, "Keywords::loadImage() : '%s:%d' : allocating RAM for pixel row %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, y, codeLine._text.c_str());
                         return false;
                     }
                 }
@@ -5016,7 +5269,7 @@ RESTART_PRINT:
             std::string romTypeStr;
             getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
             loadUsage(LoadSprite, codeLine, codeLineStart);
-            fprintf(stderr, "Keywords::LOAD() : '%s:%d' : version error, 'LOAD SPRITE' requires ROMv3 or higher, you are trying to link against '%s' : %s\n", codeLine._moduleName.c_str(), codeLineStart, romTypeStr.c_str(), codeLine._text.c_str());
+            fprintf(stderr, "Keywords::loadSprite() : '%s:%d' : version error, 'LOAD SPRITE' requires ROMv3 or higher, you are trying to link against '%s' : %s\n", codeLine._moduleName.c_str(), codeLineStart, romTypeStr.c_str(), codeLine._text.c_str());
             return false;
         }
 
@@ -5029,7 +5282,7 @@ RESTART_PRINT:
         if(gtRgbFile._header._width % SPRITE_CHUNK_SIZE != 0)
         {
             loadUsage(LoadSprite, codeLine, codeLineStart);
-            fprintf(stderr, "Keywords::LOAD() : '%s:%d' : sprite width not a multiple of %d, (%d x %d), for %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, SPRITE_CHUNK_SIZE, gtRgbFile._header._width, gtRgbFile._header._height, filename.c_str(), codeLine._text.c_str());
+            fprintf(stderr, "Keywords::loadSprite() : '%s:%d' : sprite width not a multiple of %d, (%d x %d), for %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, SPRITE_CHUNK_SIZE, gtRgbFile._header._width, gtRgbFile._header._height, filename.c_str(), codeLine._text.c_str());
             return false;
         }
 
@@ -5043,12 +5296,16 @@ RESTART_PRINT:
         std::string idToken = tokens[2];
         Expression::Numeric idNumeric;
         std::string idOperand;
-        if(Compiler::parseExpression(codeLineIndex, idToken, idOperand, idNumeric) == Compiler::OperandInvalid) return false;
+        if(Compiler::parseStaticExpression(codeLineIndex, idToken, idOperand, idNumeric) == Compiler::OperandInvalid)
+        {
+            fprintf(stderr, "Keywords::loadSprite() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, idToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         int spriteId = int(std::lround(idNumeric._value));
         if(Compiler::getDefDataSprites().find(spriteId) != Compiler::getDefDataSprites().end())
         {
             loadUsage(LoadSprite, codeLine, codeLineStart);
-            fprintf(stderr, "Keywords::LOAD() : '%s:%d' : sprite id %d not unique : %s\n", codeLine._moduleName.c_str(), codeLineStart, spriteId, codeLine._text.c_str());
+            fprintf(stderr, "Keywords::loadSprite() : '%s:%d' : sprite id %d not unique : %s\n", codeLine._moduleName.c_str(), codeLineStart, spriteId, codeLine._text.c_str());
             return false;
         }
 
@@ -5066,8 +5323,8 @@ RESTART_PRINT:
             else
             {
                 loadUsage(LoadSprite, codeLine, codeLineStart);
-                fprintf(stderr, "Keywords::LOAD() : '%s:%d' : unknown sprite flip type, %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, flipToken.c_str(), codeLine._text.c_str());
-                fprintf(stderr, "Keywords::LOAD() : '%s:%d' : must use one of 'NOFLIP', 'FLIPX', 'FLIPY', 'FLIPXY' : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
+                fprintf(stderr, "Keywords::loadSprite() : '%s:%d' : unknown sprite flip type, %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, flipToken.c_str(), codeLine._text.c_str());
+                fprintf(stderr, "Keywords::loadSprite() : '%s:%d' : must use one of 'NOFLIP', 'FLIPX', 'FLIPY', 'FLIPXY' : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
                 return false;
             }
         }
@@ -5079,7 +5336,11 @@ RESTART_PRINT:
             std::string overlapToken = tokens[4];
             Expression::Numeric overlapNumeric;
             std::string overlapOperand;
-            if(Compiler::parseExpression(codeLineIndex, overlapToken, overlapOperand, overlapNumeric) == Compiler::OperandInvalid) return false;
+            if(Compiler::parseStaticExpression(codeLineIndex, overlapToken, overlapOperand, overlapNumeric) == Compiler::OperandInvalid)
+            {
+                fprintf(stderr, "Keywords::loadSprite() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, overlapToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             overlap = uint16_t(std::lround(overlapNumeric._value));
         }
 
@@ -5094,7 +5355,7 @@ RESTART_PRINT:
         if(numColumns == 1  &&  overlap)
         {
             loadUsage(LoadSprite, codeLine, codeLineStart);
-            fprintf(stderr, "Keywords::LOAD() : '%s:%d' : can't have a non zero overlap with a single column sprite : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
+            fprintf(stderr, "Keywords::loadSprite() : '%s:%d' : can't have a non zero overlap with a single column sprite : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
             return false;
         }
 
@@ -5130,7 +5391,7 @@ RESTART_PRINT:
                     if(!Memory::getFreeRAM(Compiler::getSpriteStripeFitType(), numStripeChunks*SPRITE_CHUNK_SIZE + 1, Compiler::getSpriteStripeMinAddress(), Compiler::getRuntimeStart(), address))
                     {
                         loadUsage(LoadSprite, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : '%s:%d' : getting sprite memory for stripe %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, int(stripeAddrs.size()/2 + 1), codeLine._text.c_str());
+                        fprintf(stderr, "Keywords::loadSprite() : '%s:%d' : getting sprite memory for stripe %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, int(stripeAddrs.size()/2 + 1), codeLine._text.c_str());
                         return false;
                     }
                 }
@@ -5184,7 +5445,7 @@ RESTART_PRINT:
                         if(!Memory::getFreeRAM(Compiler::getSpriteStripeFitType(), numStripeChunks*SPRITE_CHUNK_SIZE + 1, Compiler::getSpriteStripeMinAddress(), Compiler::getRuntimeStart(), address))
                         {
                             loadUsage(LoadSprite, codeLine, codeLineStart);
-                            fprintf(stderr, "Keywords::LOAD() : '%s:%d' : getting sprite memory failed for stripe %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, int(stripeAddrs.size()/2 + 1), codeLine._text.c_str());
+                            fprintf(stderr, "Keywords::loadSprite() : '%s:%d' : getting sprite memory failed for stripe %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, int(stripeAddrs.size()/2 + 1), codeLine._text.c_str());
                             return false;
                         }
                     }
@@ -5234,7 +5495,7 @@ RESTART_PRINT:
                     if(!Memory::getFreeRAM(Compiler::getSpriteStripeFitType(), remStripeChunks*SPRITE_CHUNK_SIZE + 1, Compiler::getSpriteStripeMinAddress(), Compiler::getRuntimeStart(), address))
                     {
                         loadUsage(LoadSprite, codeLine, codeLineStart);
-                        fprintf(stderr, "Keywords::LOAD() : '%s:%d' : getting sprite memory failed for stripe %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, int(stripeAddrs.size()/2 + 1), codeLine._text.c_str());
+                        fprintf(stderr, "Keywords::loadSprite() : '%s:%d' : getting sprite memory failed for stripe %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, int(stripeAddrs.size()/2 + 1), codeLine._text.c_str());
                         return false;
                     }
                 }
@@ -5288,7 +5549,7 @@ RESTART_PRINT:
             std::string romTypeStr;
             getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
             loadUsage(LoadFont, codeLine, codeLineStart);
-            fprintf(stderr, "Keywords::LOAD() : '%s:%d' : version error, 'LOAD FONT' requires ROMv3 or higher, you are trying to link against '%s' : %s\n", codeLine._moduleName.c_str(), codeLineStart, romTypeStr.c_str(), codeLine._text.c_str());
+            fprintf(stderr, "Keywords::loadFont() : '%s:%d' : version error, 'LOAD FONT' requires ROMv3 or higher, you are trying to link against '%s' : %s\n", codeLine._moduleName.c_str(), codeLineStart, romTypeStr.c_str(), codeLine._text.c_str());
             return false;
         }
 
@@ -5302,12 +5563,16 @@ RESTART_PRINT:
         std::string idToken = tokens[2];
         Expression::Numeric idNumeric;
         std::string idOperand;
-        if(Compiler::parseExpression(codeLineIndex, idToken, idOperand, idNumeric) == Compiler::OperandInvalid) return false;
+        if(Compiler::parseStaticExpression(codeLineIndex, idToken, idOperand, idNumeric) == Compiler::OperandInvalid)
+        {
+            fprintf(stderr, "Keywords::loadFont() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, idToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         int fontId = int(std::lround(idNumeric._value));
         if(Compiler::getDefDataFonts().find(fontId) != Compiler::getDefDataFonts().end())
         {
             loadUsage(LoadFont, codeLine, codeLineStart);
-            fprintf(stderr, "Keywords::LOAD() : '%s:%d' : font id %d not unique : %s\n", codeLine._moduleName.c_str(), codeLineStart, fontId, codeLine._text.c_str());
+            fprintf(stderr, "Keywords::loadFont() : '%s:%d' : font id %d not unique : %s\n", codeLine._moduleName.c_str(), codeLineStart, fontId, codeLine._text.c_str());
             return false;
         }
 
@@ -5318,7 +5583,11 @@ RESTART_PRINT:
             std::string fgbgToken = tokens[3];
             Expression::Numeric fgbgNumeric;
             std::string fgbgOperand;
-            if(Compiler::parseExpression(codeLineIndex, fgbgToken, fgbgOperand, fgbgNumeric) == Compiler::OperandInvalid) return false;
+            if(Compiler::parseStaticExpression(codeLineIndex, fgbgToken, fgbgOperand, fgbgNumeric) == Compiler::OperandInvalid)
+            {
+                fprintf(stderr, "Keywords::loadFont() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, fgbgToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             fgbgColour = uint16_t(std::lround(fgbgNumeric._value));
         }
 
@@ -5326,7 +5595,7 @@ RESTART_PRINT:
         if(gtRgbFile._header._width % FONT_WIDTH != 0)
         {
             loadUsage(LoadFont, codeLine, codeLineStart);
-            fprintf(stderr, "Keywords::LOAD() : '%s:%d' : font width %d is not a multiple of %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, gtRgbFile._header._width, FONT_WIDTH, codeLine._text.c_str());
+            fprintf(stderr, "Keywords::loadFont() : '%s:%d' : font width %d is not a multiple of %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, gtRgbFile._header._width, FONT_WIDTH, codeLine._text.c_str());
             return false;
         }
 
@@ -5334,7 +5603,7 @@ RESTART_PRINT:
         if(gtRgbFile._header._height % FONT_HEIGHT != 0)
         {
             loadUsage(LoadFont, codeLine, codeLineStart);
-            fprintf(stderr, "Keywords::LOAD() : '%s:%d' : font height %d is not a multiple of %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, gtRgbFile._header._height, FONT_HEIGHT, codeLine._text.c_str());
+            fprintf(stderr, "Keywords::loadFont() : '%s:%d' : font height %d is not a multiple of %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, gtRgbFile._header._height, FONT_HEIGHT, codeLine._text.c_str());
             return false;
         }
 
@@ -5362,7 +5631,7 @@ RESTART_PRINT:
                 if(!infile.good() && !infile.eof())
                 {
                     loadUsage(LoadFont, codeLine, codeLineStart);
-                    fprintf(stderr, "Keywords::LOAD() : '%s:%d' : error in mapping file %s on line %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, filenameMap.c_str(), line + 1, codeLine._text.c_str());
+                    fprintf(stderr, "Keywords::loadFont() : '%s:%d' : error in mapping file %s on line %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, filenameMap.c_str(), line + 1, codeLine._text.c_str());
                     return false;
                 }
 
@@ -5373,14 +5642,14 @@ RESTART_PRINT:
             if(line != MAPPING_SIZE)
             {
                 loadUsage(LoadFont, codeLine, codeLineStart);
-                fprintf(stderr, "Keywords::LOAD() : '%s:%d' : warning, found an incorrect number of map entries %d for file %s, should be %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, line - 1, filenameMap.c_str(), MAPPING_SIZE, codeLine._text.c_str());
+                fprintf(stderr, "Keywords::loadFont() : '%s:%d' : warning, found an incorrect number of map entries %d for file %s, should be %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, line - 1, filenameMap.c_str(), MAPPING_SIZE, codeLine._text.c_str());
                 return false;
             }
 
             if(!Memory::getFreeRAM(Memory::FitDescending, MAPPING_SIZE, USER_CODE_START, Compiler::getRuntimeStart(), mapAddr))
             {
                 loadUsage(LoadFont, codeLine, codeLineStart);
-                fprintf(stderr, "Keywords::LOAD() : '%s:%d' : getting mapping memory for map size of %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, MAPPING_SIZE, codeLine._text.c_str());
+                fprintf(stderr, "Keywords::loadFont() : '%s:%d' : getting mapping memory for map size of %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, MAPPING_SIZE, codeLine._text.c_str());
                 return false;
             }
         }
@@ -5417,7 +5686,7 @@ RESTART_PRINT:
                 if(!Memory::getFreeRAM(Memory::FitDescending, (kCharHeight)*FONT_WIDTH + 1, USER_CODE_START, Compiler::getRuntimeStart(), address))
                 {
                     loadUsage(LoadFont, codeLine, codeLineStart);
-                    fprintf(stderr, "Keywords::LOAD() : '%s:%d' : getting font memory for char %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, int(fontData.size() - 1), codeLine._text.c_str());
+                    fprintf(stderr, "Keywords::loadFont() : '%s:%d' : getting font memory for char %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, int(fontData.size() - 1), codeLine._text.c_str());
                     return false;
                 }
 
@@ -5428,7 +5697,7 @@ RESTART_PRINT:
         if(foundMapFile  &&  maxIndex + 1 != int(fontData.size()))
         {
             loadUsage(LoadFont, codeLine, codeLineStart);
-            fprintf(stderr, "Keywords::LOAD() : '%s:%d' : font mapping table does not match font data, found a mapping count of %d and a chars count of %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, maxIndex + 1, int(fontData.size()), codeLine._text.c_str());
+            fprintf(stderr, "Keywords::loadFont() : '%s:%d' : font mapping table does not match font data, found a mapping count of %d and a chars count of %d : %s\n", codeLine._moduleName.c_str(), codeLineStart, maxIndex + 1, int(fontData.size()), codeLine._text.c_str());
             return false;
         }
 
@@ -5437,7 +5706,7 @@ RESTART_PRINT:
         if(!Memory::getFreeRAM(Memory::FitDescending, FONT_WIDTH + 1, USER_CODE_START, Compiler::getRuntimeStart(), baseAddr))
         {
             loadUsage(LoadFont, codeLine, codeLineStart);
-            fprintf(stderr, "Keywords::LOAD() : '%s:%d' : getting font memory for char %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, int(fontData.size() - 1), codeLine._text.c_str());
+            fprintf(stderr, "Keywords::loadFont() : '%s:%d' : getting font memory for char %d failed : %s\n", codeLine._moduleName.c_str(), codeLineStart, int(fontData.size() - 1), codeLine._text.c_str());
             return false;
         }
 
@@ -5452,7 +5721,7 @@ RESTART_PRINT:
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() < 2  ||  tokens.size() > 5)
         {
             loadUsage(LoadType, codeLine, codeLineStart);
@@ -5541,7 +5810,7 @@ RESTART_PRINT:
             return false;
         }
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 4)
         {
             fprintf(stderr, "Keywords::SPRITE() : '%s:%d' : syntax error, use 'SPRITE <NOFLIP/FLIPX/FLIPY/FLIPXY>, <id>, <x pos>, <y pos>' : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
@@ -5562,19 +5831,31 @@ RESTART_PRINT:
         // Sprite identifier
         std::string idToken = tokens[1];
         Expression::Numeric idParam;
-        if(Compiler::parseExpression(codeLineIndex, idToken, idParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, idToken, idParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::SPRITE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, idToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("STW", "spriteId", false);
 
         // Sprite X position
         std::string xposToken = tokens[2];
         Expression::Numeric xposParam;
-        if(Compiler::parseExpression(codeLineIndex, xposToken, xposParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, xposToken, xposParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::SPRITE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, xposToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("ST", "spriteXY", false);
 
         // Sprite Y position
         std::string yposToken = tokens[3];
         Expression::Numeric yposParam;
-        if(Compiler::parseExpression(codeLineIndex, yposToken, yposParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, yposToken, yposParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::SPRITE() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, yposToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("ADDI", "8", false);
         Compiler::emitVcpuAsm("ST", "spriteXY + 1", false);
 
@@ -5607,7 +5888,7 @@ RESTART_PRINT:
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() < 1  ||  tokens.size() > 5)
         {
             usageSOUND(0, codeLine, codeLineStart);
@@ -5624,7 +5905,11 @@ RESTART_PRINT:
         {
             std::string chanToken = tokens[1];
             Expression::Numeric chanParam;
-            if(Compiler::parseExpression(codeLineIndex, chanToken, chanParam) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, chanToken, chanParam) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SOUND() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, chanToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "sndChannel + 1", false);
         }
         
@@ -5639,7 +5924,11 @@ RESTART_PRINT:
 
             std::string freqToken = tokens[2];
             Expression::Numeric freqParam;
-            if(Compiler::parseExpression(codeLineIndex, freqToken, freqParam) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, freqToken, freqParam) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SOUND() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, freqToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("STW", "sndFrequency", false);
 
             if(tokens.size() == 3)
@@ -5650,7 +5939,11 @@ RESTART_PRINT:
 
             std::string volToken = tokens[3];
             Expression::Numeric volParam;
-            if(Compiler::parseExpression(codeLineIndex, volToken, volParam) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, volToken, volParam) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SOUND() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, volToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("STW", "sndVolume", false);
 
             if(tokens.size() == 4)
@@ -5663,7 +5956,11 @@ RESTART_PRINT:
 
             std::string wavToken = tokens[4];
             Expression::Numeric wavParam;
-            if(Compiler::parseExpression(codeLineIndex, wavToken, wavParam) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, wavToken, wavParam) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SOUND() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, wavToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("STW", "sndWaveType", false);
             Compiler::emitVcpuAsm("%SoundOnV", "",      false);
 
@@ -5681,14 +5978,22 @@ RESTART_PRINT:
 
             std::string waveXToken = tokens[2];
             Expression::Numeric waveXParam;
-            if(Compiler::parseExpression(codeLineIndex, waveXToken, waveXParam) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, waveXToken, waveXParam) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SOUND() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, waveXToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "sndWaveType + 1", false);
 
             if(tokens.size() == 4)
             {
                 std::string waveAToken = tokens[3];
                 Expression::Numeric waveAParam;
-                if(Compiler::parseExpression(codeLineIndex, waveAToken, waveAParam) == Expression::IsInvalid) return false;
+                if(Compiler::parseExpression(codeLineIndex, waveAToken, waveAParam) == Expression::IsInvalid)
+                {
+                    fprintf(stderr, "Keywords::SOUND() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, waveAToken.c_str(), codeLine._text.c_str());
+                    return false;
+                }
                 Compiler::emitVcpuAsm("ST", "sndWaveType", false);
             }
             // Reset waveA
@@ -5738,7 +6043,7 @@ RESTART_PRINT:
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() < 1  ||  tokens.size() > 3)
         {
             usageSET(codeLine, codeLineStart);
@@ -5773,7 +6078,11 @@ RESTART_PRINT:
 
             Compiler::emitVcpuAsm("LDWI", "_fontId_", false);
             Compiler::emitVcpuAsm("STW", "register0", false);
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("POKE", "register0", false);
             return true;
         }
@@ -5781,7 +6090,11 @@ RESTART_PRINT:
         {
             Compiler::emitVcpuAsm("LDWI", "handleT_mode + 1", false);
             Compiler::emitVcpuAsm("STW", "register0", false);
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("POKE", "register0", false);
             return true;
         }
@@ -5789,7 +6102,11 @@ RESTART_PRINT:
         {
             Compiler::emitVcpuAsm("LDWI", "handleT_epoch + 1", false);
             Compiler::emitVcpuAsm("STW", "register0", false);
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("POKE", "register0", false);
             return true;
         }
@@ -5797,7 +6114,11 @@ RESTART_PRINT:
         {
             Compiler::emitVcpuAsm("LDWI", "_timeArray_ + 0", false);
             Compiler::emitVcpuAsm("STW", "register0", false);
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("POKE", "register0", false);
             return true;
         }
@@ -5805,7 +6126,11 @@ RESTART_PRINT:
         {
             Compiler::emitVcpuAsm("LDWI", "_timeArray_ + 1", false);
             Compiler::emitVcpuAsm("STW", "register0", false);
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("POKE", "register0", false);
             return true;
         }
@@ -5813,13 +6138,21 @@ RESTART_PRINT:
         {
             Compiler::emitVcpuAsm("LDWI", "_timeArray_ + 2", false);
             Compiler::emitVcpuAsm("STW", "register0", false);
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("POKE", "register0", false);
             return true;
         }
         else if(sysVarName == "TIMER")
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("STW", "timerTick", false);
             return true;
         }
@@ -5835,7 +6168,11 @@ RESTART_PRINT:
 
             Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(VBLANK_PROC), false);
             Compiler::emitVcpuAsm("STW", "register0", false);
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("DOKE", "register0", false);
             return true;
         }
@@ -5854,7 +6191,11 @@ RESTART_PRINT:
             // (256 - n) = vblank interrupt frequency, where n = 1 to 255
             Compiler::emitVcpuAsm("LDWI", "realTS_rti + 2", false);
             Compiler::emitVcpuAsm("STW", "register0", false);
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("STW", "register1", false);
             Compiler::emitVcpuAsm("LDWI", "256", false);
             Compiler::emitVcpuAsm("SUBW", "register1", false);
@@ -5864,43 +6205,71 @@ RESTART_PRINT:
         }
         else if(sysVarName == "CURSOR_X"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "cursorXY", false);
             return true;
         }
         else if(sysVarName == "CURSOR_Y"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "cursorXY + 1", false);
             return true;
         }
         else if(sysVarName == "CURSOR_XY"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("STW", "cursorXY", false);
             return true;
         }
         else if(sysVarName == "FG_COLOUR"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "fgbgColour + 1", false);
             return true;
         }
         else if(sysVarName == "BG_COLOUR"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "fgbgColour", false);
             return true;
         }
         else if(sysVarName == "FGBG_COLOUR"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("STW", "fgbgColour", false);
             return true;
         }
         else if(sysVarName == "MIDI_STREAM"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("STW", "midiStream", false);
             return true;
         }
@@ -5908,49 +6277,81 @@ RESTART_PRINT:
         {
             Compiler::emitVcpuAsm("LDWI", "giga_videoTop", false);
             Compiler::emitVcpuAsm("STW", "register0", false);
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("POKE", "register0", false);
             return true;
         }
         else if(sysVarName == "LED_TEMPO"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "giga_ledTempo", false);
             return true;
         }
         else if(sysVarName == "LED_STATE"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "giga_ledState", false);
             return true;
         }
         else if(sysVarName == "SOUND_TIMER"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "giga_soundTimer", false);
             return true;
         }
         else if(sysVarName == "CHANNEL_MASK"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "giga_channelMask", false);
             return true;
         }
         else if(sysVarName == "XOUT_MASK"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "giga_xoutMask", false);
             return true;
         }
         else if(sysVarName == "BUTTON_STATE"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "giga_buttonState", false);
             return true;
         }
         else if(sysVarName == "FRAME_COUNT"  &&  tokens.size() == 2)
         {
-            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid) return false;
+            if(Compiler::parseExpression(codeLineIndex, token1, param1) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::SET() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, token1.c_str(), codeLine._text.c_str());
+                return false;
+            }
             Compiler::emitVcpuAsm("ST", "giga_frameCount", false);
             return true;
         }
@@ -5998,7 +6399,7 @@ RESTART_PRINT:
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
         {
             fprintf(stderr, "Keywords::BCDADD() : '%s:%d' : syntax error, use 'BCDADD <src bcd address>, <dst bcd address>, <length>' : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
@@ -6008,19 +6409,31 @@ RESTART_PRINT:
         // BCD src address
         std::string srcToken = tokens[0];
         Expression::Numeric srcParam(true); // true = allow static init
-        if(Compiler::parseExpression(codeLineIndex, srcToken, srcParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, srcToken, srcParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::BCDADD() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, srcToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("STW", "bcdSrcAddr", false);
 
         // BCD dst address
         std::string dstToken = tokens[1];
         Expression::Numeric dstParam(true); // true = allow static init
-        if(Compiler::parseExpression(codeLineIndex, dstToken, dstParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, dstToken, dstParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::BCDADD() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, dstToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("STW", "bcdDstAddr", false);
 
         // BCD length
         std::string lenToken = tokens[2];
         Expression::Numeric lenParam;
-        if(Compiler::parseExpression(codeLineIndex, lenToken, lenParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, lenToken, lenParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::BCDADD() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, lenToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("%BcdAdd", "", false);
 
         return true;
@@ -6031,7 +6444,7 @@ RESTART_PRINT:
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
         {
             fprintf(stderr, "Keywords::BCDSUB() : '%s:%d' : syntax error, use 'BCDSUB <src bcd address>, <dst bcd address>, <length>' : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
@@ -6041,19 +6454,31 @@ RESTART_PRINT:
         // BCD src address
         std::string srcToken = tokens[0];
         Expression::Numeric srcParam(true); // true = allow static init
-        if(Compiler::parseExpression(codeLineIndex, srcToken, srcParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, srcToken, srcParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::BCDSUB() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, srcToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("STW", "bcdSrcAddr", false);
 
         // BCD dst address
         std::string dstToken = tokens[1];
         Expression::Numeric dstParam(true); // true = allow static init
-        if(Compiler::parseExpression(codeLineIndex, dstToken, dstParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, dstToken, dstParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::BCDSUB() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, dstToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("STW", "bcdDstAddr", false);
 
         // BCD length
         std::string lenToken = tokens[2];
         Expression::Numeric lenParam;
-        if(Compiler::parseExpression(codeLineIndex, lenToken, lenParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, lenToken, lenParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::BCDSUB() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, lenToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("%BcdSub", "", false);
 
         return true;
@@ -6064,7 +6489,7 @@ RESTART_PRINT:
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 2)
         {
             fprintf(stderr, "Keywords::BCDINT() : '%s:%d' : syntax error, use 'BCDINT <dst bcd address>, <int>' bcd value MUST contain at least 5 digits : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
@@ -6074,13 +6499,21 @@ RESTART_PRINT:
         // BCD dst address
         std::string srcToken = tokens[0];
         Expression::Numeric srcParam(true); // true = allow static init
-        if(Compiler::parseExpression(codeLineIndex, srcToken, srcParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, srcToken, srcParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::BCDINT() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, srcToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("STW", "bcdDstAddr", false);
 
         // Integer value, must be +ve, max value 42767, (32767 + 10000 because of how vASM sub Numeric::bcdInt works)
         std::string intToken = tokens[1];
         Expression::Numeric intParam;
-        if(Compiler::parseExpression(codeLineIndex, intToken, intParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, intToken, intParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::BCDINT() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, intToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("%BcdInt", "", false);
 
         return true;
@@ -6091,7 +6524,7 @@ RESTART_PRINT:
         UNREFERENCED_PARAM(result);
         UNREFERENCED_PARAM(tokenIndex);
 
-        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ",", false);
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
         if(tokens.size() != 3)
         {
             fprintf(stderr, "Keywords::BCDCPY() : '%s:%d' : syntax error, use 'BCDCPY <src bcd address>, <dst bcd address>, <length>' : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
@@ -6101,19 +6534,31 @@ RESTART_PRINT:
         // BCD src address
         std::string srcToken = tokens[0];
         Expression::Numeric srcParam(true); // true = allow static init
-        if(Compiler::parseExpression(codeLineIndex, srcToken, srcParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, srcToken, srcParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::BCDCPY() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, srcToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("STW", "bcdSrcAddr", false);
 
         // BCD dst address
         std::string dstToken = tokens[1];
         Expression::Numeric dstParam(true); // true = allow static init
-        if(Compiler::parseExpression(codeLineIndex, dstToken, dstParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, dstToken, dstParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::BCDCPY() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, dstToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("STW", "bcdDstAddr", false);
 
         // BCD length
         std::string lenToken = tokens[2];
         Expression::Numeric lenParam;
-        if(Compiler::parseExpression(codeLineIndex, lenToken, lenParam) == Expression::IsInvalid) return false;
+        if(Compiler::parseExpression(codeLineIndex, lenToken, lenParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::BCDCPY() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, lenToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
         Compiler::emitVcpuAsm("%BcdCpy", "", false);
 
         return true;
@@ -6207,5 +6652,50 @@ RESTART_PRINT:
 #ifdef STAND_ALONE
         return true;
 #endif
+    }
+
+    bool EXEC(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() < 1  ||  tokens.size() > 2)
+        {
+            fprintf(stderr, "Keywords::EXEC() : '%s:%d' : syntax error, expected 'EXEC <rom address>, <optional ram address>' : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
+            return false;
+        }
+
+        // ROM address to load from
+        std::string romToken = tokens[0];
+        Expression::Numeric romParam;
+        if(Compiler::parseExpression(codeLineIndex, romToken, romParam) == Expression::IsInvalid)
+        {
+            fprintf(stderr, "Keywords::EXEC() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, romToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
+        Compiler::emitVcpuAsm("STW", "giga_sysArg0", false);
+
+        // RAM address to execute at
+        if(tokens.size() == 2)
+        {
+            std::string ramToken = tokens[1];
+            Expression::Numeric ramParam;
+            if(Compiler::parseExpression(codeLineIndex, ramToken, ramParam) == Expression::IsInvalid)
+            {
+                fprintf(stderr, "Keywords::EXEC() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, ramToken.c_str(), codeLine._text.c_str());
+                return false;
+            }
+        }
+        else
+        {
+            // Default execute address
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(DEFAULT_EXEC_ADDRESS), false);
+        }
+
+        // SYS_Exec_88
+        Compiler::emitVcpuAsm("%RomExec", "",  false);
+
+        return true;
     }
 }

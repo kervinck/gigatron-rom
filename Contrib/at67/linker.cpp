@@ -25,6 +25,8 @@ namespace Linker
     std::vector<Compiler::InternalSub> _internalSubs =
     {
         {0x0000, 0x0000, "romCheck"         , "", false, false},
+        {0x0000, 0x0000, "romExec"          , "", false, false},
+        {0x0000, 0x0000, "romRead"          , "", false, false},
         {0x0000, 0x0000, "realTimeStub"     , "", false, false},
         {0x0000, 0x0000, "convertEqOp"      , "", false, false},
         {0x0000, 0x0000, "convertNeOp"      , "", false, false},
@@ -171,10 +173,12 @@ namespace Linker
         {0x0000, 0x0000, "printChar"        , "", false, false},
         {0x0000, 0x0000, "printClip"        , "", false, false},
         {0x0000, 0x0000, "printHex"         , "", false, false},
+        {0x0000, 0x0000, "printSpc"         , "", false, false},
         {0x0000, 0x0000, "atTextCursor"     , "", false, false},
         {0x0000, 0x0000, "newLineScroll"    , "", false, false},
         {0x0000, 0x0000, "integerStr"       , "", false, false},
         {0x0000, 0x0000, "stringChr"        , "", false, false},
+        {0x0000, 0x0000, "stringSpc"        , "", false, false},
         {0x0000, 0x0000, "stringHex"        , "", false, false},
         {0x0000, 0x0000, "stringCopy"       , "", false, false},
         {0x0000, 0x0000, "stringCmp"        , "", false, false},

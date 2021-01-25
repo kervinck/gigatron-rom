@@ -16,9 +16,7 @@
 #include "../../linker.h"
 
 
-#define GTBASIC_MAJOR_VERSION "1.0"
-#define GTBASIC_MINOR_VERSION "7R"
-#define GTBASIC_VERSION_STR "gtbasic v" GTBASIC_MAJOR_VERSION "." GTBASIC_MINOR_VERSION
+#define GTBASIC_VERSION_STR "gtbasic v" MAJOR_VERSION "." MINOR_VERSION
 
 
 int main(int argc, char* argv[])
@@ -61,7 +59,6 @@ int main(int argc, char* argv[])
     std::string includepath = (argc == 3) ? std::string(argv[2]) : ".";
 
     // Output file
-    uint16_t address = DEFAULT_START_ADDRESS;
     size_t nameSuffix = name.find_last_of(".");
     std::string output = name.substr(0, nameSuffix) + ".gasm";
 
@@ -81,16 +78,17 @@ int main(int argc, char* argv[])
 #endif
 
     if(!Compiler::compile(filename, output)) return 1;
-    if(!Assembler::assemble(output, address, true)) return 1;
+    uint16_t execAddress = Compiler::getUserCodeStart();
+    if(!Assembler::assemble(output, execAddress, true)) return 1;
     if(!Validater::checkRuntimeVersion()) return 1;
 
     // Create gt1 format
     Loader::Gt1File gt1File;
-    gt1File._loStart = LO_BYTE(address);
-    gt1File._hiStart = HI_BYTE(address);
+    gt1File._loStart = LO_BYTE(execAddress);
+    gt1File._hiStart = HI_BYTE(execAddress);
     Loader::Gt1Segment gt1Segment;
-    gt1Segment._loAddress = LO_BYTE(address);
-    gt1Segment._hiAddress = HI_BYTE(address);
+    gt1Segment._loAddress = LO_BYTE(execAddress);
+    gt1Segment._hiAddress = HI_BYTE(execAddress);
 
     bool hasRomCode = false;
     Assembler::ByteCode byteCode;
@@ -109,10 +107,9 @@ int main(int argc, char* argv[])
                 gt1Segment._dataBytes.clear();
             }
 
-            address = byteCode._address;
             gt1Segment._isRomAddress = byteCode._isRomAddress;
-            gt1Segment._loAddress = LO_BYTE(address);
-            gt1Segment._hiAddress = HI_BYTE(address);
+            gt1Segment._loAddress = LO_BYTE(byteCode._address);
+            gt1Segment._hiAddress = HI_BYTE(byteCode._address);
         }
 
         gt1Segment._dataBytes.push_back(byteCode._data);

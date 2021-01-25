@@ -259,7 +259,8 @@ namespace Loader
             {
                 uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
                 uint16_t segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
-                if((address + segmentSize - 1) < Memory::getSizeRAM()  &&  !Memory::isVideoRAM(address)) totalSize += segmentSize;
+                //if((address + segmentSize - 1) < Memory::getSizeRAM()  &&  !Memory::isVideoRAM(address)) totalSize += segmentSize;
+                if((address + segmentSize - 1) < Memory::getSizeRAM()) totalSize += segmentSize;
                 if((address & 0x00FF) + segmentSize > 256) fprintf(stderr, "\nLoader::printGt1Stats() : Page overflow : segment %d : address 0x%04x : segmentSize %3d :" 
                                                                            "ignore if non code segment and if data does not spill into allocated RAM, (video, audio, zero page, etc)\n", i, address, segmentSize);
             }
@@ -1147,7 +1148,7 @@ namespace Loader
         }
 
 #if 0
-        // Remove trailing  comments
+        // Remove trailing comments
         for(int i=0; i<lines.size(); i++)
         {
             size_t pos = lines[i].find('\'');
@@ -1240,7 +1241,7 @@ namespace Loader
         bool hasRomCode = false;
         bool hasRamCode = false;
 
-        uint16_t executeAddress;
+        uint16_t execAddress = USER_CODE_START;
         std::string gtbFilepath;
 
         size_t slash = name.find_last_of("\\/");
@@ -1347,8 +1348,8 @@ namespace Loader
             Assembler::clearAssembler(true);
 
             if(!loadGt1File(filepath, gt1File)) return;
-            executeAddress = gt1File._loStart + (gt1File._hiStart <<8);
-            Editor::setLoadBaseAddress(executeAddress);
+            execAddress = gt1File._loStart + (gt1File._hiStart <<8);
+            Editor::setLoadBaseAddress(execAddress);
 
             // Changes memory model if needed then uploads to emulator
             if(uploadTarget == Emulator)
@@ -1364,7 +1365,7 @@ namespace Loader
         // Upload vCPU assembly code
         else if(filename.find(".gasm") != filename.npos  ||  filename.find(".vasm") != filename.npos  ||  filename.find(".s") != filename.npos  ||  filename.find(".asm") != filename.npos)
         {
-            uint16_t address = (isGbasFile) ? Compiler::getUserCodeStart() : DEFAULT_START_ADDRESS;
+            uint16_t address = (isGbasFile) ? Compiler::getUserCodeStart() : DEFAULT_EXEC_ADDRESS;
             if(!Assembler::assemble(filepath, address, isGbasFile)) return;
             if(isGbasFile  &&  !Validater::checkRuntimeVersion()) return;
 
@@ -1376,10 +1377,10 @@ namespace Loader
                 Editor::setEditorMode(Editor::Dasm);
             }
 
-            executeAddress = Assembler::getStartAddress();
-            uint16_t customAddress = executeAddress;
-            Editor::setLoadBaseAddress(executeAddress);
-            address = executeAddress;
+            execAddress = (isGbasFile) ? Compiler::getUserCodeStart() : Assembler::getStartAddress();
+            uint16_t customAddress = execAddress;
+            Editor::setLoadBaseAddress(execAddress);
+            address = execAddress;
 
             // Save to gt1 format
             gt1File._loStart = LO_BYTE(address);
@@ -1479,12 +1480,12 @@ namespace Loader
             if(!_disableUploads  &&  hasRamCode)
             {
                 // vPC
-                Cpu::setRAM(0x0016, LO_BYTE(executeAddress-2));
-                Cpu::setRAM(0x0017, HI_BYTE(executeAddress));
+                Cpu::setRAM(0x0016, LO_BYTE(execAddress-2));
+                Cpu::setRAM(0x0017, HI_BYTE(execAddress));
 
                 // vLR
-                Cpu::setRAM(0x001a, LO_BYTE(executeAddress-2));
-                Cpu::setRAM(0x001b, HI_BYTE(executeAddress));
+                Cpu::setRAM(0x001a, LO_BYTE(execAddress-2));
+                Cpu::setRAM(0x001b, HI_BYTE(execAddress));
 
                 // Reset stack and constants
                 Cpu::setRAM(STACK_POINTER, 0x00);
@@ -1629,7 +1630,7 @@ namespace Loader
 
         if(_uploadTarget != None  ||  frameUploading)
         {
-            uint16_t executeAddress = Editor::getLoadBaseAddress();
+            uint16_t execAddress = Editor::getLoadBaseAddress();
             if(_uploadTarget != None)
             {
                 if(Editor::getCurrentFileEntryName())
@@ -1652,7 +1653,7 @@ namespace Loader
             {
                 case FrameState::Resync:
                 {
-                    if(!sendFrame(vgaY, 0xFF, payload, payloadSize, executeAddress, checksum))
+                    if(!sendFrame(vgaY, 0xFF, payload, payloadSize, execAddress, checksum))
                     {
                         checksum = 'g'; // loader resets checksum
                         frameState = FrameState::Frame;
@@ -1662,7 +1663,7 @@ namespace Loader
 
                 case FrameState::Frame:
                 {
-                    if(!sendFrame(vgaY,'L', payload, payloadSize, executeAddress, checksum))
+                    if(!sendFrame(vgaY,'L', payload, payloadSize, execAddress, checksum))
                     {
                         frameState = FrameState::Execute;
                     }
@@ -1671,7 +1672,7 @@ namespace Loader
 
                 case FrameState::Execute:
                 {
-                    if(!sendFrame(vgaY, 'L', payload, 0, executeAddress, checksum))
+                    if(!sendFrame(vgaY, 'L', payload, 0, execAddress, checksum))
                     {
                         checksum = 0;
                         frameState = FrameState::Resync;

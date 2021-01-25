@@ -39,8 +39,8 @@
 #define BRA_CC_LE     0x18
 #define BRA_CC_ALWAYS 0x1C
 
-#define DEFAULT_START_ADDRESS 0x0200
-#define DEFAULT_CALL_TABLE    0x0000
+#define DEFAULT_EXEC_ADDRESS 0x0200
+#define DEFAULT_CALL_TABLE   0x0000
 
 #define USER_ROMv1_ADDRESS 0x0B00 // pictures in ROM v1
 
@@ -159,7 +159,7 @@ namespace Assembler
     void clearAssembler(bool dontClearGprintfs=false);
     bool getNextAssembledByte(ByteCode& byteCode, bool debug=false);
 
-    bool assemble(const std::string& filename, uint16_t startAddress=DEFAULT_START_ADDRESS, bool dontClearGprintfs=false);
+    bool assemble(const std::string& filename, uint16_t startAddress=DEFAULT_EXEC_ADDRESS, bool dontClearGprintfs=false);
     int disassemble(uint16_t address);
 
 #ifndef STAND_ALONE

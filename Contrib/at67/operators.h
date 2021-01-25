@@ -15,7 +15,7 @@ namespace Operators
 
     bool initialise(void);
 
-    void createTmpVar(Expression::Numeric& numeric);
+    void changeToTmpVar(Expression::Numeric& numeric);
     void createSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric);
     void handleSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric);
     void selectSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric);

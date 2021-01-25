@@ -56,8 +56,8 @@ namespace Cpu
     uint8_t _ROM[ROM_SIZE][2];
     std::vector<uint8_t*> _romFiles;
     RomType _romType = ROMERR;
-    std::map<std::string, RomType> _romTypeMap = {{"ROMV1", ROMv1}, {"ROMV2", ROMv2}, {"ROMV3", ROMv3}, {"ROMV4", ROMv4}, {"ROMV5A", ROMv5a}, {"DEVROM", DEVROM}};
-    std::map<RomType, std::string> _romTypeStr = {{ROMv1, "ROMv1"}, {ROMv2, "ROMv2"}, {ROMv3, "ROMv3"}, {ROMv4, "ROMv4"}, {ROMv5a, "ROMv5A"}, {DEVROM, "DEVROM"}};
+    std::map<std::string, RomType> _romTypeMap = {{"ROMV1", ROMv1}, {"ROMV2", ROMv2}, {"ROMV3", ROMv3}, {"ROMV4", ROMv4}, {"ROMV5A", ROMv5a}, {"SDCARD", SDCARD}, {"DEVROM", DEVROM}};
+    std::map<RomType, std::string> _romTypeStr = {{ROMv1, "ROMv1"}, {ROMv2, "ROMv2"}, {ROMv3, "ROMv3"}, {ROMv4, "ROMv4"}, {ROMv5a, "ROMv5A"}, {SDCARD, "SDCARD"}, {DEVROM, "DEVROM"}};
 
     std::vector<uint8_t> _scanlinesRom0;
     std::vector<uint8_t> _scanlinesRom1;
@@ -424,6 +424,10 @@ namespace Cpu
         {
             romType = ROMv4;
         }
+        else if(getROM(0x005E, 1) == 0xF0)
+        {
+            romType = SDCARD;
+        }
         else if(getROM(0x005E, 1) == 0xF8)
         {
             romType = DEVROM;
@@ -448,6 +452,7 @@ namespace Cpu
             case ROMv3: 
             case ROMv4:
             case ROMv5a:
+            case SDCARD:
             case DEVROM:
             {
                 _romType = (RomType)romType;
@@ -597,13 +602,17 @@ namespace Cpu
         switch(romType)
         {
             case ROMv5a:
+            case SDCARD:
             case DEVROM:
             {
                 if(getRomType() < Cpu::ROMv5a)
                 {
-                    std::string romTypeStr;
-                    getRomTypeStr(getRomType(), romTypeStr);
-                    fprintf(stderr, "\nCpu::enable6BitSound() : Error, ROM version must be >= ROMv5a, current ROM is %s\n", romTypeStr.c_str());
+                    if(enable)
+                    {
+                        std::string romTypeStr;
+                        getRomTypeStr(getRomType(), romTypeStr);
+                        fprintf(stderr, "\nCpu::enable6BitSound() : Error, ROM version must be >= ROMv5a, current ROM is %s\n", romTypeStr.c_str());
+                    }
                     return;
                 }
 

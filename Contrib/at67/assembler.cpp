@@ -87,7 +87,7 @@ namespace Assembler
 
     uint16_t _byteCount = 0;
     uint16_t _callTablePtr = 0x0000;
-    uint16_t _startAddress = DEFAULT_START_ADDRESS;
+    uint16_t _startAddress = DEFAULT_EXEC_ADDRESS;
     uint16_t _currentAddress = _startAddress;
     uint16_t _currDasmByteCount = 1, _prevDasmByteCount = 1;
     uint16_t _currDasmPageByteCount = 0, _prevDasmPageByteCount = 0;
@@ -153,40 +153,40 @@ namespace Assembler
     void initialiseOpcodes(void)
     {
         // Gigatron vCPU instructions
-        _asmOpcodes["ST"]    = {0x5E, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["STW"]   = {0x2B, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["STLW"]  = {0xEC, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["LD"]    = {0x1A, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["LDI"]   = {0x59, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["LDWI"]  = {0x11, 0x00, ThreeBytes, vCpu};
-        _asmOpcodes["LDW"]   = {0x21, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["LDLW"]  = {0xEE, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["ADDW"]  = {0x99, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["SUBW"]  = {0xB8, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["ADDI"]  = {0xE3, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["SUBI"]  = {0xE6, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["LSLW"]  = {0xE9, 0x00, OneByte,    vCpu};
-        _asmOpcodes["INC"]   = {0x93, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["ANDI"]  = {0x82, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["ANDW"]  = {0xF8, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["ORI"]   = {0x88, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["ORW"]   = {0xFA, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["XORI"]  = {0x8C, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["XORW"]  = {0xFC, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["PEEK"]  = {0xAD, 0x00, OneByte,    vCpu};
-        _asmOpcodes["DEEK"]  = {0xF6, 0x00, OneByte,    vCpu};
-        _asmOpcodes["POKE"]  = {0xF0, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["DOKE"]  = {0xF3, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["LUP"]   = {0x7F, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["BRA"]   = {0x90, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["CALL"]  = {0xCF, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["RET"]   = {0xFF, 0x00, OneByte,    vCpu};
-        _asmOpcodes["PUSH"]  = {0x75, 0x00, OneByte,    vCpu};
-        _asmOpcodes["POP"]   = {0x63, 0x00, OneByte,    vCpu};
+        _asmOpcodes["ST"   ] = {0x5E, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["STW"  ] = {0x2B, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["STLW" ] = {0xEC, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["LD"   ] = {0x1A, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["LDI"  ] = {0x59, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["LDWI" ] = {0x11, 0x00, ThreeBytes, vCpu};
+        _asmOpcodes["LDW"  ] = {0x21, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["LDLW" ] = {0xEE, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["ADDW" ] = {0x99, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["SUBW" ] = {0xB8, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["ADDI" ] = {0xE3, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["SUBI" ] = {0xE6, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["LSLW" ] = {0xE9, 0x00, OneByte,    vCpu};
+        _asmOpcodes["INC"  ] = {0x93, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["ANDI" ] = {0x82, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["ANDW" ] = {0xF8, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["ORI"  ] = {0x88, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["ORW"  ] = {0xFA, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["XORI" ] = {0x8C, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["XORW" ] = {0xFC, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["PEEK" ] = {0xAD, 0x00, OneByte,    vCpu};
+        _asmOpcodes["DEEK" ] = {0xF6, 0x00, OneByte,    vCpu};
+        _asmOpcodes["POKE" ] = {0xF0, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["DOKE" ] = {0xF3, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["LUP"  ] = {0x7F, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["BRA"  ] = {0x90, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["CALL" ] = {0xCF, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["RET"  ] = {0xFF, 0x00, OneByte,    vCpu};
+        _asmOpcodes["PUSH" ] = {0x75, 0x00, OneByte,    vCpu};
+        _asmOpcodes["POP"  ] = {0x63, 0x00, OneByte,    vCpu};
         _asmOpcodes["ALLOC"] = {0xDF, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["SYS"]   = {0xB4, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["HALT"]  = {0xB4, 0x80, TwoBytes,   vCpu};
-        _asmOpcodes["DEF"]   = {0xCD, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["SYS"  ] = {0xB4, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["HALT" ] = {0xB4, 0x80, TwoBytes,   vCpu};
+        _asmOpcodes["DEF"  ] = {0xCD, 0x00, TwoBytes,   vCpu};
         _asmOpcodes["CALLI"] = {0x85, 0x00, ThreeBytes, vCpu};
         _asmOpcodes["CMPHS"] = {0x1F, 0x00, TwoBytes,   vCpu};
         _asmOpcodes["CMPHU"] = {0x97, 0x00, TwoBytes,   vCpu};
@@ -200,28 +200,28 @@ namespace Assembler
         _asmOpcodes["BGE"] = {0x35, 0x53, ThreeBytes, vCpu};
 
         // Reserved assembler opcodes
-        _asmOpcodes["DB"]  = {0x00, 0x00, TwoBytes,   ReservedDB };
-        _asmOpcodes["DW"]  = {0x00, 0x00, ThreeBytes, ReservedDW };
+        _asmOpcodes["DB" ] = {0x00, 0x00, TwoBytes,   ReservedDB };
+        _asmOpcodes["DW" ] = {0x00, 0x00, ThreeBytes, ReservedDW };
         _asmOpcodes["DBR"] = {0x00, 0x00, TwoBytes,   ReservedDBR};
         _asmOpcodes["DWR"] = {0x00, 0x00, ThreeBytes, ReservedDWR};
                                                                            
         // Gigatron native instructions                                    
-        _asmOpcodes[".LD"]   = {0x00, 0x00, TwoBytes, Native};
-        _asmOpcodes[".NOP"]  = {0x02, 0x00, TwoBytes, Native};
+        _asmOpcodes[".LD"  ] = {0x00, 0x00, TwoBytes, Native};
+        _asmOpcodes[".NOP" ] = {0x02, 0x00, TwoBytes, Native};
         _asmOpcodes[".ANDA"] = {0x20, 0x00, TwoBytes, Native};
-        _asmOpcodes[".ORA"]  = {0x40, 0x00, TwoBytes, Native};
+        _asmOpcodes[".ORA" ] = {0x40, 0x00, TwoBytes, Native};
         _asmOpcodes[".XORA"] = {0x60, 0x00, TwoBytes, Native};
         _asmOpcodes[".ADDA"] = {0x80, 0x00, TwoBytes, Native};
         _asmOpcodes[".SUBA"] = {0xA0, 0x00, TwoBytes, Native};
-        _asmOpcodes[".ST"]   = {0xC0, 0x00, TwoBytes, Native};
-        _asmOpcodes[".JMP"]  = {0xE0, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BGT"]  = {0xE4, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BLT"]  = {0xE8, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BNE"]  = {0xEC, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BEQ"]  = {0xF0, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BGE"]  = {0xF4, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BLE"]  = {0xF8, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BRA"]  = {0xFC, 0x00, TwoBytes, Native};
+        _asmOpcodes[".ST"  ] = {0xC0, 0x00, TwoBytes, Native};
+        _asmOpcodes[".JMP" ] = {0xE0, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BGT" ] = {0xE4, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BLT" ] = {0xE8, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BNE" ] = {0xEC, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BEQ" ] = {0xF0, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BGE" ] = {0xF4, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BLE" ] = {0xF8, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BRA" ] = {0xFC, 0x00, TwoBytes, Native};
 
         // Gigatron vCPU instructions
         _vcpuOpcodes[0x5E] = {0x5E, 0x00, TwoBytes,   vCpu, "ST"   };
@@ -501,13 +501,13 @@ namespace Assembler
                     {
                         sprintf(dasmText, "%04x  $%02x $%02x", address, instruction, data0);
                         dasmCode._address = address;
-                        address = (address + 1) & (Memory::getSizeRAM() - 1);
+                        address++;
                         break;
                     }
 
                     sprintf(dasmText, "%04x  %s", address, mnemonic);
                     dasmCode._address = address;
-                    address = (address + 1) & (Memory::getSizeRAM() - 1);
+                    address++;
                 }
                 break;
 

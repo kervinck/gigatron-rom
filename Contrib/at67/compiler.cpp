@@ -40,7 +40,7 @@ namespace Compiler
     const std::vector<std::string> _sysInitNames = {"InitEqOp", "InitNeOp", "InitLeOp", "InitGeOp", "InitLtOp", "InitGtOp", "Init8Array2d", "Init8Array3d", "Init16Array2d", "Init16Array3d", "InitRealTimeStub"};
 
 
-    enum VarResult {VarError=-1, VarNotFound, VarCreated, VarUpdated, VarExists};
+    enum VarResult {VarError=-1, VarNotFound, VarCreated, VarUpdated, VarExists, VarExistsAsConst};
     enum StrResult {StrError=-1, StrNotFound, StrCreated};
     enum FloatSize {Float16=2, Float32=4};
     enum LabelResult {LabelError=-1, LabelNotFound, LabelFound};
@@ -580,7 +580,7 @@ namespace Compiler
     }
 
     // Proc/Func local and param int vars
-    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, uint16_t address, int& varIndex)
+    void createProcIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, uint16_t address, int& varIndex)
     {
         // Create var
         varIndex = int(_integerVars.size());
@@ -608,8 +608,8 @@ namespace Compiler
     }
 
     // Global int array vars
-    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType, int intSize,
-                      uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs, std::vector<uint16_t>& arrLut)
+    void createArrIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, bool isInit, int& varIndex, VarType varType, int intSize,
+                         uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs, std::vector<uint16_t>& arrLut)
     {
         // Create var
         varIndex = int(_integerVars.size());
@@ -618,7 +618,7 @@ namespace Compiler
         codeLine._varType = VarInt16;
 
         uint16_t varAddr = (varType == VarInt16) ? _userVarsAddr : address;
-        IntegerVar integerVar = {data, init, varAddr, varName, varName, codeLineIndex, varType, intSize, arrSizes, arrInits, arrAddrs, arrLut};
+        IntegerVar integerVar = {data, init, varAddr, varName, varName, codeLineIndex, varType, intSize, arrSizes, arrInits, arrAddrs, arrLut, isInit};
         _integerVars.push_back(integerVar);
 
         // Create var output
@@ -631,16 +631,6 @@ namespace Compiler
             line[LABEL_TRUNC_SIZE - 1] = ' ';
         }
         _integerVars[varIndex]._output = line;
-
-        if(varType == VarInt16)
-        {
-            _userVarsAddr += Int16;
-            if(_userVarsAddr >= USER_VAR_END)
-            {
-                _userVarsAddr = _userVarStart;
-                fprintf(stderr, "Compiler::createIntVar() : '%s:%d' : warning: you have exceeded the maximum number of page zero global variables : %s\n", codeLine._moduleName.c_str(), codeLineIndex, codeLine._text.c_str()); 
-            }
-        }
     }
 
     VarResult createCodeVar(CodeLine& codeLine, int codeLineIndex, int& varIndex)
@@ -681,6 +671,13 @@ namespace Compiler
 
         // String variables are not handled here
         if(varName.find("$") != std::string::npos) return VarError;
+
+        std::string constName = varName;
+        if(Compiler::findConst(constName) >= 0)
+        {
+            fprintf(stderr, "Keywords::createCodeVar() : '%s:%d' : const '%s' already exists : %s\n", codeLine._moduleName.c_str(), codeLineIndex, constName.c_str(), codeLine._text.c_str());
+            return VarExistsAsConst;
+        }
 
         // Var already exists?
         varIndex = findVar(varName);
@@ -784,7 +781,7 @@ namespace Compiler
         if(input.find("\"") != std::string::npos) expressionType |= Expression::HasStrings;
 
         std::string stripped = Expression::stripStrings(input);
-        std::vector<std::string> tokens = Expression::tokenise(stripped, "-+/*%&<>=();, ", false);
+        std::vector<std::string> tokens = Expression::tokeniseMulti(stripped, "-+/*%&<>=();, ", false);
 
         // Check for pragmas
         for(int i=0; i<int(tokens.size()); i++)
@@ -908,7 +905,7 @@ namespace Compiler
         return expressionType;
     }
 
-    void updateVar(int16_t data, CodeLine& codeLine, int varIndex, bool containsVars)
+    void updateIntVar(int16_t data, CodeLine& codeLine, int varIndex, bool containsVars)
     {
         codeLine._containsVars = containsVars;
         codeLine._varIndex = varIndex;
@@ -979,7 +976,7 @@ namespace Compiler
         std::string codeText = Expression::collapseWhitespaceNotStrings(text);
         codeText = Expression::removeCommentsNotInStrings(codeText);
         std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokeniseLine(codeText, " (),=", offsets);
+        std::vector<std::string> tokens = Expression::tokeniseLineOffsets(codeText, " (),=", offsets);
         codeLine = {text, codeText, tokens, offsets, vasm, expression, onGotoGosubLut, strConcatLut, inputLut, 0, labelIndex, varIndex, VarInt16, int16Byte, vars, false, false, moduleName};
         Expression::operatorReduction(codeLine._expression);
 
@@ -1759,8 +1756,8 @@ namespace Compiler
         return true;
     }
 
-    // Generic expression parser
-    OperandType parseExpression(int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric)
+    // Static expression parser
+    OperandType parseStaticExpression(int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric)
     {
         if(!Expression::parse(expression, codeLineIndex, numeric)) return OperandInvalid;
 
@@ -2149,7 +2146,7 @@ namespace Compiler
             {
                 // Create dummy codeLine for pragmas, so that codeLine count remains consistant
                 CodeLine codeLine;
-                if(createCodeLine("'PRAGMA", 0, -1, -1, Expression::Int16Both, false, codeLine, MODULE_MAIN)) _codeLines.push_back(codeLine);
+                if(createCodeLine("", 0, -1, -1, Expression::Int16Both, false, codeLine, MODULE_MAIN)) _codeLines.push_back(codeLine);
                 continue;
             }
 
@@ -2168,39 +2165,6 @@ namespace Compiler
 
         return true;
     }
-
-#if 0
-    // TODO: make this a thing, right now vars can NOT be in a seperate parse to the code, (an intermediate data structure such as an Abstract Syntax Tree, would have made this trivial)
-    bool parseVars(void)
-    {
-        // Parse code creating vars, (BASIC code lines were created in ParseLabels())
-        for(int i=0; i<int(_codeLines.size()); i++)
-        {
-            // Make a local copy, otherwise original tokens are destroyed
-            CodeLine codeLine;
-
-            // Tokenise and parse multi-statement lines
-            std::vector<std::string> tokens = Expression::tokenise(_codeLines[i]._code, ':', false);
-            for(int j=0; j<int(tokens.size()); j++)
-            {
-                createCodeLine(tokens[j], 0, _codeLines[i]._labelIndex, -1, Expression::Int16Both, false, codeLine);
-                if(_codeLines[i]._dontParse) break;
-
-                // Skip the following keywords
-                std::string token = tokens[j];
-                Expression::strToUpper(token);
-                if(token.find("CONST") != std::string::npos  ||  token.find("DIM") != std::string::npos  ||  token.find("DEF") != std::string::npos) continue;
-
-                // Create vars and vasm
-                int varIndex = -1, strIndex = -1;
-                createCodeVar(codeLine, i, varIndex);
-                createCodeStr(codeLine, i, strIndex);
-            }
-        }
-
-        return true;
-    }
-#endif
 
     // Get or create string
     int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize, bool constString, VarType varType)
@@ -2319,7 +2283,7 @@ namespace Compiler
     }
 
     // Create an array of strings
-    int createStringArray(CodeLine& codeLine, int codeLineIndex, std::string& name, uint8_t size, std::vector<std::string>& arrInits, std::vector<uint16_t>& arrAddrs)
+    int createStringArray(CodeLine& codeLine, int codeLineIndex, const std::string& name, uint8_t size, bool isInit, std::vector<std::string>& arrInits, std::vector<uint16_t>& arrAddrs)
     {
         int index = -1;
 
@@ -2360,7 +2324,7 @@ namespace Compiler
         // Max string size = 0 so compiler can differentiate between const and non const string arrays, (can't set _constant to true!)
         const std::string text(size, ' ');
         uint8_t maxSize = (constArray) ? 0 : USER_STR_SIZE;
-        StringVar stringVar = {size, maxSize, address, text, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), VarStr2, -1, false, arrInits, arrAddrs};
+        StringVar stringVar = {size, maxSize, address, text, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), VarStr2, -1, false, arrInits, arrAddrs, isInit};
         _stringVars.push_back(stringVar);
         index = int(_stringVars.size()) - 1;
 
@@ -2399,7 +2363,7 @@ namespace Compiler
 
     void emitStringAddress(const Expression::Numeric& numeric, uint16_t address)
     {
-        if(numeric._varType == Expression::Str2Var)
+        if(numeric._varType == Expression::Str2Var  ||  numeric._varType == Expression::TmpStrAddr)
         {
             emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(getTempVarStart())), false);
         }
@@ -2563,7 +2527,7 @@ namespace Compiler
 
                 std::string operand;
                 Expression::Numeric numeric; // = expression(); // TODO: Find out why expression() can't be called instead of parseExpression()
-                if(parseExpression(_currentCodeLineIndex, token, operand, numeric) == OperandInvalid) return Expression::Numeric();
+                if(parseStaticExpression(_currentCodeLineIndex, token, operand, numeric) == OperandInvalid) return Expression::Numeric();
                 if(numeric._varType != Expression::Number)
                 {
                     fprintf(stderr, "Compiler::addressOf() : '%s:%d' : indicies must be literal expressions : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
@@ -2892,7 +2856,34 @@ namespace Compiler
             }
             else
             {
-                fprintf(stderr, "Compiler::factor() : '%s:%d' : syntax error in number : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
+                fprintf(stderr, "Compiler::factor() : '%s:%d' : syntax error in number literal : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
+                numeric = Expression::Numeric();
+            }
+        }
+        // Char literals
+        else if(peek(true) == '\'')
+        {
+            get(true);
+
+            char chr = 0;
+            bool validChar = false;
+            if((chr = peek(false)) != 0) // don't skip spaces as char literal can be a space
+            {
+                if(chr >= 32  &&  chr <=127)
+                {
+                    get(false); // don't skip spaces as char literal can be a space
+                    if(peek(false) == '\'') // don't skip spaces as char literal must be a single char
+                    {
+                        validChar = true;
+                        numeric = Expression::Numeric(double(chr), -1, true, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+                        get(false); // don't skip spaces as char literal must be a single char
+                    }
+                }
+            }
+
+            if(!validChar)
+            {
+                fprintf(stderr, "Compiler::factor() : '%s:%d' : syntax error in character literal : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
                 numeric = Expression::Numeric();
             }
         }
@@ -3013,9 +3004,17 @@ namespace Compiler
         {
             numeric = factor(0); numeric = Functions::CHR$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
+        else if(Expression::findFunc("SPC$"))
+        {
+            numeric = factor(0); numeric = Functions::SPC$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
+        }
         else if(Expression::findFunc("STR$"))
         {
             numeric = factor(0); numeric = Functions::STR$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
+        }
+        else if(Expression::findFunc("STRING$"))
+        {
+            numeric = factor(0); numeric = Functions::STRING$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("HEX$"))
         {
@@ -3295,14 +3294,15 @@ namespace Compiler
     Expression::Numeric term(bool returnAddress=false)
     {
         Expression::Numeric numeric, result = factor(0, returnAddress);
-
+        if(!result._isValid) return result;
+    
         for(;;)
         {
-            if(Expression::find("**"))       {numeric = factor(0, returnAddress); result = Operators::POW(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(find('*'))               {numeric = factor(0, returnAddress); result = Operators::MUL(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(find('/'))               {numeric = factor(0, returnAddress); result = Operators::DIV(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(find('%'))               {numeric = factor(0, returnAddress); result = Operators::MOD(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("MOD")) {numeric = factor(0, returnAddress); result = Operators::MOD(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            if(Expression::find("**"))       {numeric = factor(0, returnAddress); if(!numeric._isValid) return numeric; result = Operators::POW(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('*'))               {numeric = factor(0, returnAddress); if(!numeric._isValid) return numeric; result = Operators::MUL(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('/'))               {numeric = factor(0, returnAddress); if(!numeric._isValid) return numeric; result = Operators::DIV(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('%'))               {numeric = factor(0, returnAddress); if(!numeric._isValid) return numeric; result = Operators::MOD(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("MOD")) {numeric = factor(0, returnAddress); if(!numeric._isValid) return numeric; result = Operators::MOD(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
             else return result;
         }
     }
@@ -3310,12 +3310,13 @@ namespace Compiler
     Expression::Numeric expr(bool returnAddress=false)
     {
         Expression::Numeric numeric, result = term(returnAddress);
+        if(!result._isValid) return result;
 
         for(;;)
         {
             // Toggle string work area between lhs and rhs for '+', (no need to check that parameters are strings)
-            if(find('+'))      {numeric = term(returnAddress); result = Operators::ADD(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(find('-')) {numeric = term(returnAddress); result = Operators::SUB(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            if(find('+'))      {numeric = term(returnAddress); if(!numeric._isValid) return numeric; result = Operators::ADD(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('-')) {numeric = term(returnAddress); if(!numeric._isValid) return numeric; result = Operators::SUB(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
 
             else return result;
         }
@@ -3324,35 +3325,36 @@ namespace Compiler
     Expression::Numeric logical(bool returnAddress=false)
     {
         Expression::Numeric numeric, result = expr(returnAddress);
+        if(!result._isValid) return result;
 
         for(;;)
         {
             // Boolean conditionals
-            if(Expression::find("=="))      {numeric = expr(returnAddress); result = Operators::EQ(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(find('='))              {numeric = expr(returnAddress); result = Operators::EQ(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("<>")) {numeric = expr(returnAddress); result = Operators::NE(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("<=")) {numeric = expr(returnAddress); result = Operators::LE(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find(">=")) {numeric = expr(returnAddress); result = Operators::GE(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(find('<'))              {numeric = expr(returnAddress); result = Operators::LT(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(find('>'))              {numeric = expr(returnAddress); result = Operators::GT(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            if(Expression::find("=="))      {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::EQ(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('='))              {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::EQ(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("<>")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::NE(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("<=")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LE(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find(">=")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::GE(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('<'))              {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LT(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('>'))              {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::GT(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
 
             // Normal conditionals
-            else if(Expression::find("&==")) {numeric = expr(returnAddress); result = Operators::EQ(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&="))  {numeric = expr(returnAddress); result = Operators::EQ(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&<>")) {numeric = expr(returnAddress); result = Operators::NE(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&<=")) {numeric = expr(returnAddress); result = Operators::LE(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&>=")) {numeric = expr(returnAddress); result = Operators::GE(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&<"))  {numeric = expr(returnAddress); result = Operators::LT(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&>"))  {numeric = expr(returnAddress); result = Operators::GT(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&==")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::EQ(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&="))  {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::EQ(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&<>")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::NE(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&<=")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LE(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&>=")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::GE(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&<"))  {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LT(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&>"))  {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::GT(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
 
             // Fast conditionals
-            else if(Expression::find("&&==")) {numeric = expr(returnAddress); result = Operators::EQ(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&&="))  {numeric = expr(returnAddress); result = Operators::EQ(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&&<>")) {numeric = expr(returnAddress); result = Operators::NE(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&&<=")) {numeric = expr(returnAddress); result = Operators::LE(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&&>=")) {numeric = expr(returnAddress); result = Operators::GE(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&&<"))  {numeric = expr(returnAddress); result = Operators::LT(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&&>"))  {numeric = expr(returnAddress); result = Operators::GT(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&==")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::EQ(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&="))  {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::EQ(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&<>")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::NE(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&<=")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LE(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&>=")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::GE(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&<"))  {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LT(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&>"))  {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::GT(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
 
             else return result;
         }
@@ -3361,15 +3363,16 @@ namespace Compiler
     Expression::Numeric expression(bool returnAddress)
     {
         Expression::Numeric numeric, result = logical(returnAddress);
+        if(!result._isValid) return result;
 
         for(;;)
         {
-            if(Expression::find("AND"))      {numeric = logical(returnAddress); result = Operators::AND(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("XOR")) {numeric = logical(returnAddress); result = Operators::XOR(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("OR"))  {numeric = logical(returnAddress); result = Operators::OR(result,  numeric, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("LSL")) {numeric = logical(returnAddress); result = Operators::LSL(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("LSR")) {numeric = logical(returnAddress); result = Operators::LSR(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
-            else if(Expression::find("ASR")) {numeric = logical(returnAddress); result = Operators::ASR(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            if(Expression::find("AND"))      {numeric = logical(returnAddress); if(!numeric._isValid) return numeric; result = Operators::AND(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("XOR")) {numeric = logical(returnAddress); if(!numeric._isValid) return numeric; result = Operators::XOR(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("OR"))  {numeric = logical(returnAddress); if(!numeric._isValid) return numeric; result = Operators::OR(result,  numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("LSL")) {numeric = logical(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LSL(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("LSR")) {numeric = logical(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LSR(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("ASR")) {numeric = logical(returnAddress); if(!numeric._isValid) return numeric; result = Operators::ASR(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
 
             else return result;
         }
@@ -3379,8 +3382,12 @@ namespace Compiler
     {
         uint16_t srcAddr = 0x0000;
 
+        if(numeric._varType == Expression::StrAddr)
+        {
+            srcAddr = uint16_t(std::lround(numeric._value));
+        }
         // String assignment from temporary
-        if(numeric._varType == Expression::TmpStrVar)
+        else if(numeric._varType == Expression::TmpStrVar)
         {
             srcAddr = Compiler::getStrWorkArea();
         }
@@ -3452,11 +3459,11 @@ namespace Compiler
         }
 
         bool isStrExpression = ((expressionType >= Expression::HasStrings)  &&  (expressionType <= Expression::IsStringExpression));
-        if(isStrExpression  ||  numeric._varType == Expression::TmpStrVar  ||  numeric._varType == Expression::Str2Var)
+        if(isStrExpression  ||  numeric._varType == Expression::StrAddr  ||  numeric._varType == Expression::TmpStrAddr  ||  numeric._varType == Expression::TmpStrVar  ||  numeric._varType == Expression::Str2Var)
         {
             // String assignment, from var or const or literal
             uint16_t srcAddr = getStringAddress(numeric);
-            if(srcAddr == 0x0000  &&  numeric._varType != Expression::Str2Var)
+            if(srcAddr == 0x0000  &&  numeric._varType != Expression::Str2Var  &&  numeric._varType != Expression::TmpStrAddr)
             {
                 fprintf(stderr, "Compiler::assignString() : '%s:%d' : Syntax error : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
                 return StrError;
@@ -3498,7 +3505,7 @@ namespace Compiler
         {
             // Expression that contains one or more vars
             bool containsVars = (expressionType & Expression::HasIntVars) || (expressionType & Expression::HasStrVars) || (expressionType & Expression::HasStrConsts);
-            updateVar(int16_t(std::lround(numeric._value)), codeLine, codeLine._varIndex, containsVars);
+            updateIntVar(int16_t(std::lround(numeric._value)), codeLine, codeLine._varIndex, containsVars);
         }
 
         // TODO: only works with Int16, fix for all var types
@@ -3712,7 +3719,7 @@ REDO_STATEMENT:
             if(codeLine._tokens.size() == 0) continue;
 
             // Create vars
-            createCodeVar(codeLine, codeLineIndex, varIndex);
+            if(createCodeVar(codeLine, codeLineIndex, varIndex) == VarExistsAsConst) return StatementError;
             createCodeStr(codeLine, codeLineIndex, strIndex);
 
             // Create vasm
@@ -4011,32 +4018,37 @@ REDO_STATEMENT:
                 {
                     std::string arrName = "_" + _integerVars[varIndex]._name + "_array";
                     _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][0]) + "\n");
-                    std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
 
-                    // I array values
-                    for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                    // Don't output DB statements for an uninitialised array
+                    if(_integerVars[varIndex]._arrInit)
                     {
-                        // Single initialisation value
-                        if(_integerVars[varIndex]._arrInits.size() == 0)
+                        std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                        // I array values
+                        for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
                         {
-                            dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
-                        }
-                        // Multiple initialisation values
-                        else
-                        {
-                            // Number of initialisation values may be smaller than array size
-                            if(i < int(_integerVars[varIndex]._arrInits.size()))
-                            {
-                                dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._arrInits[i])) + " ";
-                            }
-                            // Use default initialisation value for the rest of the array
-                            else
+                            // Single initialisation value
+                            if(_integerVars[varIndex]._arrInits.size() == 0)
                             {
                                 dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
                             }
+                            // Multiple initialisation values
+                            else
+                            {
+                                // Number of initialisation values may be smaller than array size
+                                if(i < int(_integerVars[varIndex]._arrInits.size()))
+                                {
+                                    dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._arrInits[i])) + " ";
+                                }
+                                // Use default initialisation value for the rest of the array
+                                else
+                                {
+                                    dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
+                                }
+                            }
                         }
+                        _output.push_back(dbString + "\n");
                     }
-                    _output.push_back(dbString + "\n");
                 }
                 break;
 
@@ -4044,32 +4056,37 @@ REDO_STATEMENT:
                 {
                     std::string arrName = "_" + _integerVars[varIndex]._name + "_array";
                     _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][0]) + "\n");
-                    std::string dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
 
-                    // I array values
-                    for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                    // Don't output DW statements for an uninitialised array
+                    if(_integerVars[varIndex]._arrInit)
                     {
-                        // Single initialisation value
-                        if(_integerVars[varIndex]._arrInits.size() == 0)
+                        std::string dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                        // I array values
+                        for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
                         {
-                            dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
-                        }
-                        // Multiple initialisation values
-                        else
-                        {
-                            // Number of initialisation values may be smaller than array size
-                            if(i < int(_integerVars[varIndex]._arrInits.size()))
-                            {
-                                dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[i]) + " ";
-                            }
-                            // Use default initialisation value for the rest of the array
-                            else
+                            // Single initialisation value
+                            if(_integerVars[varIndex]._arrInits.size() == 0)
                             {
                                 dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
                             }
+                            // Multiple initialisation values
+                            else
+                            {
+                                // Number of initialisation values may be smaller than array size
+                                if(i < int(_integerVars[varIndex]._arrInits.size()))
+                                {
+                                    dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[i]) + " ";
+                                }
+                                // Use default initialisation value for the rest of the array
+                                else
+                                {
+                                    dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
+                                }
+                            }
                         }
+                        _output.push_back(dwString + "\n");
                     }
-                    _output.push_back(dwString + "\n");
                 }
                 break;
 
@@ -4092,32 +4109,37 @@ REDO_STATEMENT:
                     {
                         arrName = "_" + _integerVars[varIndex]._name + "_" + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][j]);
                         _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][j]) + "\n");
-                        std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
 
-                        // I array values
-                        for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                        // Don't output DB statements for an uninitialised array
+                        if(_integerVars[varIndex]._arrInit)
                         {
-                            // Single initialisation value
-                            if(_integerVars[varIndex]._arrInits.size() == 0)
+                            std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                            // I array values
+                            for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
                             {
-                                dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
-                            }
-                            // Multiple initialisation values
-                            else
-                            {
-                                // Number of initialisation values may be smaller than array size
-                                if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
-                                {
-                                    dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._arrInits[initIndex++])) + " ";
-                                }
-                                // Use default initialisation value for the rest of the array
-                                else
+                                // Single initialisation value
+                                if(_integerVars[varIndex]._arrInits.size() == 0)
                                 {
                                     dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
                                 }
+                                // Multiple initialisation values
+                                else
+                                {
+                                    // Number of initialisation values may be smaller than array size
+                                    if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
+                                    {
+                                        dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._arrInits[initIndex++])) + " ";
+                                    }
+                                    // Use default initialisation value for the rest of the array
+                                    else
+                                    {
+                                        dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
+                                    }
+                                }
                             }
+                            _output.push_back(dbString + "\n");
                         }
-                        _output.push_back(dbString + "\n");
                     }
                 }
                 break;
@@ -4141,32 +4163,37 @@ REDO_STATEMENT:
                     {
                         arrName = "_" + _integerVars[varIndex]._name + "_" + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][j]);
                         _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][j]) + "\n");
-                        dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
 
-                        // I array values
-                        for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                        // Don't output DW statements for an uninitialised array
+                        if(_integerVars[varIndex]._arrInit)
                         {
-                            // Single initialisation value
-                            if(_integerVars[varIndex]._arrInits.size() == 0)
+                            dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                            // I array values
+                            for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
                             {
-                                dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
-                            }
-                            // Multiple initialisation values
-                            else
-                            {
-                                // Number of initialisation values may be smaller than array size
-                                if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
-                                {
-                                    dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[initIndex++]) + " ";
-                                }
-                                // Use default initialisation value for the rest of the array
-                                else
+                                // Single initialisation value
+                                if(_integerVars[varIndex]._arrInits.size() == 0)
                                 {
                                     dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
                                 }
+                                // Multiple initialisation values
+                                else
+                                {
+                                    // Number of initialisation values may be smaller than array size
+                                    if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
+                                    {
+                                        dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[initIndex++]) + " ";
+                                    }
+                                    // Use default initialisation value for the rest of the array
+                                    else
+                                    {
+                                        dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
+                                    }
+                                }
                             }
+                            _output.push_back(dwString + "\n");
                         }
-                        _output.push_back(dwString + "\n");
                     }
                 }
                 break;
@@ -4208,32 +4235,37 @@ REDO_STATEMENT:
                         {
                             arrName = "_" + _integerVars[varIndex]._name + "_" + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[k][j]);
                             _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[k][j]) + "\n");
-                            std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
 
-                            // I array values
-                            for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                            // Don't output DB statements for an uninitialised array
+                            if(_integerVars[varIndex]._arrInit)
                             {
-                                // Single initialisation value
-                                if(_integerVars[varIndex]._arrInits.size() == 0)
+                                std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                                // I array values
+                                for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
                                 {
-                                    dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
-                                }
-                                // Multiple initialisation values
-                                else
-                                {
-                                    // Number of initialisation values may be smaller than array size
-                                    if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
+                                    // Single initialisation value
+                                    if(_integerVars[varIndex]._arrInits.size() == 0)
                                     {
-                                        dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._arrInits[initIndex++])) + " ";
+                                        dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
                                     }
-                                    // Use default initialisation value for the rest of the array
+                                    // Multiple initialisation values
                                     else
                                     {
-                                        dbString += Expression::wordToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
+                                        // Number of initialisation values may be smaller than array size
+                                        if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
+                                        {
+                                            dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._arrInits[initIndex++])) + " ";
+                                        }
+                                        // Use default initialisation value for the rest of the array
+                                        else
+                                        {
+                                            dbString += Expression::wordToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
+                                        }
                                     }
                                 }
+                                _output.push_back(dbString + "\n");
                             }
-                            _output.push_back(dbString + "\n");
                         }
                     }
                 }
@@ -4276,32 +4308,37 @@ REDO_STATEMENT:
                         {
                             arrName = "_" + _integerVars[varIndex]._name + "_" + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[k][j]);
                             _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[k][j]) + "\n");
-                            dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
 
-                            // I array values
-                            for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                            // Don't output DW statements for an uninitialised array
+                            if(_integerVars[varIndex]._arrInit)
                             {
-                                // Single initialisation value
-                                if(_integerVars[varIndex]._arrInits.size() == 0)
+                                dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                                // I array values
+                                for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
                                 {
-                                    dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
-                                }
-                                // Multiple initialisation values
-                                else
-                                {
-                                    // Number of initialisation values may be smaller than array size
-                                    if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
-                                    {
-                                        dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[initIndex++]) + " ";
-                                    }
-                                    // Use default initialisation value for the rest of the array
-                                    else
+                                    // Single initialisation value
+                                    if(_integerVars[varIndex]._arrInits.size() == 0)
                                     {
                                         dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
                                     }
+                                    // Multiple initialisation values
+                                    else
+                                    {
+                                        // Number of initialisation values may be smaller than array size
+                                        if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
+                                        {
+                                            dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[initIndex++]) + " ";
+                                        }
+                                        // Use default initialisation value for the rest of the array
+                                        else
+                                        {
+                                            dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
+                                        }
+                                    }
                                 }
+                                _output.push_back(dwString + "\n");
                             }
-                            _output.push_back(dwString + "\n");
                         }
                     }
                 }
@@ -4381,11 +4418,15 @@ REDO_STATEMENT:
                     std::string strName = "_" + _stringVars[i]._name + "_" + Expression::wordToHexString(_stringVars[i]._arrAddrs[j]);
                     _output.push_back(strName + std::string(LABEL_TRUNC_SIZE - strName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_stringVars[i]._arrAddrs[j]) + "\n");
 
-                    int len = 0;
-                    std::string str;
-                    std::string initStr = (j < int(_stringVars[i]._arrInits.size())) ? _stringVars[i]._arrInits[j] : defaultStr;
-                    if(!sanitiseString(initStr, str, len)) return false;
-                    _output.push_back(strName + std::string(LABEL_TRUNC_SIZE - strName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + std::to_string(len) + " '" + str + "' 0\n");
+                    // Don't output DW statements for an uninitialised array
+                    if(_stringVars[i]._arrInit)
+                    {
+                        int len = 0;
+                        std::string str;
+                        std::string initStr = (j < int(_stringVars[i]._arrInits.size())) ? _stringVars[i]._arrInits[j] : defaultStr;
+                        if(!sanitiseString(initStr, str, len)) return false;
+                        _output.push_back(strName + std::string(LABEL_TRUNC_SIZE - strName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + std::to_string(len) + " '" + str + "' 0\n");
+                    }
                 }
             }
         }
@@ -5504,9 +5545,6 @@ REDO_STATEMENT:
         // Labels
         if(!parseLabels(_input, numLines)) return false;
 
-        // Vars, (do NOT enable until TODO: @ parseVars() is satisified)
-        //if(!parseVars()) return false;
-
         // Includes
         if(!Linker::parseIncludes()) return false;
 
@@ -5550,6 +5588,7 @@ REDO_STATEMENT:
         outputInternalEquates();
         outputIncludes();
         outputLabels();
+        outputConsts();
         outputVars();
         outputArrs();
 

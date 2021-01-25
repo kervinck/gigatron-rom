@@ -3,6 +3,7 @@ textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
 textHex             EQU     register1
+textSpc             EQU     register1
 textLen             EQU     register2
 textOfs             EQU     register3
 textChr             EQU     register8
@@ -277,6 +278,38 @@ printI16_pos        LDWI    10000
                     RET
 %ENDS
 
+%SUB                printChr
+                    ; prints char in textChr for standalone calls
+printChr            PUSH
+                    LDWI    printInit
+                    CALL    giga_vAC
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    POP
+                    RET
+%ENDS
+
+%SUB                printSpc
+                    ; prints textSpc spaces
+printSpc            PUSH
+                    LD      textSpc
+                    BEQ     printS_exit
+                    LDWI    printInit
+                    CALL    giga_vAC
+                    
+printS_loop         LDI     32
+                    STW     textChr
+                    LDWI    printChar
+                    CALL    giga_vAC
+                    LD      textSpc
+                    SUBI    1
+                    ST      textSpc
+                    BNE     printS_loop
+                    
+printS_exit         POP
+                    RET
+%ENDS
+
 %SUB                printHex
                     ; print textLen hex digits in textHex, (textStr, textHex, textLen = strAddr, strHex, strLen in string::stringHex)
 printHex            PUSH
@@ -285,28 +318,6 @@ printHex            PUSH
                     LDWI    stringHex
                     CALL    giga_vAC
                     LDWI    printText
-                    CALL    giga_vAC
-                    POP
-                    RET
-%ENDS
-
-%SUB                printChr
-                    ; prints char in textChr for standalone calls
-printChr            PUSH
-                    LDWI    printInit
-                    CALL    giga_vAC
-                    LDWI    printChar
-                    CALL    giga_vAC
-                    POP
-                    RET
-%ENDS
-
-%SUB                printChr
-                    ; prints char in textChr for standalone calls
-printChr            PUSH
-                    LDWI    printInit
-                    CALL    giga_vAC
-                    LDWI    printChar
                     CALL    giga_vAC
                     POP
                     RET

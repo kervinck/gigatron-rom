@@ -912,7 +912,7 @@ namespace Graphics
                 uint32_t colour = (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFB0B0B0;
                 drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), colour, onCursor, 2);
                 if(onCursor) cursorAddress = hexAddress;
-                hexAddress = (hexAddress + 1) & (Memory::getSizeRAM() - 1);
+                hexAddress = (Editor::getMemoryMode() == Editor::RAM) ? (hexAddress + 1) & (Memory::getSizeRAM() - 1) : hexAddress + 1;
             }
         }
 

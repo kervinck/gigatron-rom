@@ -33,6 +33,28 @@ stringChr           STW     strDstAddr
                     RET
 %ENDS
 
+%SUB                stringSpc
+                    ; create a spc string, (parameter in strLen)
+stringSpc           LD      strLen
+                    BEQ     stringS_exit
+                    SUBI    94
+                    BGT     stringS_exit
+                    POKE    strAddr                             ; set destination buffer length
+                    INC     strAddr
+                    
+stringS_loop        LDI     32
+                    POKE    strAddr                             ; copy char
+                    INC     strAddr
+                    LD      strLen
+                    SUBI    1
+                    ST      strLen
+                    BNE     stringS_loop
+                    LDI     0
+                    POKE    strAddr                             ; terminating 0
+                    
+stringS_exit        RET
+%ENDS
+
 %SUB                stringHex
                     ; creates a hex string at strAddr of strLen digits from strHex
 stringHex           LDWI    SYS_LSRW4_50                    ; shift right by 4 SYS routine

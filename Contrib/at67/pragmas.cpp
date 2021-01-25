@@ -128,15 +128,15 @@ namespace Pragmas
 
         Expression::Numeric addrNumeric;
         std::string addrOperand;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
         {
             fprintf(stderr, "Pragmas::RUNTIMESTART() : 'Main:%d' : syntax error in address field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
             return false;
         }
         uint16_t address = uint16_t(std::lround(addrNumeric._value));
-        if(address < DEFAULT_START_ADDRESS)
+        if(address < DEFAULT_EXEC_ADDRESS)
         {
-            fprintf(stderr, "Pragmas::RUNTIMESTART() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str());
+            fprintf(stderr, "Pragmas::RUNTIMESTART() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_EXEC_ADDRESS, tokens[0].c_str(), input.c_str());
             return false;
         }
 
@@ -178,17 +178,20 @@ namespace Pragmas
 
         Expression::Numeric addrNumeric;
         std::string addrOperand;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
         {
             fprintf(stderr, "Pragmas::USERCODESTART() : 'Main:%d' : syntax error in address field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
             return false;
         }
         uint16_t address = uint16_t(std::lround(addrNumeric._value));
-        if(address < DEFAULT_START_ADDRESS)
+        if(address < DEFAULT_EXEC_ADDRESS)
         {
-            fprintf(stderr, "Pragmas::USERCODESTART() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str());
+            fprintf(stderr, "Pragmas::USERCODESTART() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_EXEC_ADDRESS, tokens[0].c_str(), input.c_str());
             return false;
         }
+
+        // Programmer wants to use video memory as code space
+        if(address >= 0x0800  &&  address < 0x7FA0  &&  (address & 0x00FF) < 0x00A0) Memory::invertFreeRAM();
 
         Compiler::setUserCodeStart(address);
 
@@ -208,15 +211,15 @@ namespace Pragmas
 
         Expression::Numeric addrNumeric;
         std::string addrOperand;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
         {
             fprintf(stderr, "Pragmas::ARRAYSSTART() : 'Main:%d' : syntax error in address field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
             return false;
         }
         uint16_t address = uint16_t(std::lround(addrNumeric._value));
-        if(address < DEFAULT_START_ADDRESS)
+        if(address < DEFAULT_EXEC_ADDRESS)
         {
-            fprintf(stderr, "Pragmas::ARRAYSSTART() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str());
+            fprintf(stderr, "Pragmas::ARRAYSSTART() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_EXEC_ADDRESS, tokens[0].c_str(), input.c_str());
             return false;
         }
 
@@ -245,15 +248,15 @@ namespace Pragmas
 
         Expression::Numeric addrNumeric;
         std::string addrOperand;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
         {
             fprintf(stderr, "Pragmas::STRINGSSTART() : 'Main:%d' : syntax error in address field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
             return false;
         }
         uint16_t address = uint16_t(std::lround(addrNumeric._value));
-        if(address < DEFAULT_START_ADDRESS)
+        if(address < DEFAULT_EXEC_ADDRESS)
         {
-            fprintf(stderr, "Pragmas::STRINGSSTART() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str());
+            fprintf(stderr, "Pragmas::STRINGSSTART() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_EXEC_ADDRESS, tokens[0].c_str(), input.c_str());
             return false;
         }
 
@@ -282,15 +285,15 @@ namespace Pragmas
 
         Expression::Numeric addrNumeric;
         std::string addrOperand;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
         {
             fprintf(stderr, "Pragmas::STRINGWORKAREA() : 'Main:%d' : syntax error in address field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
             return false;
         }
         uint16_t strWorkArea = uint16_t(std::lround(addrNumeric._value));
-        if(strWorkArea < DEFAULT_START_ADDRESS)
+        if(strWorkArea < DEFAULT_EXEC_ADDRESS)
         {
-            fprintf(stderr, "Pragmas::STRINGWORKAREA() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str());
+            fprintf(stderr, "Pragmas::STRINGWORKAREA() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_EXEC_ADDRESS, tokens[0].c_str(), input.c_str());
             return false;
         }
 
@@ -326,7 +329,7 @@ namespace Pragmas
 
         Expression::Numeric sizeNumeric;
         std::string sizeOperand;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], sizeOperand, sizeNumeric) == Compiler::OperandInvalid)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], sizeOperand, sizeNumeric) == Compiler::OperandInvalid)
         {
             fprintf(stderr, "Pragmas::TEMPVARSIZE() : 'Main:%d' : syntax error in size field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
             return false;
@@ -395,7 +398,7 @@ namespace Pragmas
         // Max num sprites
         Expression::Numeric maxNumNumeric;
         std::string maxNumOperand;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], maxNumOperand, maxNumNumeric) == Compiler::OperandInvalid)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], maxNumOperand, maxNumNumeric) == Compiler::OperandInvalid)
         {
             fprintf(stderr, "Pragmas::MAXNUMSPRITES() : 'Main:%d' : syntax error in max num field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
             return false;
@@ -440,7 +443,7 @@ namespace Pragmas
         // Number of chunks
         Expression::Numeric chunksNumeric;
         std::string chunksOperand;
-        if(Compiler::parseExpression(codeLineIndex, tokens[0], chunksOperand, chunksNumeric) == Compiler::OperandInvalid)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], chunksOperand, chunksNumeric) == Compiler::OperandInvalid)
         {
             fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : 'Main:%d' : syntax error in num chunks field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
             return false;
@@ -459,15 +462,15 @@ namespace Pragmas
         {
             Expression::Numeric addrNumeric;
             std::string addrOperand;
-            if(Compiler::parseExpression(codeLineIndex, tokens[1], addrOperand, addrNumeric) == Compiler::OperandInvalid)
+            if(Compiler::parseStaticExpression(codeLineIndex, tokens[1], addrOperand, addrNumeric) == Compiler::OperandInvalid)
             {
                 fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : 'Main:%d' : syntax error in address field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
                 return false;
             }
             uint16_t minAddress = uint16_t(std::lround(addrNumeric._value));
-            if(minAddress < DEFAULT_START_ADDRESS)
+            if(minAddress < DEFAULT_EXEC_ADDRESS)
             {
-                fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_START_ADDRESS, tokens[1].c_str(), input.c_str());
+                fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_EXEC_ADDRESS, tokens[1].c_str(), input.c_str());
                 return false;
             }
 

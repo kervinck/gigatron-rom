@@ -325,7 +325,7 @@ namespace Validater
                 Expression::stripWhitespace(opcode);
                 if(opcodeHasBranch(opcode))
                 {
-                    std::vector<std::string> tokens = Expression::tokenise(code, " ", false);
+                    std::vector<std::string> tokens = Expression::tokenise(code, ' ', false);
                     if(tokens.size() < 2) continue;
 
                     // Normal branch

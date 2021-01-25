@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     Assembler::initialise();
 
     // Optional include path
-    uint16_t address = DEFAULT_START_ADDRESS;
+    uint16_t address = DEFAULT_EXEC_ADDRESS;
     std::string includepath = (argc == 3) ? std::string(argv[2]) : ".";
     Assembler::setIncludePath(includepath);
 

@@ -106,6 +106,7 @@ namespace Compiler
         std::vector<int16_t> _arrInits;
         std::vector<std::vector<uint16_t>> _arrAddrs;
         std::vector<uint16_t> _arrLut;
+        bool _arrInit = true;
     };
 
     struct StringVar
@@ -121,6 +122,7 @@ namespace Compiler
         bool _constant = true;
         std::vector<std::string> _arrInits;
         std::vector<uint16_t> _arrAddrs;
+        bool _arrInit = true;
     };
 
     struct InternalLabel
@@ -533,18 +535,18 @@ namespace Compiler
     bool createCodeLine(const std::string& code, int codeLineStart, int labelIndex, int varIndex, Expression::Int16Byte int16Byte, bool vars, CodeLine& codeLine, const std::string& moduleName=MODULE_MAIN);
     void createLabel(uint16_t address, const std::string& name, int codeLineIndex, Label& label, bool numeric=false, bool addUnderscore=true, bool pageJump=false, bool gosub=false);
     void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex);
-    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, uint16_t address, int& varIndex);
-    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType, int intSize,
-                      uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs, std::vector<uint16_t>& arrLut);
+    void createProcIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, uint16_t address, int& varIndex);
+    void createArrIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, bool isInit, int& varIndex, VarType varType, int intSize,
+                         uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs, std::vector<uint16_t>& arrLut);
     int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize=USER_STR_SIZE, bool constString=true, VarType varType=VarStr);
     uint16_t getOrCreateConstString(const std::string& input, int& index);
     uint16_t getOrCreateConstString(ConstStrType constStrType, int16_t input, int& index);
     uint16_t getOrCreateConstString(ConstStrType constStrType, const std::string& input, int8_t length, uint8_t offset, int& index);
-    int createStringArray(CodeLine& codeLine, int codeLineIndex, std::string& name, uint8_t size, std::vector<std::string>& arrInits, std::vector<uint16_t>& arrAddrs);
+    int createStringArray(CodeLine& codeLine, int codeLineIndex, const std::string& name, uint8_t size, bool isInit, std::vector<std::string>& arrInits, std::vector<uint16_t>& arrAddrs);
     void getOrCreateString(const Expression::Numeric& numeric, std::string& name, uint16_t& addr, int& index);
     void emitStringAddress(const Expression::Numeric& numeric, uint16_t address);
 
-    void updateVar(int16_t data, CodeLine& codeLine, int varIndex, bool containsVars);
+    void updateIntVar(int16_t data, CodeLine& codeLine, int varIndex, bool containsVars);
 
     bool findMacroText(const std::string& macroName, const std::string& text);
     int getMacroSize(const std::string& macroName);
@@ -556,7 +558,7 @@ namespace Compiler
     void getNextTempVar(void);
 
     uint32_t isExpression(std::string& input, int& varIndex, int& constIndex, int& strIndex);
-    OperandType parseExpression(int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric);
+    OperandType parseStaticExpression(int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric);
     uint32_t parseExpression(int codeLineIndex, std::string& expression, Expression::Numeric& numeric);
     uint32_t handleExpression(int codeLineIndex, std::string& expression, Expression::Numeric numeric);
     StatementResult parseMultiStatements(const std::string& code, int codeLineIndex, int codeLineStart, int& varIndex, int& strIndex);

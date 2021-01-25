@@ -41,7 +41,9 @@ namespace Functions
 
     // string functions
     Expression::Numeric CHR$(Expression::Numeric& numeric,    const std::string& moduleName, const std::string& codeLineText, int codeLineIndex);
+    Expression::Numeric SPC$(Expression::Numeric& numeric,    const std::string& moduleName, const std::string& codeLineText, int codeLineIndex);
     Expression::Numeric STR$(Expression::Numeric& numeric,    const std::string& moduleName, const std::string& codeLineText, int codeLineIndex);
+    Expression::Numeric STRING$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineIndex);
     Expression::Numeric TIME$(Expression::Numeric& numeric,   const std::string& moduleName, const std::string& codeLineText, int codeLineIndex);
     Expression::Numeric HEX$(Expression::Numeric& numeric,    const std::string& moduleName, const std::string& codeLineText, int codeLineIndex);
     Expression::Numeric LEFT$(Expression::Numeric& numeric,   const std::string& moduleName, const std::string& codeLineText, int codeLineIndex);

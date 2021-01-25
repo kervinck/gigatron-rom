@@ -1,5 +1,5 @@
 ; This must match RUNTIME_VERSION in cpu.h
-%define RUNTIME_VERSION 103
+%define RUNTIME_VERSION 104
 
 memIndex0           EQU     register10
 memIndex1           EQU     register11

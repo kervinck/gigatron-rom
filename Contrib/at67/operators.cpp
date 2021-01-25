@@ -41,7 +41,7 @@ namespace Operators
     }
 
 
-    void createTmpVar(Expression::Numeric& numeric)
+    void changeToTmpVar(Expression::Numeric& numeric)
     {
         numeric._value = uint8_t(Compiler::getTempVarStart());
         numeric._varType = Expression::TmpVar;
@@ -73,7 +73,7 @@ namespace Operators
     void handleSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric)
     {
         createSingleOp(opcodeStr, numeric);
-        createTmpVar(numeric);
+        changeToTmpVar(numeric);
     }
 
     void selectSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric)
@@ -172,7 +172,7 @@ namespace Operators
             }
         }
 
-        createTmpVar(lhs);
+        changeToTmpVar(lhs);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return true;
@@ -202,7 +202,7 @@ namespace Operators
 
         if(opcode != "LSLW") Compiler::emitVcpuAsm("STW", "mathShift", false);
 
-        createTmpVar(lhs);
+        changeToTmpVar(lhs);
 
         return true;
     }
@@ -318,7 +318,7 @@ namespace Operators
             }
         }
 
-        createTmpVar(lhs);
+        changeToTmpVar(lhs);
 
         return true;
     }
@@ -470,7 +470,7 @@ namespace Operators
             }
         }
 
-        createTmpVar(lhs);
+        changeToTmpVar(lhs);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return true;
@@ -613,7 +613,7 @@ namespace Operators
             Compiler::emitVcpuAsm(opcode, "giga_vAC", false);
         }
 
-        createTmpVar(lhs);
+        changeToTmpVar(lhs);
         
         if(isMod) Compiler::emitVcpuAsm("LDW", "mathRem", false);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
@@ -1115,7 +1115,7 @@ namespace Operators
                     default: break;
                 }
 
-                createTmpVar(left);
+                changeToTmpVar(left);
 
                 Compiler::emitVcpuAsm("ST", "giga_vAC + 1", false);
                 Compiler::emitVcpuAsm("ORI", "0xFF", false);
@@ -1176,7 +1176,7 @@ namespace Operators
                     default: break;
                 }
 
-                createTmpVar(left);
+                changeToTmpVar(left);
             }
             else
             {

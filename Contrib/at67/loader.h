@@ -8,16 +8,16 @@
 #include "timing.h"
 
 
-#define PAYLOAD_SIZE              60
-#define SEGMENT_SIZE              255
-#define SEGMENT_HEADER_SIZE       3
-#define GT1FILE_TRAILER_SIZE      3
-#define DEFAULT_START_ADDRESS_HI  0x02
-#define DEFAULT_START_ADDRESS_LO  0x00
+#define PAYLOAD_SIZE            60
+#define SEGMENT_SIZE            255
+#define SEGMENT_HEADER_SIZE     3
+#define GT1FILE_TRAILER_SIZE    3
+#define DEFAULT_EXEC_ADDRESS_HI 0x02
+#define DEFAULT_EXEC_ADDRESS_LO 0x00
 
-#define ZERO_CONST_ADDRESS        0x00
-#define ONE_CONST_ADDRESS         0x80
-#define CHANNEL_MASK              0x21
+#define ZERO_CONST_ADDRESS 0x00
+#define ONE_CONST_ADDRESS  0x80
+#define CHANNEL_MASK       0x21
 
 #define LOADER_CONFIG_INI  "loader_config.ini"
 #define HIGH_SCORES_INI    "high_scores.ini"
@@ -38,8 +38,8 @@ namespace Loader
     {
         std::vector<Gt1Segment> _segments;
         uint8_t _terminator=0;
-        uint8_t _hiStart=DEFAULT_START_ADDRESS_HI;
-        uint8_t _loStart=DEFAULT_START_ADDRESS_LO;
+        uint8_t _hiStart=DEFAULT_EXEC_ADDRESS_HI;
+        uint8_t _loStart=DEFAULT_EXEC_ADDRESS_LO;
     };
 
     const std::string& getExePath(void);

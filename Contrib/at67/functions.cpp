@@ -68,15 +68,17 @@ namespace Functions
         _functions["CLAMP" ] = "CLAMP";
 
         // String functions
-        _stringFunctions["CHR$"  ]  = "CHR$";
-        _stringFunctions["HEX$"  ]  = "HEX$";
-        _stringFunctions["LEFT$" ]  = "LEFT$";
-        _stringFunctions["RIGHT$"]  = "RIGHT$";
-        _stringFunctions["MID$"  ]  = "MID$";
-        _stringFunctions["STR$"  ]  = "STR$";
-        _stringFunctions["TIME$" ]  = "TIME$";
-        _stringFunctions["LOWER$"]  = "LOWER$";
-        _stringFunctions["UPPER$"]  = "UPPER$";
+        _stringFunctions["CHR$"   ] = "CHR$";
+        _stringFunctions["SPC$"   ] = "SPC$";
+        _stringFunctions["STR$"   ] = "STR$";
+        _stringFunctions["STRING$"] = "STRING$";
+        _stringFunctions["TIME$"  ] = "TIME$";
+        _stringFunctions["HEX$"   ] = "HEX$";
+        _stringFunctions["LEFT$"  ] = "LEFT$";
+        _stringFunctions["RIGHT$" ] = "RIGHT$";
+        _stringFunctions["MID$"   ] = "MID$";
+        _stringFunctions["LOWER$" ] = "LOWER$";
+        _stringFunctions["UPPER$" ] = "UPPER$";
         _stringFunctions["STRCAT$"] = "STRCAT$";
 
         uint64_t timeSeed = time(NULL);
@@ -222,7 +224,6 @@ namespace Functions
             std::string operand = Expression::wordToHexString(arrayPtr + uint16_t(numeric._params[0]._value*intSize));
             Compiler::emitVcpuAsm("LDWI", operand, false); 
             Compiler::emitVcpuAsm("PEEK", "",      false);
-            Operators::createTmpVar(numeric);
         }
         else if(numeric._varType == Expression::Arr1Var16  &&  numeric._params.size() == 1  &&  numeric._params[0]._varType == Expression::Number)
         {
@@ -237,8 +238,6 @@ namespace Functions
 
                 default: break;
             }
-
-            Operators::createTmpVar(numeric);
         }
         // Variable array index or 2d/3d array
         else
@@ -339,7 +338,7 @@ namespace Functions
             }
         }
 
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
         return numeric;
@@ -384,7 +383,7 @@ namespace Functions
             Compiler::emitVcpuAsm("DEEK", "", false);
         }
 
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         numeric._varType = Expression::Str2Var;
@@ -408,7 +407,7 @@ namespace Functions
             {
                 Compiler::emitVcpuAsm("LD",  Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
                 Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-                Operators::createTmpVar(numeric);
+                Operators::changeToTmpVar(numeric);
                 return numeric;
             }
             else
@@ -441,7 +440,7 @@ namespace Functions
             {
                 Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
                 Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-                Operators::createTmpVar(numeric);
+                Operators::changeToTmpVar(numeric);
                 return numeric;
             }
             else
@@ -543,7 +542,7 @@ namespace Functions
         }
         else
         {
-            Operators::createTmpVar(numeric);
+            Operators::changeToTmpVar(numeric);
             Compiler::emitVcpuAsm("%Rand", "", false);
         }
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
@@ -733,7 +732,7 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
@@ -752,7 +751,22 @@ namespace Functions
         {
             std::string sysVarName = numeric._text;
             Expression::strToUpper(sysVarName);
-            if(sysVarName == "SPRITE_LUT"  &&  numeric._params.size() == 1)
+            if(sysVarName == "ROM_READ_DIR"  &&  numeric._params.size() == 1)
+            {
+                // Literal constant
+                if(numeric._params[0]._varType == Expression::Number)
+                {
+                    Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._params[0]._value))), false);
+                }
+
+                Compiler::getNextTempVar();
+                Operators::handleSingleOp("LDW", numeric._params[0]);
+                Compiler::emitVcpuAsm("%RomRead", "", false);
+                Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+                numeric._params[0]._params.clear();
+                return numeric._params[0];
+            }
+            else if(sysVarName == "SPRITE_LUT"  &&  numeric._params.size() == 1)
             {
                 // Literal constant
                 if(numeric._params[0]._varType == Expression::Number)
@@ -806,7 +820,7 @@ namespace Functions
             else if(numeric._params.size() == 0)
             {
                 Compiler::getNextTempVar();
-                Operators::createTmpVar(numeric);
+                Operators::changeToTmpVar(numeric);
 
                 if(sysVarName == "TIME_MODE")
                 {
@@ -1059,7 +1073,7 @@ namespace Functions
                 numeric._value = abs(numeric._value);
                 (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false) : 
                                                                   Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
-                Operators::createTmpVar(numeric);
+                Operators::changeToTmpVar(numeric);
                 Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
             }
             else
@@ -1091,7 +1105,7 @@ namespace Functions
                 numeric._value = Expression::sgn(numeric._value);
                 (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false) : 
                                                                   Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
-                Operators::createTmpVar(numeric);
+                Operators::changeToTmpVar(numeric);
                 Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
             }
             else
@@ -1179,7 +1193,7 @@ namespace Functions
             Compiler::emitVcpuAsm("LDI", std::to_string(ascii), false);
         }
 
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
@@ -1255,7 +1269,7 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
         return numeric;
@@ -1290,7 +1304,7 @@ namespace Functions
         Compiler::emitVcpuAsm("%BcdCmp", "", false);
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
         return numeric;
@@ -1338,7 +1352,7 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
@@ -1378,7 +1392,7 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("LUP", offset, false);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
@@ -1484,7 +1498,7 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
@@ -1528,7 +1542,7 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("%ReadPixel", "", false);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
@@ -1573,7 +1587,7 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("%IntMin", "", false);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
@@ -1618,7 +1632,7 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("%IntMax", "", false);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
@@ -1675,7 +1689,7 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("%IntClamp", "", false);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
@@ -1701,7 +1715,7 @@ namespace Functions
             if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
             {
                 Compiler::emitVcpuAsm("LDI", std::to_string(int16_t(std::lround(numeric._value))), false);
-                Compiler::emitVcpuAsm("%PrintAcChar", "", false);
+                Compiler::emitVcpuAsm("%PrintAcChr", "", false);
                 return numeric;
             }
 
@@ -1718,7 +1732,7 @@ namespace Functions
         Operators::handleSingleOp("LDW", numeric);
         if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
         {
-            Compiler::emitVcpuAsm("%PrintAcChar", "", false);
+            Compiler::emitVcpuAsm("%PrintAcChr", "", false);
             return numeric;
         }
 
@@ -1726,6 +1740,61 @@ namespace Functions
         Compiler::emitVcpuAsm("STW", "strChr", false);
         Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
         Compiler::emitVcpuAsm("%StringChr", "", false);
+
+        return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+    }
+
+    Expression::Numeric SPC$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
+    {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Functions::SPC$() : '%s:%d' : SPC$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
+            numeric._isValid = false;
+            return numeric;
+        }
+
+        // Create a new temporary string
+        if(!isFuncNested()) Compiler::nextStrWorkArea();
+        uint16_t dstAddr = Compiler::getStrWorkArea();
+
+        if(numeric._varType == Expression::Number)
+        {
+            uint8_t len = uint8_t(std::lround(numeric._value));
+            if(len < 1  ||  len > 94)
+            {
+                fprintf(stderr, "Functions::SPC$() : '%s:%d' : syntax error, 'SPC$(n)', if 'n' is a literal, it MUST be <1-94> : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
+                numeric._isValid = false;
+                return numeric;
+            }
+
+            if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
+            {
+                Compiler::emitVcpuAsm("LDI", std::to_string(len), false);
+                Compiler::emitVcpuAsm("%PrintSpc", "", false);
+                return numeric;
+            }
+
+            // Create SPC string
+            Compiler::emitVcpuAsm("LDI", std::to_string(len), false);
+            Compiler::emitVcpuAsm("STW", "strLen", false);
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+            Compiler::emitVcpuAsm("%StringSpc", "", false);
+
+            return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
+        {
+            Compiler::emitVcpuAsm("%PrintSpc", "", false);
+            return numeric;
+        }
+
+        // Create SPC string
+        Compiler::emitVcpuAsm("STW", "strLen", false);
+        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+        Compiler::emitVcpuAsm("%StringSpc", "", false);
 
         return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
@@ -1776,6 +1845,44 @@ namespace Functions
         Compiler::emitVcpuAsm("%StringInt", "", false);
 
         return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+    }
+
+    Expression::Numeric STRING$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
+    {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Functions::STRING$() : '%s:%d' : STRING$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
+            numeric._isValid = false;
+            return numeric;
+        }
+
+        if(numeric._varType == Expression::Number)
+        {
+            // Print STR string, (without wasting memory)
+            if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
+            {
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(uint16_t(std::lround(numeric._value))), false);
+                Compiler::emitVcpuAsm("%PrintAcString", "", false);
+                return numeric;
+            }
+
+            // Point to STR address
+            return Expression::Numeric(numeric._value, uint16_t(-1), true, false, false, Expression::StrAddr, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
+        {
+            Compiler::emitVcpuAsm("%PrintAcString", "", false);
+            return numeric;
+        }
+
+        Operators::changeToTmpVar(numeric);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+        numeric._varType = Expression::TmpStrAddr;
+
+        return numeric;
     }
 
     Expression::Numeric TIME$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
