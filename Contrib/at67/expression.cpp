@@ -502,7 +502,7 @@ namespace Expression
         std::string output = input;
         for(int i=0; i<int(chars.size()); i++)
         {
-            if(output.erase(std::remove(output.begin(), output.end(), chars[i]), output.end()) == output.end()) return false;
+            output.erase(std::remove(output.begin(), output.end(), chars[i]), output.end()) == output.end();
         }
 
         input = output;
