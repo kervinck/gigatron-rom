@@ -80,8 +80,8 @@ namespace Operators
     {
         if(numeric._varType == Expression::Number)
         {
-            uint16_t val = uint16_t(std::lround(numeric._value));
-            (val <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(val)), false) : Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(val), false);
+            int16_t val = int16_t(std::lround(numeric._value));
+            (val >= 0  && val <= 255) ? Compiler::emitVcpuAsm("LDI", std::to_string(val), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(val), false);
         }
         else
         {
@@ -89,12 +89,12 @@ namespace Operators
         }
     }
 
-    bool handleDualOp(const std::string& opcodeStr, Expression::Numeric& lhs, Expression::Numeric& rhs)
+    bool handleDualOp(const std::string& opcodeStr, Expression::Numeric& lhs, Expression::Numeric& rhs, bool outputHex)
     {
         std::string opcode = std::string(opcodeStr);
 
         // Swap left and right to take advantage of LDWI for 16bit numbers
-        if(rhs._varType == Expression::Number  &&  uint16_t(rhs._value) > 255)
+        if(rhs._varType == Expression::Number  &&  (rhs._value < 0  ||  rhs._value > 255))
         {
             std::swap(lhs, rhs);
             if(opcode == "SUB")
@@ -110,12 +110,12 @@ namespace Operators
             // 8bit positive constants
             if(lhs._value >=0  &&  lhs._value <= 255)
             {
-                Compiler::emitVcpuAsm("LDI", std::to_string(uint8_t(std::lround(lhs._value))), false);
+                (outputHex) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(lhs._value))), false) : Compiler::emitVcpuAsm("LDI", std::to_string(uint8_t(std::lround(lhs._value))), false);
             }
             // 16bit constants
             else
             {
-                Compiler::emitVcpuAsm("LDWI", std::to_string(int16_t(std::lround(lhs._value))), false);
+                (outputHex) ? Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(lhs._value))), false) : Compiler::emitVcpuAsm("LDWI", std::to_string(int16_t(std::lround(lhs._value))), false);
             }
 
             _nextTempVar = true;
@@ -147,96 +147,10 @@ namespace Operators
         if(rhs._varType == Expression::Number)
         {
             // Skip XOR if operand is 0, (n XOR 0 = n)
-            if(rhs._value  ||  opcode != "XOR") Compiler::emitVcpuAsm(opcode + "I", std::to_string(int16_t(std::lround(rhs._value))), false);
-        }
-        else
-        {
-            switch(rhs._varType)
+            if(rhs._value  ||  opcode != "XOR") 
             {
-                // Temporary variable address
-                case Expression::TmpVar:
-                {
-                    Compiler::emitVcpuAsm(opcode + "W", Expression::byteToHexString(uint8_t(std::lround(rhs._value))), false);
-                }
-                break;
-
-                // User variable name
-                case Expression::IntVar16:
-                {
-                    if(!Compiler::emitVcpuAsmUserVar(opcode + "W", rhs, _nextTempVar)) return false;
-                    _nextTempVar = false;
-                }
-                break;
-
-                default: break;
+                (outputHex) ? Compiler::emitVcpuAsm(opcode + "I", Expression::wordToHexString(int8_t(std::lround(rhs._value))), false) : Compiler::emitVcpuAsm(opcode + "I", std::to_string(int8_t(std::lround(rhs._value))), false);
             }
-        }
-
-        changeToTmpVar(lhs);
-        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-
-        return true;
-    }
-
-    bool handleDualOpBool(const std::string& opcodeStr, Expression::Numeric& lhs, Expression::Numeric& rhs)
-    {
-        std::string opcode = std::string(opcodeStr);
-
-        // Swap left and right to take advantage of LDWI for 16bit numbers
-        if(rhs._varType == Expression::Number  &&  uint16_t(rhs._value) > 255)
-        {
-            std::swap(lhs, rhs);
-            if(opcode == "SUB")
-            {
-                opcode = "ADD";
-                if(lhs._value > 0) lhs._value = -lhs._value;
-            }
-        }
-
-        // LHS
-        if(lhs._varType == Expression::Number)
-        {
-            // 8bit positive constants
-            if(lhs._value >=0  &&  lhs._value <= 255)
-            {
-                Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(lhs._value))), false);
-            }
-            // 16bit constants
-            else
-            {
-                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(uint16_t(std::lround(lhs._value))), false);
-            }
-
-            _nextTempVar = true;
-        }
-        else
-        {
-            switch(lhs._varType)
-            {
-                // Temporary variable address
-                case Expression::TmpVar:
-                {
-                    Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(std::lround(lhs._value))), false);
-                }
-                break;
-
-                // User variable name
-                case Expression::IntVar16:
-                {
-                    if(!Compiler::emitVcpuAsmUserVar("LDW", lhs, true)) return false;
-                    _nextTempVar = false;
-                }
-                break;
-
-                default: break;
-            }
-        }
-
-        // RHS
-        if(rhs._varType == Expression::Number)
-        {
-            // Skip XOR if operand is 0, (n XOR 0 = n)
-            if(rhs._value  ||  opcode != "XOR") Compiler::emitVcpuAsm(opcode + "I", std::to_string(uint16_t(std::lround(rhs._value))), false);
         }
         else
         {
@@ -329,7 +243,7 @@ namespace Operators
     {
         // Swap left and right to take advantage of LDWI for 16bit numbers
         invertedLogic = false;
-        if(rhs._varType == Expression::Number  &&  uint16_t(rhs._value) > 255)
+        if(rhs._varType == Expression::Number  &&  (rhs._value < 0  ||  rhs._value > 255))
         {
             std::swap(lhs, rhs);
             invertedLogic = true;
@@ -774,7 +688,7 @@ namespace Operators
 
         if(numeric._varType == Expression::Number)
         {
-            numeric._value = ~uint16_t(std::lround(numeric._value));
+            numeric._value = ~int16_t(std::lround(numeric._value));
             return numeric;
         }
 
@@ -1094,7 +1008,7 @@ namespace Operators
             return left;
         }
 
-        left._isValid = handleDualOp("ADD", left, right);
+        left._isValid = handleDualOp("ADD", left, right, false);
         return left;
     }
 
@@ -1110,7 +1024,7 @@ namespace Operators
             return left;
         }
 
-        left._isValid = handleDualOp("SUB", left, right);
+        left._isValid = handleDualOp("SUB", left, right, false);
         return left;
     }
 
@@ -1122,11 +1036,11 @@ namespace Operators
 
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value = uint16_t(std::lround(left._value)) & uint16_t(std::lround(right._value));
+            left._value = int16_t(std::lround(left._value)) & int16_t(std::lround(right._value));
             return left;
         }
 
-        left._isValid = handleDualOpBool("AND", left, right);
+        left._isValid = handleDualOp("AND", left, right, true);
         return left;
     }
 
@@ -1138,11 +1052,11 @@ namespace Operators
 
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value = uint16_t(std::lround(left._value)) ^ uint16_t(std::lround(right._value));
+            left._value = int16_t(std::lround(left._value)) ^ int16_t(std::lround(right._value));
             return left;
         }
 
-        left._isValid = handleDualOpBool("XOR", left, right);
+        left._isValid = handleDualOp("XOR", left, right, true);
         return left;
     }
 
@@ -1154,11 +1068,11 @@ namespace Operators
 
         if(left._varType == Expression::Number  &&  right._varType == Expression::Number)
         {
-            left._value = uint16_t(std::lround(left._value)) | uint16_t(std::lround(right._value));
+            left._value = int16_t(std::lround(left._value)) | int16_t(std::lround(right._value));
             return left;
         }
 
-        left._isValid = handleDualOpBool("OR", left, right);
+        left._isValid = handleDualOp("OR", left, right, true);
         return left;
     }
 

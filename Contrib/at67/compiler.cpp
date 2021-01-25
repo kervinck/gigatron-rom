@@ -5618,11 +5618,6 @@ REDO_STATEMENT:
 
         //fprintf(stderr, "\nHeap allocations %llu, total heap usage %llu\n", _heapAllocations, _heapTotalUsage);
 
-        int16_t  dum0 = -6;
-        uint16_t dum1 = dum0;
-        int16_t  dum2 = dum1;
-        printf("%d %04x : %d %04x : %d %04x\n", dum0, dum0, dum1, dum1, dum2, dum2);
-
         return true;
     }
 }

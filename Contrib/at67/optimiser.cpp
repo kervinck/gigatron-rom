@@ -1032,8 +1032,10 @@ RESTART_OPTIMISE:
                                 vasm = Compiler::getCodeLines()[i]._vasm[firstLine + 1];
                                 operand = vasm._operand;
                                 Expression::stringToU8(operand, addi1);
-                                int result = addi0 + addi1;
-                                if(result > 255) break; // result to large for an ADDI operand so exit
+
+                                // Result can't fit in an ADDI operand so exit, (ADDI can't be -ve so result can't be -ve)
+                                uint16_t result = addi0 + addi1;
+                                if(result > 255) break;
 
                                 // Delete second ADDI
                                 linesDeleted = true;
