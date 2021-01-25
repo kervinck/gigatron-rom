@@ -68,15 +68,17 @@ namespace Functions
         _functions["CLAMP" ] = "CLAMP";
 
         // String functions
-        _stringFunctions["CHR$"  ]  = "CHR$";
-        _stringFunctions["HEX$"  ]  = "HEX$";
-        _stringFunctions["LEFT$" ]  = "LEFT$";
-        _stringFunctions["RIGHT$"]  = "RIGHT$";
-        _stringFunctions["MID$"  ]  = "MID$";
-        _stringFunctions["STR$"  ]  = "STR$";
-        _stringFunctions["TIME$" ]  = "TIME$";
-        _stringFunctions["LOWER$"]  = "LOWER$";
-        _stringFunctions["UPPER$"]  = "UPPER$";
+        _stringFunctions["CHR$"   ] = "CHR$";
+        _stringFunctions["SPC$"   ] = "SPC$";
+        _stringFunctions["STR$"   ] = "STR$";
+        _stringFunctions["STRING$"] = "STRING$";
+        _stringFunctions["TIME$"  ] = "TIME$";
+        _stringFunctions["HEX$"   ] = "HEX$";
+        _stringFunctions["LEFT$"  ] = "LEFT$";
+        _stringFunctions["RIGHT$" ] = "RIGHT$";
+        _stringFunctions["MID$"   ] = "MID$";
+        _stringFunctions["LOWER$" ] = "LOWER$";
+        _stringFunctions["UPPER$" ] = "UPPER$";
         _stringFunctions["STRCAT$"] = "STRCAT$";
 
         uint64_t timeSeed = time(NULL);
@@ -202,11 +204,11 @@ namespace Functions
             default: break;
         }
     }
-    Expression::Numeric IARR(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric IARR(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::IARR() : %s cannot be used in static initialisation : in '%s' on line %d\n", numeric._name.c_str(), codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::IARR() : '%s:%d' : %s cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, numeric._name.c_str(), codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -222,7 +224,6 @@ namespace Functions
             std::string operand = Expression::wordToHexString(arrayPtr + uint16_t(numeric._params[0]._value*intSize));
             Compiler::emitVcpuAsm("LDWI", operand, false); 
             Compiler::emitVcpuAsm("PEEK", "",      false);
-            Operators::createTmpVar(numeric);
         }
         else if(numeric._varType == Expression::Arr1Var16  &&  numeric._params.size() == 1  &&  numeric._params[0]._varType == Expression::Number)
         {
@@ -237,8 +238,6 @@ namespace Functions
 
                 default: break;
             }
-
-            Operators::createTmpVar(numeric);
         }
         // Variable array index or 2d/3d array
         else
@@ -254,7 +253,7 @@ namespace Functions
             }
             if(numDims != numeric._params.size())
             {
-                fprintf(stderr, "Functions::IARR() : %s() expects %d dimension/s, found %d : in '%s' on line %d\n", numeric._name.c_str(), int(numDims), int(numeric._params.size()), codeLineText.c_str(), codeLineStart);
+                fprintf(stderr, "Functions::IARR() : '%s:%d' : %s() expects %d dimension/s, found %d : %s\n", moduleName.c_str(), codeLineStart, numeric._name.c_str(), int(numDims), int(numeric._params.size()), codeLineText.c_str());
                 numeric._isValid = false;
                 return numeric;
             }
@@ -339,23 +338,23 @@ namespace Functions
             }
         }
 
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric SARR(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric SARR(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::SARR() : %s cannot be used in static initialisation : in '%s' on line %d\n", numeric._name.c_str(), codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::SARR() : '%s:%d' : %s cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, numeric._name.c_str(), codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() != 1)
         {
-            fprintf(stderr, "Functions::SARR() : %s() expects 1 dimension, found %d : in '%s' on line %d\n", numeric._name.c_str(), int(numeric._params.size()), codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::SARR() : '%s:%d' : %s() expects 1 dimension, found %d : %s\n", moduleName.c_str(), codeLineStart, numeric._name.c_str(), int(numeric._params.size()), codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -384,7 +383,7 @@ namespace Functions
             Compiler::emitVcpuAsm("DEEK", "", false);
         }
 
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         numeric._varType = Expression::Str2Var;
@@ -392,11 +391,11 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric PEEK(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric PEEK(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::PEEK() : PEEK() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::PEEK() : '%s:%d' : PEEK() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -408,7 +407,7 @@ namespace Functions
             {
                 Compiler::emitVcpuAsm("LD",  Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
                 Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-                Operators::createTmpVar(numeric);
+                Operators::changeToTmpVar(numeric);
                 return numeric;
             }
             else
@@ -425,11 +424,11 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric DEEK(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric DEEK(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::PEEK() : PEEK() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::PEEK() : '%s:%d' : PEEK() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -441,7 +440,7 @@ namespace Functions
             {
                 Compiler::emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false);
                 Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
-                Operators::createTmpVar(numeric);
+                Operators::changeToTmpVar(numeric);
                 return numeric;
             }
             else
@@ -458,11 +457,11 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric USR(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric USR(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::USR() : USR() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::USR() : '%s:%d' : USR() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -497,8 +496,9 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric RND(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric RND(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
+        UNREFERENCED_PARAM(moduleName);
         UNREFERENCED_PARAM(codeLineText);
         UNREFERENCED_PARAM(codeLineStart);
 
@@ -542,7 +542,7 @@ namespace Functions
         }
         else
         {
-            Operators::createTmpVar(numeric);
+            Operators::changeToTmpVar(numeric);
             Compiler::emitVcpuAsm("%Rand", "", false);
         }
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
@@ -550,25 +550,25 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric URND(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric URND(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         UNREFERENCED_PARAM(codeLineStart);
 
         if(!Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::URND() : URND only works in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::URND() : '%s:%d' : URND only works in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() != 3)
         {
-            fprintf(stderr, "Functions::URND() : URND expects 4 parameters, found %d : in '%s' on line %d\n", int(numeric._params.size()), codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::URND() : '%s:%d' : URND expects 4 parameters, found %d : %s\n", moduleName.c_str(), codeLineStart, int(numeric._params.size()), codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._varType != Expression::Number  ||  numeric._params[0]._varType != Expression::Number  ||  numeric._params[1]._varType != Expression::Number  ||  numeric._params[2]._varType != Expression::Number)
         {
-            fprintf(stderr, "Functions::URND() : URND expects 4 literal parameters, 'URND(<min>, <max>, <len>, <step>) : in '%s' on line %d'\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::URND() : '%s:%d' : URND expects 4 literal parameters, 'URND(<min>, <max>, <len>, <step>) : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -581,25 +581,25 @@ namespace Functions
 
             if(abs(numeric._params[0]._value - numeric._value) < numeric._params[1]._value)
             {
-                fprintf(stderr, "Functions::URND() : range is smaller than length : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                fprintf(stderr, "Functions::URND() : '%s:%d' : range is smaller than length : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
                 numeric._isValid = false;
                 return numeric;
             }
             if(numeric._params[0]._value <= numeric._value)
             {
-                fprintf(stderr, "Functions::URND() : maximum must be greater than minimum : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                fprintf(stderr, "Functions::URND() : '%s:%d' : maximum must be greater than minimum : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
                 numeric._isValid = false;
                 return numeric;
             }
             if(numeric._params[1]._value <= 0.0  ||  std::lround(numeric._params[1]._value) > 0xFFFF)
             {
-                fprintf(stderr, "Functions::URND() : 0x0000 < length < 0x10000 : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                fprintf(stderr, "Functions::URND() : '%s:%d' : 0x0000 < length < 0x10000 : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
                 numeric._isValid = false;
                 return numeric;
             }
             if(numeric._params[2]._value == 0.0)
             {
-                fprintf(stderr, "Functions::URND() : step must not be equal to zero : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                fprintf(stderr, "Functions::URND() : '%s:%d' : step must not be equal to zero : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
                 numeric._isValid = false;
                 return numeric;
             }
@@ -613,7 +613,7 @@ namespace Functions
             uint16_t range = uint16_t((abs(std::lround(_umax) - std::lround(_umin))) / std::lround(abs(_ustp))) + 1;
             if(range == 0)
             {
-                fprintf(stderr, "Functions::URND() : step size is too large for range : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                fprintf(stderr, "Functions::URND() : '%s:%d' : step size is too large for range : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
                 numeric._isValid = false;
                 return numeric;
             }
@@ -627,7 +627,7 @@ namespace Functions
 
         if(_uidx >= uint16_t(_uvalues.size()))
         {
-            fprintf(stderr, "Functions::URND() : length is greater than range : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::URND() : '%s:%d' : length is greater than range : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -637,17 +637,17 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric LEN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric LEN(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(numeric._varType == Expression::Number)
         {
-            fprintf(stderr, "Functions::LEN() : parameter can't be a literal : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::LEN() : '%s:%d' : parameter can't be a literal : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() != 0)
         {
-            fprintf(stderr, "Functions::LEN() : LEN expects 1 parameter, found %d : in '%s' on line %d\n", int(numeric._params.size()), codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::LEN() : '%s:%d' : LEN expects 1 parameter, found %d : %s\n", moduleName.c_str(), codeLineStart, int(numeric._params.size()), codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -675,7 +675,7 @@ namespace Functions
 
                 default:
                 {
-                    fprintf(stderr, "Functions::LEN() : couldn't find variable name '%s' : in '%s' on line %d\n", numeric._name.c_str(), codeLineText.c_str(), codeLineStart);
+                    fprintf(stderr, "Functions::LEN() : '%s:%d' : couldn't find variable name '%s' : %s\n", moduleName.c_str(), codeLineStart, numeric._name.c_str(), codeLineText.c_str());
                     numeric._isValid = false;
                     return numeric;
                 }
@@ -732,17 +732,17 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
     }
 
-    Expression::Numeric GET(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric GET(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::GET() : GET() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::GET() : '%s:%d' : GET() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -751,7 +751,22 @@ namespace Functions
         {
             std::string sysVarName = numeric._text;
             Expression::strToUpper(sysVarName);
-            if(sysVarName == "SPRITE_LUT"  &&  numeric._params.size() == 1)
+            if(sysVarName == "ROM_READ_DIR"  &&  numeric._params.size() == 1)
+            {
+                // Literal constant
+                if(numeric._params[0]._varType == Expression::Number)
+                {
+                    Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._params[0]._value))), false);
+                }
+
+                Compiler::getNextTempVar();
+                Operators::handleSingleOp("LDW", numeric._params[0]);
+                Compiler::emitVcpuAsm("%RomRead", "", false);
+                Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+                numeric._params[0]._params.clear();
+                return numeric._params[0];
+            }
+            else if(sysVarName == "SPRITE_LUT"  &&  numeric._params.size() == 1)
             {
                 // Literal constant
                 if(numeric._params[0]._varType == Expression::Number)
@@ -805,7 +820,7 @@ namespace Functions
             else if(numeric._params.size() == 0)
             {
                 Compiler::getNextTempVar();
-                Operators::createTmpVar(numeric);
+                Operators::changeToTmpVar(numeric);
 
                 if(sysVarName == "TIME_MODE")
                 {
@@ -846,7 +861,7 @@ namespace Functions
                     {
                         std::string romTypeStr;
                         getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
-                        fprintf(stderr, "Functions::GET() : Version error, 'SET VBLANK_PROC' requires ROMv5a or higher, you are trying to link against '%s' : in '%s' on line %d\n", romTypeStr.c_str(), codeLineText.c_str(), codeLineStart);
+                        fprintf(stderr, "Functions::GET() : '%s:%d' : version error, 'SET VBLANK_PROC' requires ROMv5a or higher, you are trying to link against '%s' : %s\n", moduleName.c_str(), codeLineStart, romTypeStr.c_str(), codeLineText.c_str());
                         numeric._isValid = false;
                         return numeric;
                     }
@@ -862,7 +877,7 @@ namespace Functions
                     {
                         std::string romTypeStr;
                         getRomTypeStr(Compiler::getCodeRomType(), romTypeStr);
-                        fprintf(stderr, "Functions::GET() : Version error, 'SET VBLANK_FREQ' requires ROMv5a or higher, you are trying to link against '%s' : in '%s' on line %d\n", romTypeStr.c_str(), codeLineText.c_str(), codeLineStart);
+                        fprintf(stderr, "Functions::GET() : '%s:%d' : version error, 'SET VBLANK_FREQ' requires ROMv5a or higher, you are trying to link against '%s' : %s\n", moduleName.c_str(), codeLineStart, romTypeStr.c_str(), codeLineText.c_str());
                         numeric._isValid = false;
                         return numeric;
                     }
@@ -1028,7 +1043,7 @@ namespace Functions
                 }
                 else
                 {
-                    fprintf(stderr, "Syntax error, Functions::GET() : system variable name '%s' does not exist : in '%s' on line %d\n", numeric._text.c_str(), codeLineText.c_str(), codeLineStart);
+                    fprintf(stderr, "Functions::GET() : '%s:%d' : system variable name '%s' does not exist : %s\n", moduleName.c_str(), codeLineStart, numeric._text.c_str(), codeLineText.c_str());
                     numeric._isValid = false;
                     return numeric;
                 }
@@ -1040,11 +1055,11 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric ABS(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric ABS(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::ABS() : ABS() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::ABS() : '%s:%d' : ABS() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1058,7 +1073,7 @@ namespace Functions
                 numeric._value = abs(numeric._value);
                 (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false) : 
                                                                   Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
-                Operators::createTmpVar(numeric);
+                Operators::changeToTmpVar(numeric);
                 Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
             }
             else
@@ -1072,11 +1087,11 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric SGN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric SGN(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::SGN() : SGN() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::SGN() : '%s:%d' : SGN() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1090,7 +1105,7 @@ namespace Functions
                 numeric._value = Expression::sgn(numeric._value);
                 (numeric._value >= 0  && numeric._value <= 255) ? Compiler::emitVcpuAsm("LDI", Expression::byteToHexString(uint8_t(std::lround(numeric._value))), false) : 
                                                                   Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(int16_t(std::lround(numeric._value))), false);
-                Operators::createTmpVar(numeric);
+                Operators::changeToTmpVar(numeric);
                 Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
             }
             else
@@ -1104,11 +1119,11 @@ namespace Functions
         return numeric;
     }
 
-    Expression::Numeric ASC(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric ASC(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(numeric._varType == Expression::Number)
         {
-            fprintf(stderr, "Functions::ASC() : parameter can't be a literal : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::ASC() : '%s:%d' : parameter can't be a literal : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1137,7 +1152,7 @@ namespace Functions
 
                 default:
                 {
-                    fprintf(stderr, "Functions::ASC() : couldn't find variable name '%s' : in '%s' on line %d\n", numeric._name.c_str(), codeLineText.c_str(), codeLineStart);
+                    fprintf(stderr, "Functions::ASC() : '%s:%d' : couldn't find variable name '%s' : %s\n", moduleName.c_str(), codeLineStart, numeric._name.c_str(), codeLineText.c_str());
                     numeric._isValid = false;
                     return numeric;
                 }
@@ -1178,17 +1193,17 @@ namespace Functions
             Compiler::emitVcpuAsm("LDI", std::to_string(ascii), false);
         }
 
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
     }
 
-    Expression::Numeric STRCMP(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric STRCMP(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(numeric._params.size() != 1)
         {
-            fprintf(stderr, "Functions::STRCMP() : STRCMP() requires two string parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::STRCMP() : '%s:%d' : STRCMP() requires two string parameters : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1254,23 +1269,23 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric BCDCMP(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric BCDCMP(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::BCDCMP() : BCDCMP() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::BCDCMP() : '%s:%d' : BCDCMP() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() != 2)
         {
-            fprintf(stderr, "Functions::BCDCMP() : BCDCMP() requires three string parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::BCDCMP() : '%s:%d' : BCDCMP() requires three string parameters : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1289,17 +1304,17 @@ namespace Functions
         Compiler::emitVcpuAsm("%BcdCmp", "", false);
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric VAL(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric VAL(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(numeric._params.size() != 0)
         {
-            fprintf(stderr, "Functions::VAL() : VAL() requires only one string parameter : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::VAL() : '%s:%d' : VAL() requires only one string parameter : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1337,30 +1352,30 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
     }
 
-    Expression::Numeric LUP(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric LUP(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::LUP() : LUP(<address>, <offset>) cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::LUP() : '%s:%d' : LUP(<address>, <offset>) cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() != 1) 
         {
-            fprintf(stderr, "Functions::LUP() : LUP(<address>, <offset>) missing offset : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::LUP() : '%s:%d' : LUP(<address>, <offset>) missing offset : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
 
         if(numeric._params[0]._varType != Expression::Number)
         {
-            fprintf(stderr, "Functions::LUP() : LUP(<address>, <offset>) offset is not a constant literal : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::LUP() : '%s:%d' : LUP(<address>, <offset>) offset is not a constant literal : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1377,24 +1392,24 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("LUP", offset, false);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric ADDR(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric ADDR(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(numeric._varType == Expression::Number)
         {
-            fprintf(stderr, "Functions::ADDR() : parameter can't be a literal : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::ADDR() : '%s:%d' : parameter can't be a literal : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() != 0)
         {
-            fprintf(stderr, "Functions::ADDR() : expects 1 parameter, found %d : in '%s' on line %d\n", int(numeric._params.size()), codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::ADDR() : '%s:%d' : expects 1 parameter, found %d : %s\n", moduleName.c_str(), codeLineStart, int(numeric._params.size()), codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1422,7 +1437,7 @@ namespace Functions
 
                 default:
                 {
-                    fprintf(stderr, "Functions::ADDR() : couldn't find variable name '%s' : in '%s' on line %d\n", numeric._name.c_str(), codeLineText.c_str(), codeLineStart);
+                    fprintf(stderr, "Functions::ADDR() : '%s:%d' : couldn't find variable name '%s' : %s\n", moduleName.c_str(), codeLineStart, numeric._name.c_str(), codeLineText.c_str());
                     numeric._isValid = false;
                     return numeric;
                 }
@@ -1449,7 +1464,7 @@ namespace Functions
                 case Expression::TmpVar:
                 case Expression::Str2Var:
                 {
-                    fprintf(stderr, "Functions::ADDR() : can't statically initialise from multi-dimensional array '%s' : in '%s' on line %d\n", numeric._name.c_str(), codeLineText.c_str(), codeLineStart);
+                    fprintf(stderr, "Functions::ADDR() : '%s:%d' : can't statically initialise from multi-dimensional array '%s' : %s\n", moduleName.c_str(), codeLineStart, numeric._name.c_str(), codeLineText.c_str());
                     numeric._isValid = false;
                     return numeric;
                 }
@@ -1483,23 +1498,23 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
 
         return numeric;
     }
 
-    Expression::Numeric POINT(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric POINT(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::POINT() : POINT() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::POINT() : '%s:%d' : POINT() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() != 1)
         {
-            fprintf(stderr, "Functions::POINT() : Syntax error, 'POINT(x, y)' requires two parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::POINT() : '%s:%d' : syntax error, 'POINT(x, y)' requires two parameters : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1527,18 +1542,18 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("%ReadPixel", "", false);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric MIN(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric MIN(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(numeric._params.size() != 1)
         {
-            fprintf(stderr, "Functions::MIN() : Syntax error, 'MIN(x, y)' requires two parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::MIN() : '%s:%d' : syntax error, 'MIN(x, y)' requires two parameters : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1572,18 +1587,18 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("%IntMin", "", false);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric MAX(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric MAX(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(numeric._params.size() != 1)
         {
-            fprintf(stderr, "Functions::MAX() : Syntax error, 'MAX(x, y)' requires two parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::MAX() : '%s:%d' : syntax error, 'MAX(x, y)' requires two parameters : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1617,18 +1632,18 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("%IntMax", "", false);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric CLAMP(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric CLAMP(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(numeric._params.size() != 2)
         {
-            fprintf(stderr, "Functions::CLAMP() : Syntax error, 'CLAMP(x, a, b)' requires three parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::CLAMP() : '%s:%d' : syntax error, 'CLAMP(x, a, b)' requires three parameters : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1674,18 +1689,18 @@ namespace Functions
         }
 
         Compiler::getNextTempVar();
-        Operators::createTmpVar(numeric);
+        Operators::changeToTmpVar(numeric);
         Compiler::emitVcpuAsm("%IntClamp", "", false);
         Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
         numeric._params.clear();
         return numeric;
     }
 
-    Expression::Numeric CHR$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric CHR$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::CHR$() : CHR$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::CHR$() : '%s:%d' : CHR$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1700,7 +1715,7 @@ namespace Functions
             if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
             {
                 Compiler::emitVcpuAsm("LDI", std::to_string(int16_t(std::lround(numeric._value))), false);
-                Compiler::emitVcpuAsm("%PrintAcChar", "", false);
+                Compiler::emitVcpuAsm("%PrintAcChr", "", false);
                 return numeric;
             }
 
@@ -1717,7 +1732,7 @@ namespace Functions
         Operators::handleSingleOp("LDW", numeric);
         if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
         {
-            Compiler::emitVcpuAsm("%PrintAcChar", "", false);
+            Compiler::emitVcpuAsm("%PrintAcChr", "", false);
             return numeric;
         }
 
@@ -1729,11 +1744,66 @@ namespace Functions
         return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric STR$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric SPC$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::STR$() : STR$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::SPC$() : '%s:%d' : SPC$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
+            numeric._isValid = false;
+            return numeric;
+        }
+
+        // Create a new temporary string
+        if(!isFuncNested()) Compiler::nextStrWorkArea();
+        uint16_t dstAddr = Compiler::getStrWorkArea();
+
+        if(numeric._varType == Expression::Number)
+        {
+            uint8_t len = uint8_t(std::lround(numeric._value));
+            if(len < 1  ||  len > 94)
+            {
+                fprintf(stderr, "Functions::SPC$() : '%s:%d' : syntax error, 'SPC$(n)', if 'n' is a literal, it MUST be <1-94> : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
+                numeric._isValid = false;
+                return numeric;
+            }
+
+            if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
+            {
+                Compiler::emitVcpuAsm("LDI", std::to_string(len), false);
+                Compiler::emitVcpuAsm("%PrintSpc", "", false);
+                return numeric;
+            }
+
+            // Create SPC string
+            Compiler::emitVcpuAsm("LDI", std::to_string(len), false);
+            Compiler::emitVcpuAsm("STW", "strLen", false);
+            Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+            Compiler::emitVcpuAsm("%StringSpc", "", false);
+
+            return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
+        {
+            Compiler::emitVcpuAsm("%PrintSpc", "", false);
+            return numeric;
+        }
+
+        // Create SPC string
+        Compiler::emitVcpuAsm("STW", "strLen", false);
+        Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(dstAddr), false);
+        Compiler::emitVcpuAsm("%StringSpc", "", false);
+
+        return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+    }
+
+    Expression::Numeric STR$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
+    {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Functions::STR$() : '%s:%d' : STR$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1777,11 +1847,49 @@ namespace Functions
         return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric TIME$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric STRING$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::TIME$() : TIME$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::STRING$() : '%s:%d' : STRING$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
+            numeric._isValid = false;
+            return numeric;
+        }
+
+        if(numeric._varType == Expression::Number)
+        {
+            // Print STR string, (without wasting memory)
+            if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
+            {
+                Compiler::emitVcpuAsm("LDWI", Expression::wordToHexString(uint16_t(std::lround(numeric._value))), false);
+                Compiler::emitVcpuAsm("%PrintAcString", "", false);
+                return numeric;
+            }
+
+            // Point to STR address
+            return Expression::Numeric(numeric._value, uint16_t(-1), true, false, false, Expression::StrAddr, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+        }
+
+        Compiler::getNextTempVar();
+        Operators::handleSingleOp("LDW", numeric);
+        if(Expression::getEnableOptimisedPrint()  &&  Expression::getOutputNumeric()._nestedCount == 0)
+        {
+            Compiler::emitVcpuAsm("%PrintAcString", "", false);
+            return numeric;
+        }
+
+        Operators::changeToTmpVar(numeric);
+        Compiler::emitVcpuAsm("STW", Expression::byteToHexString(uint8_t(Compiler::getTempVarStart())), false);
+        numeric._varType = Expression::TmpStrAddr;
+
+        return numeric;
+    }
+
+    Expression::Numeric TIME$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
+    {
+        if(Expression::getOutputNumeric()._staticInit)
+        {
+            fprintf(stderr, "Functions::TIME$() : '%s:%d' : TIME$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1811,17 +1919,17 @@ namespace Functions
         return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric HEX$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric HEX$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::HEX$() : HEX$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::HEX$() : '%s:%d' : HEX$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() != 1)
         {
-            fprintf(stderr, "Functions::HEX$() : Syntax error, 'HEX$(x, n)' requires two parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::HEX$() : '%s:%d' : syntax error, 'HEX$(x, n)' requires two parameters : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1831,7 +1939,7 @@ namespace Functions
             int16_t val = int16_t(std::lround(numeric._params[0]._value));
             if(val < 1  ||  val > 4)
             {
-                fprintf(stderr, "Functions::HEX$() : Syntax error, 'HEX$(x, n)', if 'n' is a literal, it MUST be <1-4> : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                fprintf(stderr, "Functions::HEX$() : '%s:%d' : syntax error, 'HEX$(x, n)', if 'n' is a literal, it MUST be <1-4> : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
                 numeric._isValid = false;
                 return numeric;
             }
@@ -1884,17 +1992,17 @@ namespace Functions
         return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
     }
 
-    Expression::Numeric LEFT$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric LEFT$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::LEFT$() : LEFT$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::LEFT$() : '%s:%d' : LEFT$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() != 1)
         {
-            fprintf(stderr, "Functions::LEFT$() : Syntax error, 'LEFT$(s$, n)' requires two parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::LEFT$() : '%s:%d' : syntax error, 'LEFT$(s$, n)' requires two parameters : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -1960,17 +2068,17 @@ namespace Functions
         return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
     }
 
-    Expression::Numeric RIGHT$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric RIGHT$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::RIGHT$() : RIGHT$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::RIGHT$() : '%s:%d' : RIGHT$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() != 1)
         {
-            fprintf(stderr, "Functions::RIGHT$() : Syntax error, 'RIGHT$(s$, n)' requires two parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::RIGHT$() : '%s:%d' : syntax error, 'RIGHT$(s$, n)' requires two parameters : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -2035,17 +2143,17 @@ namespace Functions
         return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
     }
 
-    Expression::Numeric MID$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric MID$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::MID$() : MID$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::MID$() : '%s:%d' : MID$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() != 2)
         {
-            fprintf(stderr, "Functions::MID$() : Syntax error, 'MID$(s$, i, n)' requires three parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::MID$() : '%s:%d' : syntax error, 'MID$(s$, i, n)' requires three parameters : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -2103,17 +2211,17 @@ namespace Functions
         return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
     }
 
-    Expression::Numeric LOWER$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric LOWER$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::LOWER$() : LOWER$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::LOWER$() : '%s:%d' : LOWER$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() != 0)
         {
-            fprintf(stderr, "Functions::LOWER$() : Syntax error, 'LOWER$()' requires one string parameter : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::LOWER$() : '%s:%d' : syntax error, 'LOWER$()' requires one string parameter : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -2163,17 +2271,17 @@ namespace Functions
         return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
     }
 
-    Expression::Numeric UPPER$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric UPPER$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::UPPER$() : UPPER$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::UPPER$() : '%s:%d' : UPPER$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() != 0)
         {
-            fprintf(stderr, "Functions::UPPER$() : Syntax error, 'UPPER$()' requires one string parameter : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::UPPER$() : '%s:%d' : syntax error, 'UPPER$()' requires one string parameter : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -2223,29 +2331,29 @@ namespace Functions
         return Expression::Numeric(0, uint16_t(-1), true, false, false, Expression::TmpStrVar, Expression::BooleanCC, Expression::Int16Both, name, std::string(""));
     }
 
-    Expression::Numeric STRCAT$(Expression::Numeric& numeric, const std::string& codeLineText, int codeLineStart)
+    Expression::Numeric STRCAT$(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart)
     {
         if(Expression::getOutputNumeric()._staticInit)
         {
-            fprintf(stderr, "Functions::STRCAT$() : STRCAT$() cannot be used in static initialisation : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::STRCAT$() : '%s:%d' : STRCAT$() cannot be used in static initialisation : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(Expression::getEnableOptimisedPrint())
         {
-            fprintf(stderr, "Functions::STRCAT$() : Syntax error, STRCAT$() cannot be used in PRINT statements : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::STRCAT$() : '%s:%d' : syntax error, STRCAT$() cannot be used in PRINT statements : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._params.size() == 0)
         {
-            fprintf(stderr, "Functions::STRCAT$() : Syntax error, STRCAT$() requires at least two string parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::STRCAT$() : '%s:%d' : syntax error, STRCAT$() requires at least two string parameters : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
         if(numeric._varType == Expression::TmpStrVar)
         {
-            fprintf(stderr, "Functions::STRCAT$() : Syntax error, STRCAT$() requires string literals or string variables as ALL parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::STRCAT$() : '%s:%d' : syntax error, STRCAT$() requires string literals or string variables as ALL parameters : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
             numeric._isValid = false;
             return numeric;
         }
@@ -2253,7 +2361,7 @@ namespace Functions
         {
             if(numeric._params[i]._varType == Expression::TmpStrVar)
             {
-                fprintf(stderr, "Functions::STRCAT$() : Syntax error, STRCAT$() requires string literals or string variables as ALL parameters : in '%s' on line %d\n", codeLineText.c_str(), codeLineStart);
+                fprintf(stderr, "Functions::STRCAT$() : '%s:%d' : syntax error, STRCAT$() requires string literals or string variables as ALL parameters : %s\n", moduleName.c_str(), codeLineStart, codeLineText.c_str());
                 numeric._isValid = false;
                 return numeric;
             }
@@ -2274,7 +2382,7 @@ namespace Functions
         uint16_t lutAddress;
         if(!Memory::getFreeRAM(Memory::FitDescending, int(strAddrs.size()*2), USER_CODE_START, Compiler::getStringsStart(), lutAddress))
         {
-            fprintf(stderr, "Functions::STRCAT$() : Not enough RAM for string concatenation LUT of size %d : in '%s' on line %d\n", int(strAddrs.size()), codeLineText.c_str(), codeLineStart);
+            fprintf(stderr, "Functions::STRCAT$() : '%s:%d' : not enough RAM for string concatenation LUT of size %d : %s\n", moduleName.c_str(), codeLineStart, int(strAddrs.size()), codeLineText.c_str());
             return false;
         }
         Compiler::getCodeLines()[Compiler::getCurrentCodeLineIndex()]._strConcatLut = {lutAddress, strAddrs};

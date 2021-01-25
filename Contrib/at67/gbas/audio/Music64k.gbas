@@ -105,6 +105,9 @@ return
 
 
 initialise:
+    'audio fix for ROMv5a
+    poke &h21, peek(&h21) OR 3
+
     mode 2
     set FGBG_COLOUR, &h1030
     cls

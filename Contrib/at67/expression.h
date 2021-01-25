@@ -16,7 +16,7 @@ namespace Expression
     enum CCType {BooleanCC, NormalCC, FastCC};
     enum OPType {EqOP, NeOP, LeOP, GeOP, LtOP, GtOP};
     enum Int16Byte {Int16Both, Int16Low, Int16High};
-    enum VarType {Number, String, Constant, TmpVar, IntVar16, Arr1Var8, Arr2Var8, Arr3Var8, Arr1Var16, Arr2Var16, Arr3Var16, StrVar, Str2Var, TmpStrVar};
+    enum VarType {Number, String, Constant, TmpVar, IntVar16, Arr1Var8, Arr2Var8, Arr3Var8, Arr1Var16, Arr2Var16, Arr3Var16, StrVar, Str2Var, StrAddr, TmpStrVar, TmpStrAddr};
     enum TokType {Invalid, Literal, Variable, Array};
 
 
@@ -112,11 +112,11 @@ namespace Expression
     bool stringToU16(const std::string& token, uint16_t& result);
     void stringToDouble(const std::string& token, double& result);
 
-    std::vector<std::string> tokenise(const std::string& text, const std::string& delimiterStr, bool toUpper=false);
+    std::vector<std::string> tokeniseMulti(const std::string& text, const std::string& delimiterStr, bool toUpper=false);
     std::vector<std::string> tokenise(const std::string& text, char c, bool skipSpaces=true, bool toUpper=false);
-    std::vector<std::string> tokenise(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces=true, bool toUpper=false);
+    std::vector<std::string> tokeniseOffsets(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces=true, bool toUpper=false);
     std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiterStr=" \n\r\f\t\v");
-    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiterStr, std::vector<size_t>& offsets);
+    std::vector<std::string> tokeniseLineOffsets(const std::string& line, const std::string& delimiterStr, std::vector<size_t>& offsets);
 
     void replaceText(std::string& expression, const std::string& text, const std::string& replace, size_t offset=0);
 

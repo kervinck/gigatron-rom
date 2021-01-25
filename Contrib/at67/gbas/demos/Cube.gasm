@@ -29,8 +29,10 @@ timerPrev                         EQU                               register0 + 
 ; Internal Constants
 ENABLE_SCROLL_BIT                 EQU                               0x0001
 ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+DISABLE_CLIP_BIT                  EQU                               0x0004
 ENABLE_SCROLL_MSK                 EQU                               0xfffe
 ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
+DISABLE_CLIP_MSK                  EQU                               0xfffb
 
 ; Internal Buffers
 regsWorkArea                      EQU                               0x0000
@@ -44,15 +46,15 @@ textWorkArea                      EQU                               0x7fa0
 
 ; Labels
 _entryPoint_                      EQU                               0x0200
-_10                               EQU                               0x0234
-_20                               EQU                               0x024b
-_25                               EQU                               0x0254
-_30                               EQU                               0x0274
-_35                               EQU                               0x0296
-_40                               EQU                               0x02af
-_45                               EQU                               0x02c6
-_50                               EQU                               0x02ca
-_100                              EQU                               0x030e
+_10                               EQU                               0x0241
+_20                               EQU                               0x0258
+_25                               EQU                               0x0261
+_30                               EQU                               0x0281
+_35                               EQU                               0x02a3
+_40                               EQU                               0x02bc
+_45                               EQU                               0x02d3
+_50                               EQU                               0x02d7
+_100                              EQU                               0x031b
 _110                              EQU                               0x038d
 _120                              EQU                               0x03a1
 _130                              EQU                               0x03b4
@@ -132,6 +134,8 @@ _timeString_                      DB                                8 '00:00:00'
 
 ; Define Loader Image Chunks
 
+; Define Midis
+
 ; Define Sprites
 
 ; Define Fonts
@@ -154,6 +158,13 @@ _entryPoint_                      LDI                               0x20
                                   STW                               _B
                                   STW                               _L
                                   STW                               _F                          ; Main: K=0:X=K:M=X:N=M:I=N:A=I:B=A:L=B:F=L
+
+                                  LDI                               0
+                                  STW                               timerTick
+                                  LDI                               giga_frameCount
+                                  STW                               timerPrev
+                                  LDWI                              tickTime
+                                  STW                               realTimeProc0               ; Main: init time, noupdate
 
                                   LDWI                              16128
                                   STW                               fgbgColour                  ; Main: set FGBG_COLOUR, &h3F00
@@ -248,6 +259,10 @@ _50                               PUSH
                                   LDWI                              0x7df0
                                   ADDW                              _B
                                   ADDW                              _B
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0300
+                                  CALL                              giga_vAC
+_page_0x0300                      LDLW                              0xFE
                                   DEEK                              
                                   STW                               drawLine_x2
                                   LDWI                              0x7de0
@@ -255,10 +270,6 @@ _50                               PUSH
                                   ADDW                              _B
                                   DEEK                              
                                   STW                               drawLine_y2
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x0300
-                                  CALL                              giga_vAC
-_page_0x0300                      LDLW                              0xFE
                                   DrawLine                          
                                   TickTime                          
                                   Return                                                        ; Main: LINE P(A), Q(A), P(B), Q(B) : tick time : RETURN
@@ -274,13 +285,6 @@ _100                              LDI                               45
 
                                   LDWI                              _110
                                   CALL                              giga_vAC                    ; Main: gosub 110
-
-                                  LDI                               0
-                                  STW                               timerTick
-                                  LDI                               giga_frameCount
-                                  STW                               timerPrev
-                                  LDWI                              tickTime
-                                  STW                               realTimeProc0               ; Main: init time, noupdate
 
                                   LDI                               0
                                   STW                               _timer                      ; Main: timer=0
@@ -549,23 +553,24 @@ _else_0x0583                      LDI                               63
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                          EQU     0x75b0
+romCheck                          EQU     0x74b2
 multiply16bit                     EQU     0x73cb
-divide16bit                       EQU     0x7aa8
-scanlineMode                      EQU     0x79a0
-resetVideoFlags                   EQU     0x78a2
-initClearFuncs                    EQU     0x74a2
+divide16bit                       EQU     0x7ba8
+scanlineMode                      EQU     0x7aa0
+resetVideoFlags                   EQU     0x79a2
+initClearFuncs                    EQU     0x78a1
 clearVertBlinds                   EQU     0x74c9
 clearCursorRow                    EQU     0x72cf
-drawLine                          EQU     0x79aa
+drawLine                          EQU     0x7aaa
 drawLineExt                       EQU     0x76c6
 drawLineLoop                      EQU     0x77c3
 drawLineLoadXY                    EQU     0x7da0
-printInit                         EQU     0x74b3
-printText                         EQU     0x76ad
+printInit                         EQU     0x72b9
+printText                         EQU     0x75ae
 printDigit                        EQU     0x77a1
-printInt16                        EQU     0x78ae
-printChar                         EQU     0x7ba7
+printInt16                        EQU     0x79ae
+printChar                         EQU     0x78b2
+printClip                         EQU     0x76ac
 newLineScroll                     EQU     0x7ca2
 tickTime                          EQU     0x73a1
 handleTime                        EQU     0x75c7
@@ -601,13 +606,13 @@ romCheck            LD      giga_romType
                     ANDI    0xFC
                     SUBW    romType
                     BGE     romC_return
-                    LDWI    giga_vram
+                    LDWI    giga_vram + giga_yres/2*256 + giga_xres/2
                     STW     romErrAddr
                     
 romC_loop           LD      romErrPixel
                     POKE    romErrAddr
                     INC     romErrPixel
-                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    BRA     romC_loop                       ; flash center pixel indicating rom error
                     
 romC_return         RET                    
 
@@ -1132,6 +1137,7 @@ printI16_pos        LDWI    10000
                     RET
 
 
+
                     ; prints char in textChr
 printChar           LD      textChr
                     ANDI    0x7F                            ; char can't be bigger than 127
@@ -1174,17 +1180,27 @@ printC_slice        ST      textSlice
 %if TIME_SLICING
                     CALL    realTimeStubAddr
 %endif
-                    LD      cursorXY
+                    LDWI    printClip
+                    CALL    giga_vAC
+                    POP
+                    
+printC_exit         RET
+
+
+printClip           LD      cursorXY
                     ADDI    giga_xfont
                     ST      cursorXY
                     SUBI    giga_xres - giga_xfont          ; last possible char on line
-                    BLE     printC_pop
+                    BLE     printCl_exit
+                    LDI     DISABLE_CLIP_BIT
+                    ANDW    miscFlags                       ; is text clipping disabled?
+                    BNE     printCl_exit
+                    PUSH
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+                    POP
                     
-printC_pop          POP
-
-printC_exit         RET
+printCl_exit        RET
 
 
 

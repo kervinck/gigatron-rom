@@ -117,6 +117,7 @@ namespace Keywords
     bool BCDINT(Compiler::CodeLine& codeLine,  int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool BCDCPY(Compiler::CodeLine& codeLine,  int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
     bool GPRINTF(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
+    bool EXEC(Compiler::CodeLine& codeLine,    int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result);
 }
 
 #endif

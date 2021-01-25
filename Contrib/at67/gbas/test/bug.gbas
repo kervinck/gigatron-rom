@@ -1,6 +1,6 @@
 _runtimePath_ "../runtime"
-_runtimeStart_ &hFFFF"
-_arraysStart_ &hFFFF"
+_runtimeStart_ &hFFFF
+_arraysStart_ &hFFFF
 
 dim wordArray(5000)
 dim byteArray%(5000)
@@ -59,7 +59,7 @@ input f$
 
 print s$(a) + " " + chr$(45) + " " + chr$(41) + " " + c$ + " " + chr$(35) + " arrays! " + str$(999)
 print lower$("\"ADOGZ!@#$'\"");" ";upper$("\"adogz!@#$'\"")
-d1$ = "ADOGZ!!1234$" : d2$ = "adogz!!1234$";
+d1$ = "ADOGZ!!1234$" : d2$ = "adogz!!1234$"
 print lower$(d1$);" ";upper$(d2$)
 print d1$;" ";d2$
 d1$ = LOWER$(d1$) : d2$ = UPPER$(d2$)

@@ -29,8 +29,10 @@ timerPrev                         EQU                               register0 + 
 ; Internal Constants
 ENABLE_SCROLL_BIT                 EQU                               0x0001
 ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+DISABLE_CLIP_BIT                  EQU                               0x0004
 ENABLE_SCROLL_MSK                 EQU                               0xfffe
 ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
+DISABLE_CLIP_MSK                  EQU                               0xfffb
 
 ; Internal Buffers
 regsWorkArea                      EQU                               0x0000
@@ -47,12 +49,12 @@ _entryPoint_                      EQU                               0x0200
 _reset                            EQU                               0x022f
 _start                            EQU                               0x0234
 _init                             EQU                               0x0239
-_mod5                             EQU                               0x0307
-_drawPucMon                       EQU                               0x03ed
-_drawGhosts                       EQU                               0x04b2
-_drawNextGhost                    EQU                               0x055b
-_drawNormalGhost                  EQU                               0x056b
-_drawScaredGhost                  EQU                               0x0617
+_mod5                             EQU                               0x02f2
+_drawPucMon                       EQU                               0x03e7
+_drawGhosts                       EQU                               0x04b7
+_drawNextGhost                    EQU                               0x055d
+_drawNormalGhost                  EQU                               0x056d
+_drawScaredGhost                  EQU                               0x0618
 _drawDeadGhost                    EQU                               0x083c
 _drawPills                        EQU                               0x08af
 _movePucMon                       EQU                               0x0967
@@ -63,184 +65,183 @@ _setGhostVars                     EQU                               0x14e5
 _getGhostDir                      EQU                               0x15c6
 _setGhostsMode                    EQU                               0x15e1
 _getBlinkyTarget                  EQU                               0x17b0
-_getPinkyTarget                   EQU                               0x17d9
-_getInkyTarget                    EQU                               0x18b4
-_getClydeTarget                   EQU                               0x18f5
-_getJuncDir                       EQU                               0x19e4
-_getWallDir                       EQU                               0x1dce
-_replaceDot                       EQU                               0x1fd2
-_coordsPucMon                     EQU                               0x20b8
-_handleInput                      EQU                               0x20d8
-_253                              EQU                               0x21a9
-_254                              EQU                               0x21c0
-_247                              EQU                               0x21d7
-_251                              EQU                               0x21ee
-_drawDeath                        EQU                               0x26d0
-_drawMaze                         EQU                               0x27cc
-_startLevel                       EQU                               0x2bf3
-_resetLevel                       EQU                               0x2dd8
-_initSystem                       EQU                               0x2eac
+_getPinkyTarget                   EQU                               0x17d7
+_getInkyTarget                    EQU                               0x18b0
+_getClydeTarget                   EQU                               0x18ef
+_getJuncDir                       EQU                               0x19e2
+_getWallDir                       EQU                               0x1dbf
+_replaceDot                       EQU                               0x1fc2
+_coordsPucMon                     EQU                               0x20a8
+_handleInput                      EQU                               0x20c8
+_253                              EQU                               0x20ed
+_254                              EQU                               0x21b4
+_247                              EQU                               0x21cb
+_251                              EQU                               0x21e2
+_drawDeath                        EQU                               0x26c4
+_drawMaze                         EQU                               0x27c0
+_startLevel                       EQU                               0x2be9
+_resetLevel                       EQU                               0x2dcd
+_initSystem                       EQU                               0x2df6
 _repeat_0x0234                    EQU                               0x023e
 _else_0x0250                      EQU                               0x0256
 _endif_0x025a                     EQU                               0x0260
-_else_0x0279                      EQU                               0x0277
-_endif_0x0282                     EQU                               0x0280
-_endif_0x02b7                     EQU                               0x02ab
-_endif_0x02bc                     EQU                               0x02b0
+_else_0x0277                      EQU                               0x0275
+_endif_0x0280                     EQU                               0x027e
+_endif_0x02b3                     EQU                               0x02a7
+_endif_0x02b8                     EQU                               0x02ac
 _page_0x0300                      EQU                               0x0300
-_elseif_0x033d                    EQU                               0x0332
-_elseif_0x0352                    EQU                               0x0341
-_endif_0x0365                     EQU                               0x034e
-_elseif_0x039f                    EQU                               0x0378
-_elseif_0x03b4                    EQU                               0x0387
-_endif_0x03c7                     EQU                               0x0394
-_div5                             EQU                               0x0396
+_elseif_0x0339                    EQU                               0x032c
+_elseif_0x034e                    EQU                               0x033b
+_endif_0x0361                     EQU                               0x0348
+_elseif_0x039b                    EQU                               0x0372
+_elseif_0x03b0                    EQU                               0x0381
+_endif_0x03c3                     EQU                               0x038e
+_div5                             EQU                               0x0390
 _page_0x0400                      EQU                               0x0400
-_endif_0x0461                     EQU                               0x041a
-_elseif_0x04ad                    EQU                               0x0452
-_elseif_0x04d4                    EQU                               0x0471
-_else_0x04fa                      EQU                               0x048f
-_endif_0x0513                     EQU                               0x04a4
-_next_0x052a                      EQU                               0x04b7
-_endif_0x055e                     EQU                               0x04e3
+_endif_0x0462                     EQU                               0x041f
+_elseif_0x04ae                    EQU                               0x0457
+_elseif_0x04d5                    EQU                               0x0476
+_else_0x04fb                      EQU                               0x0494
+_endif_0x0514                     EQU                               0x04a9
+_next_0x052b                      EQU                               0x04bc
+_endif_0x055d                     EQU                               0x04e6
 _page_0x0500                      EQU                               0x0500
-_elseif_0x059a                    EQU                               0x051b
-_else_0x05c5                      EQU                               0x053a
-_else_0x05e6                      EQU                               0x054f
-_endif_0x05eb                     EQU                               0x0554
-_else_0x05ed                      EQU                               0x0556
-_elseif_0x0645                    EQU                               0x059c
-_elseif_0x0680                    EQU                               0x05c7
-_else_0x06ba                      EQU                               0x05f1
+_elseif_0x0599                    EQU                               0x051d
+_else_0x05c4                      EQU                               0x053c
+_else_0x05e5                      EQU                               0x0551
+_endif_0x05ea                     EQU                               0x0556
+_else_0x05ec                      EQU                               0x0558
+_elseif_0x0644                    EQU                               0x059e
+_elseif_0x067f                    EQU                               0x05c9
+_else_0x06b9                      EQU                               0x05f3
 _page_0x0600                      EQU                               0x0600
-_endif_0x06df                     EQU                               0x0615
-_elseif_0x0710                    EQU                               0x063e
+_endif_0x06de                     EQU                               0x0616
+_elseif_0x070f                    EQU                               0x063f
 _page_0x0800                      EQU                               0x0800
-_elseif_0x073f                    EQU                               0x0807
-_else_0x0765                      EQU                               0x0825
-_endif_0x077e                     EQU                               0x083a
-_elseif_0x07ad                    EQU                               0x085b
-_elseif_0x07da                    EQU                               0x087a
-_else_0x0806                      EQU                               0x0898
-_endif_0x0825                     EQU                               0x08ad
-_else_0x0882                      EQU                               0x08f2
+_elseif_0x073e                    EQU                               0x0807
+_else_0x0764                      EQU                               0x0825
+_endif_0x077d                     EQU                               0x083a
+_elseif_0x07ac                    EQU                               0x085b
+_elseif_0x07d9                    EQU                               0x087a
+_else_0x0805                      EQU                               0x0898
+_endif_0x0824                     EQU                               0x08ad
+_else_0x087f                      EQU                               0x08f0
 _page_0x0900                      EQU                               0x0900
-_else_0x08b1                      EQU                               0x091f
-_else_0x08e0                      EQU                               0x0942
-_endif_0x090f                     EQU                               0x0965
-_elseif_0x098e                    EQU                               0x09ce
+_else_0x08ae                      EQU                               0x091f
+_else_0x08dd                      EQU                               0x0942
+_endif_0x090c                     EQU                               0x0965
+_elseif_0x098b                    EQU                               0x09ce
 _page_0x0aa0                      EQU                               0x0aa0
-_elseif_0x09e5                    EQU                               0x0ac4
-_elseif_0x0a19                    EQU                               0x0af2
+_elseif_0x09e2                    EQU                               0x0ac4
+_elseif_0x0a16                    EQU                               0x0af2
 _page_0x0ba0                      EQU                               0x0ba0
-_endif_0x0a31                     EQU                               0x0bb0
-_next_0x0a38                      EQU                               0x0bb7
+_endif_0x0a2e                     EQU                               0x0bb0
+_next_0x0a35                      EQU                               0x0bb7
 _page_0x0ca0                      EQU                               0x0ca0
-_endif_0x0a97                     EQU                               0x0ca6
+_endif_0x0a94                     EQU                               0x0ca6
 _page_0x0da0                      EQU                               0x0da0
-_else_0x0b5d                      EQU                               0x0de4
-_endif_0x0b61                     EQU                               0x0de8
+_else_0x0b5a                      EQU                               0x0de4
+_endif_0x0b5e                     EQU                               0x0de8
 _page_0x0ea0                      EQU                               0x0ea0
-_endif_0x0ba1                     EQU                               0x0ec2
-_else_0x0bc3                      EQU                               0x0ee0
-_else_0x0bd8                      EQU                               0x0ef1
+_endif_0x0b9c                     EQU                               0x0ec2
+_else_0x0bbe                      EQU                               0x0ee0
+_else_0x0bd3                      EQU                               0x0ef1
 _page_0x0fa0                      EQU                               0x0fa0
-_else_0x0c64                      EQU                               0x0ff6
+_else_0x0c5d                      EQU                               0x0ff4
 _page_0x10a0                      EQU                               0x10a0
-_endif_0x0cb2                     EQU                               0x10d6
+_endif_0x0cab                     EQU                               0x10d4
 _page_0x11a0                      EQU                               0x11a0
-_endif_0x0cfd                     EQU                               0x11bd
-_endif_0x0d14                     EQU                               0x11cc
+_endif_0x0cf6                     EQU                               0x11bd
+_endif_0x0d0d                     EQU                               0x11cc
 _page_0x12a0                      EQU                               0x12a0
-_elseif_0x0d45                    EQU                               0x12a2
-_elseif_0x0d62                    EQU                               0x12b9
-_else_0x0d92                      EQU                               0x12dd
+_elseif_0x0d3e                    EQU                               0x12a2
+_elseif_0x0d5b                    EQU                               0x12b9
+_else_0x0d8b                      EQU                               0x12dd
 _page_0x13a0                      EQU                               0x13a0
-_endif_0x0dbd                     EQU                               0x13a6
+_endif_0x0db6                     EQU                               0x13a6
 _page_0x14a0                      EQU                               0x14a0
-_endif_0x0e2d                     EQU                               0x14a2
+_endif_0x0e24                     EQU                               0x14a2
 _page_0x15a0                      EQU                               0x15a0
-_else_0x0f2b                      EQU                               0x15f0
+_else_0x0f22                      EQU                               0x15f0
 _page_0x16a0                      EQU                               0x16a0
-_endif_0x0f67                     EQU                               0x16cc
-_endif_0x0f69                     EQU                               0x16ce
-_endif_0x0f83                     EQU                               0x16e4
+_endif_0x0f5e                     EQU                               0x16cc
+_endif_0x0f60                     EQU                               0x16ce
+_endif_0x0f7a                     EQU                               0x16e4
 _page_0x17a0                      EQU                               0x17a0
-_endif_0x0fa1                     EQU                               0x17ae
-_endif_0x0fc6                     EQU                               0x17cf
+_endif_0x0f98                     EQU                               0x17ae
+_endif_0x0fbb                     EQU                               0x17cd
 _page_0x18a0                      EQU                               0x18a0
-_endif_0x1017                     EQU                               0x18aa
-_endif_0x1070                     EQU                               0x18eb
+_endif_0x100a                     EQU                               0x18a6
+_endif_0x1061                     EQU                               0x18e5
 _page_0x19a0                      EQU                               0x19a0
-_endif_0x10cd                     EQU                               0x19da
+_endif_0x10bc                     EQU                               0x19d8
 _page_0x1aa0                      EQU                               0x1aa0
-_endif_0x1139                     EQU                               0x1add
+_endif_0x1128                     EQU                               0x1ad6
 _page_0x1ba0                      EQU                               0x1ba0
-_endif_0x1175                     EQU                               0x1bb4
-_else_0x117a                      EQU                               0x1bb9
+_endif_0x1164                     EQU                               0x1bac
+_else_0x1169                      EQU                               0x1bb1
+_endif_0x11c0                     EQU                               0x1bf4
 _page_0x1ca0                      EQU                               0x1ca0
-_endif_0x11d1                     EQU                               0x1cac
-_endif_0x120d                     EQU                               0x1cdc
-_elseif_0x1226                    EQU                               0x1cf1
+_endif_0x11fc                     EQU                               0x1cce
+_elseif_0x1215                    EQU                               0x1ce3
 _page_0x1da0                      EQU                               0x1da0
-_elseif_0x1240                    EQU                               0x1db3
-_else_0x1259                      EQU                               0x1dc8
-_endif_0x125d                     EQU                               0x1dcc
+_elseif_0x122f                    EQU                               0x1da4
+_else_0x1248                      EQU                               0x1db9
+_endif_0x124c                     EQU                               0x1dbd
+_endif_0x1295                     EQU                               0x1df6
 _page_0x1ea0                      EQU                               0x1ea0
-_endif_0x12a6                     EQU                               0x1eb0
-_else_0x12d0                      EQU                               0x1ece
-_else_0x12d5                      EQU                               0x1ed3
+_else_0x12bf                      EQU                               0x1ebe
+_else_0x12c4                      EQU                               0x1ec3
+_endif_0x1300                     EQU                               0x1ef3
 _page_0x1fa0                      EQU                               0x1fa0
-_endif_0x1311                     EQU                               0x1fae
-_endif_0x133b                     EQU                               0x1fd0
+_endif_0x132a                     EQU                               0x1fc0
 _page_0x20a0                      EQU                               0x20a0
-_endif_0x1396                     EQU                               0x20b6
+_endif_0x1385                     EQU                               0x20a6
 _page_0x21a0                      EQU                               0x21a0
-_else_0x141a                      EQU                               0x21be
-_else_0x1439                      EQU                               0x21d5
-_else_0x1458                      EQU                               0x21ec
+_else_0x1409                      EQU                               0x21b2
+_else_0x1428                      EQU                               0x21c9
+_else_0x1447                      EQU                               0x21e0
 _page_0x22a0                      EQU                               0x22a0
-_else_0x1477                      EQU                               0x22b2
-_drawScore                        EQU                               0x22b4
-_next_0x1495                      EQU                               0x22d0
+_else_0x1466                      EQU                               0x22a2
+_drawScore                        EQU                               0x22a4
+_next_0x1484                      EQU                               0x22c0
 _page_0x23a0                      EQU                               0x23a0
-_endif_0x150d                     EQU                               0x23e5
-_drawHigh                         EQU                               0x23e7
-_next_0x1518                      EQU                               0x23f0
+_endif_0x14fc                     EQU                               0x23cd
+_drawHigh                         EQU                               0x23cf
+_next_0x1507                      EQU                               0x23d8
 _page_0x24a0                      EQU                               0x24a0
-_drawLevel                        EQU                               0x24c9
-_next_0x1571                      EQU                               0x24e5
+_drawLevel                        EQU                               0x24b2
+_next_0x1560                      EQU                               0x24ce
 _page_0x25a0                      EQU                               0x25a0
-_drawLives                        EQU                               0x25bf
-_while_0x15b7                     EQU                               0x25c8
+_drawLives                        EQU                               0x25b2
+_while_0x15a6                     EQU                               0x25bb
+_while_0x15e0                     EQU                               0x25eb
 _page_0x26a0                      EQU                               0x26a0
-_while_0x15f1                     EQU                               0x26a2
-_wend_0x1623                      EQU                               0x26ce
-_next_0x162f                      EQU                               0x26da
+_wend_0x1612                      EQU                               0x26c2
+_next_0x161e                      EQU                               0x26ce
 _page_0x27a0                      EQU                               0x27a0
-_next_0x1680                      EQU                               0x27d5
+_next_0x166f                      EQU                               0x27c9
 _page_0x28a0                      EQU                               0x28a0
-_drawDots                         EQU                               0x28cc
-_next_0x16fe                      EQU                               0x28d5
-_next_0x1702                      EQU                               0x28d9
+_drawDots                         EQU                               0x28c0
+_next_0x16ed                      EQU                               0x28c9
+_next_0x16f1                      EQU                               0x28cd
 _page_0x29a0                      EQU                               0x29a0
-_elseif_0x174d                    EQU                               0x29bb
-_endif_0x1771                     EQU                               0x29d1
-_endif_0x1786                     EQU                               0x29e6
+_elseif_0x173c                    EQU                               0x29af
+_endif_0x1760                     EQU                               0x29c5
+_endif_0x1775                     EQU                               0x29da
 _page_0x2aa0                      EQU                               0x2aa0
-_endif_0x17cd                     EQU                               0x2ab7
-_initVars                         EQU                               0x2ad5
+_endif_0x17bc                     EQU                               0x2aab
+_initVars                         EQU                               0x2ac9
+_next_0x1808                      EQU                               0x2af1
 _page_0x2ba0                      EQU                               0x2ba0
-_next_0x1819                      EQU                               0x2ba8
-_else_0x1835                      EQU                               0x2bbe
-_endif_0x184e                     EQU                               0x2bc9
+_else_0x1822                      EQU                               0x2bb4
+_endif_0x183b                     EQU                               0x2bbf
 _page_0x2ca0                      EQU                               0x2ca0
-_else_0x18cc                      EQU                               0x2ce1
+_else_0x18b9                      EQU                               0x2cd7
 _page_0x2da0                      EQU                               0x2da0
-_else_0x1911                      EQU                               0x2dcd
-_endif_0x191a                     EQU                               0x2dd6
+_else_0x18fc                      EQU                               0x2dc2
+_endif_0x1905                     EQU                               0x2dcb
 _page_0x2ea0                      EQU                               0x2ea0
-_page_0x2fa0                      EQU                               0x2fa0
 
 ; Global Variables
 _livesDots                        EQU                               0x0030
@@ -438,6 +439,8 @@ def_bytes_0x32f0                  DB                                5 144 83 145
 
 ; Define Loader Image Chunks
 
+; Define Midis
+
 ; Define Sprites
 def_sprites_0x7fc9                EQU                               0x7fc9
 def_sprites_0x7fc9                DB                                0 0 3 0 0 0 0 3 3 0 0 0 3 3 3 0 0 0 3 63 56 0 0 0 3 63 63 0 0 0 3 3 3 0 0 0 3 3 3 0 0 0 3 0 3 0 0 0 0 0 0 0 0 0 247 
@@ -626,9 +629,9 @@ def_sprites_0x70a4                DB                                0 63 63 63 0
 _lut_numericLabs                  EQU                               0x64a3
 _lut_numericLabs                  DW                                253 254 247 251 0x0000
 _lut_numericAddrs                 EQU                               0x63a5
-_lut_numericAddrs                 DW                                0x21a9 0x21c0 0x21d7 0x21ee 
+_lut_numericAddrs                 DW                                0x20ed 0x21b4 0x21cb 0x21e2 
 _lut_onAddrs_0x65a5               EQU                               0x65a5
-_lut_onAddrs_0x65a5               DW                                0x17b0 0x17d9 0x18b4 0x18f5 
+_lut_onAddrs_0x65a5               DW                                0x17b0 0x17d7 0x18b0 0x18ef 
 _spriteLut_0x62a3                 EQU                               0x62a3
 _spriteLut_0x62a3                 DW                                0x7fc9 0x0000 0x7f92 0x0003 0x0000
 _spriteLut_0x61a3                 EQU                               0x61a3
@@ -827,27 +830,26 @@ _else_0x0250                      LDWI                              _drawPucMon
                                   CALL                              giga_vAC                    ; Main: gosub drawGhosts
 
 _endif_0x025a                     LD                                _livesDots
-                                  XORI                              0
-                                  BNE                               _endif_0x0282               ; Main: if livesDots.lo &&= 0
+                                  BNE                               _endif_0x0280               ; Main: if livesDots.lo &&= 0
 
                                   LD                                _levelPain
                                   XORI                              99
-                                  BNE                               _else_0x0279
+                                  BNE                               _else_0x0277
                                   LDWI                              257
                                   STW                               register0
                                   LDI                               64
                                   POKE                              register0                   ; Main: if levelPain.lo &&= 99 then poke &h0101, &h40  'level100 easter egg, good luck once you get to level 100!
 
-_else_0x0279                      INC                               _levelPain                  ; Main: inc levelPain.lo
+_else_0x0277                      INC                               _levelPain                  ; Main: inc levelPain.lo
 
                                   INC                               _levelPain + 1              ; Main: inc levelPain.hi
 
                                   LDWI                              _start
                                   CALL                              giga_vAC                    ; Main: goto start
 
-_endif_0x0282                     LD                                _flags + 1
+_endif_0x0280                     LD                                _flags + 1
                                   XORI                              1
-                                  BNE                               _endif_0x02bc               ; Main: if flags.hi &&= 1
+                                  BNE                               _endif_0x02b8               ; Main: if flags.hi &&= 1
 
                                   LDI                               0
                                   ST                                _flags + 1                  ; Main: flags.hi = 0
@@ -865,16 +867,15 @@ _endif_0x0282                     LD                                _flags + 1
                                   CALL                              giga_vAC                    ; Main: gosub drawDeath
 
                                   LD                                _livesDots + 1
-                                  XORI                              0
-                                  BNE                               _endif_0x02b7               ; Main: if livesDots.hi &&= 0
+                                  BNE                               _endif_0x02b3               ; Main: if livesDots.hi &&= 0
 
                                   LDWI                              _reset
                                   CALL                              giga_vAC                    ; Main: goto reset
 
-_endif_0x02b7                     LDWI                              _init
+_endif_0x02b3                     LDWI                              _init
                                   CALL                              giga_vAC                    ; Main: goto init
 
-_endif_0x02bc                     LDI                               60
+_endif_0x02b8                     LDI                               60
                                   STW                               spriteId
                                   LDI                               3
                                   ST                                spriteXY
@@ -909,14 +910,14 @@ _endif_0x02bc                     LDI                               60
 
                                   INC                               _timeTicks                  ; Main: inc timeTicks.lo
 
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x0300
-                                  CALL                              giga_vAC
-_page_0x0300                      LDLW                              0xFE
                                   LDWI                              _repeat_0x0234
                                   CALL                              giga_vAC                    ; Main: forever
 
 _mod5                             PUSH                              
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x0300
+                                  CALL                              giga_vAC
+_page_0x0300                      LDLW                              0xFE
                                   LD                                _mx + 1
                                   STW                               0xe8
                                   LD                                _mx
@@ -932,31 +933,31 @@ _mod5                             PUSH
 
                                   LDW                               _mx
                                   SUBI                              14
-                                  BLE                               _elseif_0x033d              ; Main: if mx &&> 14
+                                  BLE                               _elseif_0x0339              ; Main: if mx &&> 14
 
                                   LDW                               _mx
                                   SUBI                              15
                                   STW                               _mx
-                                  BRA                               _endif_0x0365               ; Main: mx = mx - 15
+                                  BRA                               _endif_0x0361               ; Main: mx = mx - 15
 
-_elseif_0x033d                    LDW                               _mx
+_elseif_0x0339                    LDW                               _mx
                                   SUBI                              9
-                                  BLE                               _elseif_0x0352              ; Main: elseif mx &&> 9
+                                  BLE                               _elseif_0x034e              ; Main: elseif mx &&> 9
 
                                   LDW                               _mx
                                   SUBI                              10
                                   STW                               _mx
-                                  BRA                               _endif_0x0365               ; Main: mx = mx - 10
+                                  BRA                               _endif_0x0361               ; Main: mx = mx - 10
 
-_elseif_0x0352                    LDW                               _mx
+_elseif_0x034e                    LDW                               _mx
                                   SUBI                              4
-                                  BLE                               _endif_0x0365               ; Main: elseif mx &&> 4
+                                  BLE                               _endif_0x0361               ; Main: elseif mx &&> 4
 
                                   LDW                               _mx
                                   SUBI                              5
                                   STW                               _mx                         ; Main: mx = mx - 5
 
-_endif_0x0365                     LD                                _my + 1
+_endif_0x0361                     LD                                _my + 1
                                   STW                               0xe8
                                   LD                                _my
                                   ADDW                              0xe8
@@ -971,31 +972,31 @@ _endif_0x0365                     LD                                _my + 1
 
                                   LDW                               _my
                                   SUBI                              14
-                                  BLE                               _elseif_0x039f              ; Main: if my &&> 14
+                                  BLE                               _elseif_0x039b              ; Main: if my &&> 14
 
                                   LDW                               _my
                                   SUBI                              15
                                   STW                               _my
-                                  BRA                               _endif_0x03c7               ; Main: my = my - 15
+                                  BRA                               _endif_0x03c3               ; Main: my = my - 15
 
-_elseif_0x039f                    LDW                               _my
+_elseif_0x039b                    LDW                               _my
                                   SUBI                              9
-                                  BLE                               _elseif_0x03b4              ; Main: elseif my &&> 9
+                                  BLE                               _elseif_0x03b0              ; Main: elseif my &&> 9
 
                                   LDW                               _my
                                   SUBI                              10
                                   STW                               _my
-                                  BRA                               _endif_0x03c7               ; Main: my = my - 10
+                                  BRA                               _endif_0x03c3               ; Main: my = my - 10
 
-_elseif_0x03b4                    LDW                               _my
+_elseif_0x03b0                    LDW                               _my
                                   SUBI                              4
-                                  BLE                               _endif_0x03c7               ; Main: elseif my &&> 4
+                                  BLE                               _endif_0x03c3               ; Main: elseif my &&> 4
 
                                   LDW                               _my
                                   SUBI                              5
                                   STW                               _my                         ; Main: my = my - 5
 
-_endif_0x03c7                     Return                                                        ; Main: return
+_endif_0x03c3                     Return                                                        ; Main: return
 
 _div5                             PUSH                                                          ; Main: proc div5
 
@@ -1060,7 +1061,7 @@ _drawPucMon                       PUSH
                                   LDWI                              _page_0x0400
                                   CALL                              giga_vAC
 _page_0x0400                      LDLW                              0xFE
-                                  BNE                               _endif_0x0461               ; Main: if mz &&= WALL
+                                  JumpEQ                            _endif_0x0462 12            ; Main: if mz &= WALL
 
                                   LDI                               42
                                   STW                               spriteId
@@ -1073,7 +1074,7 @@ _page_0x0400                      LDLW                              0xFE
 
                                   Return                                                        ; Main: return
 
-_endif_0x0461                     LDW                               _px
+_endif_0x0462                     LDW                               _px
                                   STW                               mathShift
                                   ShiftRight1bit                    
                                   ANDI                              3
@@ -1087,7 +1088,7 @@ _endif_0x0461                     LDW                               _px
 
                                   LDW                               _pxd
                                   XORI                              1
-                                  BNE                               _elseif_0x04ad              ; Main: if pxd &&= 1
+                                  BNE                               _elseif_0x04ae              ; Main: if pxd &&= 1
 
                                   LDI                               44
                                   ADDW                              _xf
@@ -1098,11 +1099,11 @@ _endif_0x0461                     LDW                               _px
                                   ADDI                              8
                                   ST                                spriteXY + 1
                                   DrawSpriteX                       
-                                  BRA                               _endif_0x0513               ; Main: sprite FlipX, PucRt + xf, px, py
+                                  BRA                               _endif_0x0514               ; Main: sprite FlipX, PucRt + xf, px, py
 
-_elseif_0x04ad                    LDWI                              -1
+_elseif_0x04ae                    LDWI                              -1
                                   XORW                              _pxd
-                                  BNE                               _elseif_0x04d4              ; Main: elseif pxd &&= -1
+                                  BNE                               _elseif_0x04d5              ; Main: elseif pxd &&= -1
 
                                   LDI                               40
                                   ADDW                              _xf
@@ -1113,11 +1114,11 @@ _elseif_0x04ad                    LDWI                              -1
                                   ADDI                              8
                                   ST                                spriteXY + 1
                                   DrawSprite                        
-                                  BRA                               _endif_0x0513               ; Main: sprite NoFlip, PucLt + xf, px, py
+                                  BRA                               _endif_0x0514               ; Main: sprite NoFlip, PucLt + xf, px, py
 
-_elseif_0x04d4                    LDW                               _pyd
+_elseif_0x04d5                    LDW                               _pyd
                                   XORI                              1
-                                  BNE                               _else_0x04fa                ; Main: elseif pyd &&= 1
+                                  BNE                               _else_0x04fb                ; Main: elseif pyd &&= 1
 
                                   LDI                               36
                                   ADDW                              _yf
@@ -1128,9 +1129,9 @@ _elseif_0x04d4                    LDW                               _pyd
                                   ADDI                              8
                                   ST                                spriteXY + 1
                                   DrawSpriteY                       
-                                  BRA                               _endif_0x0513               ; Main: sprite FlipY, PucDn + yf, px, py
+                                  BRA                               _endif_0x0514               ; Main: sprite FlipY, PucDn + yf, px, py
 
-_else_0x04fa                      LDI                               32
+_else_0x04fb                      LDI                               32
                                   ADDW                              _yf
                                   STW                               spriteId
                                   LDW                               _px
@@ -1140,7 +1141,7 @@ _else_0x04fa                      LDI                               32
                                   ST                                spriteXY + 1
                                   DrawSprite                                                    ; Main: sprite NoFlip, PucUp + yf, px, py
 
-_endif_0x0513                     LDW                               _px
+_endif_0x0514                     LDW                               _px
                                   ADDW                              _pxd
                                   STW                               _px                         ; Main: px = px + pxd
 
@@ -1154,16 +1155,15 @@ _drawGhosts                       PUSH
                                   LDI                               0
                                   STW                               _gidx                       ; Main: for gidx=0 to NUM_GHOSTS-1
 
-_next_0x052a                      LDWI                              _getGhostVars
+_next_0x052b                      LDWI                              _getGhostVars
                                   CALL                              giga_vAC                    ; Main: gosub getGhostVars
 
                                   LD                                _livesDots
-                                  XORI                              0
                                   CALL                              convertEqOpAddr
                                   STW                               0xe8
                                   LD                                _flags + 1
                                   ORW                               0xe8
-                                  BEQ                               _endif_0x055e               ; Main: if &((flags.hi) OR (livesDots.lo = 0))
+                                  BEQ                               _endif_0x055d               ; Main: if &((flags.hi) OR (livesDots.lo = 0))
 
                                   LDI                               63
                                   STW                               spriteId
@@ -1177,17 +1177,17 @@ _next_0x052a                      LDWI                              _getGhostVar
                                   LDWI                              _drawNextGhost
                                   CALL                              giga_vAC                    ; Main: goto drawNextGhost
 
-_endif_0x055e                     LDW                               _gx
+_endif_0x055d                     LDW                               _gx
                                   STW                               mathShift
                                   ShiftRight2bit                    
                                   ANDI                              1
                                   STW                               _xf                         ; Main: xf = (gx LSR 2) AND 1
 
-                                  LDW                               _gy
                                   STLW                              0xFE
                                   LDWI                              _page_0x0500
                                   CALL                              giga_vAC
 _page_0x0500                      LDLW                              0xFE
+                                  LDW                               _gy
                                   STW                               mathShift
                                   ShiftRight2bit                    
                                   ANDI                              1
@@ -1195,15 +1195,15 @@ _page_0x0500                      LDLW                              0xFE
 
                                   LD                                _flags
                                   ANDI                              1
-                                  BEQ                               _elseif_0x059a              ; Main: if &(flags.lo AND 1)
+                                  BEQ                               _elseif_0x0599              ; Main: if &(flags.lo AND 1)
 
                                   LDWI                              _drawDeadGhost
                                   CALL                              giga_vAC
                                   BRA                               _drawNextGhost              ; Main: gosub drawDeadGhost
 
-_elseif_0x059a                    LDW                               _gmode
+_elseif_0x0599                    LDW                               _gmode
                                   XORI                              1
-                                  BNE                               _else_0x05ed                ; Main: elseif gmode &&= SCARED_MODE
+                                  BNE                               _else_0x05ec                ; Main: elseif gmode &&= SCARED_MODE
 
                                   LD                                _levelPain + 1
                                   STW                               register15
@@ -1212,31 +1212,31 @@ _elseif_0x059a                    LDW                               _gmode
                                   STW                               0xe8
                                   LD                                _timeTicks + 1
                                   SUBW                              0xe8
-                                  BGE                               _else_0x05c5                ; Main: if timeTicks.hi &&< (8-levelPain.hi)
+                                  BGE                               _else_0x05c4                ; Main: if timeTicks.hi &&< (8-levelPain.hi)
 
                                   LDWI                              _drawScaredGhost
                                   CALL                              giga_vAC
-                                  BRA                               _endif_0x05eb               ; Main: gosub drawScaredGhost
+                                  BRA                               _endif_0x05ea               ; Main: gosub drawScaredGhost
 
-_else_0x05c5                      LD                                _timeTicks
+_else_0x05c4                      LD                                _timeTicks
                                   STW                               mathShift
                                   ShiftRight3bit                    
                                   ANDI                              1
-                                  BEQ                               _else_0x05e6                ; Main: if &((timeTicks.lo LSR 3) AND 1)
+                                  BEQ                               _else_0x05e5                ; Main: if &((timeTicks.lo LSR 3) AND 1)
 
                                   LDWI                              _drawNormalGhost
                                   CALL                              giga_vAC
-                                  BRA                               _endif_0x05eb               ; Main: gosub drawNormalGhost
+                                  BRA                               _endif_0x05ea               ; Main: gosub drawNormalGhost
 
-_else_0x05e6                      LDWI                              _drawScaredGhost
+_else_0x05e5                      LDWI                              _drawScaredGhost
                                   CALL                              giga_vAC                    ; Main: gosub drawScaredGhost
 
-_endif_0x05eb                     BRA                               _drawNextGhost              ; Main: endif
+_endif_0x05ea                     BRA                               _drawNextGhost              ; Main: endif
 
-_else_0x05ed                      LDWI                              _drawNormalGhost
+_else_0x05ec                      LDWI                              _drawNormalGhost
                                   CALL                              giga_vAC                    ; Main: gosub drawNormalGhost
 
-_drawNextGhost                    ForNextFarInc                     _gidx _next_0x052a 3        ; Main: next gidx
+_drawNextGhost                    ForNextFarInc                     _gidx _next_0x052b 3        ; Main: next gidx
 
                                   Return                                                        ; Main: return
 
@@ -1248,7 +1248,7 @@ _drawNormalGhost                  PUSH
 
                                   LDW                               _gxd
                                   XORI                              1
-                                  JumpEQ                            _elseif_0x0645 25           ; Main: if gxd &= 1
+                                  JumpEQ                            _elseif_0x0644 25           ; Main: if gxd &= 1
 
                                   LDWI                              20921
                                   ADDW                              _i
@@ -1261,12 +1261,12 @@ _drawNormalGhost                  PUSH
                                   ADDI                              8
                                   ST                                spriteXY + 1
                                   DrawSpriteX                       
-                                  LDWI                              _endif_0x06df
+                                  LDWI                              _endif_0x06de
                                   CALL                              giga_vAC                    ; Main: sprite FlipX,  peek(@gframes + 0 + i) + xf, gx, gy
 
-_elseif_0x0645                    LDWI                              -1
+_elseif_0x0644                    LDWI                              -1
                                   XORW                              _gxd
-                                  JumpEQ                            _elseif_0x0680 26           ; Main: elseif gxd &= -1
+                                  JumpEQ                            _elseif_0x067f 26           ; Main: elseif gxd &= -1
 
                                   LDWI                              20922
                                   ADDW                              _i
@@ -1279,12 +1279,12 @@ _elseif_0x0645                    LDWI                              -1
                                   ADDI                              8
                                   ST                                spriteXY + 1
                                   DrawSprite                        
-                                  LDWI                              _endif_0x06df
+                                  LDWI                              _endif_0x06de
                                   CALL                              giga_vAC                    ; Main: sprite NoFlip, peek(@gframes + 1 + i) + xf, gx, gy
 
-_elseif_0x0680                    LDW                               _gyd
+_elseif_0x067f                    LDW                               _gyd
                                   XORI                              1
-                                  JumpEQ                            _else_0x06ba 27             ; Main: elseif gyd &= 1
+                                  JumpEQ                            _else_0x06b9 27             ; Main: elseif gyd &= 1
 
                                   LDWI                              20923
                                   ADDW                              _i
@@ -1297,16 +1297,16 @@ _elseif_0x0680                    LDW                               _gyd
                                   ADDI                              8
                                   ST                                spriteXY + 1
                                   DrawSprite                        
-                                  LDWI                              _endif_0x06df
+                                  LDWI                              _endif_0x06de
                                   CALL                              giga_vAC                    ; Main: sprite NoFlip, peek(@gframes + 2 + i) + yf, gx, gy
 
-_else_0x06ba                      LDWI                              20924
+_else_0x06b9                      LDWI                              20924
                                   ADDW                              _i
-                                  PEEK                              
                                   STLW                              0xFE
                                   LDWI                              _page_0x0600
                                   CALL                              giga_vAC
 _page_0x0600                      LDLW                              0xFE
+                                  PEEK                              
                                   ADDW                              _yf
                                   STW                               spriteId
                                   LDW                               _gx
@@ -1316,12 +1316,12 @@ _page_0x0600                      LDLW                              0xFE
                                   ST                                spriteXY + 1
                                   DrawSprite                                                    ; Main: sprite NoFlip, peek(@gframes + 3 + i) + yf, gx, gy
 
-_endif_0x06df                     Return                                                        ; Main: return
+_endif_0x06de                     Return                                                        ; Main: return
 
 _drawScaredGhost                  PUSH                              
                                   LDW                               _gxd
                                   XORI                              1
-                                  JumpEQ                            _elseif_0x0710 29           ; Main: if gxd &= 1
+                                  JumpEQ                            _elseif_0x070f 29           ; Main: if gxd &= 1
 
                                   LDI                               54
                                   ADDW                              _xf
@@ -1332,12 +1332,12 @@ _drawScaredGhost                  PUSH
                                   ADDI                              8
                                   ST                                spriteXY + 1
                                   DrawSpriteX                       
-                                  LDWI                              _endif_0x077e
+                                  LDWI                              _endif_0x077d
                                   CALL                              giga_vAC                    ; Main: sprite FlipX,  ScaredRt + xf, gx, gy
 
-_elseif_0x0710                    LDWI                              -1
+_elseif_0x070f                    LDWI                              -1
                                   XORW                              _gxd
-                                  JumpEQ                            _elseif_0x073f 30           ; Main: elseif gxd &= -1
+                                  JumpEQ                            _elseif_0x073e 30           ; Main: elseif gxd &= -1
 
                                   LDI                               52
                                   ADDW                              _xf
@@ -1352,12 +1352,12 @@ _elseif_0x0710                    LDWI                              -1
                                   LDWI                              _page_0x0800
                                   CALL                              giga_vAC
 _page_0x0800                      LDLW                              0xFE
-                                  LDWI                              _endif_0x077e
+                                  LDWI                              _endif_0x077d
                                   CALL                              giga_vAC                    ; Main: sprite NoFlip, ScaredLt + xf, gx, gy
 
-_elseif_0x073f                    LDW                               _gyd
+_elseif_0x073e                    LDW                               _gyd
                                   XORI                              1
-                                  BNE                               _else_0x0765                ; Main: elseif gyd &&= 1
+                                  BNE                               _else_0x0764                ; Main: elseif gyd &&= 1
 
                                   LDI                               50
                                   ADDW                              _yf
@@ -1368,9 +1368,9 @@ _elseif_0x073f                    LDW                               _gyd
                                   ADDI                              8
                                   ST                                spriteXY + 1
                                   DrawSprite                        
-                                  BRA                               _endif_0x077e               ; Main: sprite NoFlip, ScaredDn + yf, gx, gy
+                                  BRA                               _endif_0x077d               ; Main: sprite NoFlip, ScaredDn + yf, gx, gy
 
-_else_0x0765                      LDI                               48
+_else_0x0764                      LDI                               48
                                   ADDW                              _yf
                                   STW                               spriteId
                                   LDW                               _gx
@@ -1380,12 +1380,12 @@ _else_0x0765                      LDI                               48
                                   ST                                spriteXY + 1
                                   DrawSprite                                                    ; Main: sprite NoFlip, ScaredUp + yf, gx, gy
 
-_endif_0x077e                     Return                                                        ; Main: return
+_endif_0x077d                     Return                                                        ; Main: return
 
 _drawDeadGhost                    PUSH                              
                                   LDW                               _gxd
                                   XORI                              1
-                                  BNE                               _elseif_0x07ad              ; Main: if gxd &&= 1
+                                  BNE                               _elseif_0x07ac              ; Main: if gxd &&= 1
 
                                   LDI                               59
                                   STW                               spriteId
@@ -1396,11 +1396,11 @@ _drawDeadGhost                    PUSH
                                   ADDI                              11
                                   ST                                spriteXY + 1
                                   DrawSpriteX                       
-                                  BRA                               _endif_0x0825               ; Main: sprite FlipX,  EyesRt, gx+2, gy+3
+                                  BRA                               _endif_0x0824               ; Main: sprite FlipX,  EyesRt, gx+2, gy+3
 
-_elseif_0x07ad                    LDWI                              -1
+_elseif_0x07ac                    LDWI                              -1
                                   XORW                              _gxd
-                                  BNE                               _elseif_0x07da              ; Main: elseif gxd &&= -1
+                                  BNE                               _elseif_0x07d9              ; Main: elseif gxd &&= -1
 
                                   LDI                               58
                                   STW                               spriteId
@@ -1411,11 +1411,11 @@ _elseif_0x07ad                    LDWI                              -1
                                   ADDI                              11
                                   ST                                spriteXY + 1
                                   DrawSprite                        
-                                  BRA                               _endif_0x0825               ; Main: sprite NoFlip, EyesLt, gx+2, gy+3
+                                  BRA                               _endif_0x0824               ; Main: sprite NoFlip, EyesLt, gx+2, gy+3
 
-_elseif_0x07da                    LDW                               _gyd
+_elseif_0x07d9                    LDW                               _gyd
                                   XORI                              1
-                                  BNE                               _else_0x0806                ; Main: elseif gyd &&= 1
+                                  BNE                               _else_0x0805                ; Main: elseif gyd &&= 1
 
                                   LDI                               57
                                   STW                               spriteId
@@ -1426,9 +1426,9 @@ _elseif_0x07da                    LDW                               _gyd
                                   ADDI                              11
                                   ST                                spriteXY + 1
                                   DrawSprite                        
-                                  BRA                               _endif_0x0825               ; Main: sprite NoFlip, EyesDn, gx+2, gy+3
+                                  BRA                               _endif_0x0824               ; Main: sprite NoFlip, EyesDn, gx+2, gy+3
 
-_else_0x0806                      LDI                               56
+_else_0x0805                      LDI                               56
                                   STW                               spriteId
                                   LDW                               _gx
                                   ADDI                              2
@@ -1438,7 +1438,7 @@ _else_0x0806                      LDI                               56
                                   ST                                spriteXY + 1
                                   DrawSpriteY                                                   ; Main: sprite FlipY,  EyesUp, gx+2, gy+3
 
-_endif_0x0825                     Return                                                        ; Main: return
+_endif_0x0824                     Return                                                        ; Main: return
 
 _drawPills                        PUSH                              
                                   LD                                _timeTicks
@@ -1446,8 +1446,7 @@ _drawPills                        PUSH
                                   STW                               _i                          ; Main: i = timeTicks.lo AND 7
 
                                   LDW                               _i
-                                  XORI                              0
-                                  JumpEQ                            _endif_0x090f 41            ; Main: if i &= 0
+                                  JumpEQ                            _endif_0x090c 41            ; Main: if i &= 0
 
                                   LD                                _timeTicks
                                   STW                               mathShift
@@ -1458,7 +1457,7 @@ _drawPills                        PUSH
                                   LDWI                              0x6dae
                                   PEEK                              
                                   XORI                              2
-                                  JumpEQ                            _else_0x0882 37
+                                  JumpEQ                            _else_0x087f 37
                                   LDI                               61
                                   ADDW                              _i
                                   STW                               spriteId
@@ -1469,14 +1468,14 @@ _drawPills                        PUSH
                                   ST                                spriteXY + 1
                                   DrawSprite                                                    ; Main: if peek(PILL_LT) &= PILL then sprite NoFlip, Pill + i, (1*5)  + (ORIGIN_X-2), (2*5)  + (ORIGIN_Y - 3)
 
-_else_0x0882                      LDWI                              0x6dc7
+_else_0x087f                      LDWI                              0x6dc7
                                   PEEK                              
                                   XORI                              2
                                   STLW                              0xFE
                                   LDWI                              _page_0x0900
                                   CALL                              giga_vAC
 _page_0x0900                      LDLW                              0xFE
-                                  JumpEQ                            _else_0x08b1 38
+                                  JumpEQ                            _else_0x08ae 38
                                   LDI                               61
                                   ADDW                              _i
                                   STW                               spriteId
@@ -1487,10 +1486,10 @@ _page_0x0900                      LDLW                              0xFE
                                   ST                                spriteXY + 1
                                   DrawSprite                                                    ; Main: if peek(PILL_RT) &= PILL then sprite NoFlip, Pill + i, (26*5) + (ORIGIN_X-2), (2*5)  + (ORIGIN_Y - 3)
 
-_else_0x08b1                      LDWI                              0x5dae
+_else_0x08ae                      LDWI                              0x5dae
                                   PEEK                              
                                   XORI                              2
-                                  JumpEQ                            _else_0x08e0 39
+                                  JumpEQ                            _else_0x08dd 39
                                   LDI                               61
                                   ADDW                              _i
                                   STW                               spriteId
@@ -1501,10 +1500,10 @@ _else_0x08b1                      LDWI                              0x5dae
                                   ST                                spriteXY + 1
                                   DrawSprite                                                    ; Main: if peek(PILL_LB) &= PILL then sprite NoFlip, Pill + i, (1*5)  + (ORIGIN_X-2), (18*5) + (ORIGIN_Y - 3)
 
-_else_0x08e0                      LDWI                              0x5dc7
+_else_0x08dd                      LDWI                              0x5dc7
                                   PEEK                              
                                   XORI                              2
-                                  JumpEQ                            _endif_0x090f 40
+                                  JumpEQ                            _endif_0x090c 40
                                   LDI                               61
                                   ADDW                              _i
                                   STW                               spriteId
@@ -1515,7 +1514,7 @@ _else_0x08e0                      LDWI                              0x5dc7
                                   ST                                spriteXY + 1
                                   DrawSprite                                                    ; Main: if peek(PILL_RB) &= PILL then sprite NoFlip, Pill + i, (26*5) + (ORIGIN_X-2), (18*5) + (ORIGIN_Y - 3)
 
-_endif_0x090f                     Return                                                        ; Main: return
+_endif_0x090c                     Return                                                        ; Main: return
 
 _movePucMon                       PUSH                              
                                   LDWI                              _coordsPucMon
@@ -1541,7 +1540,7 @@ _movePucMon                       PUSH
                                   LDW                               _mz
                                   ANDI                              15
                                   XORI                              1
-                                  JumpEQ                            _elseif_0x098e 42           ; Main: if (mz AND &h0F) &= DOT
+                                  JumpEQ                            _elseif_0x098b 42           ; Main: if (mz AND &h0F) &= DOT
 
                                   LDW                               _mz
                                   ANDI                              240
@@ -1567,12 +1566,12 @@ _movePucMon                       PUSH
                                   LD                                _livesDots
                                   SUBI                              1
                                   ST                                _livesDots
-                                  LDWI                              _endif_0x0a31
+                                  LDWI                              _endif_0x0a2e
                                   CALL                              giga_vAC                    ; Main: livesDots.lo = livesDots.lo - 1
 
-_elseif_0x098e                    LDW                               _mz
+_elseif_0x098b                    LDW                               _mz
                                   XORI                              2
-                                  JumpEQ                            _elseif_0x09e5 43           ; Main: elseif mz &= PILL
+                                  JumpEQ                            _elseif_0x09e2 43           ; Main: elseif mz &= PILL
 
                                   LDW                               _mz
                                   ANDI                              240
@@ -1608,12 +1607,12 @@ _page_0x0aa0                      LDLW                              0xFE
                                   LD                                _livesDots
                                   SUBI                              1
                                   ST                                _livesDots
-                                  LDWI                              _endif_0x0a31
+                                  LDWI                              _endif_0x0a2e
                                   CALL                              giga_vAC                    ; Main: livesDots.lo = livesDots.lo - 1
 
-_elseif_0x09e5                    LDW                               _mz
+_elseif_0x09e2                    LDW                               _mz
                                   SUBI                              224
-                                  JumpGE                            _elseif_0x0a19 44           ; Main: elseif mz &>= DOOR
+                                  JumpGE                            _elseif_0x0a16 44           ; Main: elseif mz &>= DOOR
 
                                   LDW                               _oxd
                                   STW                               _pxd
@@ -1631,28 +1630,28 @@ _elseif_0x09e5                    LDW                               _mz
                                   CALL                              convert8Arr2dAddr
                                   PEEK                              
                                   STW                               _mz
-                                  LDWI                              _endif_0x0a31
+                                  LDWI                              _endif_0x0a2e
                                   CALL                              giga_vAC                    ; Main: mz = maze(cj, ci)
 
-_elseif_0x0a19                    LDW                               _mz
+_elseif_0x0a16                    LDW                               _mz
                                   XORI                              160
                                   STLW                              0xFE
                                   LDWI                              _page_0x0ba0
                                   CALL                              giga_vAC
 _page_0x0ba0                      LDLW                              0xFE
-                                  JumpEQ                            _endif_0x0a31 45            ; Main: elseif mz &= TUNNEL
+                                  JumpEQ                            _endif_0x0a2e 45            ; Main: elseif mz &= TUNNEL
 
                                   LDI                               131
                                   SUBW                              _px
                                   STW                               _px                         ; Main: px = (129+ORIGIN_X) - px
 
-_endif_0x0a31                     Return                                                        ; Main: return
+_endif_0x0a2e                     Return                                                        ; Main: return
 
 _moveGhosts                       PUSH                              
                                   LDI                               0
                                   STW                               _gidx                       ; Main: for gidx=0 to NUM_GHOSTS-1
 
-_next_0x0a38                      LDWI                              _getGhostVars
+_next_0x0a35                      LDWI                              _getGhostVars
                                   CALL                              giga_vAC                    ; Main: gosub getGhostVars
 
                                   LDI                               0
@@ -1665,17 +1664,17 @@ _next_0x0a38                      LDWI                              _getGhostVar
                                   LD                                _flags
                                   ANDI                              2
                                   ORW                               0xe8
-                                  JumpFalse                         _endif_0x0a97 48            ; Main: if (gmode = SCARED_MODE) OR (flags.lo AND 2)
+                                  JumpFalse                         _endif_0x0a94 48            ; Main: if (gmode = SCARED_MODE) OR (flags.lo AND 2)
 
                                   LD                                _timeTicks
                                   XORI                              255
                                   ANDI                              1
-                                  JumpFalse                         _endif_0x0a97 47            ; Main: if timeTicks.lo XOR 255 AND 1  'if timeTicks.lo AND 1 = 0
+                                  JumpFalse                         _endif_0x0a94 47            ; Main: if timeTicks.lo XOR 255 AND 1  'if timeTicks.lo AND 1 = 0
 
                                   LD                                _flags
                                   XORI                              255
                                   ANDI                              1
-                                  JumpFalse                         _endif_0x0a97 46            ; Main: if flags.lo XOR 255 AND 1  'if flags.lo     AND 1 = 0
+                                  JumpFalse                         _endif_0x0a94 46            ; Main: if flags.lo XOR 255 AND 1  'if flags.lo     AND 1 = 0
 
                                   LDI                               1
                                   STW                               _slowed                     ; Main: slowed = 1
@@ -1688,7 +1687,7 @@ _page_0x0ca0                      LDLW                              0xFE
                                   STW                               _gxd
                                   STW                               _gyd                        ; Main: gxd = 0 : gyd = gxd
 
-_endif_0x0a97                     LDW                               _gx
+_endif_0x0a94                     LDW                               _gx
                                   ADDW                              _gxd
                                   STW                               _gx                         ; Main: gx = gx + gxd
 
@@ -1699,19 +1698,19 @@ _endif_0x0a97                     LDW                               _gx
                                   LD                                _flags
                                   XORI                              255
                                   ANDI                              1
-                                  JumpFalse                         _endif_0x0b61 53            ; Main: if flags.lo XOR 255 AND 1  'if flags.lo AND 1 = 0
+                                  JumpFalse                         _endif_0x0b5e 53            ; Main: if flags.lo XOR 255 AND 1  'if flags.lo AND 1 = 0
 
                                   LDW                               _gx
                                   SUBW                              _px
                                   Absolute                          
                                   SUBI                              3
-                                  JumpLE                            _endif_0x0b61 52            ; Main: if abs(gx - px) &<= 3
+                                  JumpLE                            _endif_0x0b5e 52            ; Main: if abs(gx - px) &<= 3
 
                                   LDW                               _gy
                                   SUBW                              _py
                                   Absolute                          
                                   SUBI                              3
-                                  JumpLE                            _endif_0x0b61 51            ; Main: if abs(gy - py) &<= 3
+                                  JumpLE                            _endif_0x0b5e 51            ; Main: if abs(gy - py) &<= 3
 
                                   LDI                               63
                                   STW                               spriteId
@@ -1728,7 +1727,7 @@ _page_0x0da0                      LDLW                              0xFE
 
                                   LDW                               _gmode
                                   XORI                              1
-                                  JumpEQ                            _else_0x0b5d 49             ; Main: if gmode &= SCARED_MODE
+                                  JumpEQ                            _else_0x0b5a 49             ; Main: if gmode &= SCARED_MODE
 
                                   LD                                _flags
                                   ORI                               1
@@ -1750,27 +1749,26 @@ _page_0x0da0                      LDLW                              0xFE
 
                                   LDWI                              _drawScore
                                   CALL                              giga_vAC
-                                  LDWI                              _endif_0x0b61
+                                  LDWI                              _endif_0x0b5e
                                   CALL                              giga_vAC                    ; Main: call drawScore
 
-_else_0x0b5d                      LDI                               1
+_else_0x0b5a                      LDI                               1
                                   ST                                _flags + 1                  ; Main: flags.hi = 1
 
-_endif_0x0b61                     LDW                               _gmode
+_endif_0x0b5e                     LDW                               _gmode
                                   XORI                              1
-                                  JumpEQ                            _endif_0x0ba1 56            ; Main: if gmode &= SCARED_MODE
+                                  JumpEQ                            _endif_0x0b9c 56            ; Main: if gmode &= SCARED_MODE
 
                                   LD                                _timeTicks + 1
-                                  XORI                              0
                                   STLW                              0xFE
                                   LDWI                              _page_0x0ea0
                                   CALL                              giga_vAC
 _page_0x0ea0                      LDLW                              0xFE
-                                  JumpEQ                            _endif_0x0ba1 55            ; Main: if timeTicks.hi &= 0
+                                  JumpEQ                            _endif_0x0b9c 55            ; Main: if timeTicks.hi &= 0
 
                                   LD                                _timeTicks
                                   XORI                              1
-                                  JumpEQ                            _endif_0x0ba1 54            ; Main: if timeTicks.lo &= 1
+                                  JumpEQ                            _endif_0x0b9c 54            ; Main: if timeTicks.lo &= 1
 
                                   LDI                               0
                                   SUBW                              _gxd
@@ -1779,7 +1777,7 @@ _page_0x0ea0                      LDLW                              0xFE
                                   SUBW                              _gyd
                                   STW                               _gyd                        ; Main: gxd = -gxd : gyd = -gyd
 
-_endif_0x0ba1                     LDW                               _gx
+_endif_0x0b9c                     LDW                               _gx
                                   STW                               _mx
                                   LDW                               _gy
                                   STW                               _my
@@ -1788,17 +1786,17 @@ _endif_0x0ba1                     LDW                               _gx
 
                                   LDW                               _mx
                                   XORI                              3
-                                  JumpNE                            _else_0x0bc3 57
+                                  JumpNE                            _else_0x0bbe 57
                                   LDWI                              _moveNextGhost
                                   CALL                              giga_vAC                    ; Main: if mx &<> 3 then goto moveNextGhost
 
-_else_0x0bc3                      LDW                               _my
+_else_0x0bbe                      LDW                               _my
                                   XORI                              3
-                                  JumpNE                            _else_0x0bd8 58
+                                  JumpNE                            _else_0x0bd3 58
                                   LDWI                              _moveNextGhost
                                   CALL                              giga_vAC                    ; Main: if my &<> 3 then goto moveNextGhost
 
-_else_0x0bd8                      LDW                               _gx
+_else_0x0bd3                      LDW                               _gx
                                   ADDW                              _gxd
                                   ADDW                              _gxd
                                   STLW                              0xFE
@@ -1847,40 +1845,39 @@ _page_0x0fa0                      LDLW                              0xFE
                                   STW                               _mz                         ; Main: mz = maze(dj, di)
 
                                   LDW                               _slowed
-                                  XORI                              0
-                                  JumpEQ                            _else_0x0c64 59
+                                  JumpEQ                            _else_0x0c5d 59
                                   LDWI                              _replaceDot
                                   CALL                              giga_vAC                    ; Main: if slowed &= 0 then gosub replaceDot
 
-_else_0x0c64                      LDW                               _gj
+_else_0x0c5d                      LDW                               _gj
+                                  STW                               memIndex0
                                   STLW                              0xFE
                                   LDWI                              _page_0x10a0
                                   CALL                              giga_vAC
 _page_0x10a0                      LDLW                              0xFE
-                                  STW                               memIndex0
                                   LDW                               _gi
                                   STW                               memIndex1
                                   LDWI                              0x3bd0
                                   CALL                              convert8Arr2dAddr
                                   PEEK                              
                                   XORI                              192
-                                  JumpEQ                            _endif_0x0cb2 62            ; Main: if maze(gj, gi) &= EXIT
+                                  JumpEQ                            _endif_0x0cab 62            ; Main: if maze(gj, gi) &= EXIT
 
                                   LD                                _flags
                                   XORI                              255
                                   ANDI                              1
-                                  BEQ                               _endif_0x0cb2               ; Main: if &(flags.lo XOR 255 AND 1)  'if flags.lo AND 1 = 0
+                                  BEQ                               _endif_0x0cab               ; Main: if &(flags.lo XOR 255 AND 1)  'if flags.lo AND 1 = 0
 
                                   LDW                               _gmode
                                   XORI                              1
-                                  JumpNE                            _endif_0x0cb2 60            ; Main: if gmode &<> SCARED_MODE
+                                  JumpNE                            _endif_0x0cab 60            ; Main: if gmode &<> SCARED_MODE
 
                                   LDI                               0
                                   STW                               _gxd
                                   LDWI                              -1
                                   STW                               _gyd                        ; Main: gxd = 0 : gyd = -1
 
-_endif_0x0cb2                     LDW                               _gidx
+_endif_0x0cab                     LDW                               _gidx
                                   STW                               register0
                                   ADDW                              register0
                                   STW                               register0
@@ -1891,7 +1888,7 @@ _endif_0x0cb2                     LDW                               _gidx
 
                                   LDW                               _gi
                                   XORI                              13
-                                  JumpEQ                            _endif_0x0cfd 64            ; Main: if gi &= 13
+                                  JumpEQ                            _endif_0x0cf6 64            ; Main: if gi &= 13
 
                                   LDW                               _gj
                                   XORI                              10
@@ -1899,7 +1896,7 @@ _endif_0x0cb2                     LDW                               _gidx
                                   LDWI                              _page_0x11a0
                                   CALL                              giga_vAC
 _page_0x11a0                      LDLW                              0xFE
-                                  JumpEQ                            _endif_0x0cfd 63            ; Main: if gj &= 10
+                                  JumpEQ                            _endif_0x0cf6 63            ; Main: if gj &= 10
 
                                   LD                                _flags
                                   ANDI                              254
@@ -1911,16 +1908,16 @@ _page_0x11a0                      LDLW                              0xFE
                                   LDW                               memValue
                                   POKE                              memAddr                     ; Main: flags.lo = flags.lo AND &hFE : ghostsFlags(gidx) = flags.lo
 
-_endif_0x0cfd                     LD                                _flags
+_endif_0x0cf6                     LD                                _flags
                                   ANDI                              1
-                                  BEQ                               _endif_0x0d14               ; Main: if &(flags.lo AND 1)
+                                  BEQ                               _endif_0x0d0d               ; Main: if &(flags.lo AND 1)
 
                                   LDI                               12
                                   STW                               _ti
                                   LDI                               11
                                   STW                               _tj                         ; Main: ti = 12 : tj = 11
 
-_endif_0x0d14                     LDW                               _cj
+_endif_0x0d0d                     LDW                               _cj
                                   STW                               memIndex0
                                   LDW                               _ci
                                   STW                               memIndex1
@@ -1931,7 +1928,7 @@ _endif_0x0d14                     LDW                               _cj
 
                                   LDW                               _mz
                                   XORI                              240
-                                  JumpEQ                            _elseif_0x0d45 66           ; Main: if mz &= WALL
+                                  JumpEQ                            _elseif_0x0d3e 66           ; Main: if mz &= WALL
 
                                   LDWI                              _getWallDir
                                   CALL                              giga_vAC                    ; Main: gosub getWallDir
@@ -1945,9 +1942,9 @@ _endif_0x0d14                     LDW                               _cj
                                   LDWI                              _page_0x12a0
                                   CALL                              giga_vAC
 _page_0x12a0                      LDLW                              0xFE
-_elseif_0x0d45                    LDW                               _mz
+_elseif_0x0d3e                    LDW                               _mz
                                   XORI                              160
-                                  JumpEQ                            _elseif_0x0d62 67           ; Main: elseif mz &= TUNNEL
+                                  JumpEQ                            _elseif_0x0d5b 67           ; Main: elseif mz &= TUNNEL
 
                                   LDI                               131
                                   SUBW                              _gx
@@ -1955,9 +1952,9 @@ _elseif_0x0d45                    LDW                               _mz
                                   LDWI                              _moveNextGhost
                                   CALL                              giga_vAC                    ; Main: gx = (129+ORIGIN_X) - gx
 
-_elseif_0x0d62                    LDW                               _mz
+_elseif_0x0d5b                    LDW                               _mz
                                   XORI                              144
-                                  JumpEQ                            _else_0x0d92 68             ; Main: elseif mz &= SLOW
+                                  JumpEQ                            _else_0x0d8b 68             ; Main: elseif mz &= SLOW
 
                                   LD                                _flags
                                   ORI                               2
@@ -1971,9 +1968,9 @@ _elseif_0x0d62                    LDW                               _mz
                                   LDWI                              _moveNextGhost
                                   CALL                              giga_vAC                    ; Main: flags.lo = flags.lo OR 2 : ghostsFlags(gidx) = flags.lo
 
-_else_0x0d92                      LD                                _flags
+_else_0x0d8b                      LD                                _flags
                                   ANDI                              2
-                                  JumpFalse                         _endif_0x0dbd 69            ; Main: if flags.lo AND 2
+                                  JumpFalse                         _endif_0x0db6 69            ; Main: if flags.lo AND 2
 
                                   LD                                _flags
                                   ANDI                              253
@@ -1989,7 +1986,7 @@ _page_0x13a0                      LDLW                              0xFE
                                   LDW                               memValue
                                   POKE                              memAddr                     ; Main: flags.lo = flags.lo AND &hFD : ghostsFlags(gidx) = flags.lo
 
-_endif_0x0dbd                     LDW                               _gj
+_endif_0x0db6                     LDW                               _gj
                                   STW                               memIndex0
                                   LDW                               _gi
                                   STW                               memIndex1
@@ -2025,8 +2022,7 @@ _endif_0x0dbd                     LDW                               _gj
                                   CALL                              giga_vAC                    ; Main: gosub getGhostDir
 
 _moveNextGhost                    LDW                               _slowed
-                                  XORI                              0
-                                  JumpEQ                            _endif_0x0e2d 72            ; Main: if slowed &= 0
+                                  JumpEQ                            _endif_0x0e24 72            ; Main: if slowed &= 0
 
                                   LDWI                              _setGhostVars
                                   CALL                              giga_vAC                    ; Main: gosub setGhostVars
@@ -2035,7 +2031,7 @@ _moveNextGhost                    LDW                               _slowed
                                   LDWI                              _page_0x14a0
                                   CALL                              giga_vAC
 _page_0x14a0                      LDLW                              0xFE
-_endif_0x0e2d                     ForNextFarInc                     _gidx _next_0x0a38 3        ; Main: next gidx
+_endif_0x0e24                     ForNextFarInc                     _gidx _next_0x0a35 3        ; Main: next gidx
 
                                   Return                                                        ; Main: return
 
@@ -2124,10 +2120,10 @@ _getGhostDir                      PUSH
 _setGhostsMode                    PUSH                              
                                   LD                                _timeTicks
                                   ANDI                              31
-                                  JumpFalse                         _else_0x0f2b 73
+                                  JumpFalse                         _else_0x0f22 73
                                   Return                                                        ; Main: if (timeTicks.lo AND &h1F) then return
 
-_else_0x0f2b                      INC                               _timeTicks + 1              ; Main: inc timeTicks.hi
+_else_0x0f22                      INC                               _timeTicks + 1              ; Main: inc timeTicks.hi
 
                                   LDW                               _gmode
                                   XORI                              1
@@ -2135,7 +2131,7 @@ _else_0x0f2b                      INC                               _timeTicks +
                                   LDWI                              _page_0x16a0
                                   CALL                              giga_vAC
 _page_0x16a0                      LDLW                              0xFE
-                                  JumpEQ                            _endif_0x0f69 75            ; Main: if gmode &= SCARED_MODE
+                                  JumpEQ                            _endif_0x0f60 75            ; Main: if gmode &= SCARED_MODE
 
                                   LD                                _levelPain + 1
                                   STW                               register15
@@ -2144,7 +2140,7 @@ _page_0x16a0                      LDLW                              0xFE
                                   STW                               0xe8
                                   LD                                _timeTicks + 1
                                   SUBW                              0xe8
-                                  JumpGT                            _endif_0x0f67 74            ; Main: if timeTicks.hi &> (10 - levelPain.hi)
+                                  JumpGT                            _endif_0x0f5e 74            ; Main: if timeTicks.hi &> (10 - levelPain.hi)
 
                                   LDI                               0
                                   ST                                _timeTicks + 1              ; Main: timeTicks.hi = 0
@@ -2155,11 +2151,11 @@ _page_0x16a0                      LDLW                              0xFE
                                   LDI                               0
                                   STW                               _gmode                      ; Main: gmode = CHASE_MODE
 
-_endif_0x0f67                     Return                                                        ; Main: return
+_endif_0x0f5e                     Return                                                        ; Main: return
 
-_endif_0x0f69                     LD                                _timeTicks + 1
+_endif_0x0f60                     LD                                _timeTicks + 1
                                   SUBI                              30
-                                  JumpGT                            _endif_0x0f83 76            ; Main: if timeTicks.hi &> 30
+                                  JumpGT                            _endif_0x0f7a 76            ; Main: if timeTicks.hi &> 30
 
                                   LDI                               0
                                   ST                                _timeTicks + 1              ; Main: timeTicks.hi = 0
@@ -2169,7 +2165,7 @@ _endif_0x0f69                     LD                                _timeTicks +
 
                                   Return                                                        ; Main: return
 
-_endif_0x0f83                     LDI                               20
+_endif_0x0f7a                     LDI                               20
                                   STW                               0xe8
                                   LD                                _levelPain + 1
                                   ADDW                              0xe8
@@ -2180,12 +2176,12 @@ _endif_0x0f83                     LDI                               20
                                   LDWI                              _page_0x17a0
                                   CALL                              giga_vAC
 _page_0x17a0                      LDLW                              0xFE
-                                  JumpGT                            _endif_0x0fa1 77            ; Main: if timeTicks.hi &> (20 + levelPain.hi)
+                                  JumpGT                            _endif_0x0f98 77            ; Main: if timeTicks.hi &> (20 + levelPain.hi)
 
                                   LDI                               2
                                   STW                               _gmode                      ; Main: gmode = SCATTER_MODE
 
-_endif_0x0fa1                     Return                                                        ; Main: return
+_endif_0x0f98                     Return                                                        ; Main: return
 
 _getBlinkyTarget                  PUSH                              
                                   LDW                               _gi
@@ -2194,8 +2190,7 @@ _getBlinkyTarget                  PUSH
                                   STW                               _bj                         ; Main: bi = gi : bj = gj
 
                                   LDW                               _gmode
-                                  XORI                              0
-                                  JumpEQ                            _endif_0x0fc6 78            ; Main: if gmode &= CHASE_MODE
+                                  JumpEQ                            _endif_0x0fbb 78            ; Main: if gmode &= CHASE_MODE
 
                                   LDW                               _puci
                                   STW                               _ti
@@ -2204,7 +2199,7 @@ _getBlinkyTarget                  PUSH
 
                                   Return                                                        ; Main: return
 
-_endif_0x0fc6                     LDI                               27
+_endif_0x0fbb                     LDI                               27
                                   STW                               _ti
                                   LDI                               0
                                   STW                               _tj                         ; Main: ti = 27 : tj = 0
@@ -2213,8 +2208,7 @@ _endif_0x0fc6                     LDI                               27
 
 _getPinkyTarget                   PUSH                              
                                   LDW                               _gmode
-                                  XORI                              0
-                                  JumpEQ                            _endif_0x1017 79            ; Main: if gmode &= CHASE_MODE
+                                  JumpEQ                            _endif_0x100a 79            ; Main: if gmode &= CHASE_MODE
 
                                   LDW                               _puci
                                   ADDW                              _pxd
@@ -2226,17 +2220,17 @@ _getPinkyTarget                   PUSH
                                   LDW                               _pucj
                                   ADDW                              _pyd
                                   ADDW                              _pyd
+                                  ADDW                              _pyd
+                                  ADDW                              _pyd
                                   STLW                              0xFE
                                   LDWI                              _page_0x18a0
                                   CALL                              giga_vAC
 _page_0x18a0                      LDLW                              0xFE
-                                  ADDW                              _pyd
-                                  ADDW                              _pyd
                                   STW                               _tj                         ; Main: tj = pucj + pyd + pyd + pyd + pyd
 
                                   Return                                                        ; Main: return
 
-_endif_0x1017                     LDI                               0
+_endif_0x100a                     LDI                               0
                                   STW                               _ti
                                   LDI                               0
                                   STW                               _tj                         ; Main: ti = 0 : tj = 0
@@ -2245,8 +2239,7 @@ _endif_0x1017                     LDI                               0
 
 _getInkyTarget                    PUSH                              
                                   LDW                               _gmode
-                                  XORI                              0
-                                  JumpEQ                            _endif_0x1070 80            ; Main: if gmode &= CHASE_MODE
+                                  JumpEQ                            _endif_0x1061 80            ; Main: if gmode &= CHASE_MODE
 
                                   LDW                               _puci
                                   ADDW                              _pxd
@@ -2275,7 +2268,7 @@ _getInkyTarget                    PUSH
 
                                   Return                                                        ; Main: return
 
-_endif_0x1070                     LDI                               27
+_endif_0x1061                     LDI                               27
                                   STW                               _ti
                                   LDI                               23
                                   STW                               _tj                         ; Main: ti = 27 : tj = 23
@@ -2288,8 +2281,7 @@ _getClydeTarget                   PUSH
                                   LDWI                              _page_0x19a0
                                   CALL                              giga_vAC
 _page_0x19a0                      LDLW                              0xFE
-                                  XORI                              0
-                                  JumpEQ                            _endif_0x10cd 82            ; Main: if gmode &= CHASE_MODE
+                                  JumpEQ                            _endif_0x10bc 82            ; Main: if gmode &= CHASE_MODE
 
                                   LDW                               _puci
                                   SUBW                              _gi
@@ -2300,7 +2292,7 @@ _page_0x19a0                      LDLW                              0xFE
                                   Absolute                          
                                   ADDW                              0xea
                                   SUBI                              8
-                                  JumpGT                            _endif_0x10cd 81            ; Main: if abs(puci - gi) + abs(pucj - gj) &> 8 'taxi-cab distance
+                                  JumpGT                            _endif_0x10bc 81            ; Main: if abs(puci - gi) + abs(pucj - gj) &> 8 'taxi-cab distance
 
                                   LDW                               _puci
                                   STW                               _ti
@@ -2309,7 +2301,7 @@ _page_0x19a0                      LDLW                              0xFE
 
                                   Return                                                        ; Main: return
 
-_endif_0x10cd                     LDI                               0
+_endif_0x10bc                     LDI                               0
                                   STW                               _ti
                                   LDI                               23
                                   STW                               _tj                         ; Main: ti = 0 : tj = 23
@@ -2318,16 +2310,16 @@ _endif_0x10cd                     LDI                               0
 
 _getJuncDir                       PUSH                              
                                   LDW                               _gxd
-                                  JumpFalse                         _else_0x117a 88             ; Main: if (gxd)
+                                  JumpFalse                         _else_0x1169 88             ; Main: if (gxd)
 
                                   LDW                               _tj
                                   SUBW                              _gj
+                                  Absolute                          
                                   STLW                              0xFE
                                   LDWI                              _page_0x1aa0
                                   CALL                              giga_vAC
 _page_0x1aa0                      LDLW                              0xFE
-                                  Absolute                          
-                                  JumpFalse                         _endif_0x1175 87            ; Main: if (abs(tj - gj))
+                                  JumpFalse                         _endif_0x1164 87            ; Main: if (abs(tj - gj))
 
                                   LDW                               _gj
                                   SUBI                              1
@@ -2338,16 +2330,16 @@ _page_0x1aa0                      LDLW                              0xFE
                                   CALL                              convert8Arr2dAddr
                                   PEEK                              
                                   XORI                              240
-                                  JumpNE                            _endif_0x1139 84            ; Main: if maze(gj - 1, gi) &<> WALL
+                                  JumpNE                            _endif_0x1128 84            ; Main: if maze(gj - 1, gi) &<> WALL
 
                                   LDI                               3
                                   STW                               _i
                                   LDW                               _tj
                                   SUBW                              _gj
-                                  JumpLT                            _endif_0x1139 83
+                                  JumpLT                            _endif_0x1128 83
                                   Return                                                        ; Main: i = 3 : if tj &< gj then return
 
-_endif_0x1139                     LDW                               _gj
+_endif_0x1128                     LDW                               _gj
                                   ADDI                              1
                                   STW                               memIndex0
                                   LDW                               _gi
@@ -2356,26 +2348,26 @@ _endif_0x1139                     LDW                               _gj
                                   CALL                              convert8Arr2dAddr
                                   PEEK                              
                                   XORI                              240
-                                  JumpNE                            _endif_0x1175 86            ; Main: if maze(gj + 1, gi) &<> WALL
+                                  JumpNE                            _endif_0x1164 86            ; Main: if maze(gj + 1, gi) &<> WALL
 
+                                  LDI                               1
+                                  STW                               _i
+                                  LDW                               _tj
+                                  SUBW                              _gj
                                   STLW                              0xFE
                                   LDWI                              _page_0x1ba0
                                   CALL                              giga_vAC
 _page_0x1ba0                      LDLW                              0xFE
-                                  LDI                               1
-                                  STW                               _i
-                                  LDW                               _tj
-                                  SUBW                              _gj
-                                  JumpGT                            _endif_0x1175 85
+                                  JumpGT                            _endif_0x1164 85
                                   Return                                                        ; Main: i = 1 : if tj &> gj then return
 
-_endif_0x1175                     LDWI                              _endif_0x120d
+_endif_0x1164                     LDWI                              _endif_0x11fc
                                   CALL                              giga_vAC                    ; Main: endif
 
-_else_0x117a                      LDW                               _ti
+_else_0x1169                      LDW                               _ti
                                   SUBW                              _gi
                                   Absolute                          
-                                  JumpFalse                         _endif_0x120d 93            ; Main: if (abs(ti - gi))
+                                  JumpFalse                         _endif_0x11fc 93            ; Main: if (abs(ti - gi))
 
                                   LDW                               _gi
                                   SUBI                              1
@@ -2388,21 +2380,21 @@ _else_0x117a                      LDW                               _ti
                                   CALL                              convert8Arr2dAddr
                                   PEEK                              
                                   XORI                              240
-                                  JumpNE                            _endif_0x11d1 90            ; Main: if maze(gj, gi - 1) &<> WALL
+                                  JumpNE                            _endif_0x11c0 90            ; Main: if maze(gj, gi - 1) &<> WALL
 
                                   LDI                               2
                                   STW                               _i
                                   LDW                               _ti
                                   SUBW                              _gi
+                                  JumpLT                            _endif_0x11c0 89
+                                  Return                                                        ; Main: i = 2 : if ti &< gi then return
+
+_endif_0x11c0                     LDW                               _gi
+                                  ADDI                              1
                                   STLW                              0xFE
                                   LDWI                              _page_0x1ca0
                                   CALL                              giga_vAC
 _page_0x1ca0                      LDLW                              0xFE
-                                  JumpLT                            _endif_0x11d1 89
-                                  Return                                                        ; Main: i = 2 : if ti &< gi then return
-
-_endif_0x11d1                     LDW                               _gi
-                                  ADDI                              1
                                   STW                               0xe8
                                   LDW                               _gj
                                   STW                               memIndex0
@@ -2412,54 +2404,54 @@ _endif_0x11d1                     LDW                               _gi
                                   CALL                              convert8Arr2dAddr
                                   PEEK                              
                                   XORI                              240
-                                  JumpNE                            _endif_0x120d 92            ; Main: if maze(gj, gi + 1) &<> WALL
+                                  JumpNE                            _endif_0x11fc 92            ; Main: if maze(gj, gi + 1) &<> WALL
 
                                   LDI                               0
                                   STW                               _i
                                   LDW                               _ti
                                   SUBW                              _gi
-                                  JumpGT                            _endif_0x120d 91
+                                  JumpGT                            _endif_0x11fc 91
                                   Return                                                        ; Main: i = 0 : if ti &> gi then return
 
-_endif_0x120d                     LDW                               _gxd
+_endif_0x11fc                     LDW                               _gxd
                                   XORI                              1
-                                  JumpEQ                            _elseif_0x1226 95           ; Main: if gxd &= 1
+                                  JumpEQ                            _elseif_0x1215 95           ; Main: if gxd &= 1
 
                                   LDI                               0
                                   STW                               _i
-                                  LDWI                              _endif_0x125d
+                                  LDWI                              _endif_0x124c
                                   CALL                              giga_vAC                    ; Main: i = 0
 
-_elseif_0x1226                    LDWI                              -1
+_elseif_0x1215                    LDWI                              -1
                                   XORW                              _gxd
+                                  JumpEQ                            _elseif_0x122f 96           ; Main: elseif gxd &= -1
+
+                                  LDI                               2
+                                  STW                               _i
+                                  LDWI                              _endif_0x124c
                                   STLW                              0xFE
                                   LDWI                              _page_0x1da0
                                   CALL                              giga_vAC
 _page_0x1da0                      LDLW                              0xFE
-                                  JumpEQ                            _elseif_0x1240 96           ; Main: elseif gxd &= -1
-
-                                  LDI                               2
-                                  STW                               _i
-                                  LDWI                              _endif_0x125d
                                   CALL                              giga_vAC                    ; Main: i = 2
 
-_elseif_0x1240                    LDW                               _gyd
+_elseif_0x122f                    LDW                               _gyd
                                   XORI                              1
-                                  JumpEQ                            _else_0x1259 97             ; Main: elseif gyd &= 1
+                                  JumpEQ                            _else_0x1248 97             ; Main: elseif gyd &= 1
 
                                   LDI                               1
                                   STW                               _i
-                                  LDWI                              _endif_0x125d
+                                  LDWI                              _endif_0x124c
                                   CALL                              giga_vAC                    ; Main: i = 1
 
-_else_0x1259                      LDI                               3
+_else_0x1248                      LDI                               3
                                   STW                               _i                          ; Main: i = 3
 
-_endif_0x125d                     Return                                                        ; Main: return
+_endif_0x124c                     Return                                                        ; Main: return
 
 _getWallDir                       PUSH                              
                                   LDW                               _gxd
-                                  JumpFalse                         _else_0x12d5 102            ; Main: if (gxd)
+                                  JumpFalse                         _else_0x12c4 102            ; Main: if (gxd)
 
                                   LDW                               _gj
                                   SUBI                              1
@@ -2470,20 +2462,20 @@ _getWallDir                       PUSH
                                   CALL                              convert8Arr2dAddr
                                   PEEK                              
                                   XORI                              240
-                                  JumpNE                            _endif_0x12a6 100           ; Main: if maze(gj - 1, gi) &<> WALL
+                                  JumpNE                            _endif_0x1295 100           ; Main: if maze(gj - 1, gi) &<> WALL
 
                                   LDI                               3
                                   STW                               _i
+                                  LDW                               _tj
+                                  SUBW                              _gj
+                                  JumpLT                            _endif_0x1295 99
+                                  Return                                                        ; Main: i = 3 : if tj &< gj then return
+
+_endif_0x1295                     LDW                               _gj
                                   STLW                              0xFE
                                   LDWI                              _page_0x1ea0
                                   CALL                              giga_vAC
 _page_0x1ea0                      LDLW                              0xFE
-                                  LDW                               _tj
-                                  SUBW                              _gj
-                                  JumpLT                            _endif_0x12a6 99
-                                  Return                                                        ; Main: i = 3 : if tj &< gj then return
-
-_endif_0x12a6                     LDW                               _gj
                                   ADDI                              1
                                   STW                               memIndex0
                                   LDW                               _gi
@@ -2492,13 +2484,13 @@ _endif_0x12a6                     LDW                               _gj
                                   CALL                              convert8Arr2dAddr
                                   PEEK                              
                                   XORI                              240
-                                  JumpNE                            _else_0x12d0 101
+                                  JumpNE                            _else_0x12bf 101
                                   LDI                               1
                                   STW                               _i
-_else_0x12d0                      LDWI                              _endif_0x133b
+_else_0x12bf                      LDWI                              _endif_0x132a
                                   CALL                              giga_vAC                    ; Main: if maze(gj + 1, gi) &<> WALL then i = 1
 
-_else_0x12d5                      LDW                               _gi
+_else_0x12c4                      LDW                               _gi
                                   SUBI                              1
                                   STW                               0xe8
                                   LDW                               _gj
@@ -2509,21 +2501,21 @@ _else_0x12d5                      LDW                               _gi
                                   CALL                              convert8Arr2dAddr
                                   PEEK                              
                                   XORI                              240
-                                  JumpNE                            _endif_0x1311 104           ; Main: if maze(gj, gi - 1) &<> WALL
+                                  JumpNE                            _endif_0x1300 104           ; Main: if maze(gj, gi - 1) &<> WALL
 
                                   LDI                               2
                                   STW                               _i
                                   LDW                               _ti
+                                  SUBW                              _gi
+                                  JumpLT                            _endif_0x1300 103
+                                  Return                                                        ; Main: i = 2 : if ti &< gi then return
+
+_endif_0x1300                     LDW                               _gi
+                                  ADDI                              1
                                   STLW                              0xFE
                                   LDWI                              _page_0x1fa0
                                   CALL                              giga_vAC
 _page_0x1fa0                      LDLW                              0xFE
-                                  SUBW                              _gi
-                                  JumpLT                            _endif_0x1311 103
-                                  Return                                                        ; Main: i = 2 : if ti &< gi then return
-
-_endif_0x1311                     LDW                               _gi
-                                  ADDI                              1
                                   STW                               0xe8
                                   LDW                               _gj
                                   STW                               memIndex0
@@ -2533,17 +2525,17 @@ _endif_0x1311                     LDW                               _gi
                                   CALL                              convert8Arr2dAddr
                                   PEEK                              
                                   XORI                              240
-                                  JumpNE                            _endif_0x133b 105
+                                  JumpNE                            _endif_0x132a 105
                                   LDI                               0
                                   STW                               _i                          ; Main: if maze(gj, gi + 1) &<> WALL then i = 0
 
-_endif_0x133b                     Return                                                        ; Main: return
+_endif_0x132a                     Return                                                        ; Main: return
 
 _replaceDot                       PUSH                              
                                   LDW                               _mz
                                   ANDI                              15
                                   XORI                              1
-                                  JumpEQ                            _endif_0x1396 107           ; Main: if (mz AND &h0F) &= DOT
+                                  JumpEQ                            _endif_0x1385 107           ; Main: if (mz AND &h0F) &= DOT
 
                                   LDW                               _di
                                   LSLW                              
@@ -2560,10 +2552,6 @@ _replaceDot                       PUSH
                                   STW                               _dj                         ; Main: dj = (dj LSL 2) + dj + ORIGIN_Y   'dj = dj*5 + 2
 
                                   LDW                               _dj
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x20a0
-                                  CALL                              giga_vAC
-_page_0x20a0                      LDLW                              0xFE
                                   ADDI                              8
                                   STW                               0xe8
                                   LD                                0xe8
@@ -2572,10 +2560,14 @@ _page_0x20a0                      LDLW                              0xFE
                                   XORI                              0xFF
                                   ADDW                              _di
                                   STW                               0xea
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x20a0
+                                  CALL                              giga_vAC
+_page_0x20a0                      LDLW                              0xFE
                                   LDI                               43
                                   POKE                              0xea                        ; Main: poke ((dj + 8) LSL 8) + di, &h2B  'convert dj, di to vram address
 
-_endif_0x1396                     Return                                                        ; Main: return
+_endif_0x1385                     Return                                                        ; Main: return
 
 _coordsPucMon                     PUSH                              
                                   LDW                               _px
@@ -2614,10 +2606,6 @@ _handleInput                      PUSH
                                   STW                               numericLabel
                                   LDI                               0
                                   STW                               defaultLabel
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x21a0
-                                  CALL                              giga_vAC
-_page_0x21a0                      LDLW                              0xFE
                                   GosubNumeric                                                  ; Main: gosub get("BUTTON_STATE")
 
                                   Return                                                        ; Main: return
@@ -2625,50 +2613,54 @@ _page_0x21a0                      LDLW                              0xFE
 _253                              PUSH                              
                                   LDW                               _my
                                   XORI                              3
-                                  JumpEQ                            _else_0x141a 108
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x21a0
+                                  CALL                              giga_vAC
+_page_0x21a0                      LDLW                              0xFE
+                                  JumpEQ                            _else_0x1409 108
                                   LDI                               0
                                   STW                               _pyd
                                   SUBI                              1
                                   STW                               _pxd                        ; Main: if my &= 3 then pyd = 0 : pxd = pyd-1
 
-_else_0x141a                      Return                                                        ; Main: return
+_else_0x1409                      Return                                                        ; Main: return
 
 _254                              PUSH                              
                                   LDW                               _my
                                   XORI                              3
-                                  JumpEQ                            _else_0x1439 109
+                                  JumpEQ                            _else_0x1428 109
                                   LDI                               0
                                   STW                               _pyd
                                   ADDI                              1
                                   STW                               _pxd                        ; Main: if my &= 3 then pyd = 0 : pxd = pyd+1
 
-_else_0x1439                      Return                                                        ; Main: return
+_else_0x1428                      Return                                                        ; Main: return
 
 _247                              PUSH                              
                                   LDW                               _mx
                                   XORI                              3
-                                  JumpEQ                            _else_0x1458 110
+                                  JumpEQ                            _else_0x1447 110
                                   LDI                               0
                                   STW                               _pxd
                                   SUBI                              1
                                   STW                               _pyd                        ; Main: if mx &= 3 then pxd = 0 : pyd = pxd-1
 
-_else_0x1458                      Return                                                        ; Main: return
+_else_0x1447                      Return                                                        ; Main: return
 
 _251                              PUSH                              
                                   LDW                               _mx
                                   XORI                              3
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x22a0
-                                  CALL                              giga_vAC
-_page_0x22a0                      LDLW                              0xFE
-                                  JumpEQ                            _else_0x1477 111
+                                  JumpEQ                            _else_0x1466 111
                                   LDI                               0
                                   STW                               _pxd
                                   ADDI                              1
                                   STW                               _pyd                        ; Main: if mx &= 3 then pxd = 0 : pyd = pxd+1
 
-_else_0x1477                      Return                                                        ; Main: return
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x22a0
+                                  CALL                              giga_vAC
+_page_0x22a0                      LDLW                              0xFE
+_else_0x1466                      Return                                                        ; Main: return
 
 _drawScore                        PUSH                                                          ; Main: proc drawScore
 
@@ -2685,7 +2677,7 @@ _drawScore                        PUSH                                          
                                   LDI                               0
                                   STW                               _i                          ; Main: for i=0 to SCORE_LEN-1
 
-_next_0x1495                      LDWI                              26540
+_next_0x1484                      LDWI                              26540
                                   SUBW                              _i
                                   PEEK                              
                                   ADDI                              66
@@ -2701,20 +2693,20 @@ _next_0x1495                      LDWI                              26540
                                   ADDI                              6
                                   STW                               _drawScore_char             ; Main: char = char + 6
 
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x23a0
-                                  CALL                              giga_vAC
-_page_0x23a0                      LDLW                              0xFE
-                                  ForNextFarInc                     _i _next_0x1495 6           ; Main: next i
+                                  ForNextFarInc                     _i _next_0x1484 6           ; Main: next i
 
                                   LDWI                              0x67ac
                                   STW                               bcdSrcAddr
                                   LDWI                              0x68ac
                                   STW                               bcdDstAddr
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x23a0
+                                  CALL                              giga_vAC
+_page_0x23a0                      LDLW                              0xFE
                                   LDI                               7
                                   BcdCmp                            
                                   XORI                              1
-                                  JumpEQ                            _endif_0x150d 112           ; Main: if bcdcmp(@scoreBCD+(SCORE_LEN-1), @highBCD+(SCORE_LEN-1), SCORE_LEN) &= 1
+                                  JumpEQ                            _endif_0x14fc 112           ; Main: if bcdcmp(@scoreBCD+(SCORE_LEN-1), @highBCD+(SCORE_LEN-1), SCORE_LEN) &= 1
 
                                   LDWI                              26534
                                   STW                               bcdSrcAddr
@@ -2726,7 +2718,7 @@ _page_0x23a0                      LDLW                              0xFE
                                   LDWI                              _drawHigh
                                   CALL                              giga_vAC                    ; Main: call drawHigh
 
-_endif_0x150d                     Return                                                        ; Main: endproc
+_endif_0x14fc                     Return                                                        ; Main: endproc
 
 _drawHigh                         PUSH                                                          ; Main: proc drawHigh
 
@@ -2736,14 +2728,10 @@ _drawHigh                         PUSH                                          
                                   LDI                               0
                                   STW                               _i                          ; Main: for i=0 to SCORE_LEN-1
 
-_next_0x1518                      LDWI                              26796
+_next_0x1507                      LDWI                              26796
                                   SUBW                              _i
                                   PEEK                              
                                   ADDI                              66
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x24a0
-                                  CALL                              giga_vAC
-_page_0x24a0                      LDLW                              0xFE
                                   STW                               spriteId
                                   LDW                               _drawHigh_char
                                   ST                                spriteXY
@@ -2756,7 +2744,11 @@ _page_0x24a0                      LDLW                              0xFE
                                   ADDI                              6
                                   STW                               _drawHigh_char              ; Main: char = char + 6
 
-                                  ForNextFarInc                     _i _next_0x1518 6           ; Main: next i
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x24a0
+                                  CALL                              giga_vAC
+_page_0x24a0                      LDLW                              0xFE
+                                  ForNextFarInc                     _i _next_0x1507 6           ; Main: next i
 
                                   Return                                                        ; Main: endproc
 
@@ -2777,7 +2769,7 @@ _drawLevel                        PUSH                                          
                                   LDI                               0
                                   STW                               _i                          ; Main: for i=0 to LEVEL_LEN-1
 
-_next_0x1571                      LDWI                              32514
+_next_0x1560                      LDWI                              32514
                                   SUBW                              _i
                                   PEEK                              
                                   ADDI                              66
@@ -2786,10 +2778,6 @@ _next_0x1571                      LDWI                              32514
                                   ST                                spriteXY
                                   LDI                               55
                                   ADDI                              8
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x25a0
-                                  CALL                              giga_vAC
-_page_0x25a0                      LDLW                              0xFE
                                   ST                                spriteXY + 1
                                   DrawSprite                                                    ; Main: sprite NoFlip, Digit + peek(@levelBCD + LEVEL_LEN-1 - i), char, LEVEL_Y+ORIGIN_Y
 
@@ -2797,7 +2785,11 @@ _page_0x25a0                      LDLW                              0xFE
                                   ADDI                              6
                                   STW                               _drawLevel_char             ; Main: char = char + 6
 
-                                  ForNextFarInc                     _i _next_0x1571 1           ; Main: next i
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x25a0
+                                  CALL                              giga_vAC
+_page_0x25a0                      LDLW                              0xFE
+                                  ForNextFarInc                     _i _next_0x1560 1           ; Main: next i
 
                                   Return                                                        ; Main: endproc
 
@@ -2809,11 +2801,11 @@ _drawLives                        PUSH                                          
                                   LDI                               1
                                   STW                               _i                          ; Main: i = 1
 
-_while_0x15b7                     LD                                _livesDots + 1
+_while_0x15a6                     LD                                _livesDots + 1
                                   STW                               register15
                                   LDW                               _i
                                   SUBW                              register15
-                                  JumpLE                            _while_0x15f1 113           ; Main: while i &<= livesDots.hi
+                                  JumpLE                            _while_0x15e0 113           ; Main: while i &<= livesDots.hi
 
                                   LDI                               64
                                   STW                               spriteId
@@ -2830,17 +2822,17 @@ _while_0x15b7                     LD                                _livesDots +
 
                                   INC                               _i                          ; Main: inc i
 
-                                  LDWI                              _while_0x15b7
+                                  LDWI                              _while_0x15a6
                                   CALL                              giga_vAC                    ; Main: wend
+
+_while_0x15e0                     LDW                               _i
+                                  SUBI                              3
+                                  JumpLE                            _wend_0x1612 114            ; Main: while i &<= 3
 
                                   STLW                              0xFE
                                   LDWI                              _page_0x26a0
                                   CALL                              giga_vAC
 _page_0x26a0                      LDLW                              0xFE
-_while_0x15f1                     LDW                               _i
-                                  SUBI                              3
-                                  JumpLE                            _wend_0x1623 114            ; Main: while i &<= 3
-
                                   LDI                               62
                                   STW                               spriteId
                                   LDW                               _drawLives_puc
@@ -2856,10 +2848,10 @@ _while_0x15f1                     LDW                               _i
 
                                   INC                               _i                          ; Main: inc i
 
-                                  LDWI                              _while_0x15f1
+                                  LDWI                              _while_0x15e0
                                   CALL                              giga_vAC                    ; Main: wend
 
-_wend_0x1623                      Return                                                        ; Main: endproc
+_wend_0x1612                      Return                                                        ; Main: endproc
 
 _drawDeath                        PUSH                              
                                   LDWI                              _drawLives
@@ -2868,7 +2860,7 @@ _drawDeath                        PUSH
                                   LDI                               1
                                   STW                               _i                          ; Main: for i=1 to 6
 
-_next_0x162f                      LDI                               42
+_next_0x161e                      LDI                               42
                                   STW                               spriteId
                                   LDW                               _px
                                   ST                                spriteXY
@@ -2882,23 +2874,23 @@ _next_0x162f                      LDI                               42
                                   WaitVBlanks                                                   ; Main: wait 10
 
                                   LDI                               63
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x27a0
-                                  CALL                              giga_vAC
-_page_0x27a0                      LDLW                              0xFE
                                   STW                               spriteId
                                   LDW                               _px
                                   ST                                spriteXY
                                   LDW                               _py
                                   ADDI                              8
                                   ST                                spriteXY + 1
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x27a0
+                                  CALL                              giga_vAC
+_page_0x27a0                      LDLW                              0xFE
                                   DrawSprite                                                    ; Main: sprite NoFlip, Erase12x9, px, py
 
                                   LDI                               10
                                   STW                               waitVBlankNum
                                   WaitVBlanks                                                   ; Main: wait 10
 
-                                  ForNextFarInc                     _i _next_0x162f 6           ; Main: next i
+                                  ForNextFarInc                     _i _next_0x161e 6           ; Main: next i
 
                                   Return                                                        ; Main: return
 
@@ -2909,7 +2901,7 @@ _drawMaze                         PUSH
                                   LDI                               0
                                   STW                               _i                          ; Main: for i=0 to (NUM_MAZE_PIECES*2 - 2) step 4
 
-_next_0x1680                      LDWI                              15032
+_next_0x166f                      LDWI                              15032
                                   ADDW                              _i
                                   DEEK                              
                                   STW                               cursorXY
@@ -2926,19 +2918,19 @@ _next_0x1680                      LDWI                              15032
                                   STW                               cursorXY
                                   LDI                               0xB8
                                   ST                                drawPoly_mode
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x28a0
-                                  CALL                              giga_vAC
-_page_0x28a0                      LDLW                              0xFE
                                   SetPolyRelFlipX                   
                                   LDWI                              14776
                                   ADDW                              _i
                                   ADDI                              2
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x28a0
+                                  CALL                              giga_vAC
+_page_0x28a0                      LDLW                              0xFE
                                   DEEK                              
                                   STW                               drawPoly_addr
                                   DrawPolyRel                                                   ; Main: set CURSOR_XY, deek(@MAZE_PIECES + i + 2) : polyR deek(@MAZE_ADDRS + i + 2), FLIPX
 
-                                  ForNextFarAdd                     _i _next_0x1680 70 4        ; Main: next i
+                                  ForNextFarAdd                     _i _next_0x166f 70 4        ; Main: next i
 
                                   LDI                               0
                                   ST                                fgbgColour + 1              ; Main: set FG_COLOUR, 0 '&h2B
@@ -2953,10 +2945,10 @@ _drawDots                         PUSH                                          
                                   LDI                               0
                                   STW                               _cj                         ; Main: for cj=0 to 23
 
-_next_0x16fe                      LDI                               0
+_next_0x16ed                      LDI                               0
                                   STW                               _ci                         ; Main: for ci=0 to 27
 
-_next_0x1702                      LDW                               _cj
+_next_0x16f1                      LDW                               _cj
                                   STW                               memIndex0
                                   LDW                               _ci
                                   STW                               memIndex1
@@ -2967,35 +2959,35 @@ _next_0x1702                      LDW                               _cj
 
                                   LDW                               _drawDots_redraw
                                   XORI                              1
-                                  JumpEQ                            _endif_0x1786 117           ; Main: if redraw &= 1
+                                  JumpEQ                            _endif_0x1775 117           ; Main: if redraw &= 1
 
                                   LDW                               _mz
+                                  ANDI                              15
+                                  XORI                              3
+                                  JumpEQ                            _elseif_0x173c 115          ; Main: if (mz AND &h0F) &= RDOT       'reset dots
+
                                   STLW                              0xFE
                                   LDWI                              _page_0x29a0
                                   CALL                              giga_vAC
 _page_0x29a0                      LDLW                              0xFE
-                                  ANDI                              15
-                                  XORI                              3
-                                  JumpEQ                            _elseif_0x174d 115          ; Main: if (mz AND &h0F) &= RDOT       'reset dots
-
                                   LDW                               _mz
                                   ANDI                              240
                                   ORI                               1
                                   STW                               _mz
-                                  LDWI                              _endif_0x1771
+                                  LDWI                              _endif_0x1760
                                   CALL                              giga_vAC                    ; Main: mz = (mz AND &hF0) OR DOT
 
-_elseif_0x174d                    LDW                               _mz
+_elseif_0x173c                    LDW                               _mz
                                   ANDI                              15
                                   XORI                              4
-                                  JumpEQ                            _endif_0x1771 116           ; Main: elseif (mz AND &h0F) &= RPILL  'reset pills
+                                  JumpEQ                            _endif_0x1760 116           ; Main: elseif (mz AND &h0F) &= RPILL  'reset pills
 
                                   LDW                               _mz
                                   ANDI                              240
                                   ORI                               2
                                   STW                               _mz                         ; Main: mz = (mz AND &hF0) OR PILL
 
-_endif_0x1771                     LDW                               _mz
+_endif_0x1760                     LDW                               _mz
                                   STW                               memValue
                                   LDW                               _cj
                                   STW                               memIndex0
@@ -3006,18 +2998,14 @@ _endif_0x1771                     LDW                               _mz
                                   LDW                               memValue
                                   POKE                              memAddr                     ; Main: maze(cj, ci) = mz
 
-_endif_0x1786                     LDW                               _mz
+_endif_0x1775                     LDW                               _mz
                                   ANDI                              15
                                   XORI                              1
-                                  JumpEQ                            _endif_0x17cd 118           ; Main: if (mz AND &h0F) &= DOT
+                                  JumpEQ                            _endif_0x17bc 118           ; Main: if (mz AND &h0F) &= DOT
 
                                   LDW                               _ci
                                   LSLW                              
                                   LSLW                              
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x2aa0
-                                  CALL                              giga_vAC
-_page_0x2aa0                      LDLW                              0xFE
                                   ADDW                              _ci
                                   ADDI                              2
                                   ST                                drawPixel_xy
@@ -3025,13 +3013,17 @@ _page_0x2aa0                      LDLW                              0xFE
                                   LSLW                              
                                   LSLW                              
                                   ADDW                              _cj
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x2aa0
+                                  CALL                              giga_vAC
+_page_0x2aa0                      LDLW                              0xFE
                                   ADDI                              2
                                   ST                                drawPixel_xy + 1
                                   DrawPixel                                                     ; Main: pset (ci LSL 2) + ci + ORIGIN_X, (cj LSL 2) + cj + ORIGIN_Y
 
-_endif_0x17cd                     ForNextFarInc                     _ci _next_0x1702 27         ; Main: next ci
+_endif_0x17bc                     ForNextFarInc                     _ci _next_0x16f1 27         ; Main: next ci
 
-                                  ForNextFarInc                     _cj _next_0x16fe 23         ; Main: next cj
+                                  ForNextFarInc                     _cj _next_0x16ed 23         ; Main: next cj
 
                                   Return                                                        ; Main: endproc
 
@@ -3055,33 +3047,32 @@ _initVars                         PUSH                                          
 
                                   Rand                              
                                   ANDI                              3
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x2ba0
-                                  CALL                              giga_vAC
-_page_0x2ba0                      LDLW                              0xFE
                                   STW                               _initVars_corner            ; Main: corner = (rnd(0) AND 3)
 
                                   LDI                               0
                                   STW                               _gidx                       ; Main: for gidx=0 to (NUM_GHOSTS - 1)
 
-_next_0x1819                      LDW                               _gidx
-                                  XORI                              0
-                                  JumpEQ                            _else_0x1835 119            ; Main: if gidx &= 0
+_next_0x1808                      LDW                               _gidx
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x2ba0
+                                  CALL                              giga_vAC
+_page_0x2ba0                      LDLW                              0xFE
+                                  JumpEQ                            _else_0x1822 119            ; Main: if gidx &= 0
 
                                   LDW                               _gidx
                                   LSLW                              
                                   STW                               _i
-                                  LDWI                              _endif_0x184e
+                                  LDWI                              _endif_0x183b
                                   CALL                              giga_vAC                    ; Main: i = gidx LSL 1                          'blinky is always reset to the same position
 
-_else_0x1835                      LDW                               _initVars_corner
+_else_0x1822                      LDW                               _initVars_corner
                                   ADDW                              _gidx
                                   ANDI                              3
                                   ADDI                              1
                                   LSLW                              
                                   STW                               _i                          ; Main: i = (((corner + gidx) AND 3) + 1) LSL 1 'pinky, inky and clyde are reset to 1 of 4 random cage corners
 
-_endif_0x184e                     LDWI                              28323
+_endif_0x183b                     LDWI                              28323
                                   ADDW                              _i
                                   DEEK                              
                                   STW                               _gx                         ; Main: gx = deek(@ghostsXr + i)
@@ -3097,22 +3088,22 @@ _endif_0x184e                     LDWI                              28323
                                   LDWI                              _setGhostVars
                                   CALL                              giga_vAC                    ; Main: gosub setGhostVars
 
-                                  ForNextFarInc                     _gidx _next_0x1819 3        ; Main: next gidx
+                                  ForNextFarInc                     _gidx _next_0x1808 3        ; Main: next gidx
 
                                   Return                                                        ; Main: endproc
 
 _startLevel                       PUSH                              
                                   LDI                               63
                                   STW                               spriteId
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x2ca0
-                                  CALL                              giga_vAC
-_page_0x2ca0                      LDLW                              0xFE
                                   LDW                               _px
                                   ST                                spriteXY
                                   LDW                               _py
                                   ADDI                              8
                                   ST                                spriteXY + 1
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x2ca0
+                                  CALL                              giga_vAC
+_page_0x2ca0                      LDLW                              0xFE
                                   DrawSprite                                                    ; Main: sprite NoFlip, Erase12x9, px, py
 
                                   LDI                               212
@@ -3130,11 +3121,11 @@ _page_0x2ca0                      LDLW                              0xFE
 
                                   LD                                _levelPain + 1
                                   SUBI                              7
-                                  JumpGT                            _else_0x18cc 121
+                                  JumpGT                            _else_0x18b9 121
                                   LDI                               7
                                   ST                                _levelPain + 1              ; Main: if levelPain.hi &> 7 then levelPain.hi = 7
 
-_else_0x18cc                      LDI                               0x01
+_else_0x18b9                      LDI                               0x01
                                   STW                               0xd8
                                   LDWI                              _drawDots
                                   CALL                              giga_vAC                    ; Main: call drawDots, 1 'redraw
@@ -3146,31 +3137,30 @@ _else_0x18cc                      LDI                               0x01
                                   CALL                              giga_vAC                    ; Main: call drawHigh
 
                                   LDWI                              _drawLives
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x2da0
-                                  CALL                              giga_vAC
-_page_0x2da0                      LDLW                              0xFE
                                   CALL                              giga_vAC                    ; Main: call drawLives
 
                                   LDWI                              _drawLevel
                                   CALL                              giga_vAC                    ; Main: call drawLevel
 
                                   LD                                _levelPain
-                                  XORI                              0
-                                  JumpEQ                            _else_0x1911 122            ; Main: if levelPain.lo &= 0
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x2da0
+                                  CALL                              giga_vAC
+_page_0x2da0                      LDLW                              0xFE
+                                  JumpEQ                            _else_0x18fc 122            ; Main: if levelPain.lo &= 0
 
                                   LDI                               2
                                   ST                                waveType + 1
                                   LDWI                              12704
                                   PlayMusic                         
-                                  LDWI                              _endif_0x191a
+                                  LDWI                              _endif_0x1905
                                   CALL                              giga_vAC                    ; Main: play music, MUSIC_INTRO, 2
 
-_else_0x1911                      LDI                               120
+_else_0x18fc                      LDI                               120
                                   STW                               waitVBlankNum
                                   WaitVBlanks                                                   ; Main: wait 120
 
-_endif_0x191a                     Return                                                        ; Main: return
+_endif_0x1905                     Return                                                        ; Main: return
 
 _resetLevel                       PUSH                              
                                   LDI                               0
@@ -3187,10 +3177,6 @@ _resetLevel                       PUSH
                                   LDWI                              257
                                   STW                               register0
                                   LDI                               0
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x2ea0
-                                  CALL                              giga_vAC
-_page_0x2ea0                      LDLW                              0xFE
                                   POKE                              register0                   ; Main: poke &h0101, 0
 
                                   LD                                0x21
@@ -3200,6 +3186,10 @@ _page_0x2ea0                      LDLW                              0xFE
                                   Return                                                        ; Main: return
 
 _initSystem                       PUSH                              
+                                  STLW                              0xFE
+                                  LDWI                              _page_0x2ea0
+                                  CALL                              giga_vAC
+_page_0x2ea0                      LDLW                              0xFE
                                   LDI                               65
                                   STW                               _px
                                   LDI                               88
@@ -3240,10 +3230,6 @@ _initSystem                       PUSH
                                   STW                               clrLines
                                   ClearRect                                                     ; Main: cls &h0A00, 160, 116
 
-                                  STLW                              0xFE
-                                  LDWI                              _page_0x2fa0
-                                  CALL                              giga_vAC
-_page_0x2fa0                      LDLW                              0xFE
                                   Return                                                        ; Main: return
 
                                   HALT                                                          ; Main: END
@@ -3328,13 +3314,13 @@ romCheck            LD      giga_romType
                     ANDI    0xFC
                     SUBW    romType
                     BGE     romC_return
-                    LDWI    giga_vram
+                    LDWI    giga_vram + giga_yres/2*256 + giga_xres/2
                     STW     romErrAddr
                     
 romC_loop           LD      romErrPixel
                     POKE    romErrAddr
                     INC     romErrPixel
-                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    BRA     romC_loop                       ; flash center pixel indicating rom error
                     
 romC_return         RET                    
 
@@ -3864,6 +3850,7 @@ drawSpriteY         PUSH
                     RET
 
 
+midiId              EQU     register0
 audioAddr           EQU     register1
 waveType            EQU     register2
 midiNote            EQU     register4                       ; register4 to register7 are the only free registers during time slicing

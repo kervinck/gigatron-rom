@@ -3,6 +3,7 @@ textStr             EQU     register0
 textNum             EQU     register0
 textBak             EQU     register0
 textHex             EQU     register1
+textSpc             EQU     register1
 textLen             EQU     register2
 textOfs             EQU     register3
 textChr             EQU     register8
@@ -256,6 +257,35 @@ printI16_pos        LDWI    10000
                     RET
 %ENDS
 
+%SUB                printChr
+                    ; prints char in textChr for standalone calls
+printChr            PUSH
+                    ST      textChr
+                    CALLI   printInit
+                    CALLI   printChar
+                    POP
+                    RET
+%ENDS
+
+%SUB                printSpc
+                    ; prints textSpc spaces
+printSpc            PUSH
+                    BEQ     printS_exit
+                    ST      textSpc
+                    CALLI   printInit
+                    
+printS_loop         LDI     32
+                    STW     textChr
+                    CALLI   printChar
+                    LD      textSpc
+                    SUBI    1
+                    ST      textSpc
+                    BNE     printS_loop
+                    
+printS_exit         POP
+                    RET
+%ENDS
+
 %SUB                printHex
                     ; print textLen hex digits in textHex, (textStr, textHex, textLen = strAddr, strHex, strLen in string::stringHex)
 printHex            PUSH
@@ -268,16 +298,6 @@ printHex            PUSH
                     RET
 %ENDS
 
-%SUB                printChr
-                    ; prints char in textChr for standalone calls
-printChr            PUSH
-                    ST      textChr
-                    CALLI   printInit
-                    CALLI   printChar
-                    POP
-                    RET
-%ENDS
-
 %SUB                printChar
                     ; prints char in textChr
 printChar           LD      textChr
@@ -285,7 +305,6 @@ printChar           LD      textChr
                     SUBI    32
                     BLT     printC_exit
                     STW     textChr                         ; char-32                    
-
                     LDWI    _fontId_
                     PEEK
                     STW     fontId
@@ -323,19 +342,26 @@ printC_noMap        LDW     fontAddrs
                     SYS     64                              ; draw baseline for char
                     
                     PUSH
-                    LD      cursorXY
+                    CALLI   printClip
+                    POP
+                    
+printC_exit         RET
+%ENDS
+
+%SUB                printClip
+printClip           LD      cursorXY
                     ADDI    giga_xfont
                     ST      cursorXY
                     SUBI    giga_xres - giga_xfont          ; last possible char on line
-                    BLE     printC_pop
+                    BLE     printCl_exit
                     LDI     DISABLE_CLIP_BIT
                     ANDW    miscFlags                       ; is text clipping disabled?
-                    BNE     printC_pop
+                    BNE     printCl_exit
+                    PUSH
                     CALLI   newLineScroll                   ; next row, scroll at bottom
+                    POP
                     
-printC_pop          POP
-
-printC_exit         RET
+printCl_exit        RET
 %ENDS
 
 %SUB                newLineScroll

@@ -1,0 +1,1879 @@
+_startAddress_                    EQU                               0x0200
+
+; Internal Variables
+serialRawPrev                     EQU                               0x0081
+register0                         EQU                               0x0082
+register1                         EQU                               register0 + 0x02
+register2                         EQU                               register0 + 0x04
+register3                         EQU                               register0 + 0x06
+register4                         EQU                               register0 + 0x08
+register5                         EQU                               register0 + 0x0A
+register6                         EQU                               register0 + 0x0C
+register7                         EQU                               register0 + 0x0E
+register8                         EQU                               register0 + 0x10
+register9                         EQU                               register0 + 0x12
+register10                        EQU                               register0 + 0x14
+register11                        EQU                               register0 + 0x16
+register12                        EQU                               register0 + 0x18
+register13                        EQU                               register0 + 0x1A
+register14                        EQU                               register0 + 0x1C
+register15                        EQU                               register0 + 0x1E
+fgbgColour                        EQU                               register0 + 0x20
+cursorXY                          EQU                               register0 + 0x22
+midiStream                        EQU                               register0 + 0x24
+midiDelay                         EQU                               register0 + 0x26
+miscFlags                         EQU                               register0 + 0x28
+timerTick                         EQU                               register0 + 0x2A
+timerPrev                         EQU                               register0 + 0x2C
+
+; Internal Constants
+ENABLE_SCROLL_BIT                 EQU                               0x0001
+ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+DISABLE_CLIP_BIT                  EQU                               0x0004
+ENABLE_SCROLL_MSK                 EQU                               0xfffe
+ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
+DISABLE_CLIP_MSK                  EQU                               0xfffb
+
+; Internal Buffers
+regsWorkArea                      EQU                               0x0000
+textWorkArea                      EQU                               0x7ea0
+
+; Includes
+%includePath                      "../../runtime"
+%include                          util.i
+%include                          gigatron.i
+%include                          macros_ROMv5a.i
+
+; Labels
+_entryPoint_                      EQU                               0x0200
+_restart                          EQU                               0x023d
+_findLoader                       EQU                               0x0284
+_sendCommsCmd                     EQU                               0x031d
+_loadDir                          EQU                               0x0338
+_loadD0                           EQU                               0x033d
+_loadD1                           EQU                               0x0367
+_fillBrowser                      EQU                               0x038a
+_printBrowser                     EQU                               0x03e1
+_updateBrowser                    EQU                               0x04a7
+_getRomType                       EQU                               0x057c
+_loadApp                          EQU                               0x05e7
+_openSDCard                       EQU                               0x08bd
+_handleInput                      EQU                               0x09bd
+_default                          EQU                               0x09f6
+_127                              EQU                               0x0aa8
+_10                               EQU                               0x0ab5
+_254                              EQU                               0x0abb
+_253                              EQU                               0x0adf
+_251                              EQU                               0x0af6
+_247                              EQU                               0x0bc1
+_execOrList                       EQU                               0x0be5
+_listSDCard                       EQU                               0x0ca8
+_closeSDCard                      EQU                               0x0cbb
+_initialise                       EQU                               0x0cce
+_repeat_0x0243                    EQU                               0x0243
+_repeat_0x0263                    EQU                               0x025f
+_endif_0x028b                     EQU                               0x0279
+_elseif_0x02b2                    EQU                               0x029a
+_elseif_0x02c5                    EQU                               0x02a9
+_repeat_0x02d3                    EQU                               0x02b3
+_next_0x02f3                      EQU                               0x02d1
+_page_0x0300                      EQU                               0x0300
+_endif_0x032b                     EQU                               0x0308
+_endif_0x0342                     EQU                               0x031b
+_else_0x03c9                      EQU                               0x0396
+_repeat_0x03d6                    EQU                               0x039f
+_repeat_0x03da                    EQU                               0x03a3
+_else_0x041c                      EQU                               0x03d3
+_page_0x0400                      EQU                               0x0400
+_next_0x0476                      EQU                               0x0428
+_else_0x04ca                      EQU                               0x045e
+_endif_0x04cf                     EQU                               0x0463
+_else_0x04d6                      EQU                               0x046a
+_else_0x04e9                      EQU                               0x0479
+_endif_0x04ee                     EQU                               0x047e
+_else_0x058d                      EQU                               0x04f3
+_page_0x0500                      EQU                               0x0500
+_endif_0x0592                     EQU                               0x0502
+_else_0x0609                      EQU                               0x0555
+_endif_0x060e                     EQU                               0x055a
+_elseif_0x065b                    EQU                               0x0593
+_elseif_0x0674                    EQU                               0x05a4
+_elseif_0x068d                    EQU                               0x05b5
+_elseif_0x06a6                    EQU                               0x05c6
+_elseif_0x06bf                    EQU                               0x05d7
+_endif_0x06d5                     EQU                               0x05e5
+_page_0x0600                      EQU                               0x0600
+_next_0x0709                      EQU                               0x0614
+_page_0x08a0                      EQU                               0x08a0
+_next_0x0782                      EQU                               0x08e0
+_endif_0x07a4                     EQU                               0x08fa
+_page_0x09a0                      EQU                               0x09a0
+_endif_0x07e5                     EQU                               0x09d5
+_endif_0x0814                     EQU                               0x09f4
+_page_0x0aa0                      EQU                               0x0aa0
+_page_0x0ba0                      EQU                               0x0ba0
+_else_0x08a7                      EQU                               0x0bbc
+_else_0x08d7                      EQU                               0x0be0
+_else_0x08f9                      EQU                               0x0bf6
+_page_0x0ca0                      EQU                               0x0ca0
+_endif_0x0907                     EQU                               0x0ca6
+
+; Constants
+_sysArg0                          EQU                               0x0024
+_sysArg7                          EQU                               0x002b
+_MAX_FILES                        EQU                               0x0064
+_PAYLOAD_SIZE                     EQU                               0x003f
+_PROTOCOL_SIZE                    EQU                               0x0041
+_PACKET_SIZE                      EQU                               0x000f
+
+; Global Variables
+_execAddr                         EQU                               0x0030
+_commsAddr                        EQU                               0x0032
+_commsSize                        EQU                               0x0034
+_commsRetn                        EQU                               0x0036
+_browserIdx                       EQU                               0x0038
+_browserY                         EQU                               0x003a
+_cursorY                          EQU                               0x003c
+_cursOldY                         EQU                               0x003e
+_isLast                           EQU                               0x0040
+_length                           EQU                               0x0042
+_runStrAddr                       EQU                               0x0044
+_f                                EQU                               0x0046
+_kk                               EQU                               0x0048
+_k                                EQU                               0x004a
+_romType                          EQU                               0x004c
+_j                                EQU                               0x004e
+_bIdx                             EQU                               0x0050
+_cIdx                             EQU                               0x0052
+_char                             EQU                               0x0054
+_startY                           EQU                               0x0056
+_endY                             EQU                               0x0058
+_i                                EQU                               0x005a
+_strAddr                          EQU                               0x005c
+_strLen                           EQU                               0x005e
+_isFile                           EQU                               0x0060
+_prevY                            EQU                               0x0062
+_prevAddr                         EQU                               0x0064
+_prevLen                          EQU                               0x0066
+_currY                            EQU                               0x0068
+_currAddr                         EQU                               0x006a
+_currLen                          EQU                               0x006c
+_NextByteIn_32                    EQU                               0x006e
+_len                              EQU                               0x0070
+
+; Local Variables
+
+; Arrays
+_commsCmd_array                   EQU                               0x7cef
+_commsCmd_array                   DB                                0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 
+_buffer_array                     EQU                               0x7cae
+_buffer_array                     DB                                0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 
+_browser_array                    EQU                               0x0638
+_browser_array                    DW                                0x79f1 0x79e2 0x79d3 0x79c4 0x79b5 0x79a6 0x78f1 0x78e2 0x78d3 0x78c4 0x78b5 0x78a6 0x77f1 0x77e2 0x77d3 0x77c4 0x77b5 0x77a6 0x76f1 0x76e2 0x76d3 0x76c4 0x76b5 0x76a6 0x75f1 0x75e2 0x75d3 0x75c4 0x75b5 0x75a6 0x74f1 0x74e2 0x74d3 0x74c4 0x74b5 0x74a6 0x73f1 0x73e2 0x73d3 0x73c4 0x73b5 0x73a6 0x72f1 0x72e2 0x72d3 0x72c4 0x72b5 0x72a6 0x71f1 0x71e2 0x71d3 0x71c4 0x71b5 0x71a6 0x70f1 0x70e2 0x70d3 0x70c4 0x70b5 0x70a6 0x6ff1 0x6fe2 0x6fd3 0x6fc4 0x6fb5 0x6fa6 0x6ef1 0x6ee2 0x6ed3 0x6ec4 0x6eb5 0x6ea6 0x6df1 0x6de2 0x6dd3 0x6dc4 0x6db5 0x6da6 0x6cf1 0x6ce2 0x6cd3 0x6cc4 0x6cb5 0x6ca6 0x6bf1 0x6be2 0x6bd3 0x6bc4 0x6bb5 0x6ba6 0x6af1 0x6ae2 0x6ad3 0x6ac4 0x6ab5 0x6aa6 0x69f1 0x69e2 0x69d3 0x69c4 
+_browser_0x79f1                   EQU                               0x79f1
+_browser_0x79e2                   EQU                               0x79e2
+_browser_0x79d3                   EQU                               0x79d3
+_browser_0x79c4                   EQU                               0x79c4
+_browser_0x79b5                   EQU                               0x79b5
+_browser_0x79a6                   EQU                               0x79a6
+_browser_0x78f1                   EQU                               0x78f1
+_browser_0x78e2                   EQU                               0x78e2
+_browser_0x78d3                   EQU                               0x78d3
+_browser_0x78c4                   EQU                               0x78c4
+_browser_0x78b5                   EQU                               0x78b5
+_browser_0x78a6                   EQU                               0x78a6
+_browser_0x77f1                   EQU                               0x77f1
+_browser_0x77e2                   EQU                               0x77e2
+_browser_0x77d3                   EQU                               0x77d3
+_browser_0x77c4                   EQU                               0x77c4
+_browser_0x77b5                   EQU                               0x77b5
+_browser_0x77a6                   EQU                               0x77a6
+_browser_0x76f1                   EQU                               0x76f1
+_browser_0x76e2                   EQU                               0x76e2
+_browser_0x76d3                   EQU                               0x76d3
+_browser_0x76c4                   EQU                               0x76c4
+_browser_0x76b5                   EQU                               0x76b5
+_browser_0x76a6                   EQU                               0x76a6
+_browser_0x75f1                   EQU                               0x75f1
+_browser_0x75e2                   EQU                               0x75e2
+_browser_0x75d3                   EQU                               0x75d3
+_browser_0x75c4                   EQU                               0x75c4
+_browser_0x75b5                   EQU                               0x75b5
+_browser_0x75a6                   EQU                               0x75a6
+_browser_0x74f1                   EQU                               0x74f1
+_browser_0x74e2                   EQU                               0x74e2
+_browser_0x74d3                   EQU                               0x74d3
+_browser_0x74c4                   EQU                               0x74c4
+_browser_0x74b5                   EQU                               0x74b5
+_browser_0x74a6                   EQU                               0x74a6
+_browser_0x73f1                   EQU                               0x73f1
+_browser_0x73e2                   EQU                               0x73e2
+_browser_0x73d3                   EQU                               0x73d3
+_browser_0x73c4                   EQU                               0x73c4
+_browser_0x73b5                   EQU                               0x73b5
+_browser_0x73a6                   EQU                               0x73a6
+_browser_0x72f1                   EQU                               0x72f1
+_browser_0x72e2                   EQU                               0x72e2
+_browser_0x72d3                   EQU                               0x72d3
+_browser_0x72c4                   EQU                               0x72c4
+_browser_0x72b5                   EQU                               0x72b5
+_browser_0x72a6                   EQU                               0x72a6
+_browser_0x71f1                   EQU                               0x71f1
+_browser_0x71e2                   EQU                               0x71e2
+_browser_0x71d3                   EQU                               0x71d3
+_browser_0x71c4                   EQU                               0x71c4
+_browser_0x71b5                   EQU                               0x71b5
+_browser_0x71a6                   EQU                               0x71a6
+_browser_0x70f1                   EQU                               0x70f1
+_browser_0x70e2                   EQU                               0x70e2
+_browser_0x70d3                   EQU                               0x70d3
+_browser_0x70c4                   EQU                               0x70c4
+_browser_0x70b5                   EQU                               0x70b5
+_browser_0x70a6                   EQU                               0x70a6
+_browser_0x6ff1                   EQU                               0x6ff1
+_browser_0x6fe2                   EQU                               0x6fe2
+_browser_0x6fd3                   EQU                               0x6fd3
+_browser_0x6fc4                   EQU                               0x6fc4
+_browser_0x6fb5                   EQU                               0x6fb5
+_browser_0x6fa6                   EQU                               0x6fa6
+_browser_0x6ef1                   EQU                               0x6ef1
+_browser_0x6ee2                   EQU                               0x6ee2
+_browser_0x6ed3                   EQU                               0x6ed3
+_browser_0x6ec4                   EQU                               0x6ec4
+_browser_0x6eb5                   EQU                               0x6eb5
+_browser_0x6ea6                   EQU                               0x6ea6
+_browser_0x6df1                   EQU                               0x6df1
+_browser_0x6de2                   EQU                               0x6de2
+_browser_0x6dd3                   EQU                               0x6dd3
+_browser_0x6dc4                   EQU                               0x6dc4
+_browser_0x6db5                   EQU                               0x6db5
+_browser_0x6da6                   EQU                               0x6da6
+_browser_0x6cf1                   EQU                               0x6cf1
+_browser_0x6ce2                   EQU                               0x6ce2
+_browser_0x6cd3                   EQU                               0x6cd3
+_browser_0x6cc4                   EQU                               0x6cc4
+_browser_0x6cb5                   EQU                               0x6cb5
+_browser_0x6ca6                   EQU                               0x6ca6
+_browser_0x6bf1                   EQU                               0x6bf1
+_browser_0x6be2                   EQU                               0x6be2
+_browser_0x6bd3                   EQU                               0x6bd3
+_browser_0x6bc4                   EQU                               0x6bc4
+_browser_0x6bb5                   EQU                               0x6bb5
+_browser_0x6ba6                   EQU                               0x6ba6
+_browser_0x6af1                   EQU                               0x6af1
+_browser_0x6ae2                   EQU                               0x6ae2
+_browser_0x6ad3                   EQU                               0x6ad3
+_browser_0x6ac4                   EQU                               0x6ac4
+_browser_0x6ab5                   EQU                               0x6ab5
+_browser_0x6aa6                   EQU                               0x6aa6
+_browser_0x69f1                   EQU                               0x69f1
+_browser_0x69e2                   EQU                               0x69e2
+_browser_0x69d3                   EQU                               0x69d3
+_browser_0x69c4                   EQU                               0x69c4
+
+; Strings
+_runName$                         EQU                               0x7da0
+_runName$                         DB                                0 '' 0
+_execName$                        EQU                               0x7ba0
+_execName$                        DB                                0 '' 0
+_pathName$                        EQU                               0x7aa0
+_pathName$                        DB                                0 '' 0
+
+; Constant Strings
+_str_0x7cfe                       EQU                               0x7cfe
+_str_0x7cfe                       DB                                0 '' 0
+_str_0x7ca6                       EQU                               0x7ca6
+_str_0x7ca6                       DB                                6 'Loader' 0
+_str_0x69b1                       EQU                               0x69b1
+_str_0x69b1                       DB                                17 'Loader not found!' 0
+
+; Data
+
+; Time
+
+; Define Bytes
+
+; Define Words
+
+; Define Images
+
+; Define Loader Image Chunks
+
+; Define Midis
+
+; Define Sprites
+
+; Define Fonts
+
+; Lookup Tables
+_lut_numericLabs                  EQU                               0x69a3
+_lut_numericLabs                  DW                                127 10 254 253 251 247 0x0000
+_lut_numericAddrs                 EQU                               0x68f4
+_lut_numericAddrs                 DW                                0x0aa8 0x0ab5 0x0abb 0x0adf 0x0af6 0x0bc1 
+
+; Code
+_entryPoint_                      LDI                               0x40
+                                  STW                               romType
+                                  RomCheck                          
+                                  Initialise                                                    ; INIT
+
+                                  LDWI                              0x7cfe
+                                  STW                               strSrcAddr
+                                  LDWI                              0x7da0
+                                  StringCopy                                                    ; runName$ = ""
+
+                                  LDWI                              0x7cfe
+                                  STW                               strSrcAddr
+                                  LDWI                              0x7ba0
+                                  StringCopy                                                    ; execName$ = ""
+
+                                  LDWI                              0x7cfe
+                                  STW                               strSrcAddr
+                                  LDWI                              0x7aa0
+                                  StringCopy                                                    ; pathName$ = ""
+
+                                  CALLI                             _findLoader                 ; gosub findLoader
+
+_restart                          CALLI                             _initialise                 ; gosub initialise
+
+                                  CALLI                             _openSDCard                 ; gosub openSDCard
+
+_repeat_0x0243                    CALLI                             _listSDCard                 ; gosub listSDCard
+
+                                  CALLI                             _loadDir                    ; gosub loadDir
+
+                                  CALLI                             _fillBrowser                ; gosub fillBrowser
+
+                                  LDW                               _isLast
+                                  BEQ                               _repeat_0x0243              ; until &(isLast)
+
+                                  CALLI                             _closeSDCard                ; gosub closeSDCard
+
+                                  CALLI                             _printBrowser               ; gosub printBrowser
+
+                                  LDI                               0
+                                  STW                               _f                          ; f = 0
+
+                                  LDI                               255
+                                  STW                               _kk                         ; kk = 255
+
+_repeat_0x0263                    WaitVBlank                                                    ; wait
+
+                                  LD                                giga_serialRaw
+                                  STW                               _k                          ; k = get("SERIAL_RAW")
+
+                                  LDW                               _k
+                                  XORI                              255
+                                  BEQ                               _endif_0x028b               ; if k &&<> 255
+
+                                  CALLI                             _handleInput                ; gosub handleInput
+
+                                  LDWI                              0x7aa0
+                                  PEEK                              
+                                  BEQ                               _endif_0x028b
+                                  BRA                               _restart                    ; if &(peek(@pathName$)) then goto &restart
+
+_endif_0x028b                     LDW                               _k
+                                  STW                               _kk                         ; kk = k
+
+                                  INC                               _f                          ; inc f
+
+                                  CALLI                             _repeat_0x0263              ; forever
+
+                                  HALT                                                          ; end
+
+_findLoader                       PUSH                              
+                                  LD                                giga_romType
+                                  ANDI                              0xFC
+                                  STW                               _romType                    ; romType = get("ROM_TYPE")
+
+                                  LDW                               _romType
+                                  XORI                              40
+                                  BNE                               _elseif_0x02b2              ; if romType &&= 40      'ROMv3
+
+                                  LDWI                              -19288
+                                  STW                               _execAddr
+                                  CALLI                             _endif_0x0342               ; execAddr = &hB4A8
+
+_elseif_0x02b2                    LDW                               _romType
+                                  XORI                              56
+                                  BNE                               _elseif_0x02c5              ; elseif romType &&= 56  'ROMv4
+
+                                  LDWI                              -21158
+                                  STW                               _execAddr
+                                  CALLI                             _endif_0x0342               ; execAddr = &hAD5A
+
+_elseif_0x02c5                    LDW                               _romType
+                                  SUBI                              64
+                                  JumpGE                            _endif_0x0342 7             ; elseif romType &>= 64 'ROMv5 or higher
+
+_repeat_0x02d3                    LDW                               _execAddr
+                                  RomRead                           
+                                  STW                               _execAddr                   ; execAddr = get("ROM_READ_DIR", execAddr)
+
+                                  LDW                               _execAddr
+                                  JumpFalse                         _endif_0x032b 5             ; if (execAddr)
+
+                                  LDWI                              31648
+                                  STW                               register0
+                                  LDI                               6
+                                  POKE                              register0                   ; poke @execName$, 6
+
+                                  LDI                               36
+                                  STW                               _j                          ; for j=sysArg0 &to sysArg7
+
+_next_0x02f3                      LDWI                              31648
+                                  ADDW                              _j
+                                  SUBI                              35
+                                  STW                               0xe8
+                                  LDW                               _j
+                                  PEEK                              
+                                  POKE                              0xe8                        ; poke @execName$ + j - (sysArg0 - 1), peek(j)
+
+                                  ForNextInc                        _j _next_0x02f3 43          ; next j
+
+                                  LDWI                              0x7ba0
+                                  STW                               strSrcAddr
+                                  LDWI                              0x7ca6
+                                  StringCmp                         
+                                  ANDI                              1
+                                  CALLI                             _page_0x0300
+_page_0x0300                      JumpFalse                         _endif_0x032b 4
+                                  Return                                                        ; if execName$ = "Loader" then return
+
+_endif_0x032b                     LDW                               _execAddr
+                                  JumpEQ                            _repeat_0x02d3 6            ; until execAddr &= 0
+
+                                  PrintString                       _str_0x69b1
+                                  NewLine                                                       ; print "Loader not found!"
+
+                                  HALT                                                          ; end
+
+_endif_0x0342                     Return                                                        ; return
+
+_sendCommsCmd                     PUSH                                                          ; asm
+
+                                  LDWI                              SYS_SendSerial1_v3_80       ; LDWI    SYS_SendSerial1_v3_80
+                                  STW                               giga_sysFn                  ; STW     giga_sysFn
+                                  LDW                               _commsAddr                  ; LDW     _commsAddr
+                                  STW                               giga_sysArg0                ; STW     giga_sysArg0
+                                  LDI                               1                           ; LDI     1
+                                  STW                               giga_sysArg2                ; STW     giga_sysArg2
+                                  LD                                _commsSize                  ; LD      _commsSize
+                                  LSLW                                                          ; LSLW
+                                  LSLW                                                          ; LSLW
+                                  LSLW                                                          ; LSLW
+                                  STW                               giga_sysArg3                ; STW     giga_sysArg3
+                                  SYS                               80                          ; SYS     80
+                                  STW                               _commsRetn                  ; STW     _commsRetn
+
+                                  Return                                                        ; return
+
+_loadDir                          PUSH                                                          ; asm
+
+                                  LDW                               _NextByteIn_32              ; LDW     _NextByteIn_32
+                                  STW                               giga_sysFn                  ; STW     giga_sysFn
+
+_loadD0                           LDWI                              _buffer_array               ; LDWI    _buffer_array
+                                  STW                               giga_sysArg0                ; STW     giga_sysArg0            'buffer
+
+                                  LDI                               207                         ; LDI     207
+                                  ST                                giga_sysArg3                ; ST      giga_sysArg3            'scanline 207
+                                  SYS                               32                          ; SYS     32                      'isLast, (0 or 1)
+
+                                  LDWI                              _buffer_array               ; LDWI    _buffer_array
+                                  PEEK                                                          ; PEEK
+                                  XORI                              255                         ; XORI    255
+                                  BEQ                               _loadD0                     ; BEQ     _loadD0                 'loop while idle
+
+                                  LDI                               219                         ; LDI     219
+                                  ST                                giga_sysArg3                ; ST      giga_sysArg3            'scanline 219
+                                  SYS                               32                          ; SYS     32                      'length, (6 bits : 0..62)
+
+                                  LDI                               235                         ; LDI     235
+                                  ST                                giga_sysArg3                ; ST      giga_sysArg3            'scanline 235
+                                  SYS                               32                          ; SYS     32                      'payload 0
+
+                                  LDI                               251                         ; LDI     251
+                                  ST                                giga_sysArg3                ; ST      giga_sysArg3            'scanline 251
+                                  SYS                               32                          ; SYS     32                      'payload 1
+
+                                  LDI                               2                           ; LDI     2
+                                  ST                                giga_sysArg3                ; ST      giga_sysArg3            'scanline 2
+
+_loadD1                           SYS                               32                          ; SYS     32                      'payload 2-61
+                                  LD                                giga_sysArg3                ; LD      giga_sysArg3
+                                  ADDI                              4                           ; ADDI    4
+                                  ST                                giga_sysArg3                ; ST      giga_sysArg3
+                                  XORI                              242                         ; XORI    242                     'scanline end is 238
+                                  BNE                               _loadD1                     ; BNE     _loadD1
+                                  LDI                               185                         ; LDI     185
+                                  ST                                giga_sysArg3                ; ST      giga_sysArg3            'scanline 185
+                                  SYS                               32                          ; SYS     32                      'payload 62
+
+                                  LDWI                              0x7cae
+                                  PEEK                              
+                                  STW                               _isLast                     ; isLast = peek(@buffer)
+
+                                  LDWI                              0x7caf
+                                  PEEK                              
+                                  ANDI                              63
+                                  STW                               _length                     ; length = peek(@buffer + 1) AND 63
+
+                                  Return                                                        ; return
+
+_fillBrowser                      PUSH                              
+                                  LDI                               2
+                                  STW                               _bIdx                       ; bIdx = 2
+
+                                  LDW                               _length
+                                  BNE                               _else_0x03c9
+                                  Return                                                        ; if length &&= 0 then return
+
+_else_0x03c9                      LDW                               _browserIdx
+                                  XORI                              100
+                                  BNE                               _repeat_0x03d6
+                                  Return                                                        ; if browserIdx &&= MAX_FILES then return
+
+_repeat_0x03d6                    LDI                               0
+                                  STW                               _cIdx                       ; cIdx = 0
+
+_repeat_0x03da                    LDWI                              31918
+                                  ADDW                              _bIdx
+                                  PEEK                              
+                                  STW                               _char                       ; char = peek(@buffer + bIdx)
+
+                                  LDW                               _browserIdx
+                                  STW                               memIndex0
+                                  LDW                               _cIdx
+                                  STW                               memIndex1
+                                  LDWI                              0x0638
+                                  CALLI                             convert8Arr2d
+                                  STW                               0xea
+                                  LDW                               _char
+                                  POKE                              0xea                        ; poke addr(browser(browserIdx, cIdx)), char
+
+                                  INC                               _bIdx                       ; inc bIdx
+
+                                  INC                               _cIdx                       ; inc cIdx
+
+                                  LDW                               _char
+                                  BNE                               _repeat_0x03da              ; until char &&= 0
+
+                                  INC                               _browserIdx                 ; inc browserIdx
+
+                                  LDW                               _browserIdx
+                                  XORI                              100
+                                  BNE                               _else_0x041c
+                                  Return                                                        ; if browserIdx &&= MAX_FILES then return
+
+_else_0x041c                      LDW                               _bIdx
+                                  SUBI                              2
+                                  XORW                              _length
+                                  JumpEQ                            _repeat_0x03d6 11           ; until (bIdx - 2) &= length
+
+                                  Return                                                        ; return
+
+_printBrowser                     PUSH                              
+                                  LDW                               _browserIdx
+                                  SUBI                              15
+                                  STW                               0xe8
+                                  LDW                               _browserY
+                                  STW                               intSrcA
+                                  LDW                               0xe8
+                                  IntMin                            
+                                  STW                               intSrcA
+                                  LDI                               0
+                                  CALLI                             _page_0x0400
+_page_0x0400                      IntMax                            
+                                  STW                               _startY                     ; startY = max(min(browserY, browserIdx-15), 0)
+
+                                  LDW                               _browserY
+                                  ADDI                              14
+                                  STW                               0xe8
+                                  LDW                               _browserIdx
+                                  SUBI                              1
+                                  STW                               0xea
+                                  LDW                               0xe8
+                                  STW                               intSrcA
+                                  LDW                               0xea
+                                  IntMin                            
+                                  STW                               _endY                       ; endY = min(browserY+14, browserIdx-1)
+
+                                  LDW                               _startY
+                                  STW                               _i
+                                  LDW                               _endY
+                                  STW                               0xb0
+                                  LDI                               1
+                                  STW                               0xb2                        ; for i=startY &to endY
+
+_next_0x0476                      LDW                               _i
+                                  STW                               memIndex0
+                                  LDI                               0
+                                  STW                               memIndex1
+                                  LDWI                              0x0638
+                                  CALLI                             convert8Arr2d
+                                  ADDI                              1
+                                  STW                               _strAddr                    ; strAddr = addr(browser(i, 0)) + 1
+
+                                  LDW                               _strAddr
+                                  PEEK                              
+                                  STW                               _strLen                     ; strLen = peek(strAddr)
+
+                                  LDW                               _strAddr
+                                  SUBI                              1
+                                  PEEK                              
+                                  STW                               _isFile                     ; isFile = peek(strAddr - 1)
+
+                                  LDW                               _i
+                                  SUBW                              _browserY
+                                  XORW                              _cursorY
+                                  BNE                               _else_0x04d6                ; if (i-browserY) &&= cursorY
+
+                                  LDW                               _isFile
+                                  XORI                              1
+                                  BNE                               _else_0x04ca                ; if isFile &&= 1
+
+                                  LDWI                              8255
+                                  STW                               fgbgColour
+                                  CALLI                             _endif_0x04cf               ; set FGBG_COLOUR, &h203F
+
+_else_0x04ca                      LDWI                              8234
+                                  STW                               fgbgColour                  ; set FGBG_COLOUR, &h202A
+
+_endif_0x04cf                     LDW                               _strAddr
+                                  STW                               _runStrAddr
+                                  CALLI                             _endif_0x04ee               ; runStrAddr = strAddr
+
+_else_0x04d6                      LDW                               _isFile
+                                  XORI                              1
+                                  BNE                               _else_0x04e9                ; if isFile &&= 1
+
+                                  LDWI                              16160
+                                  STW                               fgbgColour
+                                  CALLI                             _endif_0x04ee               ; set FGBG_COLOUR, &h3F20
+
+_else_0x04e9                      LDWI                              10784
+                                  STW                               fgbgColour                  ; set FGBG_COLOUR, &h2A20
+
+_endif_0x04ee                     LDI                               2
+                                  ST                                cursorXY
+                                  LDW                               _i
+                                  SUBW                              _browserY
+                                  LSLW                              
+                                  LSLW                              
+                                  LSLW                              
+                                  ST                                cursorXY + 1
+                                  AtTextCursor                                                  ; at 2, (i-browserY) LSL 3
+
+                                  LDW                               _strAddr
+                                  PrintAcString                     
+                                  LDI                               12
+                                  SUBW                              _strLen
+                                  PrintSpc                                                      ; print string$(strAddr);spc$(12 - strLen);
+
+                                  ForNextVarAdd                     _i _next_0x0476 0xb0 0xb2   ; next i
+
+                                  Return                                                        ; return
+
+_updateBrowser                    PUSH                              
+                                  LDW                               _browserIdx
+                                  SUBI                              15
+                                  STW                               0xe8
+                                  LDW                               _browserY
+                                  STW                               intSrcA
+                                  LDW                               0xe8
+                                  IntMin                            
+                                  STW                               intSrcA
+                                  LDI                               0
+                                  IntMax                            
+                                  STW                               _startY                     ; startY = max(min(browserY, browserIdx-15), 0)
+
+                                  LDW                               _startY
+                                  ADDW                              _cursOldY
+                                  STW                               _prevY                      ; prevY = startY + cursOldY
+
+                                  LDW                               _prevY
+                                  STW                               memIndex0
+                                  LDI                               0
+                                  STW                               memIndex1
+                                  LDWI                              0x0638
+                                  CALLI                             convert8Arr2d
+                                  ADDI                              1
+                                  STW                               _prevAddr                   ; prevAddr = addr(browser(prevY, 0)) + 1
+
+                                  LDW                               _prevAddr
+                                  PEEK                              
+                                  STW                               _prevLen                    ; prevLen = peek(prevAddr)
+
+                                  LDW                               _prevAddr
+                                  SUBI                              1
+                                  PEEK                              
+                                  STW                               _isFile                     ; isFile = peek(prevAddr - 1)
+
+                                  LDW                               _isFile
+                                  XORI                              1
+                                  BNE                               _else_0x058d                ; if isFile &&= 1
+
+                                  LDWI                              16160
+                                  STW                               fgbgColour
+                                  CALLI                             _endif_0x0592               ; set FGBG_COLOUR, &h3F20
+
+_else_0x058d                      LDWI                              10784
+                                  CALLI                             _page_0x0500
+_page_0x0500                      STW                               fgbgColour                  ; set FGBG_COLOUR, &h2A20
+
+_endif_0x0592                     LDI                               2
+                                  ST                                cursorXY
+                                  LDW                               _prevY
+                                  SUBW                              _startY
+                                  LSLW                              
+                                  LSLW                              
+                                  LSLW                              
+                                  ST                                cursorXY + 1
+                                  AtTextCursor                                                  ; at 2, (prevY - startY) LSL 3
+
+                                  LDW                               _prevAddr
+                                  PrintAcString                     
+                                  LDI                               12
+                                  SUBW                              _prevLen
+                                  PrintSpc                                                      ; print string$(prevAddr);spc$(12 - prevLen);
+
+                                  LDW                               _cursorY
+                                  STW                               _cursOldY                   ; cursOldY = cursorY
+
+                                  LDW                               _startY
+                                  ADDW                              _cursorY
+                                  STW                               _currY                      ; currY = startY + cursorY
+
+                                  LDW                               _currY
+                                  STW                               memIndex0
+                                  LDI                               0
+                                  STW                               memIndex1
+                                  LDWI                              0x0638
+                                  CALLI                             convert8Arr2d
+                                  ADDI                              1
+                                  STW                               _currAddr                   ; currAddr = addr(browser(currY, 0)) + 1
+
+                                  LDW                               _currAddr
+                                  PEEK                              
+                                  STW                               _currLen                    ; currLen = peek(currAddr)
+
+                                  LDW                               _currAddr
+                                  SUBI                              1
+                                  PEEK                              
+                                  STW                               _isFile                     ; isFile = peek(currAddr - 1)
+
+                                  LDW                               _isFile
+                                  XORI                              1
+                                  BNE                               _else_0x0609                ; if isFile &&= 1
+
+                                  LDWI                              8255
+                                  STW                               fgbgColour
+                                  CALLI                             _endif_0x060e               ; set FGBG_COLOUR, &h203F
+
+_else_0x0609                      LDWI                              8234
+                                  STW                               fgbgColour                  ; set FGBG_COLOUR, &h202A
+
+_endif_0x060e                     LDI                               2
+                                  ST                                cursorXY
+                                  LDW                               _currY
+                                  SUBW                              _startY
+                                  LSLW                              
+                                  LSLW                              
+                                  LSLW                              
+                                  ST                                cursorXY + 1
+                                  AtTextCursor                                                  ; at 2, (currY - startY) LSL 3
+
+                                  LDW                               _currAddr
+                                  PrintAcString                     
+                                  LDI                               12
+                                  SUBW                              _currLen
+                                  PrintSpc                                                      ; print string$(currAddr);spc$(12 - currLen);
+
+                                  LDW                               _currAddr
+                                  STW                               _runStrAddr                 ; runStrAddr = currAddr
+
+                                  Return                                                        ; return
+
+_getRomType                       PUSH                              
+                                  LDWI                              745
+                                  STW                               _NextByteIn_32              ; NextByteIn_32 = &h02E9
+
+                                  LD                                giga_romType
+                                  ANDI                              0xFC
+                                  XORI                              32
+                                  BNE                               _elseif_0x065b              ; if get("ROM_TYPE") &&= &h20     'ROMv2
+
+                                  LDWI                              2993
+                                  STW                               _NextByteIn_32
+                                  CALLI                             _endif_0x06d5               ; NextByteIn_32 = &h0BB1
+
+_elseif_0x065b                    LD                                giga_romType
+                                  ANDI                              0xFC
+                                  XORI                              40
+                                  BNE                               _elseif_0x0674              ; elseif get("ROM_TYPE") &&= &h28 'ROMv3
+
+                                  LDWI                              3039
+                                  STW                               _NextByteIn_32
+                                  CALLI                             _endif_0x06d5               ; NextByteIn_32 = &h0BDF
+
+_elseif_0x0674                    LD                                giga_romType
+                                  ANDI                              0xFC
+                                  XORI                              56
+                                  BNE                               _elseif_0x068d              ; elseif get("ROM_TYPE") &&= &h38 'ROMv4
+
+                                  LDWI                              -30159
+                                  STW                               _NextByteIn_32
+                                  CALLI                             _endif_0x06d5               ; NextByteIn_32 = &h8A31
+
+_elseif_0x068d                    LD                                giga_romType
+                                  ANDI                              0xFC
+                                  XORI                              64
+                                  BNE                               _elseif_0x06a6              ; elseif get("ROM_TYPE") &&= &h40 'ROMv5a
+
+                                  LDWI                              22791
+                                  STW                               _NextByteIn_32
+                                  CALLI                             _endif_0x06d5               ; NextByteIn_32 = &h5907
+
+_elseif_0x06a6                    LD                                giga_romType
+                                  ANDI                              0xFC
+                                  XORI                              240
+                                  BNE                               _elseif_0x06bf              ; elseif get("ROM_TYPE") &&= &hF0 'SDCARD
+
+                                  LDWI                              4864
+                                  STW                               _NextByteIn_32
+                                  CALLI                             _endif_0x06d5               ; NextByteIn_32 = &h1300
+
+_elseif_0x06bf                    LD                                giga_romType
+                                  ANDI                              0xFC
+                                  XORI                              248
+                                  BNE                               _endif_0x06d5               ; elseif get("ROM_TYPE") &&= &hF8 'DEVROM
+
+                                  LDWI                              23887
+                                  STW                               _NextByteIn_32              ; NextByteIn_32 = &h5D4F
+
+_endif_0x06d5                     Return                                                        ; return
+
+_loadApp                          PUSH                              
+                                  LDWI                              31983
+                                  STW                               register0
+                                  LDI                               2
+                                  POKE                              register0                   ; poke @commsCmd + 0, 2
+
+                                  LDW                               _runStrAddr
+                                  STW                               strSrcAddr
+                                  LDWI                              0x7da0
+                                  StringCopy                                                    ; runName$ = string$(runStrAddr)
+
+                                  CALLI                             _page_0x0600
+_page_0x0600                      LDWI                              0x7da0
+                                  PEEK                              
+                                  STW                               _len                        ; len = peek(@runName$)
+
+                                  LDI                               1
+                                  STW                               _i
+                                  LDW                               _len
+                                  ADDI                              1
+                                  STW                               0xb0
+                                  LDI                               1
+                                  STW                               0xb2                        ; for i=1 &to len + 1
+
+_next_0x0709                      LDWI                              31983
+                                  ADDW                              _i
+                                  STW                               0xe8
+                                  LDWI                              32160
+                                  ADDW                              _i
+                                  PEEK                              
+                                  POKE                              0xe8                        ; poke @commsCmd + i, peek(@runName$ + i)
+
+                                  ForNextVarAdd                     _i _next_0x0709 0xb0 0xb2   ; next i
+
+                                  LDWI                              3872
+                                  STW                               fgbgColour
+                                  CALLI                             _page_0x08a0
+_page_0x08a0                      ResetVideoTable                   
+                                  ClearVertBlinds                                               ; set FGBG_COLOUR, &h0F20 : cls INIT : cls
+
+                                  LDI                               1
+                                  ADDW                              _len
+                                  ADDI                              1
+                                  STW                               _commsSize                  ; commsSize = 1 + len + 1
+
+                                  CALLI                             _sendCommsCmd               ; gosub sendCommsCmd
+
+                                  LDW                               _execAddr
+                                  STW                               giga_sysArg0
+                                  LDWI                              0x0200
+                                  RomExec                                                       ; exec execAddr
+
+                                  Return                                                        ; return
+
+_openSDCard                       PUSH                              
+                                  LDWI                              31983
+                                  STW                               register0
+                                  LDI                               3
+                                  POKE                              register0                   ; poke @commsCmd + 0, 3
+
+                                  LDWI                              0x7aa0
+                                  PEEK                              
+                                  STW                               _len                        ; len = peek(@pathName$)
+
+                                  LDW                               _len
+                                  BLE                               _endif_0x07a4               ; if len &&> 0
+
+                                  LDI                               1
+                                  STW                               _i
+                                  LDW                               _len
+                                  ADDI                              1
+                                  STW                               0xb0
+                                  LDI                               1
+                                  STW                               0xb2                        ; for i=1 &to len + 1
+
+_next_0x0782                      LDWI                              31983
+                                  ADDW                              _i
+                                  STW                               0xe8
+                                  LDWI                              31392
+                                  ADDW                              _i
+                                  PEEK                              
+                                  POKE                              0xe8                        ; poke @commsCmd + i, peek(@pathName$ + i)
+
+                                  ForNextVarAdd                     _i _next_0x0782 0xb0 0xb2   ; next i
+
+_endif_0x07a4                     LDI                               1
+                                  CALLI                             _page_0x09a0
+_page_0x09a0                      ADDW                              _len
+                                  ADDI                              1
+                                  STW                               _commsSize                  ; commsSize = 1 + len + 1
+
+                                  CALLI                             _sendCommsCmd               ; gosub sendCommsCmd
+
+                                  LDWI                              0x7cfe
+                                  STW                               strSrcAddr
+                                  LDWI                              0x7aa0
+                                  StringCopy                                                    ; pathName$ = ""
+
+                                  LDI                               10
+                                  STW                               waitVBlankNum
+                                  WaitVBlanks                                                   ; wait 10
+
+                                  Return                                                        ; return
+
+_handleInput                      PUSH                              
+                                  LDW                               _k
+                                  XORW                              _kk
+                                  BEQ                               _endif_0x07e5               ; if k &&<> kk
+
+                                  LDI                               0
+                                  STW                               _f                          ; f = 0
+
+                                  LDW                               _k
+                                  STW                               numericLabel
+                                  LDWI                              _default
+                                  STW                               defaultLabel
+                                  GosubNumeric                                                  ; gosub k, default
+
+_endif_0x07e5                     LDW                               _f
+                                  SUBI                              20
+                                  BLE                               _endif_0x0814               ; if f &&> 20
+
+                                  LDW                               _f
+                                  STW                               mathShift
+                                  ShiftRight1bit                    
+                                  ANDI                              1
+                                  BEQ                               _endif_0x0814               ; if &((f LSR 1) AND 1)
+
+                                  LDW                               _k
+                                  STW                               numericLabel
+                                  LDWI                              _default
+                                  STW                               defaultLabel
+                                  GosubNumeric                                                  ; gosub k, default
+
+_endif_0x0814                     Return                                                        ; return
+
+_default                          PUSH                              
+                                  LDWI                              0x7cfe
+                                  STW                               strSrcAddr
+                                  CALLI                             _page_0x0aa0
+_page_0x0aa0                      LDWI                              0x7aa0
+                                  StringCopy                                                    ; pathName$ = ""
+
+                                  Return                                                        ; return
+
+_127                              PUSH                              
+                                  LDI                               5
+                                  STW                               waitVBlankNum
+                                  WaitVBlanks                                                   ; wait 5
+
+                                  CALLI                             _execOrList                 ; gosub execOrList
+
+                                  Return                                                        ; return
+
+_10                               PUSH                              
+                                  CALLI                             _execOrList                 ; gosub execOrList
+
+                                  Return                                                        ; return
+
+_254                              PUSH                              
+                                  LDW                               _browserY
+                                  ADDI                              15
+                                  STW                               _browserY                   ; browserY = browserY + 15
+
+                                  LDW                               _browserIdx
+                                  SUBI                              15
+                                  STW                               0xe8
+                                  LDW                               _browserY
+                                  STW                               intSrcA
+                                  LDW                               0xe8
+                                  IntMin                            
+                                  STW                               intSrcA
+                                  LDI                               0
+                                  IntMax                            
+                                  STW                               _browserY                   ; browserY = max(min(browserY, browserIdx-15), 0)
+
+                                  CALLI                             _printBrowser               ; gosub printBrowser
+
+                                  Return                                                        ; return
+
+_253                              PUSH                              
+                                  LDW                               _browserY
+                                  SUBI                              15
+                                  STW                               _browserY                   ; browserY = browserY - 15
+
+                                  LDW                               _browserY
+                                  STW                               intSrcA
+                                  LDI                               0
+                                  IntMax                            
+                                  STW                               _browserY                   ; browserY = max(browserY, 0)
+
+                                  CALLI                             _printBrowser               ; gosub printBrowser
+
+                                  Return                                                        ; return
+
+_251                              PUSH                              
+                                  INC                               _cursorY                    ; inc cursorY
+
+                                  LDW                               _browserIdx
+                                  CALLI                             _page_0x0ba0
+_page_0x0ba0                      SUBI                              1
+                                  STW                               intSrcA
+                                  LDI                               14
+                                  IntMin                            
+                                  STW                               0xea
+                                  LDW                               _cursorY
+                                  SUBW                              0xea
+                                  CALLI                             convertGtOp
+                                  JumpFalse                         _else_0x08a7 32
+                                  LDI                               0
+                                  STW                               _cursorY                    ; if cursorY > min(browserIdx - 1, 14) then cursorY = 0
+
+_else_0x08a7                      CALLI                             _updateBrowser              ; gosub updateBrowser
+
+                                  Return                                                        ; return
+
+_247                              PUSH                              
+                                  LDW                               _cursorY
+                                  SUBI                              1
+                                  STW                               _cursorY                    ; dec cursorY
+
+                                  LDW                               _cursorY
+                                  CALLI                             convertLtOp
+                                  JumpFalse                         _else_0x08d7 33
+                                  LDW                               _browserIdx
+                                  SUBI                              1
+                                  STW                               intSrcA
+                                  LDI                               14
+                                  IntMin                            
+                                  STW                               _cursorY                    ; if cursorY < 0 then cursorY = min(browserIdx - 1, 14)
+
+_else_0x08d7                      CALLI                             _updateBrowser              ; gosub updateBrowser
+
+                                  Return                                                        ; return
+
+_execOrList                       PUSH                              
+                                  LDW                               _runStrAddr
+                                  SUBI                              1
+                                  PEEK                              
+                                  XORI                              1
+                                  BNE                               _else_0x08f9                ; if peek(runStrAddr - 1) &&= 1
+
+                                  CALLI                             _loadApp
+                                  CALLI                             _endif_0x0907               ; gosub loadApp
+
+_else_0x08f9                      LDW                               _runStrAddr
+                                  STW                               strSrcAddr
+                                  CALLI                             _page_0x0ca0
+_page_0x0ca0                      LDWI                              0x7aa0
+                                  StringCopy                                                    ; pathName$ = string$(runStrAddr)
+
+_endif_0x0907                     Return                                                        ; return
+
+_listSDCard                       PUSH                              
+                                  LDI                               1
+                                  STW                               _commsSize                  ; commsSize = 1
+
+                                  LDWI                              31983
+                                  STW                               register0
+                                  LDI                               1
+                                  POKE                              register0                   ; poke @commsCmd, 1
+
+                                  CALLI                             _sendCommsCmd               ; gosub sendCommsCmd
+
+                                  Return                                                        ; return
+
+_closeSDCard                      PUSH                              
+                                  LDI                               1
+                                  STW                               _commsSize                  ; commsSize = 1
+
+                                  LDWI                              31983
+                                  STW                               register0
+                                  LDI                               4
+                                  POKE                              register0                   ; poke @commsCmd, 4
+
+                                  CALLI                             _sendCommsCmd               ; gosub sendCommsCmd
+
+                                  Return                                                        ; return
+
+_initialise                       PUSH                              
+                                  LDI                               0x34
+                                  STW                               varAddress
+                                  ResetVars                                                     ; init vars @commsSize
+
+                                  CALLI                             _getRomType                 ; gosub getRomType
+
+                                  LDWI                              31983
+                                  STW                               _commsAddr                  ; commsAddr = @commsCmd
+
+                                  LDI                               2
+                                  STW                               graphicsMode
+                                  ScanlineMode                      
+                                  LDWI                              16160
+                                  STW                               fgbgColour
+                                  ResetVideoTable                   
+                                  ClearVertBlinds                                               ; mode 2 : set FGBG_COLOUR, &h3F20 : cls INIT : cls
+
+                                  Return                                                        ; return
+
+                                  HALT                                                          ; END
+
+
+
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+;* Internal runtime, DO NOT MODIFY PAST THIS POINT, modifications must be made in the original include files                            *
+;****************************************************************************************************************************************
+;****************************************************************************************************************************************
+
+romCheck                          EQU     0x62e8
+romExec                           EQU     0x64a0
+romRead                           EQU     0x61bf
+convertLtOp                       EQU     0x61b6
+convertGtOp                       EQU     0x61ad
+convert8Arr2d                     EQU     0x68a1
+resetVars                         EQU     0x63a4
+integerMin                        EQU     0x62ac
+integerMax                        EQU     0x61f0
+shiftRight1bit                    EQU     0x67a0
+gosubNumericLabel                 EQU     0x65cd
+scanlineMode                      EQU     0x61c8
+waitVBlank                        EQU     0x61a5
+waitVBlanks                       EQU     0x63cc
+resetVideoFlags                   EQU     0x62a0
+resetVideoTable                   EQU     0x66a3
+initClearFuncs                    EQU     0x61e1
+clearVertBlinds                   EQU     0x64cd
+clearCursorRow                    EQU     0x65a1
+printInit                         EQU     0x62bb
+printText                         EQU     0x62d1
+printChar                         EQU     0x68ab
+printClip                         EQU     0x63b4
+printSpc                          EQU     0x63e4
+atTextCursor                      EQU     0x64a8
+newLineScroll                     EQU     0x67aa
+stringCopy                        EQU     0x61d2
+stringCmp                         EQU     0x66c3
+
+
+; do *NOT* use register4 to register7 during time slicing
+realTimeAddr        EQU     register0
+realTimeProc0       EQU     register1
+realTimeProc1       EQU     register2
+realTimeProc2       EQU     register3
+numericLabel        EQU     register0
+defaultLabel        EQU     register1
+lutLabs             EQU     register2
+lutAddrs            EQU     register3
+lutIndex            EQU     register8
+romType             EQU     register0
+romErrAddr          EQU     register1
+romErrPixel         EQU     register2
+romReadAddr         EQU     register0
+
+
+romCheck            LD      giga_romType
+                    ANDI    0xFC
+                    SUBW    romType
+                    BGE     romC_return
+                    LDWI    giga_vram + giga_yres/2*256 + giga_xres/2
+                    STW     romErrAddr
+                    
+romC_loop           LD      romErrPixel
+                    POKE    romErrAddr
+                    INC     romErrPixel
+                    BRA     romC_loop                       ; flash center pixel indicating rom error
+                    
+romC_return         RET                    
+
+
+romExec             STW     giga_vLR
+                    LDI     SYS_Exec_88                     ; address < 0x0100 so use LDI
+                    STW     giga_sysFn
+                    SYS     88                              ; doesn't return from here!
+
+
+romRead             LDI     SYS_ReadRomDir_v5_80            ; address < 0x0100 so use LDI
+                    STW     giga_sysFn
+                    LDW     romReadAddr
+                    SYS     80
+                    RET
+
+
+                    ; convert less than into a boolean
+convertLtOp         BLT     convertLt_1
+                    LDI     0
+                    RET
+convertLt_1         LDI     1
+                    RET
+
+
+                    ; convert greater than into boolean
+convertGtOp         BGT     convertGt_1
+                    LDI     0
+                    RET
+convertGt_1         LDI     1
+                    RET
+
+
+cpySrcAddr          EQU     register0
+cpyDstAddr          EQU     register1
+cpyCount            EQU     register2
+cpyLoaderLut        EQU     register3
+regsWork            EQU     giga_sysArg4                        ; use SYS arg registers to stop conflicts with time slicing/vblanks
+regsAddr            EQU     giga_sysArg6                        ; use SYS arg registers to stop conflicts with time slicing/vblanks
+
+
+convert8Arr2d       ADDW    memIndex0
+                    ADDW    memIndex0
+                    DEEK
+                    ADDW    memIndex1
+                    STW     memAddr
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing
+xreset              EQU     register0
+xcount              EQU     register1
+ycount              EQU     register2
+treset              EQU     register3
+breset              EQU     register8
+top                 EQU     register9
+bot                 EQU     register10
+vramAddr            EQU     register11
+evenAddr            EQU     register12
+clsAddress          EQU     register13
+clsLines            EQU     register14
+varAddress          EQU     register13
+clrAddress          EQU     register13
+clrLines            EQU     register14
+clrWidth            EQU     register15
+
+
+resetVars           LDI     0
+                    DOKE    varAddress
+                    INC     varAddress
+                    INC     varAddress
+                    LD      varAddress
+                    XORI    giga_One                        ; end of user vars
+                    BNE     resetVars
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing
+intSrcA             EQU     register0
+intSrcB             EQU     register1
+intSrcX             EQU     register2
+intSwap             EQU     register3
+intSrcAddr          EQU     register8
+intDigit            EQU     register9
+intResult           EQU     register10
+intNegative         EQU     register11
+bcdLength           EQU     register8
+bcdSrcAddr          EQU     register9
+bcdDstAddr          EQU     register10
+bcdSrcData          EQU     register11
+bcdDstData          EQU     register11          ; alias to make code less confusing
+bcdCarry            EQU     register12
+bcdBorrow           EQU     register12          ; alias to make code less confusing
+bcdValue            EQU     register0
+bcdDigit            EQU     register1
+bcdMult             EQU     register2
+
+
+integerMin          STW     intSrcB
+                    LDW     intSrcA
+                    SUBW    intSrcB
+                    BLE     integerMi_A
+                    LDW     intSrcB
+                    RET
+
+integerMi_A         LDW     intSrcA
+                    RET
+
+
+integerMax          STW     intSrcB
+                    LDW     intSrcA
+                    SUBW    intSrcB
+                    BGE     integerMa_A
+                    LDW     intSrcB
+                    RET
+
+integerMa_A         LDW     intSrcA
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing
+mathX               EQU     register8
+mathY               EQU     register9
+mathSum             EQU     register12
+mathRem             EQU     register12
+mathMask            EQU     register13
+mathSign            EQU     register14
+mathQuot            EQU     register15
+mathShift           EQU     register15
+mathBase            EQU     register10
+mathPow             EQU     register11
+mathResult          EQU     register14
+
+
+shiftRight1bit      LDWI    SYS_LSRW1_48
+                    STW     giga_sysFn
+                    LDW     mathShift
+                    SYS     48
+                    RET
+
+
+                    ; find numeric label and call it, (it had better return or welcome to lala land)
+gosubNumericLabel   PUSH
+                    LDWI    _lut_numericLabs
+                    STW     lutLabs
+                    STW     lutIndex
+                    LDWI    _lut_numericAddrs
+                    STW     lutAddrs
+                    
+gosubNL_loop        LDW     lutIndex
+                    DEEK
+                    BNE     gosubNL_cont                    ; check for 0
+                    LDW     defaultLabel
+                    BEQ     gosubNL_exit
+                    CALL    defaultLabel                    ; fetch default address and call
+                    
+gosubNL_exit        POP
+                    RET
+                    
+gosubNL_cont        SUBW    numericLabel
+                    BEQ     gosubNL_found
+                    INC     lutIndex
+                    INC     lutIndex
+                    BRA     gosubNL_loop                    ; loop through lut until found or 0
+                    
+gosubNL_found       LDW     lutIndex
+                    SUBW    lutLabs
+                    ADDW    lutAddrs
+                    DEEK
+                    CALL    giga_vAC                        ; fetch label address and call
+                    POP
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing
+graphicsMode        EQU     register0
+waitVBlankNum       EQU     register0
+
+drawHLine_x1        EQU     register0
+drawHLine_y1        EQU     register1
+drawHLine_x2        EQU     register2
+drawHLine_x4        EQU     register3
+
+drawVLine_x1        EQU     register0
+drawVLine_y1        EQU     register1
+drawVLine_y2        EQU     register2
+drawVLine_y8        EQU     register3
+
+drawLine_x1         EQU     register0
+drawLine_y1         EQU     register1
+drawLine_x2         EQU     register2
+drawLine_y2         EQU     register3
+drawLine_xy1        EQU     register0
+drawLine_xy2        EQU     register1
+drawLine_dxy1       EQU     register2
+drawLine_dxy2       EQU     register3
+drawLine_dx1        EQU     register8
+drawLine_dy1        EQU     register9
+drawLine_dx2        EQU     register10
+drawLine_dy2        EQU     register11
+drawLine_sx         EQU     register12
+drawLine_sy         EQU     register13
+drawLine_h          EQU     register14
+drawLine_num        EQU     register15
+drawLine_count      EQU     register14
+drawLine_tmp        EQU     register15
+drawLine_dx         EQU     register2
+drawLine_dy         EQU     register3
+drawLine_u          EQU     register8
+drawLine_v          EQU     register9
+drawLine_addr       EQU     register10
+drawLine_ddx        EQU     register11
+drawLine_cnt        EQU     register12
+drawLine_swp        EQU     register13
+
+drawPixel_xy        EQU     register15
+readPixel_xy        EQU     register15
+
+drawCircle_cx       EQU     register0
+drawCircle_cy       EQU     register1
+drawCircle_r        EQU     register2
+drawCircle_a        EQU     register3
+drawCircle_d        EQU     register8
+drawCircle_x        EQU     register9
+drawCircle_y        EQU     register10
+drawCircle_ch0      EQU     register11
+drawCircle_ch1      EQU     register12
+drawCircle_ch2      EQU     register13
+drawCircle_ch3      EQU     register14
+
+drawCircleF_x1      EQU     register0
+drawCircleF_y1      EQU     register1
+drawCircleF_x2      EQU     register2
+drawCircleF_cx      EQU     register15
+drawCircleF_cy      EQU     register10
+drawCircleF_r       EQU     register11
+drawCircleF_v       EQU     register8
+drawCircleF_w       EQU     register9
+
+drawRect_x1         EQU     register7
+drawRect_y1         EQU     register10
+drawRect_x2         EQU     register11
+drawRect_y2         EQU     register15
+
+drawRectF_x1        EQU     register0
+drawRectF_y1        EQU     register1
+drawRectF_x2        EQU     register2
+drawRectF_y2        EQU     register7
+
+drawPoly_mode       EQU     register14
+drawPoly_addr       EQU     register15
+
+    
+scanlineMode        LDWI    SYS_SetMode_v2_80
+                    STW     giga_sysFn
+                    LDW     graphicsMode
+                    SYS     80
+                    RET
+
+
+                    ; 179 is normally the start of vBlank, but if a vBlank routine is executing there
+                    ; is a very good chance by the time the vBlank routine is over giga_videoY will
+                    ; have progressed past 179, (by how much is nondeterministic). So instead we wait
+                    ; for the scanline before vBlank, i.e. when videoY = 0xEE, (videoTablePtr = 0x01EE)
+waitVBlank          LD      giga_videoY
+                    XORI    &HEE
+                    BNE     waitVBlank
+                    RET
+
+
+waitVBlanks         PUSH
+
+waitVB_loop0        LDW     waitVBlankNum
+                    SUBI    0x01
+                    STW     waitVBlankNum
+                    BGE     waitVB_vblank
+                    POP
+                    RET
+    
+waitVB_vblank       CALLI   waitVBlank
+
+waitVB_loop1        LD      giga_videoY         ; wait until bottom scanline, (0x01EE), is done
+                    XORI    &HEE
+                    BEQ     waitVB_loop1
+                    BRA     waitVB_loop0
+
+
+resetVideoFlags     LDI     giga_CursorX                    ; starting cursor position
+                    STW     cursorXY
+                    LDWI    ON_BOTTOM_ROW_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags                       ; reset on bottom row flag
+                    RET
+
+
+                    ; resets video table pointers
+resetVideoTable     PUSH
+                    LDI     8
+                    STW     vramAddr
+                    LDWI    giga_videoTable
+                    STW     evenAddr
+    
+resetVT_loop        LDW     vramAddr
+                    DOKE    evenAddr
+                    INC     evenAddr
+                    INC     evenAddr
+                    INC     vramAddr
+                    LD      vramAddr
+                    SUBI    giga_yres + 8
+                    BLT     resetVT_loop
+
+                    CALLI   resetVideoFlags
+                    POP
+                    RET
+
+
+
+initClearFuncs      PUSH
+                    CALLI   resetVideoFlags
+                    LDWI    SYS_SetMemory_v2_54             ; setup fill memory SYS routine
+                    STW     giga_sysFn
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value                    
+                    POP
+                    RET
+
+
+                    ; clears the viewable screen using a vertical blinds effect
+clearVertBlinds     PUSH
+                    CALLI   initClearFuncs
+                    LDI     giga_vram >> 8
+                    STW     top  
+                    
+clearVB_loopy       LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                    ; low start address
+                    LD      top
+                    ST      giga_sysArg3                    ; top line
+                    SYS     54                              ; fill memory
+    
+                    LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                    ; low start address
+                    LDWI    giga_yres - 1 + 16
+                    SUBW    top
+                    ST      giga_sysArg3                    ; bottom line
+                    SYS     54                              ; fill memory
+                    INC     top                             ; next top line
+                    LD      top
+                    SUBI    giga_yres / 2 + 8
+                    BLT     clearVB_loopy
+                    POP
+                    RET
+
+
+
+; do *NOT* use register4 to register7 during time slicing
+textStr             EQU     register0
+textNum             EQU     register0
+textBak             EQU     register0
+textHex             EQU     register1
+textSpc             EQU     register1
+textLen             EQU     register2
+textOfs             EQU     register3
+textChr             EQU     register8
+textFont            EQU     register9
+textSlice           EQU     register10
+scanLine            EQU     register11
+digitMult           EQU     register12
+digitIndex          EQU     register13
+clearLoop           EQU     register14
+    
+    
+printInit           LDWI    SYS_VDrawBits_134
+                    STW     giga_sysFn
+                    LDW     fgbgColour
+                    STW     giga_sysArg0
+                    LD      cursorXY + 1                    ; xy = peek(256+2*y)*256 + x
+                    LSLW
+                    INC     giga_vAC + 1
+                    PEEK
+                    ST      giga_sysArg4 + 1
+                    LD      cursorXY
+                    ST      giga_sysArg4                    ; xy position
+                    RET
+
+
+
+                    ; prints text string pointed to by the accumulator
+printText           PUSH
+                    STW     textStr
+                    CALLI   printInit
+
+                    ; first byte is length
+printT_char         INC     textStr                         ; next char
+                    LDW     textStr             
+                    PEEK
+                    BEQ     printT_exit                     ; check for delimiting zero
+                    ST      textChr
+                    CALLI   printChar
+                    BRA     printT_char
+                    
+printT_exit         POP
+                    RET
+
+
+
+                    ; prints char in textChr
+printChar           LD      textChr
+                    ANDI    0x7F                            ; char can't be bigger than 127
+                    SUBI    82
+                    BGE     printC_text82
+                    ADDI    50
+                    BLT     printC_exit                     ; char<32 exit
+                    STW     textChr                         ; char-32
+                    LDWI    giga_text32                     ; text font slice base address for chars 32-81
+                    BRA     printC_font
+                    
+printC_text82       STW     textChr                         ; char-82
+                    LDWI    giga_text82                     ; text font slice base address for chars 82+
+                    
+printC_font         STW     textFont
+                    LD      textChr
+                    LSLW    
+                    LSLW    
+                    ADDW    textChr
+                    ADDW    textFont
+                    STW     textFont                        ; char*5 + textFont
+                    LDI     0x05
+
+printC_slice        ST      textSlice
+                    LDW     textFont                        ; text font slice base address
+                    LUP     0x00                            ; get ROM slice
+                    ST      giga_sysArg2
+                    SYS     134                             ; draw vertical slice, SYS_VDrawBits_134, 270 - 134/2 = 0xCB
+                    INC     textFont                        ; next vertical slice
+                    INC     giga_sysArg4                    ; next x
+                    LD      textSlice
+                    SUBI    1
+                    BNE     printC_slice
+                    
+                    ST      giga_sysArg2                    ; result of printC_slice is 0
+                    SYS     134                             ; draw last blank slice
+                    INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
+                    
+                    PUSH
+                    CALLI   printClip
+                    POP
+                    
+printC_exit         RET
+
+
+printClip           LD      cursorXY
+                    ADDI    giga_xfont
+                    ST      cursorXY
+                    SUBI    giga_xres - giga_xfont          ; last possible char on line
+                    BLE     printCl_exit
+                    LDI     DISABLE_CLIP_BIT
+                    ANDW    miscFlags                       ; is text clipping disabled?
+                    BNE     printCl_exit
+                    PUSH
+                    CALLI   newLineScroll                   ; next row, scroll at bottom
+                    POP
+                    
+printCl_exit        RET
+
+
+                    ; prints textSpc spaces
+printSpc            PUSH
+                    BEQ     printS_exit
+                    ST      textSpc
+                    CALLI   printInit
+                    
+printS_loop         LDI     32
+                    STW     textChr
+                    CALLI   printChar
+                    LD      textSpc
+                    SUBI    1
+                    ST      textSpc
+                    BNE     printS_loop
+                    
+printS_exit         POP
+                    RET
+
+
+atTextCursor        LD      cursorXY
+                    SUBI    giga_xres - giga_xfont
+                    BLE     atTC_checkY
+                    LDI     0
+                    ST      cursorXY
+                    
+atTC_checkY         LD      cursorXY + 1
+                    SUBI    giga_yres - giga_yfont
+                    BLT     atTC_resbot
+                    LDI     giga_yres - giga_yfont
+                    ST      cursorXY + 1
+                    LDI     ON_BOTTOM_ROW_BIT
+                    ORW     miscFlags
+                    STW     miscFlags                       ; set on bottom row flag
+                    RET
+                    
+atTC_resbot         LDWI    ON_BOTTOM_ROW_MSK
+                    ANDW    miscFlags
+                    STW     miscFlags                       ; reset on bottom row flag
+                    RET
+
+
+
+                    ; clears the top giga_yfont lines of pixels in preparation of text scrolling
+clearCursorRow      PUSH
+                    LDWI    SYS_SetMemory_v2_54
+                    STW     giga_sysFn                      ; setup fill memory SYS routine
+                    LD      fgbgColour
+                    ST      giga_sysArg1                    ; fill value
+                    LDWI    giga_videoTable
+                    PEEK
+                    ST      giga_sysArg3                    ; row0 high byte address
+                    LDI     giga_yfont
+
+clearCR_loopy       ST      clearLoop                    
+                    LDI     giga_xres
+                    ST      giga_sysArg0
+                    LDI     0
+                    ST      giga_sysArg2                    ; low start address
+                    SYS     54                              ; fill memory
+                    INC     giga_sysArg3                    ; next line
+                    LD      clearLoop
+                    SUBI    1
+                    BNE     clearCR_loopy
+                    CALLI   printInit                       ; re-initialise the SYS registers
+                    POP
+                    RET
+
+
+                    ; print from top row to bottom row, then start scrolling 
+newLineScroll       LDI     giga_CursorX                    ; cursor x start
+                    ST      cursorXY
+                    ST      giga_sysArg4
+                    LDI     ENABLE_SCROLL_BIT
+                    ANDW    miscFlags
+                    BNE     newLS_cont0                     ; is scroll on or off?
+                    RET
+                    
+newLS_cont0         PUSH
+                    LDI     ON_BOTTOM_ROW_BIT
+                    ANDW    miscFlags                       ; is on bottom row flag?
+                    BNE     newLS_cont1
+                    LD      cursorXY + 1
+                    ADDI    giga_yfont
+                    ST      cursorXY + 1
+                    SUBI    giga_yres
+                    BLT     newLS_exit
+                    LDI     giga_yres - giga_yfont
+                    ST      cursorXY + 1
+                    
+newLS_cont1         CALLI   clearCursorRow
+                    LDWI    giga_videoTable
+                    STW     scanLine
+    
+newLS_scroll        LDW     scanLine
+                    PEEK
+                    ADDI    giga_yfont
+                    ANDI    0x7F
+                    SUBI    giga_yfont
+                    BGE     newLS_adjust
+                    ADDI    giga_yfont
+                    
+newLS_adjust        ADDI    giga_yfont
+                    POKE    scanLine
+                    INC     scanLine                        ; scanline pointers are 16bits
+                    INC     scanLine
+                    LD      scanLine
+                    SUBI    0xF0                            ; scanline pointers end at 0x01EE
+                    BLT     newLS_scroll
+        
+                    LDI     ON_BOTTOM_ROW_BIT
+                    ORW     miscFlags
+                    STW     miscFlags                       ; set on bottom row flag
+                    
+newLS_exit          CALLI   printInit                       ; re-initialise the SYS registers
+                    POP
+                    RET
+
+
+; do *NOT* use register4 to register7 during time slicing
+strChr              EQU     register0
+strAddr             EQU     register0
+strHex              EQU     register1
+strLen              EQU     register2
+strDstLen           EQU     register0
+strFinish           EQU     register0
+strSrcAddr          EQU     register1
+strDstAddr          EQU     register2
+strSrcLen           EQU     register3
+strOffset           EQU     register8
+strSrcAddr2         EQU     register9
+strTmpAddr          EQU     register10
+strLutAddr          EQU     register11
+strBakAddr          EQU     register12
+strSrcLen2          EQU     register13
+strInteger          EQU     register0
+strDigit            EQU     register1
+strMult             EQU     register3
+
+
+                    ; copy one string to another
+stringCopy          STW     strDstAddr
+
+stringCp_loop       LDW     strSrcAddr
+                    PEEK
+                    POKE    strDstAddr
+                    INC     strSrcAddr
+                    INC     strDstAddr
+                    BNE     stringCp_loop                       ; copy char until terminating char
+                    RET
+
+
+                    ; compares two strings: returns 0 for smaller, 1 for equal and 2 for larger
+stringCmp           STW     strSrcAddr2
+                    LDW     strSrcAddr
+                    PEEK
+                    STW     strSrcLen                           ; save str length
+                    LDW     strSrcAddr2
+                    PEEK
+                    STW     strSrcLen2                          ; save str length
+                    INC     strSrcAddr
+                    INC     strSrcAddr2                         ; skip lengths
+                    
+stringC_loop        LDW     strSrcAddr
+                    PEEK
+                    BEQ     stringC_equal                       ; this assumes your strings are valid, (i.e. valid length and terminating bytes)
+                    STW     strChr
+                    LDW     strSrcAddr2
+                    PEEK
+                    SUBW    strChr
+                    BLT     stringC_larger
+                    BGT     stringC_smaller
+                    INC     strSrcAddr
+                    INC     strSrcAddr2
+                    BRA     stringC_loop
+
+stringC_smaller     LDI     0
+                    RET
+                    
+stringC_equal       LDW     strSrcLen
+                    SUBW    strSrcLen2
+                    BLT     stringC_smaller
+                    BGT     stringC_larger                      ; if strings are equal, choose based on length
+                    LDI     1
+                    RET
+                    
+stringC_larger      LDI     2
+                    RET
+

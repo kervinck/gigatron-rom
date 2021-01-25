@@ -27,7 +27,7 @@ const ASM_CODE = &hD8
 ' Play all notes
 '
 30 for n=1 to 95
-31 print "Playing note",n
+31 print "Playing note ";n
 32 poke ASM_CODE+1,n+n:'$900+n*2
 33 for c=1 to 4 : p=(c LSL 8)+252
 34 poke p,  usr(ASM_CODE):'Flo

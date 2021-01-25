@@ -449,9 +449,22 @@ namespace Expression
 
     void isInComment(const std::string& input, int index, bool& output)
     {
-        if((input[index] == '\'')  ||  (index <= int(input.size()) - 3  &&  toupper((unsigned char)input[index]) == 'R'  &&  toupper((unsigned char)input[index+1]) == 'E'  &&  toupper((unsigned char)input[index+2]) == 'M'))
+        // Once a comment is found this function must instantly return when called again, otherwise the logic breaks
+        if(output) return;
+
+        if(index >= int(input.size())) return;
+    
+        // In comment if trailing a single quote or if NOT a forward char literal or if trailing a 'REM' sequence
+        if((input[index] == '\''  &&  index > int(input.size())-3)  ||  (index <= int(input.size())-3  &&  input[index] == '\''  &&  input[index+2] != '\'')  ||
+           (index <= int(input.size()) - 3  &&  toupper((unsigned char)input[index]) == 'R'  &&  toupper((unsigned char)input[index+1]) == 'E'  &&  toupper((unsigned char)input[index+2]) == 'M'))
         {
             output = true;
+
+            // Not in comment if a reverse char literal
+            if(index >= 2  &&  input[index] == '\''  &&  input[index-2] == '\'')
+            {
+                output = false;
+            }
         }
     }
 
@@ -489,7 +502,7 @@ namespace Expression
         std::string output = input;
         for(int i=0; i<int(chars.size()); i++)
         {
-            if(output.erase(std::remove(output.begin(), output.end(), chars[i]), output.end()) == output.end()) return false;
+            output.erase(std::remove(output.begin(), output.end(), chars[i]), output.end()) == output.end();
         }
 
         input = output;
@@ -970,7 +983,7 @@ namespace Expression
     }
 
     // Tokenise using a list of chars as delimiters, returns all tokens, (i.e. start, end and whole if no delimiters)
-    std::vector<std::string> tokenise(const std::string& text, const std::string& delimiterStr, bool toUpper)
+    std::vector<std::string> tokeniseMulti(const std::string& text, const std::string& delimiterStr, bool toUpper)
     {
         size_t offset0 = 0;
         size_t offset1 = SIZE_MAX;
@@ -1052,7 +1065,7 @@ namespace Expression
     }
 
     // Tokenise using any char as a delimiter, returns tokens and their offsets in original text, preserve strings
-    std::vector<std::string> tokenise(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces, bool toUpper)
+    std::vector<std::string> tokeniseOffsets(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces, bool toUpper)
     {
         std::vector<std::string> result;
         const char* str = text.c_str();
@@ -1170,7 +1183,7 @@ namespace Expression
     }
 
     // Tokenise using delimiters and double quotes, preserves strings, outputs offsets to tokens
-    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiterStr, std::vector<size_t>& offsets)
+    std::vector<std::string> tokeniseLineOffsets(const std::string& line, const std::string& delimiterStr, std::vector<size_t>& offsets)
     {
         std::string token = "";
         bool delimiterStart = true;
@@ -1402,7 +1415,7 @@ namespace Expression
 
             if(peek() != ')')
             {
-                fprintf(stderr, "Expression::factor() : Missing ')' in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
+                fprintf(stderr, "Expression::factor() : '%s:%d' : missing ')'\n", _expressionToParse.c_str(), _lineNumber + 1);
                 numeric = Numeric();
             }
             get();
@@ -1411,7 +1424,7 @@ namespace Expression
         {
             if(!number(value))
             {
-                fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
+                fprintf(stderr, "Expression::factor() : '%s:%d' : bad numeric data\n", _expressionToParse.c_str(), _lineNumber + 1);
                 numeric = Numeric();
             }
             else

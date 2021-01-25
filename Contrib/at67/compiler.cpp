@@ -40,7 +40,7 @@ namespace Compiler
     const std::vector<std::string> _sysInitNames = {"InitEqOp", "InitNeOp", "InitLeOp", "InitGeOp", "InitLtOp", "InitGtOp", "Init8Array2d", "Init8Array3d", "Init16Array2d", "Init16Array3d", "InitRealTimeStub"};
 
 
-    enum VarResult {VarError=-1, VarNotFound, VarCreated, VarUpdated, VarExists};
+    enum VarResult {VarError=-1, VarNotFound, VarCreated, VarUpdated, VarExists, VarExistsAsConst};
     enum StrResult {StrError=-1, StrNotFound, StrCreated};
     enum FloatSize {Float16=2, Float32=4};
     enum LabelResult {LabelError=-1, LabelNotFound, LabelFound};
@@ -85,6 +85,7 @@ namespace Compiler
 
     int _codeLineStart = 0;
     std::string _codeLineText;
+    std::string _codeLineModule;
 
     std::string _runtimePath = "./runtime";
     std::string _tempVarStartStr;
@@ -165,6 +166,7 @@ namespace Compiler
     const std::string& getRuntimePath(void) {return _runtimePath;}
     const std::string& getTempVarStartStr(void) {return _tempVarStartStr;}
     const std::string& getNextInternalLabel(void) {return _nextInternalLabel;}
+    int getCodeLineStart(int index) {return (_moduleLines.size()  &&  (index < int(_moduleLines.size()))) ? _moduleLines[index]._index : index;}
 
     void setCodeIsAsm(bool codeIsAsm) {_codeIsAsm = codeIsAsm;}
     void setUserCodeStart(uint16_t userCodeStart) {_userCodeStart = userCodeStart;}
@@ -318,7 +320,7 @@ namespace Compiler
     {
         if(!infile.is_open())
         {
-            fprintf(stderr, "Compiler::readInputFile() : Failed to open file : '%s'\n", filename.c_str());
+            fprintf(stderr, "Compiler::readInputFile() : Failed to open file '%s'\n", filename.c_str());
             return false;
         }
 
@@ -334,7 +336,7 @@ namespace Compiler
             lineToken = Expression::removeCommentsNotInStrings(lineToken);
             if(Expression::findMatchingBrackets(lineToken, 0, lbra, rbra, '{'))
             {
-                fprintf(stderr, "Compiler::readInputFile() : Compound statement must span multiple lines : in '%s' : on line %d\n", filename.c_str(), numLines+1);
+                fprintf(stderr, "Compiler::readInputFile() : '%s:%d' : compound statement must span multiple lines\n", filename.c_str(), numLines+1);
                 return false;
             }
 
@@ -347,7 +349,7 @@ namespace Compiler
                     std::getline(infile, lineToken);
                     if(infile.eof())
                     {
-                        fprintf(stderr, "Compiler::readInputFile() : Missing '}' : in '%s' : on line %d\n", filename.c_str(), numLines+1);
+                        fprintf(stderr, "Compiler::readInputFile() : '%s:%d' : missing '}'\n", filename.c_str(), numLines+1);
                         return false;
                     }
 
@@ -370,7 +372,7 @@ namespace Compiler
 
             if(!infile.good() && !infile.eof())
             {
-                fprintf(stderr, "Compiler::readInputFile() : Bad line : '%s' : in '%s' : on line %d\n", lineToken.c_str(), filename.c_str(), numLines+1);
+                fprintf(stderr, "Compiler::readInputFile() : '%s:%d' : bad line '%s'\n", filename.c_str(), numLines+1, lineToken.c_str());
                 return false;
             }
 
@@ -573,12 +575,12 @@ namespace Compiler
         if(_userVarsAddr >= USER_VAR_END)
         {
             _userVarsAddr = _userVarStart;
-            fprintf(stderr, "Warning: you have used the maximum number of page zero global variables : in '%s', on line %d\n", codeLine._text.c_str(), codeLineIndex); 
+            fprintf(stderr, "Compiler::createIntVar() : '%s:%d' : warning, you have used the maximum number of page zero global variables : %s\n", codeLine._moduleName.c_str(), codeLineIndex, codeLine._text.c_str()); 
         }
     }
 
     // Proc/Func local and param int vars
-    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, uint16_t address, int& varIndex)
+    void createProcIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, uint16_t address, int& varIndex)
     {
         // Create var
         varIndex = int(_integerVars.size());
@@ -606,8 +608,8 @@ namespace Compiler
     }
 
     // Global int array vars
-    void createIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, int& varIndex, VarType varType, int intSize,
-                      uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs, std::vector<uint16_t>& arrLut)
+    void createArrIntVar(const std::string& varName, int16_t data, int16_t init, CodeLine& codeLine, int codeLineIndex, bool containsVars, bool isInit, int& varIndex, VarType varType, int intSize,
+                         uint16_t address, std::vector<uint16_t>& arrSizes, const std::vector<int16_t>& arrInits, std::vector<std::vector<uint16_t>>& arrAddrs, std::vector<uint16_t>& arrLut)
     {
         // Create var
         varIndex = int(_integerVars.size());
@@ -616,7 +618,7 @@ namespace Compiler
         codeLine._varType = VarInt16;
 
         uint16_t varAddr = (varType == VarInt16) ? _userVarsAddr : address;
-        IntegerVar integerVar = {data, init, varAddr, varName, varName, codeLineIndex, varType, intSize, arrSizes, arrInits, arrAddrs, arrLut};
+        IntegerVar integerVar = {data, init, varAddr, varName, varName, codeLineIndex, varType, intSize, arrSizes, arrInits, arrAddrs, arrLut, isInit};
         _integerVars.push_back(integerVar);
 
         // Create var output
@@ -629,16 +631,6 @@ namespace Compiler
             line[LABEL_TRUNC_SIZE - 1] = ' ';
         }
         _integerVars[varIndex]._output = line;
-
-        if(varType == VarInt16)
-        {
-            _userVarsAddr += Int16;
-            if(_userVarsAddr >= USER_VAR_END)
-            {
-                _userVarsAddr = _userVarStart;
-                fprintf(stderr, "Warning: you have exceeded the maximum number of page zero global variables : in '%s', on line %d\n", codeLine._text.c_str(), codeLineIndex); 
-            }
-        }
     }
 
     VarResult createCodeVar(CodeLine& codeLine, int codeLineIndex, int& varIndex)
@@ -679,6 +671,13 @@ namespace Compiler
 
         // String variables are not handled here
         if(varName.find("$") != std::string::npos) return VarError;
+
+        std::string constName = varName;
+        if(Compiler::findConst(constName) >= 0)
+        {
+            fprintf(stderr, "Keywords::createCodeVar() : '%s:%d' : const '%s' already exists : %s\n", codeLine._moduleName.c_str(), codeLineIndex, constName.c_str(), codeLine._text.c_str());
+            return VarExistsAsConst;
+        }
 
         // Var already exists?
         varIndex = findVar(varName);
@@ -782,7 +781,7 @@ namespace Compiler
         if(input.find("\"") != std::string::npos) expressionType |= Expression::HasStrings;
 
         std::string stripped = Expression::stripStrings(input);
-        std::vector<std::string> tokens = Expression::tokenise(stripped, "-+/*%&<>=();, ", false);
+        std::vector<std::string> tokens = Expression::tokeniseMulti(stripped, "-+/*%&<>=();, ", false);
 
         // Check for pragmas
         for(int i=0; i<int(tokens.size()); i++)
@@ -906,7 +905,7 @@ namespace Compiler
         return expressionType;
     }
 
-    void updateVar(int16_t data, CodeLine& codeLine, int varIndex, bool containsVars)
+    void updateIntVar(int16_t data, CodeLine& codeLine, int varIndex, bool containsVars)
     {
         codeLine._containsVars = containsVars;
         codeLine._varIndex = varIndex;
@@ -917,11 +916,13 @@ namespace Compiler
     bool createAsmLine(const std::string& code)
     {
         std::string line, vasm = code;
+        CodeLine codeLine = _codeLines[_currentCodeLineIndex];
+
         Expression::trimWhitespace(vasm);
         std::vector<std::string> tokens = Expression::tokenise(vasm, ' ', false);
         if(tokens.size() < 1)
         {
-            fprintf(stderr, "Compiler::createAsmLine() : vASM syntax error, missing opcode : in '%s', on line %d\n", _codeLines[_currentCodeLineIndex]._text.c_str(), _currentCodeLineIndex);
+            fprintf(stderr, "Compiler::createAsmLine() : '%s:%d' : vASM syntax error, missing opcode : %s\n", codeLine._moduleName.c_str(), _currentCodeLineIndex, codeLine._text.c_str());
             return false;
         }
 
@@ -939,7 +940,7 @@ namespace Compiler
             // This is a bit of a hack, but unfortunately needed as createAsmLine is called before the keyword ENDASM can be processed
             if(opcodeStr == "ENDASM") return true;
 
-            fprintf(stderr, "Compiler::createAsmLine() : vASM syntax error, undefined opcode : in '%s', on line %d\n", _codeLines[_currentCodeLineIndex]._text.c_str(), _currentCodeLineIndex);
+            fprintf(stderr, "Compiler::createAsmLine() : '%s:%d' : vASM syntax error, undefined opcode : %s\n", codeLine._moduleName.c_str(), _currentCodeLineIndex, codeLine._text.c_str());
             return false;
         }
 
@@ -975,8 +976,8 @@ namespace Compiler
         std::string codeText = Expression::collapseWhitespaceNotStrings(text);
         codeText = Expression::removeCommentsNotInStrings(codeText);
         std::vector<size_t> offsets;
-        std::vector<std::string> tokens = Expression::tokeniseLine(codeText, " (),=", offsets);
-        codeLine = {moduleName + ": " + text, codeText, tokens, offsets, vasm, expression, onGotoGosubLut, strConcatLut, inputLut, 0, labelIndex, varIndex, VarInt16, int16Byte, vars, false, false, moduleName};
+        std::vector<std::string> tokens = Expression::tokeniseLineOffsets(codeText, " (),=", offsets);
+        codeLine = {text, codeText, tokens, offsets, vasm, expression, onGotoGosubLut, strConcatLut, inputLut, 0, labelIndex, varIndex, VarInt16, int16Byte, vars, false, false, moduleName};
         Expression::operatorReduction(codeLine._expression);
 
         // ASM keyword
@@ -1092,7 +1093,7 @@ namespace Compiler
 
         if(!infile.is_open())
         {
-            fprintf(stderr, "Compiler::initialiseMacros() : Failed to open file : '%s'\n", filename.c_str());
+            fprintf(stderr, "Compiler::initialiseMacros() : failed to open file '%s'\n", filename.c_str());
             return false;
         }
 
@@ -1137,7 +1138,7 @@ namespace Compiler
             //_macroNameEntries.erase(macroIndex);
             //_macroIndexEntries.erase(macroName);
 
-            fprintf(stderr, "Compiler::initialiseMacros() : %%MACRO %s on line %d: is missing a %%ENDM\n", macroName.c_str(), macroIndex);
+            fprintf(stderr, "Compiler::initialiseMacros() : '%s:%d' : %%MACRO '%s' is missing a %%ENDM\n", filename.c_str(), macroIndex, macroName.c_str());
             return false;
         }
 
@@ -1424,7 +1425,7 @@ namespace Compiler
         std::vector<std::string> indexTokens = Expression::tokenise(arrText, ',', true);
         if(indexTokens.size() != 2)
         {
-            fprintf(stderr, "Compiler::writeArray2d() : Number of dimensions must be equal to 2, found %d in '%s' on line %d\n", int(indexTokens.size()), codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::writeArray2d() : '%s:%d' : number of dimensions must be equal to 2, found %d : %s\n", codeLine._moduleName.c_str(), codeLineIndex, int(indexTokens.size()), codeLine._text.c_str());
             return false;
         }
 
@@ -1477,7 +1478,7 @@ namespace Compiler
         std::vector<std::string> indexTokens = Expression::tokenise(arrText, ',', true);
         if(indexTokens.size() != 3)
         {
-            fprintf(stderr, "Compiler::writeArray3d() : Number of dimensions must be equal to 3, found %d in '%s' on line %d\n", int(indexTokens.size()), codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::writeArray3d() : '%s:%d' : number of dimensions must be equal to 3, found %d : %s\n", codeLine._moduleName.c_str(), codeLineIndex, int(indexTokens.size()), codeLine._text.c_str());
             return false;
         }
 
@@ -1755,8 +1756,8 @@ namespace Compiler
         return true;
     }
 
-    // Generic expression parser
-    OperandType parseExpression(int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric)
+    // Static expression parser
+    OperandType parseStaticExpression(int codeLineIndex, std::string& expression, std::string& operand, Expression::Numeric& numeric)
     {
         if(!Expression::parse(expression, codeLineIndex, numeric)) return OperandInvalid;
 
@@ -1858,7 +1859,7 @@ namespace Compiler
         return false;
     }
 
-    bool checkForGosubLabel(const std::string& code, int lineNumber)
+    bool checkForGosubLabel(const std::string& moduleName, const std::string& code, int lineNumber)
     {
         std::vector<std::string> tokens = Expression::tokeniseLine(code, " :=");
         for(int i=0; i<int(tokens.size()); i++)
@@ -1867,7 +1868,7 @@ namespace Compiler
             {
                 if(i+1 >= int(tokens.size()))
                 {
-                    fprintf(stderr, "Compiler::checkForGosubLabel() : missing label after GOSUB in '%s' on line %d\n", code.c_str(), lineNumber + 1);
+                    fprintf(stderr, "Compiler::checkForGosubLabel() : '%s:%d' : missing label after GOSUB in '%s'\n", moduleName.c_str(), lineNumber + 1, code.c_str());
                     return false;
                 }
                 _gosubLabels.push_back(tokens[i+1]);
@@ -1877,7 +1878,7 @@ namespace Compiler
         return true;
     }
 
-    LabelResult checkForLabel(std::string& code, int lineNumber, const std::string& moduleName)
+    LabelResult checkForLabel(const std::string& moduleName, std::string& code, int lineNumber)
     {
         Label label;
         CodeLine codeLine;
@@ -1902,13 +1903,13 @@ namespace Compiler
 
             if(code.size() - (space + 1) <= 2)
             {
-                fprintf(stderr, "Compiler::checkForLabel() : line number cannot exist on its own : '%s' : on line %d\n", code.c_str(), lineNumber + 1);
+                fprintf(stderr, "Compiler::checkForLabel() : '%s:%d' : line number cannot exist on its own in '%s'\n", moduleName.c_str(), lineNumber + 1, code.c_str());
                 return LabelError;
             }
 
             if(code[0] == '0')
             {
-                fprintf(stderr, "Compiler::checkForLabel() : line number cannot be zero or start with zero : '%s' : on line %d\n", code.c_str(), lineNumber + 1);
+                fprintf(stderr, "Compiler::checkForLabel() : '%s:%d' : line number cannot be zero or start with zero in '%s'\n", moduleName.c_str(), lineNumber + 1, code.c_str());
                 return LabelError;
             }
 
@@ -1965,7 +1966,7 @@ namespace Compiler
                     }
                 }
 
-                // Check for label without code, (create dummy codeline for labels without code, so that codeLine count remains consistant)
+                // Check for label without code, (create dummy codeLine for labels without code, so that codeLine count remains consistant)
                 if(!validCode)
                 {
                     _nonNumericLabelIndex = _currentLabelIndex;
@@ -2037,7 +2038,7 @@ namespace Compiler
         std::ifstream infile(modulePath);
         if(!infile.is_open())
         {
-            fprintf(stderr, "Compiler::loadModule() : Failed to open module %s\n", moduleName.c_str());
+            fprintf(stderr, "Compiler::loadModule() : failed to open module %s\n", moduleName.c_str());
             return false;
         }
 
@@ -2055,7 +2056,7 @@ namespace Compiler
         {
             if(moduleFile == _moduleLines[i]._name)
             {
-                fprintf(stderr, "Compiler::loadModule() : Module %s already loaded\n", moduleName.c_str());
+                fprintf(stderr, "Compiler::loadModule() : module %s already loaded\n", moduleName.c_str());
                 return false;
             }
         }
@@ -2099,7 +2100,7 @@ namespace Compiler
             {
                 if(tokens.size() < 2  ||  tokens.size() > 2)
                 {
-                    fprintf(stderr, "Compiler::parseModules() : Syntax error, use 'MODULE \"<module name>\"', in %s on %d\n", input[j]._text.c_str(), j);
+                    fprintf(stderr, "Compiler::parseModules() : '%s:%d' : syntax error, use 'MODULE \"<module name>\"'\n", input[j]._text.c_str(), j);
                     return false;
                 }
 
@@ -2135,7 +2136,7 @@ namespace Compiler
         {
             if(!input[i]._parse) continue;
 
-            if(!checkForGosubLabel(input[i]._text, i)) return false;
+            if(!checkForGosubLabel(_moduleLines[i]._name, input[i]._text, i)) return false;
         }
 
         // All labels and code lines
@@ -2143,13 +2144,13 @@ namespace Compiler
         {
             if(!input[i]._parse)
             {
-                // Create dummy codeline for pragmas, so that codeLine count remains consistant
+                // Create dummy codeLine for pragmas, so that codeLine count remains consistant
                 CodeLine codeLine;
-                if(createCodeLine("'PRAGMA", 0, -1, -1, Expression::Int16Both, false, codeLine, MODULE_MAIN)) _codeLines.push_back(codeLine);
+                if(createCodeLine("", 0, -1, -1, Expression::Int16Both, false, codeLine, MODULE_MAIN)) _codeLines.push_back(codeLine);
                 continue;
             }
 
-            switch(checkForLabel(input[i]._text, i, _moduleLines[i]._name))
+            switch(checkForLabel(_moduleLines[i]._name, input[i]._text, i))
             {
                 case LabelFound:    break;
                 case LabelNotFound: break;
@@ -2164,39 +2165,6 @@ namespace Compiler
 
         return true;
     }
-
-#if 0
-    // TODO: make this a thing, right now vars can NOT be in a seperate parse to the code, (an intermediate data structure such as an Abstract Syntax Tree, would have made this trivial)
-    bool parseVars(void)
-    {
-        // Parse code creating vars, (BASIC code lines were created in ParseLabels())
-        for(int i=0; i<int(_codeLines.size()); i++)
-        {
-            // Make a local copy, otherwise original tokens are destroyed
-            CodeLine codeline;
-
-            // Tokenise and parse multi-statement lines
-            std::vector<std::string> tokens = Expression::tokenise(_codeLines[i]._code, ':', false);
-            for(int j=0; j<int(tokens.size()); j++)
-            {
-                createCodeLine(tokens[j], 0, _codeLines[i]._labelIndex, -1, Expression::Int16Both, false, codeline);
-                if(_codeLines[i]._dontParse) break;
-
-                // Skip the following keywords
-                std::string token = tokens[j];
-                Expression::strToUpper(token);
-                if(token.find("CONST") != std::string::npos  ||  token.find("DIM") != std::string::npos  ||  token.find("DEF") != std::string::npos) continue;
-
-                // Create vars and vasm
-                int varIndex = -1, strIndex = -1;
-                createCodeVar(codeline, i, varIndex);
-                createCodeStr(codeline, i, strIndex);
-            }
-        }
-
-        return true;
-    }
-#endif
 
     // Get or create string
     int getOrCreateString(CodeLine& codeLine, int codeLineIndex, const std::string& str, std::string& name, uint16_t& address, uint8_t maxSize, bool constString, VarType varType)
@@ -2232,8 +2200,7 @@ namespace Compiler
                 // Allocate RAM for string + length and delimiter bytes
                 if(!Memory::getFreeRAM(Memory::FitDescending, strLength + 2, USER_CODE_START, _stringsStart, address))
                 {
-                    fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d, in '%s' on line %d\n", name.c_str(), str.c_str(), strLength + 2, 
-                                                                                                                                          codeLine._text.c_str(), codeLineIndex);
+                    fprintf(stderr, "Compiler::getOrCreateString() : '%s:%d' : not enough RAM for string %s='%s' of size %d : %s\n", codeLine._moduleName.c_str(), codeLineIndex, name.c_str(), str.c_str(), strLength + 2, codeLine._text.c_str());
                     return -1;
                 }
 
@@ -2251,8 +2218,7 @@ namespace Compiler
             // Allocate RAM for string + length and delimiter bytes
             if(!Memory::getFreeRAM(Memory::FitDescending, maxSize + 2, USER_CODE_START, _stringsStart, address))
             {
-                fprintf(stderr, "Compiler::getOrCreateString() : Not enough RAM for string %s='%s' of size %d, in '%s' on line %d\n", name.c_str(), str.c_str(), maxSize + 2,
-                                                                                                                                      codeLine._text.c_str(), codeLineIndex);
+                fprintf(stderr, "Compiler::getOrCreateString() : '%s:%d' : not enough RAM for string %s='%s' of size %d : %s\n", codeLine._moduleName.c_str(), codeLineIndex, name.c_str(), str.c_str(), maxSize + 2, codeLine._text.c_str());
                 return -1;
             }
 
@@ -2317,22 +2283,20 @@ namespace Compiler
     }
 
     // Create an array of strings
-    int createStringArray(CodeLine& codeLine, int codeLineIndex, std::string& name, uint8_t size, std::vector<std::string>& arrInits, std::vector<uint16_t>& arrAddrs)
+    int createStringArray(CodeLine& codeLine, int codeLineIndex, const std::string& name, uint8_t size, bool isInit, std::vector<std::string>& arrInits, std::vector<uint16_t>& arrAddrs)
     {
         int index = -1;
 
         if(size > USER_STR_SIZE)
         {
-            fprintf(stderr, "Compiler::createStringArray() : Length %d of string is larger than maximum of %d, in '%s' on line %d\n", size, USER_STR_SIZE,
-                                                                                                                                      codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::createStringArray() : '%s:%d' : length %d of string is larger than maximum of %d : %s\n", codeLine._moduleName.c_str(), codeLineIndex, size, USER_STR_SIZE, codeLine._text.c_str());
             return -1;
         }
 
         bool constArray = (size == 0);
         if(constArray  &&  arrInits.size() != arrAddrs.size())
         {
-            fprintf(stderr, "Compiler::createStringArray() : CONST array initialisers missing, found %d, expecting %d, in '%s' on line %d\n", int(arrInits.size()), int(arrAddrs.size()),
-                                                                                                                                              codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Compiler::createStringArray() : '%s:%d' : CONST array initialisers missing, found %d, expecting %d : %s\n", codeLine._moduleName.c_str(), codeLineIndex, int(arrInits.size()), int(arrAddrs.size()), codeLine._text.c_str());
             return -1;
         }
 
@@ -2342,8 +2306,7 @@ namespace Compiler
             uint8_t strSize = uint8_t(((constArray) ? arrInits[i].size() : size));
             if(!Memory::getFreeRAM(Memory::FitDescending, strSize + 2, USER_CODE_START, _arraysStart, arrAddrs[i]))
             {
-                fprintf(stderr, "Compiler::createStringArray() : Not enough RAM for string %s of size %d, in '%s' on line %d\n", name.c_str(), strSize + 2,
-                                                                                                                                 codeLine._text.c_str(), codeLineIndex);
+                fprintf(stderr, "Compiler::createStringArray() : '%s:%d' : not enough RAM for string %s of size %d : %s\n", codeLine._moduleName.c_str(), codeLineIndex, name.c_str(), strSize + 2, codeLine._text.c_str());
                 return -1;
             }
         }
@@ -2353,7 +2316,7 @@ namespace Compiler
         int arraySize = int(arrAddrs.size())*2;
         if(!Memory::getFreeRAM(Memory::FitDescending, arraySize, USER_CODE_START, _arraysStart, address, false)) // arrays do not need to be contained within pages
         {
-            fprintf(stderr, "Keywords::createStringArray() : Not enough RAM for int array of size %d in '%s' on line %d\n", arraySize, codeLine._text.c_str(), codeLineIndex);
+            fprintf(stderr, "Keywords::createStringArray() : '%s:%d' : not enough RAM for int array of size %d : %s\n", codeLine._moduleName.c_str(), codeLineIndex, arraySize, codeLine._text.c_str());
             return -1;
         }
 
@@ -2361,7 +2324,7 @@ namespace Compiler
         // Max string size = 0 so compiler can differentiate between const and non const string arrays, (can't set _constant to true!)
         const std::string text(size, ' ');
         uint8_t maxSize = (constArray) ? 0 : USER_STR_SIZE;
-        StringVar stringVar = {size, maxSize, address, text, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), VarStr2, -1, false, arrInits, arrAddrs};
+        StringVar stringVar = {size, maxSize, address, text, name, "_" + name + std::string(LABEL_TRUNC_SIZE - name.size() - 1, ' '), VarStr2, -1, false, arrInits, arrAddrs, isInit};
         _stringVars.push_back(stringVar);
         index = int(_stringVars.size()) - 1;
 
@@ -2400,7 +2363,7 @@ namespace Compiler
 
     void emitStringAddress(const Expression::Numeric& numeric, uint16_t address)
     {
-        if(numeric._varType == Expression::Str2Var)
+        if(numeric._varType == Expression::Str2Var  ||  numeric._varType == Expression::TmpStrAddr)
         {
             emitVcpuAsm("LDW", Expression::byteToHexString(uint8_t(getTempVarStart())), false);
         }
@@ -2450,8 +2413,9 @@ namespace Compiler
     void setCurrentCodeLine(void)
     {
         // Module line, Pragma parsing happens before any code has been parsed, so _codeLines[] may be empty
-        _codeLineText = (int(_codeLines.size()) > _currentCodeLineIndex) ? _codeLines[_currentCodeLineIndex]._text : "PRAGMA";
-        _codeLineStart = (_moduleLines.size()  &&  (_currentCodeLineIndex < int(_moduleLines.size()))) ? _moduleLines[_currentCodeLineIndex]._index : _currentCodeLineIndex;
+        _codeLineStart = getCodeLineStart(_currentCodeLineIndex);
+        _codeLineText = (int(_codeLines.size()) > _currentCodeLineIndex) ? _codeLines[_currentCodeLineIndex]._code : "PRAGMA";
+        _codeLineModule = (int(_moduleLines.size()) > _currentCodeLineIndex) ? _moduleLines[_currentCodeLineIndex]._name : "MAIN";
     }
 
     bool number(double& value)
@@ -2513,7 +2477,7 @@ namespace Compiler
 
         if(!peek(true)  ||  peek(true) != '"')
         {
-            fprintf(stderr, "Compiler::getString() : Syntax error in string '%s' in '%s' on line %d\n", text.c_str(), _codeLineText.c_str(), _codeLineStart);
+            fprintf(stderr, "Compiler::getString() : '%s:%d' : syntax error in string '%s' : '%s'\n", _codeLineModule.c_str(), _codeLineStart, text.c_str(), _codeLineText.c_str());
             return Expression::Numeric();
         }
 
@@ -2529,13 +2493,10 @@ namespace Compiler
         std::string params;
         int indices[MAX_ARRAY_DIMS] = {0};
 
-        // Need to set the correct code line and code line index before parsing for correct error reporting, (takes into account pragmas and modules)
-        setCurrentCodeLine();
-
         std::string varName = Expression::getExpression();
         if(varName.size()  &&  !isalpha(varName[0]))
         {
-            fprintf(stderr, "Compiler::sizeOf() : Syntax error in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
+            fprintf(stderr, "Compiler::sizeOf() : '%s:%d' : syntax error : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
             return Expression::Numeric();
         }
 
@@ -2548,7 +2509,7 @@ namespace Compiler
             indexTokens = Expression::tokenise(params, ',', true);
             if(indexTokens.size() < 1  ||  indexTokens.size() > MAX_ARRAY_DIMS)
             {
-                fprintf(stderr, "Compiler::addressOf() : Wrong number of indicies in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
+                fprintf(stderr, "Compiler::addressOf() : '%s:%d' : wrong number of indicies : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
                 return Expression::Numeric();
             }
 
@@ -2566,10 +2527,10 @@ namespace Compiler
 
                 std::string operand;
                 Expression::Numeric numeric; // = expression(); // TODO: Find out why expression() can't be called instead of parseExpression()
-                if(parseExpression(_currentCodeLineIndex, token, operand, numeric) == OperandInvalid) return Expression::Numeric();
+                if(parseStaticExpression(_currentCodeLineIndex, token, operand, numeric) == OperandInvalid) return Expression::Numeric();
                 if(numeric._varType != Expression::Number)
                 {
-                    fprintf(stderr, "Compiler::addressOf() : Indicies must be literal expressions in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
+                    fprintf(stderr, "Compiler::addressOf() : '%s:%d' : indicies must be literal expressions : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
                     return Expression::Numeric();
                 }
 
@@ -2577,7 +2538,7 @@ namespace Compiler
                 indices[i + MAX_ARRAY_DIMS - indexTokens.size()] = int16_t(std::lround(numeric._value));
                 if(indices[i + MAX_ARRAY_DIMS - indexTokens.size()] < 0)
                 {
-                    fprintf(stderr, "Compiler::addressOf() : Indicies must be >= 0 in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
+                    fprintf(stderr, "Compiler::addressOf() : '%s:%d' : indicies must be >= 0\n : %s", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
                     return Expression::Numeric();
                 }
             }
@@ -2619,7 +2580,7 @@ namespace Compiler
                 int dim = _integerVars[varIndex]._arrSizes[i];
                 if(indices[i] > dim - 1)
                 {
-                    fprintf(stderr, "Compiler::addressOf() : Index %d:%d greater than array dimension %d:%d in '%s' on line %d\n", i, indices[i], i, dim, _codeLineText.c_str(), _codeLineStart);
+                    fprintf(stderr, "Compiler::addressOf() : '%s:%d' : index %d:%d greater than array dimension %d:%d : %s\n", _codeLineModule.c_str(), _codeLineStart, i, indices[i], i, dim, _codeLineText.c_str());
                     return Expression::Numeric();
                 }
             }
@@ -2656,7 +2617,8 @@ namespace Compiler
 
                         default:
                         {
-                            fprintf(stderr, "Compiler::addressOf() : Too many indices for string array '%s(%s)' in '%s' on line %d\n", _stringVars[strIndex]._name.c_str(), params.c_str(), _codeLineText.c_str(), _codeLineStart);
+                            fprintf(stderr, "Compiler::addressOf() : '%s:%d' : too many indices for string array '%s(%s) : %s'\n", _codeLineModule.c_str(), _codeLineStart, _stringVars[strIndex]._name.c_str(), params.c_str(),
+                                                                                                                                   _codeLineText.c_str());
                             return Expression::Numeric();
                         }
                         break;
@@ -2676,7 +2638,8 @@ namespace Compiler
 
                         default:
                         {
-                            fprintf(stderr, "Compiler::addressOf() : Too many indices for string array '%s(%s)' in '%s' on line %d\n", _stringVars[strIndex]._name.c_str(), params.c_str(), _codeLineText.c_str(), _codeLineStart);
+                            fprintf(stderr, "Compiler::addressOf() : '%s:%d' : too many indices for string array '%s(%s) : %s'\n", _codeLineModule.c_str(), _codeLineStart, _stringVars[strIndex]._name.c_str(), params.c_str(),
+                                                                                                                                   _codeLineText.c_str());
                             return Expression::Numeric();
                         }
                         break;
@@ -2699,7 +2662,7 @@ namespace Compiler
         }
         else
         {
-            fprintf(stderr, "Compiler::addressOf() : Syntax error in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
+            fprintf(stderr, "Compiler::addressOf() : '%s:%d' : syntax error : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
             return Expression::Numeric();
         }
 
@@ -2709,13 +2672,10 @@ namespace Compiler
 
     Expression::Numeric sizeOf(void)
     {
-        // Need to set the correct code line and code line index before parsing for correct error reporting, (takes into account pragmas and modules)
-        setCurrentCodeLine();
-
         std::string varName = Expression::getExpression();
         if(varName.size()  &&  !isalpha(varName[0]))
         {
-            fprintf(stderr, "Compiler::sizeOf() : Syntax error in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
+            fprintf(stderr, "Compiler::sizeOf() : '%s:%d' : syntax error : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
             return Expression::Numeric();
         }
 
@@ -2785,7 +2745,7 @@ namespace Compiler
         }
         else
         {
-            fprintf(stderr, "Compiler::sizeOf() : Syntax error in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
+            fprintf(stderr, "Compiler::sizeOf() : '%s:%d' : syntax error : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
             return Expression::Numeric();
         }
 
@@ -2798,7 +2758,7 @@ namespace Compiler
         std::string funcText = Expression::getExpression();
         if(!Expression::findMatchingBrackets(funcText, 0, lbra, rbra))
         {
-            fprintf(stderr, "Compiler::userFunc() : Parenthesis error in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
+            fprintf(stderr, "Compiler::userFunc() : '%s:%d' : parenthesis error : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
             return false;
         }
 
@@ -2806,13 +2766,13 @@ namespace Compiler
         std::vector<std::string> params = Expression::tokenise(funcText, ',', true);
         if(params.size() == 0)
         {
-            fprintf(stderr, "Compiler::userFunc() : Syntax error, need at least one parameter, in '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
+            fprintf(stderr, "Compiler::userFunc() : '%s:%d' : syntax error, need at least one parameter : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
             return false;
         }
         int paramsSize = int(getDefFunctions()[name]._params.size());
         if(paramsSize != int(params.size()))
         {
-            fprintf(stderr, "Compiler::userFunc() : Syntax error, wrong number of parameters, expecting %d, in '%s' on line %d\n", paramsSize, _codeLineText.c_str(), _codeLineStart);
+            fprintf(stderr, "Compiler::userFunc() : '%s:%d' : syntax error, wrong number of parameters, expecting %d : %s\n", _codeLineModule.c_str(), _codeLineStart, paramsSize, _codeLineText.c_str());
             return false;
         }
         std::string func = getDefFunctions()[name]._function;
@@ -2835,6 +2795,8 @@ namespace Compiler
         double value = 0;
         Expression::Numeric numeric;
 
+        setCurrentCodeLine();
+
         // Fast boolean conditions, (condition must be enclosed within paranthesis. e.g. '&(a), &(a XOR b), etc')
         if(Expression::find(" &("))
         {
@@ -2853,7 +2815,7 @@ namespace Compiler
 
             if(peek(true) != ')')
             {
-                fprintf(stderr, "Compiler::factor() : Found '%c' : expecting ')' in '%s' on line %d\n", peek(true), Expression::getExpressionToParse(), _codeLineStart);
+                fprintf(stderr, "Compiler::factor() : '%s:%d' : found '%c' expecting ')'\n", Expression::getExpressionToParse(), _codeLineStart, peek(true));
                 numeric = Expression::Numeric();
             }
             get(true);
@@ -2880,7 +2842,7 @@ namespace Compiler
 
             if(peek(true) != ')')
             {
-                fprintf(stderr, "Compiler::factor() : Found '%c' : expecting ')' in '%s' on line %d\n", peek(true), Expression::getExpressionToParse(), _codeLineStart);
+                fprintf(stderr, "Compiler::factor() : '%s:%d' : found '%c' expecting ')'\n", Expression::getExpressionToParse(), _codeLineStart, peek(true));
                 numeric = Expression::Numeric();
             }
             get(true);
@@ -2894,7 +2856,34 @@ namespace Compiler
             }
             else
             {
-                fprintf(stderr, "Compiler::factor() : Syntax error in number '%s' on line %d\n", _codeLineText.c_str(), _codeLineStart);
+                fprintf(stderr, "Compiler::factor() : '%s:%d' : syntax error in number literal : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
+                numeric = Expression::Numeric();
+            }
+        }
+        // Char literals
+        else if(peek(true) == '\'')
+        {
+            get(true);
+
+            char chr = 0;
+            bool validChar = false;
+            if((chr = peek(false)) != 0) // don't skip spaces as char literal can be a space
+            {
+                if(chr >= 32)
+                {
+                    get(false); // don't skip spaces as char literal can be a space
+                    if(peek(false) == '\'') // don't skip spaces as char literal must be a single char
+                    {
+                        validChar = true;
+                        numeric = Expression::Numeric(double(chr), -1, true, false, false, Expression::Number, Expression::BooleanCC, Expression::Int16Both, std::string(""), std::string(""));
+                        get(false); // don't skip spaces as char literal must be a single char
+                    }
+                }
+            }
+
+            if(!validChar)
+            {
+                fprintf(stderr, "Compiler::factor() : '%s:%d' : syntax error in character literal : %s\n", _codeLineModule.c_str(), _codeLineStart, _codeLineText.c_str());
                 numeric = Expression::Numeric();
             }
         }
@@ -2917,215 +2906,223 @@ namespace Compiler
         // Unary operators
         else if(peek(true) == '+')
         {
-            get(true); numeric = factor(0); numeric = Operators::POS(numeric, _codeLineText, _codeLineStart);
+            get(true); numeric = factor(0); numeric = Operators::POS(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(peek(true) == '-')
         {
-            get(true); numeric = factor(0); numeric = Operators::NEG(numeric, _codeLineText, _codeLineStart);
+            get(true); numeric = factor(0); numeric = Operators::NEG(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::find("NOT "))
         {
-            numeric = factor(0); numeric = Operators::NOT(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::NOT(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         // Functions with no parameters
         else if(Expression::find("TIME$"))
         {
-            numeric = Functions::TIME$(numeric, _codeLineText, _codeLineStart);
+            numeric = Functions::TIME$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         // Functions
         else if(Expression::findFunc("PEEK"))
         {
-            numeric = factor(0); numeric = Functions::PEEK(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::PEEK(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("DEEK"))
         {
-            numeric = factor(0); numeric = Functions::DEEK(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::DEEK(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("USR"))
         {
-            numeric = factor(0); numeric = Functions::USR(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::USR(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("RND"))
         {
-            numeric = factor(0); numeric = Functions::RND(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::RND(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("URND"))
         {
-            numeric = factor(0); numeric = Functions::URND(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::URND(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("LEN"))
         {
             // Functions::IARR() needs to return an address rather than a value for LEN()
-            numeric = factor(0, true); numeric = Functions::LEN(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0, true); numeric = Functions::LEN(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("GET"))
         {
-            numeric = factor(0); numeric = Functions::GET(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::GET(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("ABS"))
         {
-            numeric = factor(0); numeric = Functions::ABS(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::ABS(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("SGN"))
         {
-            numeric = factor(0); numeric = Functions::SGN(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::SGN(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("ASC"))
         {
-            numeric = factor(0); numeric = Functions::ASC(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::ASC(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("STRCMP"))
         {
-            numeric = factor(0); numeric = Functions::STRCMP(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::STRCMP(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("BCDCMP"))
         {
-            numeric = factor(0); numeric = Functions::BCDCMP(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::BCDCMP(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("VAL"))
         {
-            numeric = factor(0); numeric = Functions::VAL(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::VAL(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("LUP"))
         {
-            numeric = factor(0); numeric = Functions::LUP(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::LUP(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("ADDR"))
         {
             // Functions::IARR() needs to return an address rather than a value for ADDR()
-            numeric = factor(0, true); numeric = Functions::ADDR(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0, true); numeric = Functions::ADDR(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("POINT"))
         {
-            numeric = factor(0); numeric = Functions::POINT(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::POINT(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("MIN"))
         {
-            numeric = factor(0); numeric = Functions::MIN(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::MIN(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("MAX"))
         {
-            numeric = factor(0); numeric = Functions::MAX(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::MAX(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("CLAMP"))
         {
-            numeric = factor(0); numeric = Functions::CLAMP(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::CLAMP(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("CHR$"))
         {
-            numeric = factor(0); numeric = Functions::CHR$(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::CHR$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
+        }
+        else if(Expression::findFunc("SPC$"))
+        {
+            numeric = factor(0); numeric = Functions::SPC$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("STR$"))
         {
-            numeric = factor(0); numeric = Functions::STR$(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::STR$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
+        }
+        else if(Expression::findFunc("STRING$"))
+        {
+            numeric = factor(0); numeric = Functions::STRING$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("HEX$"))
         {
-            numeric = factor(0); numeric = Functions::HEX$(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::HEX$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("LEFT$"))
         {
-            numeric = factor(0); numeric = Functions::LEFT$(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::LEFT$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("RIGHT$"))
         {
-            numeric = factor(0); numeric = Functions::RIGHT$(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::RIGHT$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("MID$"))
         {
-            numeric = factor(0); numeric = Functions::MID$(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::MID$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("LOWER$"))
         {
-            numeric = factor(0); numeric = Functions::LOWER$(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::LOWER$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("UPPER$"))
         {
-            numeric = factor(0); numeric = Functions::UPPER$(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::UPPER$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("STRCAT$"))
         {
-            numeric = factor(0); numeric = Functions::STRCAT$(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Functions::STRCAT$(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("CEIL"))
         {
-            numeric = factor(0); numeric = Operators::CEIL(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::CEIL(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("FLOOR"))
         {
-            numeric = factor(0); numeric = Operators::FLOOR(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::FLOOR(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("POW"))
         {
-            numeric = factor(0); numeric = Operators::POWF(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::POWF(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("SQRT"))
         {
-            numeric = factor(0); numeric = Operators::SQRT(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::SQRT(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("EXP2"))
         {
-            numeric = factor(0); numeric = Operators::EXP2(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::EXP2(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("EXP"))
         {
-            numeric = factor(0); numeric = Operators::EXP(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::EXP(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("LOG10"))
         {
-            numeric = factor(0); numeric = Operators::LOG10(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::LOG10(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("LOG2"))
         {
-            numeric = factor(0); numeric = Operators::LOG2(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::LOG2(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("LOG"))
         {
-            numeric = factor(0); numeric = Operators::LOG(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::LOG(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("SIN"))
         {
-            numeric = factor(0); numeric = Operators::SIN(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::SIN(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("COS"))
         {
-            numeric = factor(0); numeric = Operators::COS(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::COS(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("TAN"))
         {
-            numeric = factor(0); numeric = Operators::TAN(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::TAN(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("ASIN"))
         {
-            numeric = factor(0); numeric = Operators::ASIN(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::ASIN(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("ACOS"))
         {
-            numeric = factor(0); numeric = Operators::ACOS(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::ACOS(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("ATAN2"))
         {
-            numeric = factor(0); numeric = Operators::ATAN2(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::ATAN2(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("ATAN"))
         {
-            numeric = factor(0); numeric = Operators::ATAN(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::ATAN(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("RAND"))
         {
-            numeric = factor(0); numeric = Operators::RAND(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::RAND(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("REV16"))
         {
-            numeric = factor(0); numeric = Operators::REV16(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::REV16(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("REV8"))
         {
-            numeric = factor(0); numeric = Operators::REV8(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::REV8(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else if(Expression::findFunc("REV4"))
         {
-            numeric = factor(0); numeric = Operators::REV4(numeric, _codeLineText, _codeLineStart);
+            numeric = factor(0); numeric = Operators::REV4(numeric, _codeLineModule, _codeLineText, _codeLineStart);
         }
         else
         {
@@ -3202,7 +3199,7 @@ namespace Compiler
                                 if(Expression::find(".HI")) int16Byte = Expression::Int16High;
                                 numeric._int16Byte = int16Byte;
 
-                                numeric = Functions::IARR(numeric, _codeLineText, _codeLineStart);
+                                numeric = Functions::IARR(numeric, _codeLineModule, _codeLineText, _codeLineStart);
                             }
                         }
                         // Vars
@@ -3237,7 +3234,7 @@ namespace Compiler
                                     numeric._params.push_back(param._params[i]);
                                 }
 
-                                numeric = Functions::SARR(numeric, _codeLineText, _codeLineStart);
+                                numeric = Functions::SARR(numeric, _codeLineModule, _codeLineText, _codeLineStart);
                             }
                         }
                         // Vars
@@ -3277,12 +3274,12 @@ namespace Compiler
 
                         if(varName.size())
                         {
-                            fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n", varName.c_str(), _codeLineText.c_str(), _codeLineStart);
+                            fprintf(stderr, "\nCompiler::factor() : '%s:%d' : found an unknown symbol '%s' : %s\n", _codeLineModule.c_str(), _codeLineStart, varName.c_str(), _codeLineText.c_str());
                         }
                         else
                         {
                             Expression::advance(-1);
-                            fprintf(stderr, "\nCompiler::factor() : Found an unknown symbol '%s' : in '%s' on line %d\n", Expression::getExpression(), _codeLineText.c_str(), _codeLineStart);
+                            fprintf(stderr, "\nCompiler::factor() : '%s:%d' : found an unknown symbol '%s' : %s\n", _codeLineModule.c_str(), _codeLineStart, Expression::getExpression(), _codeLineText.c_str());
                             Expression::advance(1);
                         }
                     }
@@ -3297,14 +3294,15 @@ namespace Compiler
     Expression::Numeric term(bool returnAddress=false)
     {
         Expression::Numeric numeric, result = factor(0, returnAddress);
-
+        if(!result._isValid) return result;
+    
         for(;;)
         {
-            if(Expression::find("**"))       {numeric = factor(0, returnAddress); result = Operators::POW(result, numeric, _codeLineText, _codeLineStart);}
-            else if(find('*'))               {numeric = factor(0, returnAddress); result = Operators::MUL(result, numeric, _codeLineText, _codeLineStart);}
-            else if(find('/'))               {numeric = factor(0, returnAddress); result = Operators::DIV(result, numeric, _codeLineText, _codeLineStart);}
-            else if(find('%'))               {numeric = factor(0, returnAddress); result = Operators::MOD(result, numeric, _codeLineText, _codeLineStart);}
-            else if(Expression::find("MOD")) {numeric = factor(0, returnAddress); result = Operators::MOD(result, numeric, _codeLineText, _codeLineStart);}
+            if(Expression::find("**"))       {numeric = factor(0, returnAddress); if(!numeric._isValid) return numeric; result = Operators::POW(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('*'))               {numeric = factor(0, returnAddress); if(!numeric._isValid) return numeric; result = Operators::MUL(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('/'))               {numeric = factor(0, returnAddress); if(!numeric._isValid) return numeric; result = Operators::DIV(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('%'))               {numeric = factor(0, returnAddress); if(!numeric._isValid) return numeric; result = Operators::MOD(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("MOD")) {numeric = factor(0, returnAddress); if(!numeric._isValid) return numeric; result = Operators::MOD(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
             else return result;
         }
     }
@@ -3312,12 +3310,13 @@ namespace Compiler
     Expression::Numeric expr(bool returnAddress=false)
     {
         Expression::Numeric numeric, result = term(returnAddress);
+        if(!result._isValid) return result;
 
         for(;;)
         {
             // Toggle string work area between lhs and rhs for '+', (no need to check that parameters are strings)
-            if(find('+'))      {numeric = term(returnAddress); result = Operators::ADD(result, numeric, _codeLineText, _codeLineStart);}
-            else if(find('-')) {numeric = term(returnAddress); result = Operators::SUB(result, numeric, _codeLineText, _codeLineStart);}
+            if(find('+'))      {numeric = term(returnAddress); if(!numeric._isValid) return numeric; result = Operators::ADD(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('-')) {numeric = term(returnAddress); if(!numeric._isValid) return numeric; result = Operators::SUB(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
 
             else return result;
         }
@@ -3326,35 +3325,36 @@ namespace Compiler
     Expression::Numeric logical(bool returnAddress=false)
     {
         Expression::Numeric numeric, result = expr(returnAddress);
+        if(!result._isValid) return result;
 
         for(;;)
         {
             // Boolean conditionals
-            if(Expression::find("=="))      {numeric = expr(returnAddress); result = Operators::EQ(result, numeric, Expression::BooleanCC, _codeLineText, _codeLineStart);}
-            else if(find('='))              {numeric = expr(returnAddress); result = Operators::EQ(result, numeric, Expression::BooleanCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("<>")) {numeric = expr(returnAddress); result = Operators::NE(result, numeric, Expression::BooleanCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("<=")) {numeric = expr(returnAddress); result = Operators::LE(result, numeric, Expression::BooleanCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find(">=")) {numeric = expr(returnAddress); result = Operators::GE(result, numeric, Expression::BooleanCC, _codeLineText, _codeLineStart);}
-            else if(find('<'))              {numeric = expr(returnAddress); result = Operators::LT(result, numeric, Expression::BooleanCC, _codeLineText, _codeLineStart);}
-            else if(find('>'))              {numeric = expr(returnAddress); result = Operators::GT(result, numeric, Expression::BooleanCC, _codeLineText, _codeLineStart);}
+            if(Expression::find("=="))      {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::EQ(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('='))              {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::EQ(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("<>")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::NE(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("<=")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LE(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find(">=")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::GE(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('<'))              {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LT(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(find('>'))              {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::GT(result, numeric, Expression::BooleanCC, _codeLineModule, _codeLineText, _codeLineStart);}
 
             // Normal conditionals
-            else if(Expression::find("&==")) {numeric = expr(returnAddress); result = Operators::EQ(result, numeric, Expression::NormalCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&="))  {numeric = expr(returnAddress); result = Operators::EQ(result, numeric, Expression::NormalCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&<>")) {numeric = expr(returnAddress); result = Operators::NE(result, numeric, Expression::NormalCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&<=")) {numeric = expr(returnAddress); result = Operators::LE(result, numeric, Expression::NormalCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&>=")) {numeric = expr(returnAddress); result = Operators::GE(result, numeric, Expression::NormalCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&<"))  {numeric = expr(returnAddress); result = Operators::LT(result, numeric, Expression::NormalCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&>"))  {numeric = expr(returnAddress); result = Operators::GT(result, numeric, Expression::NormalCC, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&==")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::EQ(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&="))  {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::EQ(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&<>")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::NE(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&<=")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LE(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&>=")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::GE(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&<"))  {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LT(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&>"))  {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::GT(result, numeric, Expression::NormalCC, _codeLineModule, _codeLineText, _codeLineStart);}
 
             // Fast conditionals
-            else if(Expression::find("&&==")) {numeric = expr(returnAddress); result = Operators::EQ(result, numeric, Expression::FastCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&&="))  {numeric = expr(returnAddress); result = Operators::EQ(result, numeric, Expression::FastCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&&<>")) {numeric = expr(returnAddress); result = Operators::NE(result, numeric, Expression::FastCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&&<=")) {numeric = expr(returnAddress); result = Operators::LE(result, numeric, Expression::FastCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&&>=")) {numeric = expr(returnAddress); result = Operators::GE(result, numeric, Expression::FastCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&&<"))  {numeric = expr(returnAddress); result = Operators::LT(result, numeric, Expression::FastCC, _codeLineText, _codeLineStart);}
-            else if(Expression::find("&&>"))  {numeric = expr(returnAddress); result = Operators::GT(result, numeric, Expression::FastCC, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&==")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::EQ(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&="))  {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::EQ(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&<>")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::NE(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&<=")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LE(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&>=")) {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::GE(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&<"))  {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LT(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("&&>"))  {numeric = expr(returnAddress); if(!numeric._isValid) return numeric; result = Operators::GT(result, numeric, Expression::FastCC, _codeLineModule, _codeLineText, _codeLineStart);}
 
             else return result;
         }
@@ -3363,18 +3363,16 @@ namespace Compiler
     Expression::Numeric expression(bool returnAddress)
     {
         Expression::Numeric numeric, result = logical(returnAddress);
-
-        // Need to set the correct code line and code line index before parsing for correct error reporting, (takes into account pragmas and modules)
-        setCurrentCodeLine();
+        if(!result._isValid) return result;
 
         for(;;)
         {
-            if(Expression::find("AND"))      {numeric = logical(returnAddress); result = Operators::AND(result, numeric, _codeLineText, _codeLineStart);}
-            else if(Expression::find("XOR")) {numeric = logical(returnAddress); result = Operators::XOR(result, numeric, _codeLineText, _codeLineStart);}
-            else if(Expression::find("OR"))  {numeric = logical(returnAddress); result = Operators::OR(result,  numeric, _codeLineText, _codeLineStart);}
-            else if(Expression::find("LSL")) {numeric = logical(returnAddress); result = Operators::LSL(result, numeric, _codeLineText, _codeLineStart);}
-            else if(Expression::find("LSR")) {numeric = logical(returnAddress); result = Operators::LSR(result, numeric, _codeLineText, _codeLineStart);}
-            else if(Expression::find("ASR")) {numeric = logical(returnAddress); result = Operators::ASR(result, numeric, _codeLineText, _codeLineStart);}
+            if(Expression::find("AND"))      {numeric = logical(returnAddress); if(!numeric._isValid) return numeric; result = Operators::AND(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("XOR")) {numeric = logical(returnAddress); if(!numeric._isValid) return numeric; result = Operators::XOR(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("OR"))  {numeric = logical(returnAddress); if(!numeric._isValid) return numeric; result = Operators::OR(result,  numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("LSL")) {numeric = logical(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LSL(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("LSR")) {numeric = logical(returnAddress); if(!numeric._isValid) return numeric; result = Operators::LSR(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
+            else if(Expression::find("ASR")) {numeric = logical(returnAddress); if(!numeric._isValid) return numeric; result = Operators::ASR(result, numeric, _codeLineModule, _codeLineText, _codeLineStart);}
 
             else return result;
         }
@@ -3384,8 +3382,12 @@ namespace Compiler
     {
         uint16_t srcAddr = 0x0000;
 
+        if(numeric._varType == Expression::StrAddr)
+        {
+            srcAddr = uint16_t(std::lround(numeric._value));
+        }
         // String assignment from temporary
-        if(numeric._varType == Expression::TmpStrVar)
+        else if(numeric._varType == Expression::TmpStrVar)
         {
             srcAddr = Compiler::getStrWorkArea();
         }
@@ -3452,18 +3454,18 @@ namespace Compiler
         int dstIndex = codeLine._varIndex;
         if(dstIndex == -1)
         {
-            fprintf(stderr, "Compiler::assignString() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+            fprintf(stderr, "Compiler::assignString() : '%s:%d' : syntax error : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
             return StrError;
         }
 
         bool isStrExpression = ((expressionType >= Expression::HasStrings)  &&  (expressionType <= Expression::IsStringExpression));
-        if(isStrExpression  ||  numeric._varType == Expression::TmpStrVar  ||  numeric._varType == Expression::Str2Var)
+        if(isStrExpression  ||  numeric._varType == Expression::StrAddr  ||  numeric._varType == Expression::TmpStrAddr  ||  numeric._varType == Expression::TmpStrVar  ||  numeric._varType == Expression::Str2Var)
         {
             // String assignment, from var or const or literal
             uint16_t srcAddr = getStringAddress(numeric);
-            if(srcAddr == 0x0000  &&  numeric._varType != Expression::Str2Var)
+            if(srcAddr == 0x0000  &&  numeric._varType != Expression::Str2Var  &&  numeric._varType != Expression::TmpStrAddr)
             {
-                fprintf(stderr, "Compiler::assignString() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+                fprintf(stderr, "Compiler::assignString() : '%s:%d' : Syntax error : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
                 return StrError;
             }
 
@@ -3485,7 +3487,7 @@ namespace Compiler
             {
                 if(!writeArrayStr(codeLine, codeLineIndex, numeric, dstIndex, srcAddr))
                 {
-                    fprintf(stderr, "Compiler::assignString() : Syntax error in '%s' on line %d\n", codeLine._text.c_str(), codeLineStart);
+                    fprintf(stderr, "Compiler::assignString() : '%s:%d' : syntax error : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
                     return StrError;
                 }
             }
@@ -3503,7 +3505,7 @@ namespace Compiler
         {
             // Expression that contains one or more vars
             bool containsVars = (expressionType & Expression::HasIntVars) || (expressionType & Expression::HasStrVars) || (expressionType & Expression::HasStrConsts);
-            updateVar(int16_t(std::lround(numeric._value)), codeLine, codeLine._varIndex, containsVars);
+            updateIntVar(int16_t(std::lround(numeric._value)), codeLine, codeLine._varIndex, containsVars);
         }
 
         // TODO: only works with Int16, fix for all var types
@@ -3592,7 +3594,8 @@ namespace Compiler
             emitVcpuAsm("PUSH", "", false, codeLineIndex);
         }
 
-        // Specific parsing requirements for most keywords, (*NOT* functions), some keywords like IF will also parse multi-statements
+        // Specific parsing requirements for most keywords, (*NOT* functions), some keywords like IF will also parse multi-statements; token[0] has to always be a valid keyword
+        bool isTokenZeroValid = false;
         for(int i=0; i<int(codeLine._tokens.size()); i++)
         {
             Keywords::KeywordFuncResult result;
@@ -3602,7 +3605,16 @@ namespace Compiler
             // Search for keyword, if found return it's statement type result
             std::string token = codeLine._tokens[i];
             Expression::strToUpper(token);
-            if(Keywords::getKeywords().find(token) != Keywords::getKeywords().end()) return Keywords::getKeywords()[token]._result;
+            if(Keywords::getKeywords().find(token) != Keywords::getKeywords().end())
+            {
+                if(i == 0) isTokenZeroValid = true;
+                if(i > 0  &&  !isTokenZeroValid)
+                {
+                    fprintf(stderr, "Compiler::createVasmCode() : '%s:%d' : syntax error in '%s' : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._tokens[0].c_str(), codeLine._text.c_str());
+                    return StatementError;
+                }
+                return Keywords::getKeywords()[token]._result;
+            }
         }
 
         int varIndexRhs = -1, constIndexRhs = -1, strIndexRhs = -1;
@@ -3637,7 +3649,7 @@ namespace Compiler
         }
         if(!Expression::parse(codeLine._expression, codeLineIndex, numeric))
         {
-            fprintf(stderr, "Compiler::createVasmCode() : Syntax error '%s' in %s on line %d\n", Expression::getExpression(), _codeLineText.c_str(), _codeLineStart);
+            //fprintf(stderr, "Compiler::createVasmCode() : '%s:%d' : syntax error in '%s'\n", codeLine._moduleName.c_str(), codeLineStart, Expression::getExpression());
             return StatementError;
         }
 
@@ -3680,7 +3692,7 @@ namespace Compiler
     StatementResult parseMultiStatements(const std::string& code, int codeLineIndex, int codeLineStart, int& varIndex, int& strIndex)
     {
         // Make a local copy, otherwise original tokens are destroyed
-        CodeLine codeline = _codeLines[codeLineIndex];
+        CodeLine codeLine = _codeLines[codeLineIndex];
 
         // Tokenise and parse multi-statement lines
         StatementResult statementResult = StatementSuccess;
@@ -3691,12 +3703,12 @@ REDO_STATEMENT:
             Functions::restart();
             Keywords::restart();
 
-            createCodeLine(tokens[j], 0, _codeLines[codeLineIndex]._labelIndex, -1, Expression::Int16Both, false, codeline, codeline._module);
+            createCodeLine(tokens[j], 0, codeLine._labelIndex, -1, Expression::Int16Both, false, codeLine, codeLine._moduleName);
 
             // Check statement matching brackets
             if(!checkMatchingBrackets(tokens[j]))
             {
-                fprintf(stderr, "Compiler::parseMultiStatements() : Syntax error, brackets do not match in '%s' on line %d\n", _codeLines[codeLineIndex]._text.c_str(), codeLineStart);
+                fprintf(stderr, "Compiler::parseMultiStatements() : '%s:%d' : syntax error, brackets do not match : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
                 statementResult = StatementError;
                 break;
             }
@@ -3704,14 +3716,14 @@ REDO_STATEMENT:
             if(_codeLines[codeLineIndex]._dontParse) return StatementSuccess;
 
             // Skip empty lines
-            if(codeline._tokens.size() == 0) continue;
+            if(codeLine._tokens.size() == 0) continue;
 
             // Create vars
-            createCodeVar(codeline, codeLineIndex, varIndex);
-            createCodeStr(codeline, codeLineIndex, strIndex);
+            if(createCodeVar(codeLine, codeLineIndex, varIndex) == VarExistsAsConst) return StatementError;
+            createCodeStr(codeLine, codeLineIndex, strIndex);
 
             // Create vasm
-            statementResult = createVasmCode(codeline, codeLineIndex, codeLineStart);
+            statementResult = createVasmCode(codeLine, codeLineIndex, codeLineStart);
             if(statementResult == StatementError) break;
 
             // Some commands, (such as FN), modify the BASIC source and cause a re-evaluation
@@ -3774,7 +3786,7 @@ REDO_STATEMENT:
         for(int i=0; i<int(_codeLines.size()); i++)
         {
             _currentCodeLineIndex = i;
-            int codeLineStart = (_moduleLines.size()  &&  (_currentCodeLineIndex < int(_moduleLines.size()))) ? _moduleLines[_currentCodeLineIndex]._index : _currentCodeLineIndex;
+            int codeLineStart = getCodeLineStart(_currentCodeLineIndex);
 
             // First line of BASIC code is always a dummy INIT line, ignore it
             if(i > 0  &&  _codeLines[i]._code.size() >= 2)
@@ -3842,7 +3854,7 @@ REDO_STATEMENT:
                     // Warn about duplicate internal labels, (should not happen)
                     if(findInternalLabel(internalLabel) > -1)
                     {
-                        fprintf(stderr, "\nCompiler::outputLabels() : Warning duplicate internal label, '%s' at '0x%04x' on line '%d'\n\n", internalLabel.c_str(), address, i);
+                        fprintf(stderr, "\nCompiler::outputLabels() : warning duplicate internal label '%s' at '0x%04x' on line '%d'\n\n", internalLabel.c_str(), address, i);
                         continue;
                     }
 
@@ -3852,7 +3864,7 @@ REDO_STATEMENT:
                     {
                         if(internalLabel.substr(1) == _labels[k]._name) //  &&  address == _labels[k]._address)
                         {
-                            fprintf(stderr, "\nCompiler::outputLabels() : Warning duplicate internal label, (if mixing ASM with BASIC then safe to ignore), '%s' at '0x%04x' on line '%d'\n\n",
+                            fprintf(stderr, "\nCompiler::outputLabels() : warning duplicate internal label, (if mixing ASM with BASIC then safe to ignore), '%s' at '0x%04x' on line '%d'\n\n",
                                             internalLabel.c_str(), address, i);
                             foundDuplicate = true;
                             break;
@@ -4006,32 +4018,37 @@ REDO_STATEMENT:
                 {
                     std::string arrName = "_" + _integerVars[varIndex]._name + "_array";
                     _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][0]) + "\n");
-                    std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
 
-                    // I array values
-                    for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                    // Don't output DB statements for an uninitialised array
+                    if(_integerVars[varIndex]._arrInit)
                     {
-                        // Single initialisation value
-                        if(_integerVars[varIndex]._arrInits.size() == 0)
+                        std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                        // I array values
+                        for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
                         {
-                            dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
-                        }
-                        // Multiple initialisation values
-                        else
-                        {
-                            // Number of initialisation values may be smaller than array size
-                            if(i < int(_integerVars[varIndex]._arrInits.size()))
-                            {
-                                dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._arrInits[i])) + " ";
-                            }
-                            // Use default initialisation value for the rest of the array
-                            else
+                            // Single initialisation value
+                            if(_integerVars[varIndex]._arrInits.size() == 0)
                             {
                                 dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
                             }
+                            // Multiple initialisation values
+                            else
+                            {
+                                // Number of initialisation values may be smaller than array size
+                                if(i < int(_integerVars[varIndex]._arrInits.size()))
+                                {
+                                    dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._arrInits[i])) + " ";
+                                }
+                                // Use default initialisation value for the rest of the array
+                                else
+                                {
+                                    dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
+                                }
+                            }
                         }
+                        _output.push_back(dbString + "\n");
                     }
-                    _output.push_back(dbString + "\n");
                 }
                 break;
 
@@ -4039,32 +4056,37 @@ REDO_STATEMENT:
                 {
                     std::string arrName = "_" + _integerVars[varIndex]._name + "_array";
                     _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][0]) + "\n");
-                    std::string dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
 
-                    // I array values
-                    for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                    // Don't output DW statements for an uninitialised array
+                    if(_integerVars[varIndex]._arrInit)
                     {
-                        // Single initialisation value
-                        if(_integerVars[varIndex]._arrInits.size() == 0)
+                        std::string dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                        // I array values
+                        for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
                         {
-                            dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
-                        }
-                        // Multiple initialisation values
-                        else
-                        {
-                            // Number of initialisation values may be smaller than array size
-                            if(i < int(_integerVars[varIndex]._arrInits.size()))
-                            {
-                                dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[i]) + " ";
-                            }
-                            // Use default initialisation value for the rest of the array
-                            else
+                            // Single initialisation value
+                            if(_integerVars[varIndex]._arrInits.size() == 0)
                             {
                                 dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
                             }
+                            // Multiple initialisation values
+                            else
+                            {
+                                // Number of initialisation values may be smaller than array size
+                                if(i < int(_integerVars[varIndex]._arrInits.size()))
+                                {
+                                    dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[i]) + " ";
+                                }
+                                // Use default initialisation value for the rest of the array
+                                else
+                                {
+                                    dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
+                                }
+                            }
                         }
+                        _output.push_back(dwString + "\n");
                     }
-                    _output.push_back(dwString + "\n");
                 }
                 break;
 
@@ -4087,32 +4109,37 @@ REDO_STATEMENT:
                     {
                         arrName = "_" + _integerVars[varIndex]._name + "_" + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][j]);
                         _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][j]) + "\n");
-                        std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
 
-                        // I array values
-                        for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                        // Don't output DB statements for an uninitialised array
+                        if(_integerVars[varIndex]._arrInit)
                         {
-                            // Single initialisation value
-                            if(_integerVars[varIndex]._arrInits.size() == 0)
+                            std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                            // I array values
+                            for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
                             {
-                                dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
-                            }
-                            // Multiple initialisation values
-                            else
-                            {
-                                // Number of initialisation values may be smaller than array size
-                                if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
-                                {
-                                    dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._arrInits[initIndex++])) + " ";
-                                }
-                                // Use default initialisation value for the rest of the array
-                                else
+                                // Single initialisation value
+                                if(_integerVars[varIndex]._arrInits.size() == 0)
                                 {
                                     dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
                                 }
+                                // Multiple initialisation values
+                                else
+                                {
+                                    // Number of initialisation values may be smaller than array size
+                                    if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
+                                    {
+                                        dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._arrInits[initIndex++])) + " ";
+                                    }
+                                    // Use default initialisation value for the rest of the array
+                                    else
+                                    {
+                                        dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
+                                    }
+                                }
                             }
+                            _output.push_back(dbString + "\n");
                         }
-                        _output.push_back(dbString + "\n");
                     }
                 }
                 break;
@@ -4136,32 +4163,37 @@ REDO_STATEMENT:
                     {
                         arrName = "_" + _integerVars[varIndex]._name + "_" + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][j]);
                         _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[0][j]) + "\n");
-                        dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
 
-                        // I array values
-                        for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                        // Don't output DW statements for an uninitialised array
+                        if(_integerVars[varIndex]._arrInit)
                         {
-                            // Single initialisation value
-                            if(_integerVars[varIndex]._arrInits.size() == 0)
+                            dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                            // I array values
+                            for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
                             {
-                                dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
-                            }
-                            // Multiple initialisation values
-                            else
-                            {
-                                // Number of initialisation values may be smaller than array size
-                                if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
-                                {
-                                    dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[initIndex++]) + " ";
-                                }
-                                // Use default initialisation value for the rest of the array
-                                else
+                                // Single initialisation value
+                                if(_integerVars[varIndex]._arrInits.size() == 0)
                                 {
                                     dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
                                 }
+                                // Multiple initialisation values
+                                else
+                                {
+                                    // Number of initialisation values may be smaller than array size
+                                    if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
+                                    {
+                                        dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[initIndex++]) + " ";
+                                    }
+                                    // Use default initialisation value for the rest of the array
+                                    else
+                                    {
+                                        dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
+                                    }
+                                }
                             }
+                            _output.push_back(dwString + "\n");
                         }
-                        _output.push_back(dwString + "\n");
                     }
                 }
                 break;
@@ -4203,32 +4235,37 @@ REDO_STATEMENT:
                         {
                             arrName = "_" + _integerVars[varIndex]._name + "_" + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[k][j]);
                             _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[k][j]) + "\n");
-                            std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
 
-                            // I array values
-                            for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                            // Don't output DB statements for an uninitialised array
+                            if(_integerVars[varIndex]._arrInit)
                             {
-                                // Single initialisation value
-                                if(_integerVars[varIndex]._arrInits.size() == 0)
+                                std::string dbString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                                // I array values
+                                for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
                                 {
-                                    dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
-                                }
-                                // Multiple initialisation values
-                                else
-                                {
-                                    // Number of initialisation values may be smaller than array size
-                                    if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
+                                    // Single initialisation value
+                                    if(_integerVars[varIndex]._arrInits.size() == 0)
                                     {
-                                        dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._arrInits[initIndex++])) + " ";
+                                        dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
                                     }
-                                    // Use default initialisation value for the rest of the array
+                                    // Multiple initialisation values
                                     else
                                     {
-                                        dbString += Expression::wordToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
+                                        // Number of initialisation values may be smaller than array size
+                                        if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
+                                        {
+                                            dbString += Expression::byteToHexString(uint8_t(_integerVars[varIndex]._arrInits[initIndex++])) + " ";
+                                        }
+                                        // Use default initialisation value for the rest of the array
+                                        else
+                                        {
+                                            dbString += Expression::wordToHexString(uint8_t(_integerVars[varIndex]._init)) + " ";
+                                        }
                                     }
                                 }
+                                _output.push_back(dbString + "\n");
                             }
-                            _output.push_back(dbString + "\n");
                         }
                     }
                 }
@@ -4271,32 +4308,37 @@ REDO_STATEMENT:
                         {
                             arrName = "_" + _integerVars[varIndex]._name + "_" + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[k][j]);
                             _output.push_back(arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_integerVars[varIndex]._arrAddrs[k][j]) + "\n");
-                            dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
 
-                            // I array values
-                            for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
+                            // Don't output DW statements for an uninitialised array
+                            if(_integerVars[varIndex]._arrInit)
                             {
-                                // Single initialisation value
-                                if(_integerVars[varIndex]._arrInits.size() == 0)
+                                dwString = arrName + std::string(LABEL_TRUNC_SIZE - arrName.size(), ' ') + "DW" + std::string(OPCODE_TRUNC_SIZE - 2, ' ');
+
+                                // I array values
+                                for(int i=0; i<_integerVars[varIndex]._arrSizes[2]; i++)
                                 {
-                                    dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
-                                }
-                                // Multiple initialisation values
-                                else
-                                {
-                                    // Number of initialisation values may be smaller than array size
-                                    if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
-                                    {
-                                        dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[initIndex++]) + " ";
-                                    }
-                                    // Use default initialisation value for the rest of the array
-                                    else
+                                    // Single initialisation value
+                                    if(_integerVars[varIndex]._arrInits.size() == 0)
                                     {
                                         dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
                                     }
+                                    // Multiple initialisation values
+                                    else
+                                    {
+                                        // Number of initialisation values may be smaller than array size
+                                        if(initIndex < int(_integerVars[varIndex]._arrInits.size()))
+                                        {
+                                            dwString += Expression::wordToHexString(_integerVars[varIndex]._arrInits[initIndex++]) + " ";
+                                        }
+                                        // Use default initialisation value for the rest of the array
+                                        else
+                                        {
+                                            dwString += Expression::wordToHexString(_integerVars[varIndex]._init) + " ";
+                                        }
+                                    }
                                 }
+                                _output.push_back(dwString + "\n");
                             }
-                            _output.push_back(dwString + "\n");
                         }
                     }
                 }
@@ -4329,7 +4371,7 @@ REDO_STATEMENT:
 
         if(int(output.size()) > USER_STR_SIZE + numQuotes)
         {
-            fprintf(stderr, "Expression::sanitiseString() : String '%s' of size '%d' is larger than '%d' chars\n", output.c_str(), int(output.size()), USER_STR_SIZE);
+            fprintf(stderr, "Expression::sanitiseString() : string '%s' of size '%d' is larger than '%d' chars\n", output.c_str(), int(output.size()), USER_STR_SIZE);
             return false;
         }
 
@@ -4376,11 +4418,15 @@ REDO_STATEMENT:
                     std::string strName = "_" + _stringVars[i]._name + "_" + Expression::wordToHexString(_stringVars[i]._arrAddrs[j]);
                     _output.push_back(strName + std::string(LABEL_TRUNC_SIZE - strName.size(), ' ') + "EQU" + std::string(OPCODE_TRUNC_SIZE - 3, ' ') + Expression::wordToHexString(_stringVars[i]._arrAddrs[j]) + "\n");
 
-                    int len = 0;
-                    std::string str;
-                    std::string initStr = (j < int(_stringVars[i]._arrInits.size())) ? _stringVars[i]._arrInits[j] : defaultStr;
-                    if(!sanitiseString(initStr, str, len)) return false;
-                    _output.push_back(strName + std::string(LABEL_TRUNC_SIZE - strName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + std::to_string(len) + " '" + str + "' 0\n");
+                    // Don't output DW statements for an uninitialised array
+                    if(_stringVars[i]._arrInit)
+                    {
+                        int len = 0;
+                        std::string str;
+                        std::string initStr = (j < int(_stringVars[i]._arrInits.size())) ? _stringVars[i]._arrInits[j] : defaultStr;
+                        if(!sanitiseString(initStr, str, len)) return false;
+                        _output.push_back(strName + std::string(LABEL_TRUNC_SIZE - strName.size(), ' ') + "DB" + std::string(OPCODE_TRUNC_SIZE - 2, ' ') + std::to_string(len) + " '" + str + "' 0\n");
+                    }
                 }
             }
         }
@@ -4424,7 +4470,7 @@ REDO_STATEMENT:
                     int size = 2;
                     if(!Memory::getFreeRAM(Memory::FitDescending, size, USER_CODE_START, _runtimeStart, pData->_address, true))
                     {
-                        fprintf(stderr, "Compiler::outputDATA() : Not enough RAM for data of size %d\n", size);
+                        fprintf(stderr, "Compiler::outputDATA() : not enough RAM for data of size %d\n", size);
                         return false;
                     }
                     std::string defName = "_data_" + Expression::wordToHexString(pData->_address);
@@ -4440,7 +4486,7 @@ REDO_STATEMENT:
                     int size = int(str.size()) + 2;
                     if(!Memory::getFreeRAM(Memory::FitDescending, size, USER_CODE_START, _runtimeStart, pData->_address, true))
                     {
-                        fprintf(stderr, "Compiler::outputDATA() : Not enough RAM for data of size %d\n", size);
+                        fprintf(stderr, "Compiler::outputDATA() : not enough RAM for data of size %d\n", size);
                         return false;
                     }
                     std::string defName = "_data_" + Expression::wordToHexString(pData->_address);
@@ -4460,7 +4506,7 @@ REDO_STATEMENT:
             int size = int(_dataObjects.size()) * 2;
             if(!Memory::getFreeRAM(Memory::FitDescending, size, USER_CODE_START, _runtimeStart, address, false))
             {
-                fprintf(stderr, "Compiler::outputDATA() : Not enough RAM for data LUT of size %d\n", size);
+                fprintf(stderr, "Compiler::outputDATA() : not enough RAM for data LUT of size %d\n", size);
                 return false;
             }
             std::string defName = "_data_";
@@ -4478,7 +4524,7 @@ REDO_STATEMENT:
             size = 2;
             if(!Memory::getFreeRAM(Memory::FitDescending, size, USER_CODE_START, _runtimeStart, address, false))
             {
-                fprintf(stderr, "Compiler::outputDATA() : Not enough RAM for data LUT of size %d\n", size);
+                fprintf(stderr, "Compiler::outputDATA() : not enough RAM for data LUT of size %d\n", size);
                 return false;
             }
             defName = "_dataIndex_";
@@ -4502,7 +4548,7 @@ REDO_STATEMENT:
             uint16_t timeArrayAddress;
             if(!Memory::getFreeRAM(Memory::FitDescending, timeArraySize, USER_CODE_START, _runtimeStart, timeArrayAddress))
             {
-                fprintf(stderr, "Compiler::outputTIME() : Not enough RAM for time array of size %d\n", timeArraySize);
+                fprintf(stderr, "Compiler::outputTIME() : not enough RAM for time array of size %d\n", timeArraySize);
                 return false;
             }
             std::string defName = "_timeArray_";
@@ -4514,7 +4560,7 @@ REDO_STATEMENT:
             uint16_t timeStringAddress;
             if(!Memory::getFreeRAM(Memory::FitDescending, timeStringSize, USER_CODE_START, _runtimeStart, timeStringAddress))
             {
-                fprintf(stderr, "Compiler::outputTIME() : Not enough RAM for time string of size %d\n", timeStringSize);
+                fprintf(stderr, "Compiler::outputTIME() : not enough RAM for time string of size %d\n", timeStringSize);
                 return false;
             }
             defName = "_timeString_";
@@ -4684,7 +4730,7 @@ REDO_STATEMENT:
             // Skip invalid sprite
             if(it->second._stripeAddrs.size() == 0)
             {
-                fprintf(stderr, "Compiler::outputDefs() : Warning, sprite %d is missing stripe addresses\n", spriteId);
+                fprintf(stderr, "Compiler::outputDefs() : Wwrning sprite %d is missing stripe addresses\n", spriteId);
                 continue;
             }
 
@@ -4730,7 +4776,7 @@ REDO_STATEMENT:
             uint16_t fontIdAddress;
             if(!Memory::getFreeRAM(Memory::FitDescending, fontIdSize, USER_CODE_START, _runtimeStart, fontIdAddress))
             {
-                fprintf(stderr, "Compiler::outputDefs() : Not enough RAM for font id var of size %d\n", fontIdSize);
+                fprintf(stderr, "Compiler::outputDefs() : not enough RAM for font id var of size %d\n", fontIdSize);
                 return false;
             }
             std::string defName = "_fontId_";
@@ -4745,7 +4791,7 @@ REDO_STATEMENT:
             // Skip invalid font
             if(it->second._mapping.size() == 0)
             {
-                fprintf(stderr, "Compiler::outputDefs() : Warning, font %d is missing mapping table\n", fontId);
+                fprintf(stderr, "Compiler::outputDefs() : warning font %d is missing mapping table\n", fontId);
                 continue;
             }
 
@@ -4837,7 +4883,7 @@ REDO_STATEMENT:
                 uint16_t lutAddress;
                 if(!Memory::getFreeRAM(Memory::FitDescending, lutSize + 2, USER_CODE_START, _runtimeStart, lutAddress))
                 {
-                    fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for numeric labels LUT of size %d\n", lutSize + 2);
+                    fprintf(stderr, "Compiler::outputLuts() : not enough RAM for numeric labels LUT of size %d\n", lutSize + 2);
                     return false;
                 }
 
@@ -4854,7 +4900,7 @@ REDO_STATEMENT:
                 // Create numeric addresses LUT, (same size as above, but no delimiter)
                 if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, _runtimeStart, lutAddress))
                 {
-                    fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for numeric addresses LUT of size %d\n", lutSize);
+                    fprintf(stderr, "Compiler::outputLuts() : not enough RAM for numeric addresses LUT of size %d\n", lutSize);
                     return false;
                 }
 
@@ -4885,7 +4931,7 @@ REDO_STATEMENT:
                 for(int j=0; j<lutSize; j++)
                 {
                     int index = _codeLines[i]._onGotoGosubLut._lut[j];
-                    if(index == -1) fprintf(stderr, "Compiler::outputLuts() : Warning, label index is invalid for LUT entry %d\n", j);
+                    if(index == -1) fprintf(stderr, "Compiler::outputLuts() : warning label index is invalid for LUT entry %d\n", j);
 
                     uint16_t labelAddress = _labels[index]._address;
                     dwString += Expression::wordToHexString(labelAddress) + " ";
@@ -4992,7 +5038,7 @@ REDO_STATEMENT:
             uint16_t lutSize = uint16_t(_defDataLoaderImageChunks.size() * DefDataLoaderImageChunkLutEntrySize) + 2;
             if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, _runtimeStart, lutAddress))
             {
-                fprintf(stderr, "Compiler::outputDefs() : Not enough RAM for loader image LUT of size %d\n", lutSize);
+                fprintf(stderr, "Compiler::outputDefs() : not enough RAM for loader image LUT of size %d\n", lutSize);
                 return false;
             }
 
@@ -5023,7 +5069,7 @@ REDO_STATEMENT:
             int lutSize = int(_defDataMidis.size()) * 2;
             if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, _runtimeStart, lutAddress))
             {
-                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for midis LUT of size %d\n", lutSize);
+                fprintf(stderr, "Compiler::outputLuts() : not enough RAM for midis LUT of size %d\n", lutSize);
                 return false;
             }
 
@@ -5047,7 +5093,7 @@ REDO_STATEMENT:
             // Skip invalid sprite
             if(it->second._stripeAddrs.size() == 0)
             {
-                fprintf(stderr, "Compiler::outputLuts() : Warning, sprite %d is missing stripe addresses\n", spriteId);
+                fprintf(stderr, "Compiler::outputLuts() : warning sprite %d is missing stripe addresses\n", spriteId);
                 continue;
             }
 
@@ -5056,7 +5102,7 @@ REDO_STATEMENT:
             int lutSize = int(it->second._stripeAddrs.size())*2 + 2;
             if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, _runtimeStart, lutAddress))
             {
-                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for sprite %d address LUT of size %d\n", spriteId, lutSize);
+                fprintf(stderr, "Compiler::outputLuts() : not enough RAM for sprite %d address LUT of size %d\n", spriteId, lutSize);
                 return false;
             }
             _spritesAddrLut._spriteAddrs.push_back(lutAddress);
@@ -5082,7 +5128,7 @@ REDO_STATEMENT:
                 int lutSize = int(_spritesAddrLut._spriteAddrs.size()) * 2;
                 if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, _runtimeStart, _spritesAddrLutAddress))
                 {
-                    fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for sprites LUT of size %d\n", lutSize);
+                    fprintf(stderr, "Compiler::outputLuts() : not enough RAM for sprites LUT of size %d\n", lutSize);
                     return false;
                 }
             }
@@ -5108,7 +5154,7 @@ REDO_STATEMENT:
             // Skip invalid font
             if(it->second._charAddrs.size() == 0)
             {
-                fprintf(stderr, "Compiler::outputLuts() : Warning, font %d is missing char addresses\n", fontId);
+                fprintf(stderr, "Compiler::outputLuts() : warning font %d is missing char addresses\n", fontId);
                 continue;
             }
 
@@ -5117,7 +5163,7 @@ REDO_STATEMENT:
             int lutSize = int(it->second._charAddrs.size())*2 + 4;
             if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, _runtimeStart, lutAddress))
             {
-                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for font %d address LUT of size %d\n", fontId, lutSize);
+                fprintf(stderr, "Compiler::outputLuts() : not enough RAM for font %d address LUT of size %d\n", fontId, lutSize);
                 return false;
             }
             _fontsAddrLut._fontAddrs.push_back(lutAddress);
@@ -5151,7 +5197,7 @@ REDO_STATEMENT:
             int lutSize = int(_fontsAddrLut._fontAddrs.size()) * 2;
             if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, _runtimeStart, lutAddress))
             {
-                fprintf(stderr, "Compiler::outputLuts() : Not enough RAM for fonts LUT of size %d\n", lutSize);
+                fprintf(stderr, "Compiler::outputLuts() : not enough RAM for fonts LUT of size %d\n", lutSize);
                 return false;
             }
             _fontsAddrLut._address = lutAddress;
@@ -5499,9 +5545,6 @@ REDO_STATEMENT:
         // Labels
         if(!parseLabels(_input, numLines)) return false;
 
-        // Vars, (do NOT enable until TODO: @ parseVars() is satisified)
-        //if(!parseVars()) return false;
-
         // Includes
         if(!Linker::parseIncludes()) return false;
 
@@ -5545,6 +5588,7 @@ REDO_STATEMENT:
         outputInternalEquates();
         outputIncludes();
         outputLabels();
+        outputConsts();
         outputVars();
         outputArrs();
 

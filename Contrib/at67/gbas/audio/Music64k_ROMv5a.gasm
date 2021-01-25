@@ -534,6 +534,10 @@ _textScroll                       LDWI                              &h0103      
                                   RET                                                           ; Main: ret
 
 _initialise                       PUSH                              
+                                  LD                                0x21
+                                  ORI                               3
+                                  ST                                33                          ; Main: poke &h21, peek(&h21) OR 3
+
                                   LDI                               2
                                   STW                               graphicsMode
                                   ScanlineMode                                                  ; Main: mode 2
@@ -581,10 +585,10 @@ _initialise                       PUSH
                                   STW                               drawRectF_y1
                                   LDI                               143
                                   STW                               drawRectF_x2
-                                  LDI                               106
-                                  STW                               drawRectF_y2
                                   CALLI                             _page_0x0400
-_page_0x0400                      DrawRectF                                                     ; Main: rectf 16, 14, 143, 106
+_page_0x0400                      LDI                               106
+                                  STW                               drawRectF_y2
+                                  DrawRectF                                                     ; Main: rectf 16, 14, 143, 106
 
                                   LDWI                              0xFFFE
                                   ANDW                              miscFlags
@@ -635,31 +639,32 @@ _page_0x0400                      DrawRectF                                     
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                          EQU     0x18a2
-realTimeStub                      EQU     0x17be
-convertEqOp                       EQU     0x17b5
+romCheck                          EQU     0x17e8
+realTimeStub                      EQU     0x17bd
+convertEqOp                       EQU     0x17b4
 setRealTimeProc0                  EQU     0x19a1
-setRealTimeProc1                  EQU     0x1da0
+setRealTimeProc1                  EQU     0x1ea0
 gosubNumericLabel                 EQU     0x1bcd
-scanlineMode                      EQU     0x1fa0
+scanlineMode                      EQU     0x20a0
 resetVideoFlags                   EQU     0x21a2
-initClearFuncs                    EQU     0x1ea1
+initClearFuncs                    EQU     0x1fa1
 clearRect                         EQU     0x18b9
 clearVertBlinds                   EQU     0x1acd
 clearCursorRow                    EQU     0x1ba1
 drawHLine                         EQU     0x1aa4
 drawRectF                         EQU     0x19d9
-setMidiStream                     EQU     0x17ac
+setMidiStream                     EQU     0x17ab
 resetMidi                         EQU     0x19b3
-playMidiVol                       EQU     0x1eb0
-midiStartNote                     EQU     0x1db5
-printInit                         EQU     0x17d2
-printText                         EQU     0x17e8
+playMidiVol                       EQU     0x1fb0
+midiStartNote                     EQU     0x1eb5
+printInit                         EQU     0x1da0
+printText                         EQU     0x17d1
 printDigit                        EQU     0x1ca0
 printInt16                        EQU     0x1cc2
-printChar                         EQU     0x20a4
+printChar                         EQU     0x1db6
+printClip                         EQU     0x18a1
 atTextCursor                      EQU     0x18da
-newLineScroll                     EQU     0x1faa
+newLineScroll                     EQU     0x20aa
 
 
 ; do *NOT* use register4 to register7 during time slicing
@@ -1238,6 +1243,7 @@ printI16_pos        LDWI    10000
                     RET
 
 
+
                     ; prints char in textChr
 printChar           LD      textChr
                     ANDI    0x7F                            ; char can't be bigger than 127
@@ -1277,19 +1283,25 @@ printC_slice        ST      textSlice
                     INC     giga_sysArg4                    ; using sysArg4 as a temporary cursor address for multiple char prints
                     
                     PUSH
-                    LD      cursorXY
+                    CALLI   printClip
+                    POP
+                    
+printC_exit         RET
+
+
+printClip           LD      cursorXY
                     ADDI    giga_xfont
                     ST      cursorXY
                     SUBI    giga_xres - giga_xfont          ; last possible char on line
-                    BLE     printC_pop
+                    BLE     printCl_exit
                     LDI     DISABLE_CLIP_BIT
                     ANDW    miscFlags                       ; is text clipping disabled?
-                    BNE     printC_pop
+                    BNE     printCl_exit
+                    PUSH
                     CALLI   newLineScroll                   ; next row, scroll at bottom
+                    POP
                     
-printC_pop          POP
-
-printC_exit         RET
+printCl_exit        RET
 
 
 atTextCursor        LD      cursorXY

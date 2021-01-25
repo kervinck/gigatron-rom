@@ -56,6 +56,12 @@ namespace Memory
         _sizeFreeRAM = _baseFreeRAM;
     }
 
+    void invertFreeRAM(void)
+    {
+        _freeRam.clear();
+        _freeRam = _videoRam;
+    }
+
     void updateFreeRAM(void)
     {
         _sizeFreeRAM = 0;

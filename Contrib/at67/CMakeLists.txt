@@ -7,8 +7,17 @@ set(CMAKE_SUPPRESS_REGENERATION true)
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
+
+set(CMAKE_BUILD_TYPE "Release")
+
 if(APPLE)
-    set(CMAKE_CXX_FLAGS "-std=c++14")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+endif()
+
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "armv7l")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
+    set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -latomic")
+    add_compile_options(-march=armv8-a+crc -mcpu=cortex-a53 -mfpu=neon-fp-armv8)
 endif()
 
 add_subdirectory(tools/gtasm)

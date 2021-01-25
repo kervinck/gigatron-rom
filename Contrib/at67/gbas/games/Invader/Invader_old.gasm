@@ -29,8 +29,10 @@ timerPrev                         EQU                               register0 + 
 ; Internal Constants
 ENABLE_SCROLL_BIT                 EQU                               0x0001
 ON_BOTTOM_ROW_BIT                 EQU                               0x0002
+DISABLE_CLIP_BIT                  EQU                               0x0004
 ENABLE_SCROLL_MSK                 EQU                               0xfffe
 ON_BOTTOM_ROW_MSK                 EQU                               0xfffd
+DISABLE_CLIP_MSK                  EQU                               0xfffb
 
 ; Internal Buffers
 regsWorkArea                      EQU                               0x0000
@@ -47,72 +49,72 @@ _entryPoint_                      EQU                               0x0200
 _reset                            EQU                               0x022a
 _start                            EQU                               0x022f
 _init                             EQU                               0x0234
-_playerBullet                     EQU                               0x035d
-_smashBarrier                     EQU                               0x05e1
+_playerBullet                     EQU                               0x0356
+_smashBarrier                     EQU                               0x05db
 _repeat_0x022f                    EQU                               0x0239
 _else_0x0251                      EQU                               0x0257
 _endif_0x0273                     EQU                               0x0275
 _drawPlayerBullet                 EQU                               0x0277
 _else_0x0281                      EQU                               0x027f
-_else_0x0294                      EQU                               0x028a
-_endif_0x02b2                     EQU                               0x02a0
-_endif_0x02e7                     EQU                               0x02cb
-_endif_0x02e9                     EQU                               0x02cd
-_drawPlayer                       EQU                               0x02d9
+_else_0x028c                      EQU                               0x0286
+_endif_0x02aa                     EQU                               0x029c
+_endif_0x02df                     EQU                               0x02c7
+_endif_0x02e1                     EQU                               0x02c9
+_drawPlayer                       EQU                               0x02d5
 _page_0x0300                      EQU                               0x0300
-_else_0x0318                      EQU                               0x030c
-_endif_0x032b                     EQU                               0x031f
-_handleInput                      EQU                               0x0321
-_else_0x034e                      EQU                               0x0334
-_else_0x0362                      EQU                               0x0340
-_endif_0x038d                     EQU                               0x0357
-_else_0x039f                      EQU                               0x0365
-_else_0x03d3                      EQU                               0x038b
-_endif_0x03f7                     EQU                               0x03a5
-_movePlayer                       EQU                               0x03a7
-_endif_0x0421                     EQU                               0x03c3
-_else_0x0423                      EQU                               0x03c5
-_endif_0x0438                     EQU                               0x03d6
-_initVars                         EQU                               0x03d8
-_startLevel                       EQU                               0x03e4
+_else_0x0310                      EQU                               0x0307
+_endif_0x0323                     EQU                               0x031a
+_handleInput                      EQU                               0x031c
+_else_0x0346                      EQU                               0x032f
+_else_0x035a                      EQU                               0x033b
+_endif_0x0383                     EQU                               0x0350
+_else_0x0395                      EQU                               0x035e
+_else_0x03c9                      EQU                               0x0384
+_endif_0x03ed                     EQU                               0x039e
+_movePlayer                       EQU                               0x03a0
+_endif_0x0417                     EQU                               0x03bc
+_else_0x0419                      EQU                               0x03be
+_endif_0x042e                     EQU                               0x03cf
+_initVars                         EQU                               0x03d1
+_startLevel                       EQU                               0x03dd
+_drawInvaders                     EQU                               0x03ee
 _page_0x0400                      EQU                               0x0400
-_drawInvaders                     EQU                               0x0404
-_repeat_0x0463                    EQU                               0x040c
-_endif_0x04cf                     EQU                               0x044e
-_else_0x0512                      EQU                               0x0481
-_endif_0x0548                     EQU                               0x04ab
-_endif_0x056a                     EQU                               0x04c5
-_elseif_0x057c                    EQU                               0x04d3
-_endif_0x058b                     EQU                               0x04de
+_repeat_0x0459                    EQU                               0x0407
+_endif_0x04c5                     EQU                               0x0449
+_else_0x0508                      EQU                               0x047c
+_endif_0x053e                     EQU                               0x04a6
+_endif_0x0560                     EQU                               0x04c0
+_elseif_0x0572                    EQU                               0x04ce
+_endif_0x0581                     EQU                               0x04d9
 _page_0x05a0                      EQU                               0x05a0
-_else_0x05bf                      EQU                               0x05b4
-_else_0x05dc                      EQU                               0x05cb
-_endif_0x05e4                     EQU                               0x05d1
-_endif_0x05e8                     EQU                               0x05d5
+_else_0x05b5                      EQU                               0x05ae
+_else_0x05d2                      EQU                               0x05c5
+_endif_0x05da                     EQU                               0x05cb
+_endif_0x05de                     EQU                               0x05cf
 _page_0x0678                      EQU                               0x0678
-_drawBarriers                     EQU                               0x068c
-_next_0x062a                      EQU                               0x0699
-_checkInvaders                    EQU                               0x06bd
-_endif_0x0682                     EQU                               0x06e5
-_endif_0x0684                     EQU                               0x06e7
-_else_0x0697                      EQU                               0x06f2
+_drawBarriers                     EQU                               0x0686
+_next_0x0620                      EQU                               0x0693
+_checkInvaders                    EQU                               0x06b7
+_endif_0x0678                     EQU                               0x06df
+_endif_0x067a                     EQU                               0x06e1
+_else_0x0685                      EQU                               0x06e8
 _page_0x08a0                      EQU                               0x08a0
-_else_0x06b2                      EQU                               0x08af
-_else_0x06c7                      EQU                               0x08bc
-_else_0x06e2                      EQU                               0x08cd
-_else_0x0703                      EQU                               0x08e4
-_else_0x0710                      EQU                               0x08eb
+_else_0x06a0                      EQU                               0x08a7
+_else_0x06b5                      EQU                               0x08b4
+_else_0x06d0                      EQU                               0x08c5
+_else_0x06f1                      EQU                               0x08dc
+_else_0x06fe                      EQU                               0x08e3
 _page_0x09a0                      EQU                               0x09a0
-_else_0x0744                      EQU                               0x09ae
+_else_0x072f                      EQU                               0x09ac
 _page_0x0aa0                      EQU                               0x0aa0
-_else_0x07b2                      EQU                               0x0aac
-_endif_0x07c5                     EQU                               0x0abf
-_endif_0x07fd                     EQU                               0x0ae9
-_endif_0x080e                     EQU                               0x0af6
+_else_0x079d                      EQU                               0x0aac
+_endif_0x07b0                     EQU                               0x0abf
+_endif_0x07e8                     EQU                               0x0ae9
+_endif_0x07f9                     EQU                               0x0af6
 _page_0x0ba0                      EQU                               0x0ba0
 _resetLevel                       EQU                               0x0ba2
-_next_0x0815                      EQU                               0x0ba7
-_next_0x0819                      EQU                               0x0bab
+_next_0x0800                      EQU                               0x0ba7
+_next_0x0804                      EQU                               0x0bab
 _page_0x0ca0                      EQU                               0x0ca0
 _initSystem                       EQU                               0x0cc3
 
@@ -202,6 +204,8 @@ def_bytes_0x0600                  DB                                0 0 0 0 0 0 
 ; Define Images
 
 ; Define Loader Image Chunks
+
+; Define Midis
 
 ; Define Sprites
 def_sprites_0x7fa5                EQU                               0x7fa5
@@ -315,126 +319,124 @@ _entryPoint_                      LDI                               0x28
                                   RomCheck                          
                                   Initialise                        
                                   InitEqOp                        
-                                  Init16Array2d                                                 ; Main: INIT
+                                  Init16Array2d                                                 ; INIT
 
                                   LDWI                              _initSystem
-                                  CALL                              giga_vAC                    ; Main: call initSystem
+                                  CALL                              giga_vAC                    ; call initSystem
 
 _reset                            LDWI                              _resetLevel
-                                  CALL                              giga_vAC                    ; Main: call resetLevel
+                                  CALL                              giga_vAC                    ; call resetLevel
 
 _start                            LDWI                              _startLevel
-                                  CALL                              giga_vAC                    ; Main: call startLevel
+                                  CALL                              giga_vAC                    ; call startLevel
 
 _init                             LDWI                              _initVars
-                                  CALL                              giga_vAC                    ; Main: call initVars
+                                  CALL                              giga_vAC                    ; call initVars
 
-_repeat_0x022f                    WaitVBlank                                                    ; Main: wait
+_repeat_0x022f                    WaitVBlank                                                    ; wait
 
                                   LDWI                              _checkInvaders
-                                  CALL                              giga_vAC                    ; Main: call checkInvaders
+                                  CALL                              giga_vAC                    ; call checkInvaders
 
                                   LDWI                              _drawPlayerBullet
-                                  CALL                              giga_vAC                    ; Main: call drawPlayerBullet
+                                  CALL                              giga_vAC                    ; call drawPlayerBullet
 
                                   LDWI                              _drawInvaders
-                                  CALL                              giga_vAC                    ; Main: call drawInvaders
+                                  CALL                              giga_vAC                    ; call drawInvaders
 
                                   LDW                               _gameOver
                                   BEQ                               _else_0x0251
                                   LDWI                              _reset
-                                  CALL                              giga_vAC                    ; Main: if &(gameOver) then goto reset
+                                  CALL                              giga_vAC                    ; if &(gameOver) then goto reset
 
 _else_0x0251                      LDWI                              _handleInput
-                                  CALL                              giga_vAC                    ; Main: call handleInput
+                                  CALL                              giga_vAC                    ; call handleInput
 
                                   LDWI                              _drawPlayer
-                                  CALL                              giga_vAC                    ; Main: call drawPlayer
+                                  CALL                              giga_vAC                    ; call drawPlayer
 
                                   LDWI                              _movePlayer
-                                  CALL                              giga_vAC                    ; Main: call movePlayer
+                                  CALL                              giga_vAC                    ; call movePlayer
 
-                                  INC                               _timeTicks                  ; Main: inc timeTicks.lo
+                                  INC                               _timeTicks                  ; inc timeTicks.lo
 
                                   LD                                _timeTicks
                                   XORI                              60
-                                  BNE                               _endif_0x0273               ; Main: if timeTicks.lo &&= 60
+                                  BNE                               _endif_0x0273               ; if timeTicks.lo &&= 60
 
                                   LDI                               0
-                                  ST                                _timeTicks                  ; Main: timeTicks.lo = 0
+                                  ST                                _timeTicks                  ; timeTicks.lo = 0
 
-                                  INC                               _timeTicks + 1              ; Main: inc timeTicks.hi
+                                  INC                               _timeTicks + 1              ; inc timeTicks.hi
 
-_endif_0x0273                     BRA                               _repeat_0x022f              ; Main: &forever
+_endif_0x0273                     BRA                               _repeat_0x022f              ; &forever
 
-_drawPlayerBullet                 PUSH                                                          ; Main: proc drawPlayerBullet
+_drawPlayerBullet                 PUSH                                                          ; proc drawPlayerBullet
 
                                   LDW                               _iexplode
                                   BEQ                               _else_0x0281
-                                  Return                                                        ; Main: if &(iexplode) then return
+                                  Return                                                        ; if &(iexplode) then return
 
 _else_0x0281                      LD                                _pbullet + 1
-                                  XORI                              0
-                                  CALL                              convertEqOpAddr
-                                  BEQ                               _else_0x0294
-                                  Return                                                        ; Main: if &(pbullet.hi = 0) then return
+                                  BNE                               _else_0x028c
+                                  Return                                                        ; if pbullet.hi &&= 0 then return
 
-_else_0x0294                      LDWI                              SYS_VDrawBits_134           ; Main: LDWI    SYS_VDrawBits_134
-                                  STW                               giga_sysFn                  ; Main: STW     giga_sysFn
+_else_0x028c                      LDWI                              SYS_VDrawBits_134           ; LDWI    SYS_VDrawBits_134
+                                  STW                               giga_sysFn                  ; STW     giga_sysFn
 
                                   LDW                               _pbxy
                                   PEEK                              
                                   XORI                              12
-                                  BNE                               _endif_0x02b2               ; Main: if peek(pbxy) &&= &h0C
+                                  BNE                               _endif_0x02aa               ; if peek(pbxy) &&= &h0C
 
                                   LDI                               0
-                                  ST                                _pbullet                    ; Main: pbullet.lo = 0
+                                  ST                                _pbullet                    ; pbullet.lo = 0
 
                                   LDWI                              _smashBarrier
-                                  CALL                              giga_vAC                    ; Main: gosub smashBarrier
+                                  CALL                              giga_vAC                    ; gosub smashBarrier
 
-_endif_0x02b2                     LDWI                              0x3F00                      ; Main: LDWI    0x3F00
-                                  STW                               giga_sysArg0                ; Main: STW     giga_sysArg0
-                                  LDW                               _pbxy                       ; Main: LDW     _pbxy
-                                  STW                               giga_sysArg4                ; Main: STW     giga_sysArg4
+_endif_0x02aa                     LDWI                              0x3F00                      ; LDWI    0x3F00
+                                  STW                               giga_sysArg0                ; STW     giga_sysArg0
+                                  LDW                               _pbxy                       ; LDW     _pbxy
+                                  STW                               giga_sysArg4                ; STW     giga_sysArg4
 
                                   LD                                _pbullet
-                                  BEQ                               _endif_0x02e9               ; Main: if &(pbullet.lo)
+                                  BEQ                               _endif_0x02e1               ; if &(pbullet.lo)
 
-                                  LDI                               0xF8                        ; Main: LDI     0xF8
-                                  ST                                giga_sysArg2                ; Main: ST      giga_sysArg2
-                                  SYS                               134                         ; Main: SYS     134
+                                  LDI                               0xF8                        ; LDI     0xF8
+                                  ST                                giga_sysArg2                ; ST      giga_sysArg2
+                                  SYS                               134                         ; SYS     134
 
                                   LD                                _pbxy + 1
                                   SUBI                              2
-                                  ST                                _pbxy + 1                   ; Main: pbxy.hi = pbxy.hi - 2
+                                  ST                                _pbxy + 1                   ; pbxy.hi = pbxy.hi - 2
 
                                   LD                                _pbxy + 1
                                   SUBI                              8
-                                  BGE                               _endif_0x02e7               ; Main: if pbxy.hi &&< 8
+                                  BGE                               _endif_0x02df               ; if pbxy.hi &&< 8
 
                                   LDI                               0
-                                  STW                               _pbullet                    ; Main: pbullet = 0
+                                  STW                               _pbullet                    ; pbullet = 0
 
-                                  LDI                               0x00                        ; Main: LDI     0x00
-                                  ST                                giga_sysArg2                ; Main: ST      giga_sysArg2
-                                  SYS                               134                         ; Main: SYS     134
+                                  LDI                               0x00                        ; LDI     0x00
+                                  ST                                giga_sysArg2                ; ST      giga_sysArg2
+                                  SYS                               134                         ; SYS     134
 
-_endif_0x02e7                     Return                                                        ; Main: return
+_endif_0x02df                     Return                                                        ; return
 
-_endif_0x02e9                     LDI                               0x00                        ; Main: LDI     0x00
-                                  ST                                giga_sysArg2                ; Main: ST      giga_sysArg2
-                                  SYS                               134                         ; Main: SYS     134
+_endif_0x02e1                     LDI                               0x00                        ; LDI     0x00
+                                  ST                                giga_sysArg2                ; ST      giga_sysArg2
+                                  SYS                               134                         ; SYS     134
 
                                   LDI                               0
-                                  STW                               _pbullet                    ; Main: pbullet = 0
+                                  STW                               _pbullet                    ; pbullet = 0
 
-                                  Return                                                        ; Main: endproc
+                                  Return                                                        ; endproc
 
-_drawPlayer                       PUSH                                                          ; Main: proc drawPlayer
+_drawPlayer                       PUSH                                                          ; proc drawPlayer
 
                                   LD                                _pflip
-                                  JumpFalse                         _else_0x0318 7              ; Main: if (pflip.lo)
+                                  JumpFalse                         _else_0x0310 7              ; if (pflip.lo)
 
                                   LDI                               4
                                   STW                               spriteId
@@ -443,71 +445,70 @@ _drawPlayer                       PUSH                                          
                                   LDW                               _py
                                   ADDI                              8
                                   ST                                spriteXY + 1
+                                  DrawSpriteX                       
                                   STLW                              0xFE
                                   LDWI                              _page_0x0300
                                   CALL                              giga_vAC
 _page_0x0300                      LDLW                              0xFE
-                                  DrawSpriteX                       
-                                  LDWI                              _endif_0x032b
-                                  CALL                              giga_vAC                    ; Main: sprite FlipX,  Player + 1, px, py
+                                  LDWI                              _endif_0x0323
+                                  CALL                              giga_vAC                    ; sprite FlipX,  Player + 1, px, py
 
-_else_0x0318                      LDI                               3
+_else_0x0310                      LDI                               3
                                   STW                               spriteId
                                   LDW                               _px
                                   ST                                spriteXY
                                   LDW                               _py
                                   ADDI                              8
                                   ST                                spriteXY + 1
-                                  DrawSprite                                                    ; Main: sprite NoFlip, Player + 0, px, py
+                                  DrawSprite                                                    ; sprite NoFlip, Player + 0, px, py
 
-_endif_0x032b                     Return                                                        ; Main: endproc
+_endif_0x0323                     Return                                                        ; endproc
 
-_handleInput                      PUSH                                                          ; Main: proc handleInput
+_handleInput                      PUSH                                                          ; proc handleInput
 
                                   LD                                giga_buttonState
                                   XORI                              255
-                                  STW                               _handleInput_button         ; Main: button = get("BUTTON_STATE") XOR 255
+                                  STW                               _handleInput_button         ; button = get("BUTTON_STATE") XOR 255
 
                                   LDW                               _handleInput_button
                                   ANDI                              1
-                                  BEQ                               _else_0x034e
+                                  BEQ                               _else_0x0346
                                   LDWI                              257
-                                  STW                               _pflip                      ; Main: if &(button AND &h01) then pflip = &h0101
+                                  STW                               _pflip                      ; if &(button AND &h01) then pflip = &h0101
 
-_else_0x034e                      LDW                               _handleInput_button
+_else_0x0346                      LDW                               _handleInput_button
                                   ANDI                              2
-                                  BEQ                               _else_0x0362
+                                  BEQ                               _else_0x035a
                                   LDWI                              256
-                                  STW                               _pflip                      ; Main: if &(button AND &h02) then pflip = &h0100
+                                  STW                               _pflip                      ; if &(button AND &h02) then pflip = &h0100
 
-_else_0x0362                      LDW                               _buttonPrev
+_else_0x035a                      LDW                               _buttonPrev
                                   ANDI                              128
-                                  XORI                              0
                                   CALL                              convertEqOpAddr
-                                  BEQ                               _endif_0x038d               ; Main: if &((buttonPrev AND &h80) = 0)
+                                  BEQ                               _endif_0x0383               ; if &((buttonPrev AND &h80) = 0)
 
                                   LDW                               _handleInput_button
                                   ANDI                              128
-                                  BEQ                               _endif_0x038d               ; Main: if &(button AND &h80)
+                                  BEQ                               _endif_0x0383               ; if &(button AND &h80)
 
                                   LDWI                              _playerBullet
-                                  CALL                              giga_vAC                    ; Main: gosub playerBullet
+                                  CALL                              giga_vAC                    ; gosub playerBullet
 
-_endif_0x038d                     LDW                               _handleInput_button
-                                  STW                               _buttonPrev                 ; Main: buttonPrev = button
+_endif_0x0383                     LDW                               _handleInput_button
+                                  STW                               _buttonPrev                 ; buttonPrev = button
 
-                                  Return                                                        ; Main: endproc
+                                  Return                                                        ; endproc
 
 _playerBullet                     PUSH                              
                                   LD                                _pbullet + 1
-                                  BEQ                               _else_0x039f
-                                  Return                                                        ; Main: if &(pbullet.hi) then return
+                                  BEQ                               _else_0x0395
+                                  Return                                                        ; if &(pbullet.hi) then return
 
-_else_0x039f                      LDWI                              257
-                                  STW                               _pbullet                    ; Main: pbullet = &h0101
+_else_0x0395                      LDWI                              257
+                                  STW                               _pbullet                    ; pbullet = &h0101
 
                                   LD                                _pflip
-                                  BEQ                               _else_0x03d3                ; Main: if &(pflip.lo)
+                                  BEQ                               _else_0x03c9                ; if &(pflip.lo)
 
                                   LDW                               _px
                                   ADDI                              6
@@ -522,9 +523,9 @@ _else_0x039f                      LDWI                              257
                                   XORI                              0xFF
                                   ADDW                              0xe8
                                   STW                               _pbxy
-                                  BRA                               _endif_0x03f7               ; Main: pbxy = (px + 6) + ((py - 5 + 8) LSL 8)
+                                  BRA                               _endif_0x03ed               ; pbxy = (px + 6) + ((py - 5 + 8) LSL 8)
 
-_else_0x03d3                      LDW                               _px
+_else_0x03c9                      LDW                               _px
                                   ADDI                              5
                                   STW                               0xe8
                                   LDW                               _py
@@ -536,89 +537,89 @@ _else_0x03d3                      LDW                               _px
                                   ORI                               0xFF
                                   XORI                              0xFF
                                   ADDW                              0xe8
-                                  STW                               _pbxy                       ; Main: pbxy = (px + 5) + ((py - 5 + 8) LSL 8)
+                                  STW                               _pbxy                       ; pbxy = (px + 5) + ((py - 5 + 8) LSL 8)
 
-_endif_0x03f7                     Return                                                        ; Main: return
+_endif_0x03ed                     Return                                                        ; return
 
-_movePlayer                       PUSH                                                          ; Main: proc movePlayer
+_movePlayer                       PUSH                                                          ; proc movePlayer
 
                                   LD                                _pflip + 1
-                                  BEQ                               _endif_0x0438               ; Main: if &(pflip.hi)
+                                  BEQ                               _endif_0x042e               ; if &(pflip.hi)
 
                                   LDI                               0
-                                  ST                                _pflip + 1                  ; Main: pflip.hi = 0
+                                  ST                                _pflip + 1                  ; pflip.hi = 0
 
                                   LD                                _pflip
-                                  BEQ                               _else_0x0423                ; Main: if &(pflip.lo)
+                                  BEQ                               _else_0x0419                ; if &(pflip.lo)
 
-                                  INC                               _px                         ; Main: inc px
+                                  INC                               _px                         ; inc px
 
                                   LDW                               _px
                                   SUBI                              147
-                                  BLE                               _endif_0x0421               ; Main: if px &&> PLAYER_XEND
+                                  BLE                               _endif_0x0417               ; if px &&> PLAYER_XEND
 
                                   LDI                               147
-                                  STW                               _px                         ; Main: px = PLAYER_XEND
+                                  STW                               _px                         ; px = PLAYER_XEND
 
-_endif_0x0421                     BRA                               _endif_0x0438               ; Main: endif
+_endif_0x0417                     BRA                               _endif_0x042e               ; endif
 
-_else_0x0423                      LDW                               _px
+_else_0x0419                      LDW                               _px
                                   SUBI                              1
-                                  STW                               _px                         ; Main: dec px
+                                  STW                               _px                         ; dec px
 
                                   LDW                               _px
                                   SUBI                              1
-                                  BGE                               _endif_0x0438               ; Main: if px &&< PLAYER_X
+                                  BGE                               _endif_0x042e               ; if px &&< PLAYER_X
 
                                   LDI                               1
-                                  STW                               _px                         ; Main: px = PLAYER_X
+                                  STW                               _px                         ; px = PLAYER_X
 
-_endif_0x0438                     Return                                                        ; Main: endproc
+_endif_0x042e                     Return                                                        ; endproc
 
-_initVars                         PUSH                                                          ; Main: proc initVars
+_initVars                         PUSH                                                          ; proc initVars
 
                                   LDI                               0x42
                                   STW                               varAddress
-                                  ResetVars                                                     ; Main: init vars @timeTicks
+                                  ResetVars                                                     ; init vars @timeTicks
 
-                                  Return                                                        ; Main: endproc
+                                  Return                                                        ; endproc
 
-_startLevel                       PUSH                                                          ; Main: proc startLevel
+_startLevel                       PUSH                                                          ; proc startLevel
 
                                   LDWI                              32420
                                   STW                               bcdDstAddr
                                   LDI                               0
-                                  BcdInt                                                        ; Main: bcdint @pointsBCD, 0
+                                  BcdInt                                                        ; bcdint @pointsBCD, 0
 
+                                  Return                                                        ; endproc
+
+_drawInvaders                     PUSH                                                          ; proc drawInvaders
+
+                                  LDW                               _iexplode
                                   STLW                              0xFE
                                   LDWI                              _page_0x0400
                                   CALL                              giga_vAC
 _page_0x0400                      LDLW                              0xFE
-                                  Return                                                        ; Main: endproc
+                                  BEQ                               _repeat_0x0459
+                                  Return                                                        ; if &(iexplode) then return
 
-_drawInvaders                     PUSH                                                          ; Main: proc drawInvaders
-
-                                  LDW                               _iexplode
-                                  BEQ                               _repeat_0x0463
-                                  Return                                                        ; Main: if &(iexplode) then return
-
-_repeat_0x0463                    LDWI                              0x78a5
+_repeat_0x0459                    LDWI                              0x78a5
                                   ADDW                              _jj
                                   ADDW                              _jj
                                   DEEK                              
                                   ADDW                              _ii
                                   ADDW                              _ii
                                   DEEK                              
-                                  STW                               _drawInvaders_invader       ; Main: invader = deek(iaddress(jj) + ii + ii)
+                                  STW                               _drawInvaders_invader       ; invader = deek(iaddress(jj) + ii + ii)
 
                                   LD                                _drawInvaders_invader
-                                  BEQ                               _endif_0x058b               ; Main: if &(invader.lo)
+                                  BEQ                               _endif_0x0581               ; if &(invader.lo)
 
                                   LDWI                              0x77a5
                                   ADDW                              _ii
                                   PEEK                              
                                   ADDW                              _ixorigin
-                                  STW                               _drawInvaders_x             ; Main: x = ixorigin + ixpos(ii)
+                                  STW                               _drawInvaders_x             ; x = ixorigin + ixpos(ii)
 
                                   LDWI                              0x7fa0
                                   ADDW                              _jj
@@ -626,24 +627,24 @@ _repeat_0x0463                    LDWI                              0x78a5
                                   STW                               0xe8
                                   LDW                               _iyorigin
                                   SUBW                              0xe8
-                                  STW                               _drawInvaders_y             ; Main: y = iyorigin - iypos(jj)
+                                  STW                               _drawInvaders_y             ; y = iyorigin - iypos(jj)
 
                                   LDW                               _drawInvaders_y
                                   SUBI                              108
-                                  BLT                               _endif_0x04cf               ; Main: if y &&>= PLAYER_Y - 6
+                                  BLT                               _endif_0x04c5               ; if y &&>= PLAYER_Y - 6
 
                                   LDI                               120
                                   STW                               waitVBlankNum
-                                  WaitVBlanks                                                   ; Main: wait 120
+                                  WaitVBlanks                                                   ; wait 120
 
                                   LDI                               1
-                                  STW                               _gameOver                   ; Main: gameOver = 1
+                                  STW                               _gameOver                   ; gameOver = 1
 
-                                  Return                                                        ; Main: return
+                                  Return                                                        ; return
 
-_endif_0x04cf                     LDW                               _xflip
+_endif_0x04c5                     LDW                               _xflip
                                   XORI                              2
-                                  BNE                               _else_0x0512                ; Main: if xflip &&= 2
+                                  BNE                               _else_0x0508                ; if xflip &&= 2
 
                                   LD                                _drawInvaders_invader + 1
                                   STW                               memIndex0
@@ -663,9 +664,9 @@ _endif_0x04cf                     LDW                               _xflip
                                   ADDI                              8
                                   ST                                spriteXY + 1
                                   DrawSpriteX                       
-                                  BRA                               _endif_0x0548               ; Main: sprite FlipX, irsprites(invader.hi) + ((x LSR 1) AND 1), x, y
+                                  BRA                               _endif_0x053e               ; sprite FlipX, irsprites(invader.hi) + ((x LSR 1) AND 1), x, y
 
-_else_0x0512                      LD                                _drawInvaders_invader + 1
+_else_0x0508                      LD                                _drawInvaders_invader + 1
                                   STW                               memIndex0
                                   LDWI                              0x7da2
                                   ADDW                              memIndex0
@@ -682,10 +683,10 @@ _else_0x0512                      LD                                _drawInvader
                                   LDW                               _drawInvaders_y
                                   ADDI                              8
                                   ST                                spriteXY + 1
-                                  DrawSprite                                                    ; Main: sprite NoFlip, ilsprites(invader.hi) + ((x LSR 1) AND 1), x, y
+                                  DrawSprite                                                    ; sprite NoFlip, ilsprites(invader.hi) + ((x LSR 1) AND 1), x, y
 
-_endif_0x0548                     LD                                _imarch
-                                  BEQ                               _endif_0x056a               ; Main: if &(imarch.lo)
+_endif_0x053e                     LD                                _imarch
+                                  BEQ                               _endif_0x0560               ; if &(imarch.lo)
 
                                   LDI                               17
                                   STW                               spriteId
@@ -695,139 +696,139 @@ _endif_0x0548                     LD                                _imarch
                                   SUBI                              10
                                   ADDI                              8
                                   ST                                spriteXY + 1
-                                  DrawSprite                                                    ; Main: sprite NoFlip, InvBlk, x, y - INVADERS_Y
+                                  DrawSprite                                                    ; sprite NoFlip, InvBlk, x, y - INVADERS_Y
 
-_endif_0x056a                     LDW                               _drawInvaders_x
+_endif_0x0560                     LDW                               _drawInvaders_x
                                   SUBI                              147
-                                  BLT                               _elseif_0x057c              ; Main: if x &&>= PLAYER_XEND
+                                  BLT                               _elseif_0x0572              ; if x &&>= PLAYER_XEND
 
                                   LDWI                              -2
                                   STW                               _iflip
-                                  BRA                               _endif_0x058b               ; Main: iflip = -2
+                                  BRA                               _endif_0x0581               ; iflip = -2
 
-_elseif_0x057c                    LDW                               _drawInvaders_x
+_elseif_0x0572                    LDW                               _drawInvaders_x
                                   SUBI                              1
-                                  BGT                               _endif_0x058b               ; Main: elseif x &&<= 1
+                                  BGT                               _endif_0x0581               ; elseif x &&<= 1
 
                                   LDI                               2
-                                  STW                               _iflip                      ; Main: iflip = 2
+                                  STW                               _iflip                      ; iflip = 2
 
-_endif_0x058b                     INC                               _ii                         ; Main: inc ii
+_endif_0x0581                     INC                               _ii                         ; inc ii
 
                                   LDW                               _ii
                                   XORI                              10
-                                  JumpEQ                            _endif_0x05e8 33            ; Main: if ii &= INVADERS_I
+                                  JumpEQ                            _endif_0x05de 33            ; if ii &= INVADERS_I
 
                                   LDI                               0
-                                  STW                               _ii                         ; Main: ii = 0
+                                  STW                               _ii                         ; ii = 0
+
+                                  LDW                               _jj
+                                  SUBI                              1
+                                  STW                               _jj                         ; dec jj
 
                                   LDW                               _jj
                                   STLW                              0xFE
                                   LDWI                              _page_0x05a0
                                   CALL                              giga_vAC
 _page_0x05a0                      LDLW                              0xFE
-                                  SUBI                              1
-                                  STW                               _jj                         ; Main: dec jj
-
-                                  LDW                               _jj
-                                  BGE                               _endif_0x05e8               ; Main: if jj &&< 0
+                                  BGE                               _endif_0x05de               ; if jj &&< 0
 
                                   LD                                _imarch
-                                  BEQ                               _else_0x05bf
+                                  BEQ                               _else_0x05b5
                                   LDI                               0
-                                  ST                                _imarch                     ; Main: if &(imarch.lo) then imarch.lo = 0
+                                  ST                                _imarch                     ; if &(imarch.lo) then imarch.lo = 0
 
-_else_0x05bf                      LDI                               4
-                                  STW                               _jj                         ; Main: jj = INVADERS_J - 1
+_else_0x05b5                      LDI                               4
+                                  STW                               _jj                         ; jj = INVADERS_J - 1
 
                                   LDW                               _iflip
                                   XORW                              _xflip
-                                  BEQ                               _else_0x05dc                ; Main: if iflip &&<> xflip
+                                  BEQ                               _else_0x05d2                ; if iflip &&<> xflip
 
                                   LDI                               1
-                                  ST                                _imarch                     ; Main: imarch.lo = 1
+                                  ST                                _imarch                     ; imarch.lo = 1
 
                                   LDW                               _iyorigin
                                   ADDI                              8
                                   STW                               _iyorigin
-                                  BRA                               _endif_0x05e4               ; Main: iyorigin = iyorigin + INVADERS_H
+                                  BRA                               _endif_0x05da               ; iyorigin = iyorigin + INVADERS_H
 
-_else_0x05dc                      LDW                               _ixorigin
+_else_0x05d2                      LDW                               _ixorigin
                                   ADDW                              _iflip
-                                  STW                               _ixorigin                   ; Main: ixorigin = ixorigin + iflip
+                                  STW                               _ixorigin                   ; ixorigin = ixorigin + iflip
 
-_endif_0x05e4                     LDW                               _iflip
-                                  STW                               _xflip                      ; Main: xflip = iflip
+_endif_0x05da                     LDW                               _iflip
+                                  STW                               _xflip                      ; xflip = iflip
 
-_endif_0x05e8                     LD                                _drawInvaders_invader
-                                  JumpFalse                         _repeat_0x0463 34           ; Main: until (invader.lo)
+_endif_0x05de                     LD                                _drawInvaders_invader
+                                  JumpFalse                         _repeat_0x0459 34           ; until (invader.lo)
 
-                                  Return                                                        ; Main: endproc
+                                  Return                                                        ; endproc
 
-_smashBarrier                     PUSH                                                          ; Main: asm
+_smashBarrier                     PUSH                                                          ; asm
 
-                                  LDWI                              0x0C00                      ; Main: LDWI    0x0C00
-                                  STW                               giga_sysArg0                ; Main: STW     giga_sysArg0        'FGBG colour
-                                  LDWI                              0xFEFF                      ; Main: LDWI    0xFEFF
-                                  ADDW                              _pbxy                       ; Main: ADDW    _pbxy
-                                  STW                               giga_sysArg4                ; Main: STW     giga_sysArg4        'offset
-                                  LD                                giga_rand0                  ; Main: LD      giga_rand0
-                                  ANDI                              0xC0                        ; Main: ANDI    0xC0
-                                  ST                                giga_sysArg2                ; Main: ST      giga_sysArg2
-                                  SYS                               134                         ; Main: SYS     134                 'left damage
-                                  INC                               giga_sysArg4                ; Main: INC     giga_sysArg4
+                                  LDWI                              0x0C00                      ; LDWI    0x0C00
+                                  STW                               giga_sysArg0                ; STW     giga_sysArg0        'FGBG colour
+                                  LDWI                              0xFEFF                      ; LDWI    0xFEFF
+                                  ADDW                              _pbxy                       ; ADDW    _pbxy
+                                  STW                               giga_sysArg4                ; STW     giga_sysArg4        'offset
+                                  LD                                giga_rand0                  ; LD      giga_rand0
+                                  ANDI                              0xC0                        ; ANDI    0xC0
+                                  ST                                giga_sysArg2                ; ST      giga_sysArg2
+                                  SYS                               134                         ; SYS     134                 'left damage
+                                  INC                               giga_sysArg4                ; INC     giga_sysArg4
+                                  LDI                               0x00                        ; LDI     0x00
+                                  ST                                giga_sysArg2                ; ST      giga_sysArg2
+                                  SYS                               134                         ; SYS     134                 'center damage
                                   STLW                              0xFE
                                   LDWI                              _page_0x0678
                                   CALL                              giga_vAC
 _page_0x0678                      LDLW                              0xFE
-                                  LDI                               0x00                        ; Main: LDI     0x00
-                                  ST                                giga_sysArg2                ; Main: ST      giga_sysArg2
-                                  SYS                               134                         ; Main: SYS     134                 'center damage
-                                  INC                               giga_sysArg4                ; Main: INC     giga_sysArg4
-                                  LD                                giga_rand2                  ; Main: LD      giga_rand2
-                                  ANDI                              0xC0                        ; Main: ANDI    0xC0
-                                  ST                                giga_sysArg2                ; Main: ST      giga_sysArg2
-                                  SYS                               134                         ; Main: SYS     134                 'right damage
+                                  INC                               giga_sysArg4                ; INC     giga_sysArg4
+                                  LD                                giga_rand2                  ; LD      giga_rand2
+                                  ANDI                              0xC0                        ; ANDI    0xC0
+                                  ST                                giga_sysArg2                ; ST      giga_sysArg2
+                                  SYS                               134                         ; SYS     134                 'right damage
 
-                                  Return                                                        ; Main: return
+                                  Return                                                        ; return
 
-_drawBarriers                     PUSH                                                          ; Main: proc drawBarriers
+_drawBarriers                     PUSH                                                          ; proc drawBarriers
 
                                   LDI                               20
                                   STW                               _drawBarriers_x
                                   LDI                               90
-                                  STW                               _drawBarriers_y             ; Main: x = BARRIER_X : y = BARRIER_Y
+                                  STW                               _drawBarriers_y             ; x = BARRIER_X : y = BARRIER_Y
 
                                   LDI                               0
-                                  STW                               _drawBarriers_i             ; Main: for i=0 &to NUM_BARRIERS - 1
+                                  STW                               _drawBarriers_i             ; for i=0 &to NUM_BARRIERS - 1
 
-_next_0x062a                      LDI                               0
+_next_0x0620                      LDI                               0
                                   STW                               spriteId
                                   LDW                               _drawBarriers_x
                                   ST                                spriteXY
                                   LDW                               _drawBarriers_y
                                   ADDI                              8
                                   ST                                spriteXY + 1
-                                  DrawSprite                                                    ; Main: sprite NoFlip, Barrier, x, y
+                                  DrawSprite                                                    ; sprite NoFlip, Barrier, x, y
 
                                   LDW                               _drawBarriers_x
                                   ADDI                              48
-                                  STW                               _drawBarriers_x             ; Main: x = x + BARRIER_OFFSET
+                                  STW                               _drawBarriers_x             ; x = x + BARRIER_OFFSET
 
-                                  ForNextInc                        _drawBarriers_i _next_0x062a 2                                                                                              ; Main: next i
+                                  ForNextInc                        _drawBarriers_i _next_0x0620 2                                                                                              ; next i
 
-                                  Return                                                        ; Main: endproc
+                                  Return                                                        ; endproc
 
-_checkInvaders                    PUSH                                                          ; Main: proc checkInvaders
+_checkInvaders                    PUSH                                                          ; proc checkInvaders
 
                                   LDW                               _iexplode
-                                  BEQ                               _endif_0x0684               ; Main: if &(iexplode)
+                                  BEQ                               _endif_0x067a               ; if &(iexplode)
 
-                                  INC                               _itimer                     ; Main: inc itimer
+                                  INC                               _itimer                     ; inc itimer
 
                                   LDW                               _itimer
                                   XORI                              10
-                                  BNE                               _endif_0x0682               ; Main: if itimer &&= 10
+                                  BNE                               _endif_0x0678               ; if itimer &&= 10
 
                                   LDI                               17
                                   STW                               spriteId
@@ -836,92 +837,88 @@ _checkInvaders                    PUSH                                          
                                   LD                                _iexplode + 1
                                   ADDI                              8
                                   ST                                spriteXY + 1
-                                  DrawSprite                                                    ; Main: sprite NoFlip, InvBlk, iexplode.lo, iexplode.hi
+                                  DrawSprite                                                    ; sprite NoFlip, InvBlk, iexplode.lo, iexplode.hi
 
                                   LDI                               0
                                   STW                               _itimer
-                                  STW                               _iexplode                   ; Main: itimer = 0 : iexplode = itimer
+                                  STW                               _iexplode                   ; itimer = 0 : iexplode = itimer
 
-_endif_0x0682                     Return                                                        ; Main: return
+_endif_0x0678                     Return                                                        ; return
 
-_endif_0x0684                     LD                                _pbullet + 1
-                                  XORI                              0
-                                  CALL                              convertEqOpAddr
-                                  BEQ                               _else_0x0697
-                                  Return                                                        ; Main: if &(pbullet.hi = 0) then return
+_endif_0x067a                     LD                                _pbullet + 1
+                                  BNE                               _else_0x0685
+                                  Return                                                        ; if pbullet.hi &&= 0 then return
 
-_else_0x0697                      LD                                _pbxy + 1
+_else_0x0685                      LD                                _pbxy + 1
                                   SUBI                              11
                                   STW                               0xe8
+                                  LDW                               _iyorigin
+                                  SUBW                              0xe8
+                                  STW                               _checkInvaders_y            ; y = iyorigin - (pbxy.hi - (8 + 3))
+
+                                  LDW                               _checkInvaders_y
                                   STLW                              0xFE
                                   LDWI                              _page_0x08a0
                                   CALL                              giga_vAC
 _page_0x08a0                      LDLW                              0xFE
-                                  LDW                               _iyorigin
-                                  SUBW                              0xe8
-                                  STW                               _checkInvaders_y            ; Main: y = iyorigin - (pbxy.hi - (8 + 3))
+                                  BGE                               _else_0x06a0
+                                  Return                                                        ; if y &&< 0 then return
 
-                                  LDW                               _checkInvaders_y
-                                  BGE                               _else_0x06b2
-                                  Return                                                        ; Main: if y &&< 0 then return
-
-_else_0x06b2                      LD                                _pbxy
+_else_0x06a0                      LD                                _pbxy
                                   SUBW                              _ixorigin
-                                  STW                               _checkInvaders_x            ; Main: x = pbxy.lo - ixorigin
+                                  STW                               _checkInvaders_x            ; x = pbxy.lo - ixorigin
 
                                   LDW                               _checkInvaders_x
-                                  BGE                               _else_0x06c7
-                                  Return                                                        ; Main: if x &&< 0 then return
+                                  BGE                               _else_0x06b5
+                                  Return                                                        ; if x &&< 0 then return
 
-_else_0x06c7                      LDWI                              1280
+_else_0x06b5                      LDWI                              1280
                                   ADDW                              _checkInvaders_x
                                   PEEK                              
-                                  STW                               _checkInvaders_i            ; Main: i = peek(DIVX + x)
+                                  STW                               _checkInvaders_i            ; i = peek(DIVX + x)
 
                                   LDW                               _checkInvaders_i
                                   SUBI                              10
-                                  BLT                               _else_0x06e2
-                                  Return                                                        ; Main: if i &&>= INVADERS_I then return
+                                  BLT                               _else_0x06d0
+                                  Return                                                        ; if i &&>= INVADERS_I then return
 
-_else_0x06e2                      LDWI                              1536
+_else_0x06d0                      LDWI                              1536
                                   ADDW                              _checkInvaders_y
                                   PEEK                              
                                   STW                               0xea
                                   LDI                               4
                                   SUBW                              0xea
-                                  STW                               _checkInvaders_j            ; Main: j = (INVADERS_J - 1) - peek(DIVY + y)
+                                  STW                               _checkInvaders_j            ; j = (INVADERS_J - 1) - peek(DIVY + y)
 
                                   LDW                               _checkInvaders_j
                                   SUBI                              5
-                                  BLT                               _else_0x0703
-                                  Return                                                        ; Main: if j &&>= INVADERS_J then return
+                                  BLT                               _else_0x06f1
+                                  Return                                                        ; if j &&>= INVADERS_J then return
 
-_else_0x0703                      LDW                               _checkInvaders_j
-                                  BGE                               _else_0x0710
-                                  Return                                                        ; Main: if j &&< 0 then return
+_else_0x06f1                      LDW                               _checkInvaders_j
+                                  BGE                               _else_0x06fe
+                                  Return                                                        ; if j &&< 0 then return
 
-_else_0x0710                      LDWI                              0x78a5
+_else_0x06fe                      LDWI                              0x78a5
                                   ADDW                              _checkInvaders_j
                                   ADDW                              _checkInvaders_j
                                   DEEK                              
                                   ADDW                              _checkInvaders_i
                                   ADDW                              _checkInvaders_i
+                                  STW                               _checkInvaders_iaddr
+                                  PEEK                              
                                   STLW                              0xFE
                                   LDWI                              _page_0x09a0
                                   CALL                              giga_vAC
 _page_0x09a0                      LDLW                              0xFE
-                                  STW                               _checkInvaders_iaddr
-                                  PEEK                              
-                                  XORI                              0
-                                  CALL                              convertEqOpAddr
-                                  BEQ                               _else_0x0744
-                                  Return                                                        ; Main: iaddr = iaddress(j) + i + i : if &(peek(iaddr) = 0) then return
+                                  JumpEQ                            _else_0x072f 43
+                                  Return                                                        ; iaddr = iaddress(j) + i + i : if peek(iaddr) &= 0 then return
 
-_else_0x0744                      LDI                               0
-                                  POKE                              _checkInvaders_iaddr        ; Main: poke iaddr, 0
+_else_0x072f                      LDI                               0
+                                  POKE                              _checkInvaders_iaddr        ; poke iaddr, 0
 
                                   LDI                               0
-                                  ST                                _pbullet                    ; Main: pbullet.lo = 0
+                                  ST                                _pbullet                    ; pbullet.lo = 0
 
                                   LDW                               _checkInvaders_i
                                   LSLW                              
@@ -933,11 +930,11 @@ _else_0x0744                      LDI                               0
                                   LSLW                              
                                   ADDW                              0xea
                                   ADDW                              _ixorigin
-                                  STW                               _checkInvaders_x            ; Main: x = ixorigin + ((i LSL 3) + (i LSL 2))  'x = ixorigin + i*INVADERS_X
+                                  STW                               _checkInvaders_x            ; x = ixorigin + ((i LSL 3) + (i LSL 2))  'x = ixorigin + i*INVADERS_X
 
                                   LDI                               4
                                   SUBW                              _checkInvaders_j
-                                  STW                               _checkInvaders_j            ; Main: j = (INVADERS_J - 1) - j
+                                  STW                               _checkInvaders_j            ; j = (INVADERS_J - 1) - j
 
                                   LDW                               _checkInvaders_j
                                   LSLW                              
@@ -948,10 +945,10 @@ _else_0x0744                      LDI                               0
                                   STW                               0xea
                                   LDW                               _iyorigin
                                   SUBW                              0xea
-                                  STW                               _checkInvaders_y            ; Main: y = iyorigin - ((j LSL 3) + j + j)      'y = iyorigin - j*INVADERS_Y;
+                                  STW                               _checkInvaders_y            ; y = iyorigin - ((j LSL 3) + j + j)      'y = iyorigin - j*INVADERS_Y;
 
                                   LDW                               _xflip
-                                  JumpGT                            _else_0x07b2 44             ; Main: if xflip &> 0
+                                  JumpGT                            _else_0x079d 44             ; if xflip &> 0
 
                                   LDI                               18
                                   STW                               spriteId
@@ -965,29 +962,29 @@ _else_0x0744                      LDI                               0
                                   CALL                              giga_vAC
 _page_0x0aa0                      LDLW                              0xFE
                                   DrawSprite                        
-                                  LDWI                              _endif_0x07c5
-                                  CALL                              giga_vAC                    ; Main: sprite NoFlip, IExplode, x, y
+                                  LDWI                              _endif_0x07b0
+                                  CALL                              giga_vAC                    ; sprite NoFlip, IExplode, x, y
 
-_else_0x07b2                      LDI                               19
+_else_0x079d                      LDI                               19
                                   STW                               spriteId
                                   LDW                               _checkInvaders_x
                                   ST                                spriteXY
                                   LDW                               _checkInvaders_y
                                   ADDI                              8
                                   ST                                spriteXY + 1
-                                  DrawSpriteX                                                   ; Main: sprite FlipX, IExplode + 1, x, y
+                                  DrawSpriteX                                                   ; sprite FlipX, IExplode + 1, x, y
 
-_endif_0x07c5                     LDI                               0
+_endif_0x07b0                     LDI                               0
                                   STW                               _itimer
                                   LD                                _checkInvaders_y
                                   ST                                giga_vAC + 1
                                   ORI                               0xFF
                                   XORI                              0xFF
                                   ADDW                              _checkInvaders_x
-                                  STW                               _iexplode                   ; Main: itimer = 0 : iexplode = x + (y LSL 8)
+                                  STW                               _iexplode                   ; itimer = 0 : iexplode = x + (y LSL 8)
 
                                   LD                                _imarch
-                                  BEQ                               _endif_0x07fd               ; Main: if &(imarch.lo)
+                                  BEQ                               _endif_0x07e8               ; if &(imarch.lo)
 
                                   LDI                               17
                                   STW                               spriteId
@@ -997,32 +994,32 @@ _endif_0x07c5                     LDI                               0
                                   SUBI                              10
                                   ADDI                              8
                                   ST                                spriteXY + 1
-                                  DrawSprite                                                    ; Main: sprite NoFlip, InvBlk, x, y - INVADERS_Y
+                                  DrawSprite                                                    ; sprite NoFlip, InvBlk, x, y - INVADERS_Y
 
-_endif_0x07fd                     INC                               _icount                     ; Main: inc icount
+_endif_0x07e8                     INC                               _icount                     ; inc icount
 
                                   LDW                               _icount
                                   XORI                              50
-                                  BNE                               _endif_0x080e               ; Main: if icount &&= (INVADERS_J * INVADERS_I)
+                                  BNE                               _endif_0x07f9               ; if icount &&= (INVADERS_J * INVADERS_I)
 
                                   LDI                               1
-                                  STW                               _gameOver                   ; Main: gameOver = 1
+                                  STW                               _gameOver                   ; gameOver = 1
 
-_endif_0x080e                     Return                                                        ; Main: endproc
+_endif_0x07f9                     Return                                                        ; endproc
 
                                   STLW                              0xFE
                                   LDWI                              _page_0x0ba0
                                   CALL                              giga_vAC
 _page_0x0ba0                      LDLW                              0xFE
-_resetLevel                       PUSH                                                          ; Main: proc resetLevel
+_resetLevel                       PUSH                                                          ; proc resetLevel
 
                                   LDI                               0
-                                  STW                               _resetLevel_j               ; Main: for j=0 to INVADERS_J - 1
+                                  STW                               _resetLevel_j               ; for j=0 to INVADERS_J - 1
 
-_next_0x0815                      LDI                               0
-                                  STW                               _resetLevel_i               ; Main: for i=0 to INVADERS_I - 1
+_next_0x0800                      LDI                               0
+                                  STW                               _resetLevel_i               ; for i=0 to INVADERS_I - 1
 
-_next_0x0819                      LDI                               1
+_next_0x0804                      LDI                               1
                                   STW                               memValue
                                   LDW                               _resetLevel_j
                                   STW                               memIndex0
@@ -1031,21 +1028,21 @@ _next_0x0819                      LDI                               1
                                   LDWI                              0x7aa0
                                   CALL                              convert16Arr2dAddr
                                   LDW                               memValue
-                                  POKE                              memAddr                     ; Main: invaders(j, i).lo = 1
+                                  POKE                              memAddr                     ; invaders(j, i).lo = 1
 
-                                  ForNextFarInc                     _resetLevel_i _next_0x0819 9                                                                                                ; Main: next i
+                                  ForNextFarInc                     _resetLevel_i _next_0x0804 9                                                                                                ; next i
 
-                                  ForNextFarInc                     _resetLevel_j _next_0x0815 4                                                                                                ; Main: next j
+                                  ForNextFarInc                     _resetLevel_j _next_0x0800 4                                                                                                ; next j
 
-                                  ClearVertBlinds                                               ; Main: cls
+                                  ClearVertBlinds                                               ; cls
 
                                   LDWI                              768
-                                  STW                               _livesLevel                 ; Main: livesLevel = 3*256 + 0
+                                  STW                               _livesLevel                 ; livesLevel = 3*256 + 0
 
                                   LDWI                              32427
                                   STW                               bcdDstAddr
                                   LDI                               0
-                                  BcdInt                                                        ; Main: bcdint @scoreBCD, 0
+                                  BcdInt                                                        ; bcdint @scoreBCD, 0
 
                                   LDI                               1
                                   STW                               _px
@@ -1054,43 +1051,43 @@ _next_0x0819                      LDI                               1
                                   CALL                              giga_vAC
 _page_0x0ca0                      LDLW                              0xFE
                                   LDI                               114
-                                  STW                               _py                         ; Main: px = PLAYER_X : py = PLAYER_Y
+                                  STW                               _py                         ; px = PLAYER_X : py = PLAYER_Y
 
                                   LDI                               1
                                   STW                               _ixorigin
                                   LDI                               57
-                                  STW                               _iyorigin                   ; Main: ixorigin = IORIGIN_X : iyorigin = IORIGIN_Y
+                                  STW                               _iyorigin                   ; ixorigin = IORIGIN_X : iyorigin = IORIGIN_Y
 
                                   LDI                               0
                                   STW                               _ii
                                   LDI                               4
-                                  STW                               _jj                         ; Main: ii = 0 : jj = INVADERS_J - 1
+                                  STW                               _jj                         ; ii = 0 : jj = INVADERS_J - 1
 
                                   LDI                               2
                                   STW                               _iflip
-                                  STW                               _xflip                      ; Main: iflip = 2 : xflip = iflip
+                                  STW                               _xflip                      ; iflip = 2 : xflip = iflip
 
                                   LDWI                              _drawBarriers
-                                  CALL                              giga_vAC                    ; Main: call drawBarriers
+                                  CALL                              giga_vAC                    ; call drawBarriers
 
-                                  Return                                                        ; Main: endproc
+                                  Return                                                        ; endproc
 
-_initSystem                       PUSH                                                          ; Main: proc initSystem
+_initSystem                       PUSH                                                          ; proc initSystem
 
                                   LD                                0x21
                                   ORI                               3
-                                  ST                                33                          ; Main: poke &h21, peek(&h21) OR 3
+                                  ST                                33                          ; poke &h21, peek(&h21) OR 3
 
                                   LDI                               2
                                   STW                               graphicsMode
-                                  ScanlineMode                                                  ; Main: mode 2
+                                  ScanlineMode                                                  ; mode 2
 
                                   LDI                               0
-                                  STW                               fgbgColour                  ; Main: set FGBG_COLOUR, 0
+                                  STW                               fgbgColour                  ; set FGBG_COLOUR, 0
 
-                                  Return                                                        ; Main: endproc
+                                  Return                                                        ; endproc
 
-                                  HALT                                                          ; Main: END
+                                  HALT                                                          ; END
 
 
 
@@ -1148,13 +1145,13 @@ romCheck            LD      giga_romType
                     ANDI    0xFC
                     SUBW    romType
                     BGE     romC_return
-                    LDWI    giga_vram
+                    LDWI    giga_vram + giga_yres/2*256 + giga_xres/2
                     STW     romErrAddr
                     
 romC_loop           LD      romErrPixel
                     POKE    romErrAddr
                     INC     romErrPixel
-                    BRA     romC_loop                       ; flash left hand corner pixel indicating rom error
+                    BRA     romC_loop                       ; flash center pixel indicating rom error
                     
 romC_return         RET                    
 

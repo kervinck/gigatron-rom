@@ -496,6 +496,10 @@ _repeat_0x0371                    TickMidiV                                     
                                   Return                                                        ; Main: return
 
 _initialise                       PUSH                              
+                                  LD                                0x21
+                                  ORI                               3
+                                  ST                                33                          ; Main: poke &h21, peek(&h21) OR 3
+
                                   LDI                               2
                                   STW                               graphicsMode
                                   ScanlineMode                                                  ; Main: mode 2
@@ -545,13 +549,13 @@ _initialise                       PUSH
                                   STW                               drawRectF_x2
                                   LDI                               106
                                   STW                               drawRectF_y2
-                                  DrawRectF                                                     ; Main: rectf 16, 14, 143, 106
-
-                                  LDWI                              0xFFFE
                                   STLW                              0xFE
                                   LDWI                              _page_0x0400
                                   CALL                              giga_vAC
 _page_0x0400                      LDLW                              0xFE
+                                  DrawRectF                                                     ; Main: rectf 16, 14, 143, 106
+
+                                  LDWI                              0xFFFE
                                   ANDW                              miscFlags
                                   STW                               miscFlags                   ; Main: scroll off
 
@@ -599,29 +603,30 @@ _page_0x0400                      LDLW                              0xFE
 ;****************************************************************************************************************************************
 ;****************************************************************************************************************************************
 
-romCheck                          EQU     0x12ad
-convertEqOp                       EQU     0x18a6
+romCheck                          EQU     0x11e8
+convertEqOp                       EQU     0x19a6
 gosubNumericLabel                 EQU     0x15cd
-scanlineMode                      EQU     0x1aa0
-resetVideoFlags                   EQU     0x19a2
-initClearFuncs                    EQU     0x17a4
+scanlineMode                      EQU     0x1ba0
+resetVideoFlags                   EQU     0x1aa2
+initClearFuncs                    EQU     0x18a1
 clearRect                         EQU     0x13da
 clearVertBlinds                   EQU     0x16c9
 clearCursorRow                    EQU     0x14cf
 drawHLine                         EQU     0x15a0
 drawRectF                         EQU     0x16a1
-setMidiStream                     EQU     0x13ac
+setMidiStream                     EQU     0x17ac
 resetMidi                         EQU     0x14a5
-playMidi                          EQU     0x18af
-playMidiVol                       EQU     0x1aaa
+playMidi                          EQU     0x19af
+playMidiVol                       EQU     0x1baa
 midiStartNote                     EQU     0x17b5
-printInit                         EQU     0x11e9
-printText                         EQU     0x12c4
+printInit                         EQU     0x11d2
+printText                         EQU     0x12aa
 printDigit                        EQU     0x12dd
-printInt16                        EQU     0x19ae
-printChar                         EQU     0x1ca0
+printInt16                        EQU     0x1aae
+printChar                         EQU     0x18b2
+printClip                         EQU     0x12c3
 atTextCursor                      EQU     0x13b5
-newLineScroll                     EQU     0x1ba2
+newLineScroll                     EQU     0x1ca2
 convertEqOpAddr                   EQU     0x00c0
 convertNeOpAddr                   EQU     0x00c2
 convertLeOpAddr                   EQU     0x00c4
@@ -1246,6 +1251,7 @@ printI16_pos        LDWI    10000
                     RET
 
 
+
                     ; prints char in textChr
 printChar           LD      textChr
                     ANDI    0x7F                            ; char can't be bigger than 127
@@ -1288,20 +1294,27 @@ printC_slice        ST      textSlice
 %if TIME_SLICING
                     CALL    realTimeStubAddr
 %endif
-                    LD      cursorXY
+                    LDWI    printClip
+                    CALL    giga_vAC
+                    POP
+                    
+printC_exit         RET
+
+
+printClip           LD      cursorXY
                     ADDI    giga_xfont
                     ST      cursorXY
                     SUBI    giga_xres - giga_xfont          ; last possible char on line
-                    BLE     printC_pop
+                    BLE     printCl_exit
                     LDI     DISABLE_CLIP_BIT
                     ANDW    miscFlags                       ; is text clipping disabled?
-                    BNE     printC_pop
+                    BNE     printCl_exit
+                    PUSH
                     LDWI    newLineScroll                   ; next row, scroll at bottom
                     CALL    giga_vAC
+                    POP
                     
-printC_pop          POP
-
-printC_exit         RET
+printCl_exit        RET
 
 
 atTextCursor        LD      cursorXY

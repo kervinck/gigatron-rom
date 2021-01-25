@@ -4,6 +4,11 @@
 /Utils/lcc/build/
 /Docs/gtemu
 *.o
+/Contrib/at67/**/*.sln
+/Contrib/at67/**/*.vcx*
+/Contrib/at67/**/.vs
+/Contrib/at67/**/__vm
+/Contrib/at67/**/Release
 /Contrib/at67/CMakeCache.txt
 /Contrib/at67/**/CMakeFiles
 /Contrib/at67/**/Makefile

@@ -2,6 +2,7 @@
 giga_text32                     EQU     0x0700
 giga_text82                     EQU     0x0800
 giga_notesTable                 EQU     0x0900
+giga_invTable                   EQU     0x0A00
 
 ; RAM
 giga_vram                       EQU     0x0800
@@ -98,6 +99,9 @@ SYS_ExpanderControl_v4_40       EQU     0x0b09
 SYS_ResetWaveforms_v4_50        EQU     0x0b0f
 SYS_ShuffleNoise_v4_46          EQU     0x0b12
 SYS_SpiExchangeBytes_v4_134     EQU     0x0b15
+
+; ROMv5 SYS calls
+SYS_ReadRomDir_v5_80            EQU     0x00ef
 
 giga_Black                      EQU     0x00
 giga_DarkRed                    EQU     0x01

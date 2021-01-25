@@ -73,7 +73,8 @@ namespace Editor
     uint8_t _addressDigit = 0;
 
     uint16_t _ntvBaseAddress = 0x0000;
-    uint16_t _hexBaseAddress = HEX_BASE_ADDRESS;
+    uint16_t _hexBaseAddressROM = 0x0000;
+    uint16_t _hexBaseAddressRAM = HEX_BASE_ADDRESS;
     uint16_t _vpcBaseAddress = HEX_BASE_ADDRESS;
     uint16_t _loadBaseAddress = LOAD_BASE_ADDRESS;
     uint16_t _varsBaseAddress = VARS_BASE_ADDRESS;
@@ -118,7 +119,6 @@ namespace Editor
     uint8_t getMemoryDigit(void) {return _memoryDigit;}
     uint8_t getAddressDigit(void) {return _addressDigit;}
     uint16_t getNtvBaseAddress(void) {return _ntvBaseAddress;}
-    uint16_t getHexBaseAddress(void) {return _hexBaseAddress;}
     uint16_t getVpcBaseAddress(void) {return _vpcBaseAddress;}
     uint16_t getLoadBaseAddress(void) {return _loadBaseAddress;}
     uint16_t getVarsBaseAddress(void) {return _varsBaseAddress;}
@@ -167,6 +167,32 @@ namespace Editor
     void getMouseState(MouseState& mouseState) {mouseState = _mouseState;}
     void setMouseState(MouseState& mouseState) {_mouseState = mouseState;}
 
+    uint16_t getHexBaseAddress(void)
+    {
+        switch(Editor::getMemoryMode())
+        {
+            case Editor::RAM:  return _hexBaseAddressRAM; break;
+            case Editor::ROM0: return _hexBaseAddressROM; break;
+            case Editor::ROM1: return _hexBaseAddressROM; break;
+
+            default: break;
+        }
+
+        return 0x0000;
+    }
+
+    void setHexBaseAddress(uint16_t hexBaseAddress)
+    {
+        switch(Editor::getMemoryMode())
+        {
+            case Editor::RAM:  _hexBaseAddressRAM = hexBaseAddress; break;
+            case Editor::ROM0: _hexBaseAddressROM = hexBaseAddress; break;
+            case Editor::ROM1: _hexBaseAddressROM = hexBaseAddress; break;
+
+            default: break;
+        }
+    }
+    
     void getMouseUiCursor(int& x, int& y, int& cy)
     {
         // Normalised mouse position
@@ -687,9 +713,9 @@ namespace Editor
     {
         switch(_editorMode)
         {
-            case Hex:  _hexBaseAddress = (_hexBaseAddress - HEX_CHARS_X*numRows) & (Memory::getSizeRAM()-1); break;
-            case Load: if((_fileEntriesIndex -= numRows) < 0) _fileEntriesIndex = 0;                         break;
-            case Rom:  if((_romEntriesIndex -= numRows) < 0) _romEntriesIndex = 0;                           break;
+            case Hex:  setHexBaseAddress((_memoryMode == RAM) ? (getHexBaseAddress() - HEX_CHARS_X*numRows) & (Memory::getSizeRAM()-1) : getHexBaseAddress() - HEX_CHARS_X*numRows); break;
+            case Load: if((_fileEntriesIndex -= numRows) < 0) _fileEntriesIndex = 0;                                                                                                 break;
+            case Rom:  if((_romEntriesIndex -= numRows) < 0) _romEntriesIndex = 0;                                                                                                   break;
 
             case Dasm: 
             {
@@ -701,7 +727,7 @@ namespace Editor
                     }
                     else
                     {
-                        _ntvBaseAddress = uint16_t(_ntvBaseAddress - Assembler::getPrevDasmByteCount()) & (Memory::getSizeRAM()-1);
+                        _ntvBaseAddress = uint16_t(_ntvBaseAddress - Assembler::getPrevDasmByteCount());
                     }
                 }
                 else
@@ -712,7 +738,7 @@ namespace Editor
                     }
                     else
                     {
-                        _ntvBaseAddress = uint16_t(_ntvBaseAddress - Assembler::getPrevDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                        _ntvBaseAddress = uint16_t(_ntvBaseAddress - Assembler::getPrevDasmPageByteCount());
                     }
                 }
             }
@@ -726,7 +752,7 @@ namespace Editor
     {
         switch(_editorMode)
         {
-            case Hex:  _hexBaseAddress = (_hexBaseAddress + HEX_CHARS_X*numRows) & (Memory::getSizeRAM()-1); break;
+            case Hex: setHexBaseAddress((_memoryMode == RAM) ? (getHexBaseAddress() + HEX_CHARS_X*numRows) & (Memory::getSizeRAM()-1) : getHexBaseAddress() + HEX_CHARS_X*numRows); break;
 
             case Load:
             {
@@ -760,7 +786,7 @@ namespace Editor
                     }
                     else
                     {
-                        _ntvBaseAddress = uint16_t(_ntvBaseAddress + Assembler::getCurrDasmByteCount()) & (Memory::getSizeRAM()-1);
+                        _ntvBaseAddress = uint16_t(_ntvBaseAddress + Assembler::getCurrDasmByteCount());
                     }
                 }
                 else
@@ -771,7 +797,7 @@ namespace Editor
                     }
                     else
                     {
-                        _ntvBaseAddress = uint16_t(_ntvBaseAddress + Assembler::getCurrDasmPageByteCount()) & (Memory::getSizeRAM()-1);
+                        _ntvBaseAddress = uint16_t(_ntvBaseAddress + Assembler::getCurrDasmPageByteCount());
                     }
                 }
             }
@@ -909,7 +935,7 @@ namespace Editor
             // Edit memory
             if(_memoryMode == RAM  &&  _cursorY >= 0)
             {
-                uint16_t address = uint16_t(_hexBaseAddress + _cursorX + _cursorY*HEX_CHARS_X);
+                uint16_t address = uint16_t(getHexBaseAddress() + _cursorX + _cursorY*HEX_CHARS_X);
                 switch(_memoryDigit)
                 {
                     case 0: value = (value << 4) & 0xF0; Cpu::setRAM(address, uint8_t((Cpu::getRAM(address) & 0x0F) | value)); break;
@@ -1012,10 +1038,10 @@ namespace Editor
                         {
                             switch(_addressDigit)
                             {
-                                case 0: value = (value << 12) & 0xF000; _hexBaseAddress = (_hexBaseAddress & 0x0FFF) | value; break;
-                                case 1: value = (value << 8)  & 0x0F00; _hexBaseAddress = (_hexBaseAddress & 0xF0FF) | value; break;
-                                case 2: value = (value << 4)  & 0x00F0; _hexBaseAddress = (_hexBaseAddress & 0xFF0F) | value; break;
-                                case 3: value = (value << 0)  & 0x000F; _hexBaseAddress = (_hexBaseAddress & 0xFFF0) | value; break;
+                                case 0: value = (value << 12) & 0xF000; setHexBaseAddress((getHexBaseAddress() & 0x0FFF) | value); break;
+                                case 1: value = (value << 8)  & 0x0F00; setHexBaseAddress((getHexBaseAddress() & 0xF0FF) | value); break;
+                                case 2: value = (value << 4)  & 0x00F0; setHexBaseAddress((getHexBaseAddress() & 0xFF0F) | value); break;
+                                case 3: value = (value << 0)  & 0x000F; setHexBaseAddress((getHexBaseAddress() & 0xFFF0) | value); break;
 
                                 default: break;
                             }

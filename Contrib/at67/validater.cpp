@@ -312,17 +312,20 @@ namespace Validater
     {
         for(int i=0; i<int(Compiler::getCodeLines().size()); i++)
         {
+            // Line number taking into account modules
+            int codeLineStart = Compiler::getCodeLineStart(i);
+
             for(int j=0; j<int(Compiler::getCodeLines()[i]._vasm.size()); j++)
             {
                 uint16_t opcAddr = Compiler::getCodeLines()[i]._vasm[j]._address;
                 std::string opcode = Compiler::getCodeLines()[i]._vasm[j]._opcode;
                 const std::string& code = Compiler::getCodeLines()[i]._vasm[j]._code;
-                const std::string& basic = Compiler::getCodeLines()[i]._code;
+                const std::string& basic = Compiler::getCodeLines()[i]._text;
 
                 Expression::stripWhitespace(opcode);
                 if(opcodeHasBranch(opcode))
                 {
-                    std::vector<std::string> tokens = Expression::tokenise(code, " ", false);
+                    std::vector<std::string> tokens = Expression::tokenise(code, ' ', false);
                     if(tokens.size() < 2) continue;
 
                     // Normal branch
@@ -349,7 +352,7 @@ namespace Validater
                         uint16_t labAddr = Compiler::getLabels()[labelIndex]._address;
                         if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                         {
-                            fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i);
+                            fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), codeLineStart);
                             return false;
                         }
                     }
@@ -365,7 +368,7 @@ namespace Validater
                             uint16_t labAddr = Compiler::getInternalLabels()[labelIndex]._address;
                             if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                             {
-                                fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i);
+                                fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), codeLineStart);
                                 return false;
                             }
                         }
