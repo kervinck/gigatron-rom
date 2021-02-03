@@ -126,10 +126,14 @@ namespace Cpu
     int64_t getClock(void);
     uint8_t getIN(void);
     uint8_t getXOUT(void);
+    uint16_t getCTRL(void); // extension ctrl register
+    uint8_t getXIN(void);   // extension input
     uint16_t getVPC(void);
     uint8_t getRAM(uint16_t address);
+    uint8_t getXRAM(uint32_t address);
     uint8_t getROM(uint16_t address, int page);
     uint16_t getRAM16(uint16_t address);
+    uint16_t getXRAM16(uint32_t address);
     uint16_t getROM16(uint16_t address, int page);
     float getvCpuUtilisation(void);
 
@@ -137,10 +141,13 @@ namespace Cpu
     void setIsInReset(bool isInReset);
     void setClock(int64_t clock);
     void setIN(uint8_t in);
-    void setXOUT(uint8_t xout);
+    void setCTRL(uint16_t ctrl);
+    void setXIN(uint8_t xin);
     void setRAM(uint16_t address, uint8_t data);
+    void setXRAM(uint32_t address, uint8_t data);
     void setROM(uint16_t base, uint16_t address, uint8_t data);
     void setRAM16(uint16_t address, uint16_t data);
+    void setXRAM16(uint32_t address, uint16_t data);
     void setROM16(uint16_t base, uint16_t address, uint16_t data);
     void setRomType(void);
     void setSizeRAM(int size);

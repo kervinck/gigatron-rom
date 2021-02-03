@@ -9,7 +9,7 @@ std::vector<std::string> _defaultKeys =
     "                                                                                ",
     "[Emulator]               ; case sensitive                                       ",
     "MemoryMode   = CTRL+M    ; toggles between RAM, ROM0 and ROM1                   ",
-    "MemorySize   = CTRL+Z    ; toggles between 32K RAM and 64K RAM                  ",
+    "MemorySize   = CTRL+Z    ; toggles between 32K, 64K, and 128K RAM with SPI      ",
     "Browse       = CTRL+B    ; file browser                                         ",
     "RomType      = CTRL+R    ; ROM browser                                          ",
     "HexMonitor   = CTRL+X    ; hex monitor                                          ",
