@@ -62,10 +62,9 @@ namespace Cpu
       RAM_s(size_t size) {
         resize(size);}
       const uint8_t& operator[](uint16_t address) const {
-        address &= 0xffff;
         return (ctrl&1)?xin:ram[(address&0x8000)?bank:0][address&0x7fff];}
       uint8_t& operator[](uint16_t address) {
-        address &= 0xffff; return ram[(address&0x8000)?bank:0][address&0x7fff];}
+        return ram[(address&0x8000)?bank:0][address&0x7fff];}
       bool has_extension() {
         return size==0x20000;}
       void setctrl(uint16_t c) {
