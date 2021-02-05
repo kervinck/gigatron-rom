@@ -5,9 +5,13 @@
 #include <vector>
 
 
-#define ROM_SIZE (1<<16)
-#define RAM_SIZE_LO (1<<15)
-#define RAM_SIZE_HI (1<<16)
+#define ROM_SIZE         (1<<16)
+#define RAM_SIZE_LO      (1<<15)
+#define RAM_SIZE_HI      (1<<16)
+#define RAM_SIZE_EX      (1<<17)
+#define RAM_SIZE_LO_MASK (RAM_SIZE_LO - 1)
+#define RAM_SIZE_HI_MASK (RAM_SIZE_HI - 1)
+#define RAM_SIZE_EX_MASK (RAM_SIZE_EX - 1)
 
 #define RAM_USED_DEFAULT  19986 // page0=256 + page1=256 + page2=6 + page3=6 + page4=6 + page7=256 + 160*120
 
@@ -38,9 +42,13 @@
 #define RAM_SEGMENTS_OFS   0x0100
 #define RAM_SEGMENTS_SIZE  96
 
-#define RAM_EXPANSION_START 0x8000
-#define RAM_EXPANSION_SIZE  0x8000
-#define RAM_EXPANSION_SEG   256
+#define RAM_UPPER_START 0x8000
+#define RAM_UPPER_SIZE  0x8000
+#define RAM_UPPER_SEG   256
+
+#define RAM_EXPAND_START 0x10000
+#define RAM_EXPAND_SIZE  0x10000
+#define RAM_EXPAND_SEG   256
 
 #define GTB_LINE0_ADDRESS     0x1BA0
 #define MAX_GTB_LINE_SIZE     32

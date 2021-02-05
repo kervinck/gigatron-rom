@@ -445,6 +445,14 @@ namespace Loader
     INIReader _highScoresIniReader;
     std::map<std::string, SaveData> _saveData;
 
+    SDL_Thread* _uploadThread = nullptr;
+
+
+    void shutdown(void)
+    {
+        if(_uploadThread) SDL_WaitThread(_uploadThread, nullptr);
+        closeComPort();
+    }
 
     bool getKeyAsString(INIReader& iniReader, const std::string& sectionString, const std::string& iniKey, const std::string& defaultKey, std::string& result, bool upperCase=true)
     {
@@ -682,7 +690,6 @@ namespace Loader
     void closeComPort(void)
     {
         comClose(_currentComPort);
-
         _currentComPort = -1;
     }
 
@@ -846,7 +853,11 @@ namespace Loader
 
     int uploadToGigaThread(void* userData)
     {
-        if(!checkComPort()) return -1;
+        if(!checkComPort())
+        {
+            _uploadThread = nullptr;
+            return -1;
+        }
 
         Graphics::enableUploadBar(true);
 
@@ -879,6 +890,8 @@ namespace Loader
         Graphics::enableUploadBar(false);
         //fprintf(stderr, "\n");
 
+        _uploadThread = nullptr;
+
         return 0;
     }
 
@@ -906,7 +919,7 @@ namespace Loader
         Graphics::setUploadFilename(filename);
 
         _gt1UploadSize = int(gt1file.gcount());
-        SDL_CreateThread(uploadToGigaThread, "gtemuAT67::Loader::uploadToGiga()", (void*)&_gt1UploadSize);
+        _uploadThread = SDL_CreateThread(uploadToGigaThread, "gtemuAT67::Loader::uploadToGiga()", (void*)&_gt1UploadSize);
     }
 
     void disableUploads(bool disable)
@@ -1265,13 +1278,9 @@ namespace Loader
 
     void setMemoryModel64k(void)
     {
-        if(Memory::getSizeRAM() == RAM_SIZE_LO)
-        {
-            Memory::setSizeRAM(RAM_SIZE_HI);
-            Memory::initialise();
-            Cpu::setSizeRAM(Memory::getSizeRAM());
-            Cpu::setRAM(0x0001, 0x00); // inform system that RAM is 64k
-        }
+        Memory::setSizeRAM(RAM_SIZE_HI);
+        Cpu::setSizeRAM(Memory::getSizeRAM());
+        Cpu::setRAM(0x0001, 0x00); // inform system that RAM is 64k
     }
 
     void uploadToEmulatorRAM(const Gt1File& gt1File)
@@ -1279,7 +1288,7 @@ namespace Loader
         // Set 64k memory model based on any segment address being >= 0x8000
         for(int i=0; i<int(gt1File._segments.size()); i++)
         {
-            if(gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8) >= RAM_EXPANSION_START)
+            if(gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8) >= RAM_UPPER_START)
             {
                 setMemoryModel64k();
                 break;

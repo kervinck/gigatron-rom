@@ -84,6 +84,8 @@ namespace Loader
     };
 
 
+    void shutdown(void);
+
     void setCurrentGame(const std::string& currentGame);
 
     void uploadDirect(UploadTarget uploadTarget);

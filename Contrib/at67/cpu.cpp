@@ -405,13 +405,13 @@ namespace Cpu
     void setRAM16(uint16_t address, uint16_t data)
     {
         setRAM(address, uint8_t(LO_BYTE(data)));
-        setRAM(address+1, uint8_t(LO_BYTE(data)));
+        setRAM(address+1, uint8_t(HI_BYTE(data)));
     }
 
     void setXRAM16(uint32_t address, uint16_t data)
     {
         setXRAM(address, uint8_t(LO_BYTE(data)));
-        setXRAM(address+1, uint8_t(LO_BYTE(data)));
+        setXRAM(address+1, uint8_t(HI_BYTE(data)));
     }
 
     void setSizeRAM(int size)
@@ -469,6 +469,10 @@ namespace Cpu
         {
             romType = ROMv4;
         }
+        else if(getROM(0x005E, 1) == 0x40)
+        {
+            romType = ROMv5a;
+        }
         else if(getROM(0x005E, 1) == 0xF0)
         {
             romType = SDCARD;
@@ -478,12 +482,11 @@ namespace Cpu
             romType = DEVROM;
         }
 #endif
-        switch((RomType)romType)
+        _romType = (RomType)romType;
+        switch(_romType)
         {
             case ROMv1:
             {
-                _romType = (RomType)romType;
-
                 // Patches SYS_Exec_88 loader to accept page0 segments as the first segment and works with 64KB SRAM hardware
                 patchSYS_Exec_88();
 
@@ -500,7 +503,6 @@ namespace Cpu
             case SDCARD:
             case DEVROM:
             {
-                _romType = (RomType)romType;
                 setRAM(VIDEO_MODE_D, 0xEC);
                 setRAM(VIDEO_MODE_B, 0x0A);
                 setRAM(VIDEO_MODE_C, 0x0A);
@@ -613,7 +615,7 @@ namespace Cpu
             }
         }
 
-        Loader::closeComPort();
+        Loader::shutdown();
 
         SDL_Quit();
     }

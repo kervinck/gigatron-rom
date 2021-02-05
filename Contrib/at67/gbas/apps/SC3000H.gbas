@@ -1,5 +1,6 @@
 _runtimePath_ "../runtime"
 _runtimeStart_ &h7FFF
+_codeRomType_ ROMv3
 
 const colourBits = &h06F8
 def byte(colourBits) = &h01, &h02, &h04, &h08, &h10, &h20, &h40, &h3F
@@ -93,10 +94,9 @@ ohNoes:
     posY = rnd(101) + 10
 
 forever:
-    at posX, posY
     wait
+    at posX, posY
     print "RickRolled";
-    
     if posX AND 1 == 1
         colour = colour XOR peek(colourBits + (rnd(0) AND 7))
         set FG_COLOUR, colour

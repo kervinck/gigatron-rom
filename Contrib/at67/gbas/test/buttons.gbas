@@ -4,6 +4,7 @@ _codeRomType_ ROMv2
 
 mode 2: cls
 
+f = 'A'
 f = 0
 kk = 255
 repeat

@@ -13,7 +13,18 @@ const PAYLOAD_SIZE  = 63
 const PROTOCOL_SIZE = 1 + 1 + PAYLOAD_SIZE
 const PACKET_SIZE   = 1 + 1 + 12 + 1
 
-def execAddr, commsAddr, commsSize, commsRetn, browserIdx, browserY, cursorY, cursOldY, isLast, length, runStrAddr
+const CmdSDList  = 1
+const CmdSDExec  = 2
+const CmdSDOpen  = 3
+const CmdSDClose = 4
+const CmdSDBegin = 5
+const CmdSDInit  = 6
+
+const EntryFile  = 1
+const EntryDir   = 2
+const EntryError = 3
+
+def execAddr, commsAddr, commsSize, commsRetn, browserIdx, browserY, cursorY, cursOldY, isLast, length, runStrAddr, execRtn, waitRtn
 
 runName$ = ""
 execName$ = ""
@@ -28,7 +39,9 @@ gosub findLoader
     
 restart:
 
-gosub initialise    
+gosub initialise
+gosub initSDComms
+gosub beginSDCard
 gosub openSDCard
     
 repeat
@@ -44,12 +57,10 @@ f = 0
 kk = 255
 repeat
     wait
-    k = get("SERIAL_RAW")
-    if k &&<> 255
-        gosub handleInput
-        if &(peek(@pathName$)) then goto &restart
-    endif
-    kk = k
+
+    gosub handleInput
+    if &(execRtn) then goto &restart
+
     inc f
 forever
 end
@@ -57,11 +68,13 @@ end
 
 findLoader:
     romType = get("ROM_TYPE")
-    if romType &= 40      'ROMv3
+    if romType     &= &h20  'ROMv2
+        execAddr = &hE23E
+    elseif romType &= &h28  'ROMv3
         execAddr = &hB4A8
-    elseif romType &= 56  'ROMv4
+    elseif romType &= &h38  'ROMv4
         execAddr = &hAD5A
-    elseif romType &>= 64 'ROMv5 or higher
+    elseif romType &>= &h40 'ROMv5 or higher
         repeat
             'create name string
             execAddr = get("ROM_READ_DIR", execAddr)
@@ -233,24 +246,46 @@ return
 getRomType:
     'defaults to ROMv1
     NextByteIn_32 = &h02E9
-    if get("ROM_TYPE") &= &h20      'ROMv2
+    romType = get("ROM_TYPE")
+    if romType     &=  &h20 'ROMv2
         NextByteIn_32 = &h0BB1
-    elseif get("ROM_TYPE") &= &h28  'ROMv3
+    elseif romType &=  &h28 'ROMv3
         NextByteIn_32 = &h0BDF
-    elseif get("ROM_TYPE") &&= &h38 'ROMv4
+    elseif romType &&= &h38 'ROMv4
         NextByteIn_32 = &h8A31
-    elseif get("ROM_TYPE") &&= &h40 'ROMv5a
+    elseif romType &&= &h40 'ROMv5a
         NextByteIn_32 = &h5907
-    elseif get("ROM_TYPE") &&= &hF0 'SDCARD
+    elseif romType &&= &hF0 'SDCARD
         NextByteIn_32 = &h1300
-    elseif get("ROM_TYPE") &&= &hF8 'DEVROM
-        NextByteIn_32 = &h5D4F
+    elseif romType &&= &hF8 'DEVROM
+        NextByteIn_32 = &h5907
     endif
 return
 
 
-loadApp:
-    poke @commsCmd + 0, 2
+openSDCard:
+    poke @commsCmd, CmdSDOpen
+    len = peek(@pathName$)
+    if len &> 0
+        for i=1 &to len + 1
+            poke @commsCmd + i, peek(@pathName$ + i)
+        next i
+    else
+        poke @commsCmd + 1, 0
+    endif
+    commsSize = 1 + len + 1
+    gosub sendCommsCmd
+    
+    'SDCard open can take a variable amount of time
+    gosub waitSDCard
+    
+    pathName$ = ""
+return
+
+
+execApp:
+    gosub initSDComms
+    poke @commsCmd, CmdSDExec
     runName$ = string$(runStrAddr)
     len = peek(@runName$)
     for i=1 &to len + 1
@@ -263,43 +298,24 @@ loadApp:
 return
 
 
-openSDCard:
-    poke @commsCmd + 0, 3
-    len = peek(@pathName$)
-    if len &&> 0
-        for i=1 &to len + 1
-            poke @commsCmd + i, peek(@pathName$ + i)
-        next i
-    endif
-    commsSize = 1 + len + 1
-    gosub sendCommsCmd
-    pathName$ = ""
-    
-    'give the Arduino Micro a chance to do its thing before sending any more commands
-    wait 10
-return
-
-
 'repeat delay and auto repeat
 handleInput:
+    k = get("SERIAL_RAW")
     if k &&<> kk
         f = 0
-        gosub k, default
+        kk = k
+        gosub k
     endif
-    if f &&> 20
-        if &((f LSR 1) AND 1)
-            gosub k, default
+    if f &> 20
+        if ((f LSR 1) AND 1)
+            gosub k
         endif
     endif
 return
 
 
-default: pathName$ = ""
-         return
-
 'button A
-127:    wait 5
-        gosub execOrList
+127:    gosub execOrList
         return
 
 'enter
@@ -320,38 +336,83 @@ default: pathName$ = ""
      
 'down     
 251:    inc cursorY
-        if cursorY > min(browserIdx - 1, 14) then cursorY = 0
+        if cursorY &&> min(browserIdx - 1, 14) then cursorY = 0
         gosub updateBrowser
         return
 
 'up
 247:    dec cursorY
-        if cursorY < 0 then cursorY = min(browserIdx - 1, 14)
+        if cursorY &< 0 then cursorY = min(browserIdx - 1, 14)
         gosub updateBrowser
         return
 
 
 'execute files, list directories
 execOrList:
-    if peek(runStrAddr - 1) &&= 1
-        gosub loadApp
-    else
+    entry = peek(runStrAddr - 1)
+    if entry &= EntryFile
+        execRtn = 0
+        gosub execApp
+    elseif entry &= EntryDir
+        execRtn = 1
         pathName$ = string$(runStrAddr)
+    elseif entry &&= EntryError
+        execRtn = 2
+        pathName$ = ""
     endif
+return
+
+
+waitSDCard:
+    asm
+        LDW     _NextByteIn_32
+        STW     giga_sysFn
+
+waitSD: LDI     _waitRtn
+        STW     giga_sysArg0            'waitRtn address
+
+        LDI     207
+        ST      giga_sysArg3            'scanline 207
+        SYS     32                      'waitRtn result, (0:ready)
+        
+        LD      _waitRtn
+        BNE     _waitSD                 'loop while busy
+    endasm
+
+    wait 2
+return
+
+
+'this command is used to break BabelFish out of it's game controller loop and start checking comms
+initSDComms:
+    commsSize = 1
+    poke @commsCmd, CmdSDInit
+    gosub sendCommsCmd
+    wait
 return
 
 
 listSDCard:
     commsSize = 1
-    poke @commsCmd, 1
+    poke @commsCmd, CmdSDList
     gosub sendCommsCmd
 return
 
 
 closeSDCard:
     commsSize = 1
-    poke @commsCmd, 4
+    poke @commsCmd, CmdSDClose
     gosub sendCommsCmd
+return
+
+
+beginSDCard:
+    commsSize = 1
+    poke @commsCmd, CmdSDBegin
+    gosub sendCommsCmd
+    
+    'SDCard begin can take a variable amount of time
+    gosub waitSDCard
 return
 
 
