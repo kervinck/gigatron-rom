@@ -84,7 +84,6 @@ int main(int argc, char* argv[])
             if(Memory::getSizeRAM() == RAM_SIZE_LO)
             {
                 Memory::setSizeRAM(RAM_SIZE_HI);
-                Memory::initialise();
                 Cpu::setSizeRAM(Memory::getSizeRAM());
             }
         }

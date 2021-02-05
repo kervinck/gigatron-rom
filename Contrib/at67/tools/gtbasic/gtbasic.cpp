@@ -52,7 +52,6 @@ int main(int argc, char* argv[])
     if(name.find("64k") != std::string::npos  ||  name.find("64K") != std::string::npos)
     {
         Memory::setSizeRAM(RAM_SIZE_HI);
-        Memory::initialise();
     }
 
     // Optional include path

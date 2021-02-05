@@ -146,7 +146,6 @@ namespace Pragmas
         if(address >= RAM_UPPER_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
         {
             Memory::setSizeRAM(RAM_SIZE_HI);
-            Memory::initialise();
         }
 
         // String work area needs to be updated, (return old work areas and get new ones)
@@ -229,7 +228,6 @@ namespace Pragmas
         if(address >= RAM_UPPER_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
         {
             Memory::setSizeRAM(RAM_SIZE_HI);
-            Memory::initialise();
         }
 
         return true;
@@ -266,7 +264,6 @@ namespace Pragmas
         if(address >= RAM_UPPER_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
         {
             Memory::setSizeRAM(RAM_SIZE_HI);
-            Memory::initialise();
         }
 
         return true;
