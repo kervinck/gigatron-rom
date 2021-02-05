@@ -37,6 +37,34 @@
 
 namespace Cpu
 {
+    class RAM_s {
+        size_t  size;
+        uint8_t ram[4][0x8000];
+        uint16_t ctrl;
+        uint8_t  xin;
+        int bank;
+    public:
+        RAM_s(size_t size) {
+            resize(size);}
+        const uint8_t& operator[](uint16_t address) const {
+            return (ctrl&1)?xin:ram[(address&0x8000)?bank:0][address&0x7fff];}
+        uint8_t& operator[](uint16_t address) {
+            return ram[(address&0x8000)?bank:0][address&0x7fff];}
+        bool has_extension() {
+            return size==0x20000;}
+        void setctrl(uint16_t c) {
+            if (has_extension()) {ctrl=(c&0x80fd); bank=(ctrl&0xC0)>>6;} }
+        uint16_t getctrl() { return ctrl; }
+        void setxin(uint8_t x) {xin=x;}
+        uint8_t getxin() { return xin; }
+        void resize(size_t s) {
+            bank=(s>=0x10000)?1:0; ctrl=uint16_t((bank<<6)|0x3c); size=s;
+            if (size!=0x8000 && size!=0x10000 && size!=0x20000) abort(); }
+        uint8_t get(uint32_t addr) {return ram[(addr>>15)&3][addr&0x7fff];}
+        void set(uint32_t addr,uint8_t data) {ram[(addr>>15)&3][addr&0x7fff]=data;}
+    } _RAM(0x8000);
+
+
     const uint8_t _endianBytes[] = {0x00, 0x01, 0x02, 0x03};
 
     int _numRoms = 0;
@@ -52,7 +80,6 @@ namespace Cpu
     bool _initAudio = true;
     bool _consoleSaveFile = true;
 
-    std::vector<uint8_t> _RAM;
     uint8_t _ROM[ROM_SIZE][2];
     std::vector<uint8_t*> _romFiles;
     RomType _romType = ROMERR;
@@ -64,6 +91,7 @@ namespace Cpu
     int _scanlineMode = ScanlineMode::Normal;
 
     std::vector<InternalGt1> _internalGt1s;
+
 
     int getNumRoms(void) {return _numRoms;}
     int getRomIndex(void) {return _romIndex;}
@@ -331,11 +359,15 @@ namespace Cpu
     int64_t getClock(void) {return _clock;}
     uint8_t getIN(void) {return _IN;}
     uint8_t getXOUT(void) {return _XOUT;}
+    uint16_t getCTRL(void) {return _RAM.getctrl();}
+    uint8_t getXIN(void) {return _RAM.getxin();}
     uint16_t getVPC(void) {return _vPC.first;}
     uint16_t getOldVPC(void) {return _vPC.second;}
-    uint8_t getRAM(uint16_t address) {return _RAM[address & (Memory::getSizeRAM()-1)];}
+    uint8_t getRAM(uint16_t address) {return _RAM[address];}
+    uint8_t getXRAM(uint32_t address) {return _RAM.get(address);}
     uint8_t getROM(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01];}
-    uint16_t getRAM16(uint16_t address) {return _RAM[address & (Memory::getSizeRAM()-1)] | (_RAM[(address+1) & (Memory::getSizeRAM()-1)]<<8);}
+    uint16_t getRAM16(uint16_t address) {return _RAM[address] | (_RAM[address+1]<<8);}
+    uint16_t getXRAM16(uint32_t address) {return _RAM.get(address) | (_RAM.get(address+1)<<8);}
     uint16_t getROM16(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01] | (_ROM[(address+1) & (ROM_SIZE-1)][page & 0x01]<<8);}
     float getvCpuUtilisation(void) {return _vCpuUtilisation;}
 
@@ -345,14 +377,23 @@ namespace Cpu
     void setClock(int64_t clock) {_clock = clock;}
     void setIN(uint8_t in) {_IN = in;}
     void setXOUT(uint8_t xout) {_XOUT = xout;}
+    void setCTRL(uint16_t ctrl) {_RAM.setctrl(ctrl);}
+    void setXIN(uint8_t xin) {_RAM.setxin(xin);}
 
     void setRAM(uint16_t address, uint8_t data)
     {
         // Constant "0" and "1" are stored here
         if(address == ZERO_CONST_ADDRESS  &&  data != 0x00) {fprintf(stderr, "Cpu::setRAM() : Warning writing to address : 0x%04x : 0x%02x\n", address, data); return;}
         if(address == ONE_CONST_ADDRESS   &&  data != 0x01) {fprintf(stderr, "Cpu::setRAM() : Warning writing to address : 0x%04x : 0x%02x\n", address, data); return;}
+        _RAM[address] = data;
+    }
 
-        _RAM[address & (Memory::getSizeRAM()-1)] = data;
+    void setXRAM(uint32_t address, uint8_t data)
+    {
+        if (address < 0x8000)
+           setRAM((uint16_t)address, data);
+        else
+           _RAM.set(address, data);
     }
 
     void setROM(uint16_t base, uint16_t address, uint8_t data)
@@ -363,12 +404,14 @@ namespace Cpu
 
     void setRAM16(uint16_t address, uint16_t data)
     {
-        // Constant "0" and "1" are stored here
-        if(address == 0x0000) return;
-        if(address == 0x0080) return;
+        setRAM(address, uint8_t(LO_BYTE(data)));
+        setRAM(address+1, uint8_t(LO_BYTE(data)));
+    }
 
-        _RAM[address & (Memory::getSizeRAM()-1)] = uint8_t(LO_BYTE(data));
-        _RAM[(address+1) & (Memory::getSizeRAM()-1)] = uint8_t(HI_BYTE(data));
+    void setXRAM16(uint32_t address, uint16_t data)
+    {
+        setXRAM(address, uint8_t(LO_BYTE(data)));
+        setXRAM(address+1, uint8_t(LO_BYTE(data)));
     }
 
     void setSizeRAM(int size)
@@ -842,7 +885,7 @@ namespace Cpu
             case 0x5D: // ora [Y,X++],OUT
             {
                 uint16_t addr = MAKE_ADDR(S._Y, S._X);
-                T._OUT = _RAM[addr & (Memory::getSizeRAM()-1)] | S._AC;
+                T._OUT = _RAM[addr] | S._AC;
                 T._X++;
                 T._PC = S._PC + 1;
                 return;
@@ -851,7 +894,7 @@ namespace Cpu
 
             case 0xC2: // st [D]
             {
-                _RAM[S._D & (Memory::getSizeRAM()-1)] = S._AC;
+                _RAM[S._D] = S._AC;
                 T._PC = S._PC + 1;
                 return;
             }
@@ -859,7 +902,7 @@ namespace Cpu
 
             case 0x01: // ld [D]
             {
-                T._AC = _RAM[S._D & (Memory::getSizeRAM()-1)];
+                T._AC = _RAM[S._D];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -892,7 +935,7 @@ namespace Cpu
             case 0x0D: // ld [Y,X]
             {
                 uint16_t addr = MAKE_ADDR(S._Y, S._X);
-                T._AC = _RAM[addr & (Memory::getSizeRAM()-1)];
+                T._AC = _RAM[addr];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -915,7 +958,7 @@ namespace Cpu
 
             case 0x81: // adda [D]
             {
-                T._AC += _RAM[S._D & (Memory::getSizeRAM()-1)];
+                T._AC += _RAM[S._D];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -924,7 +967,7 @@ namespace Cpu
             case 0x89: // adda [Y,D]
             {
                 uint16_t addr = MAKE_ADDR(S._Y, S._D);
-                T._AC += _RAM[addr & (Memory::getSizeRAM()-1)];
+                T._AC += _RAM[addr];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -980,14 +1023,15 @@ namespace Cpu
         switch(bus)
         {
             case 0: B=S._D;                                            break;
-            case 1: if (!W) B = _RAM[addr & (Memory::getSizeRAM()-1)]; break;
+            case 1: if (!W) B = _RAM[addr]; else _RAM.setctrl(addr);   break;
             case 2: B=S._AC;                                           break;
             case 3: B=_IN;                                             break;
 
             default: break;
         }
 
-        if(W) _RAM[addr & (Memory::getSizeRAM()-1)] = B; // Random Access Memory
+        if(W && (bus != 1 || !_RAM.has_extension()))
+            _RAM[addr] = B; // Random Access Memory
 
         uint8_t ALU = 0; // Arithmetic and Logic Unit
         switch(ins)
@@ -1050,14 +1094,21 @@ namespace Cpu
 
     void swapMemoryModel(void)
     {
-        (Memory::getSizeRAM() == RAM_SIZE_LO) ? Memory::setSizeRAM(RAM_SIZE_HI) : Memory::setSizeRAM(RAM_SIZE_LO);
-        _RAM.resize(Memory::getSizeRAM());
+        if (Memory::getSizeRAM() == RAM_SIZE_LO) {
+            Memory::setSizeRAM(RAM_SIZE_HI);
+            _RAM.resize(RAM_SIZE_HI);
+        } else if (! _RAM.has_extension()) {
+            Memory::setSizeRAM(RAM_SIZE_HI);
+            _RAM.resize(RAM_SIZE_HI * 2);
+        } else {
+            Memory::setSizeRAM(RAM_SIZE_LO);
+            _RAM.resize(RAM_SIZE_LO);
+        }
         Memory::initialise();
         reset(false);
     }
 
-    // Counts maximum and used vCPU instruction slots available per frame, updates _vPC and performs a softReset if needed
-    void vCpuUpdate(const State& S, const State& T)
+    void vCpuUsage(const State& S, const State& T)
     {
         UNREFERENCED_PARAM(T);
 
@@ -1112,7 +1163,7 @@ namespace Cpu
         cycle(_stateS, _stateT);
 
         // vCPU instruction slot utilisation, also updates _vPC
-        vCpuUpdate(_stateS, _stateT);
+        vCpuUsage(_stateS, _stateT);
 
         _hSync = (_stateT._OUT & 0x40) - (_stateS._OUT & 0x40);
         _vSync = (_stateT._OUT & 0x80) - (_stateS._OUT & 0x80);
