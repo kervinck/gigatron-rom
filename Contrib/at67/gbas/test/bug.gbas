@@ -2,7 +2,7 @@ _runtimePath_ "../runtime"
 _runtimeStart_ &hFFFF
 _arraysStart_ &hFFFF
 
-dim wordArray(5000)
+dim wordArray(5000) = 0
 dim byteArray%(5000)
 dim threeDimArray(5, 5, 5)
 dim strArray$(2) = "dog", "cat123", "test"

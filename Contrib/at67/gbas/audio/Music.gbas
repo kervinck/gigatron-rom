@@ -20,9 +20,9 @@ samplesAddr = &h0600
 def byte(&h0600, 0, 1, SAMPLES) = 0 'buffer A
 def byte(&h0680, 0, 1, SAMPLES) = 0 'buffer B
 
-load midi, ../../res/audio/midi/agony.gtmid,    0
-load midi, ../../res/audio/midi/bath.gtmid,     1
-load midi, ../../res/audio/midi/escape.gtmid,   2
+load midi, ../../res/audio/midi/agony.gtmid,  0
+load midi, ../../res/audio/midi/bath.gtmid,   1
+load midi, ../../res/audio/midi/escape.gtmid, 2
 
 init midiv, noupdate
 
