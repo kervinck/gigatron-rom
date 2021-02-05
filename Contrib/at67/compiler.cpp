@@ -129,6 +129,7 @@ namespace Compiler
     std::vector<DefDataLoaderImageChunk> _defDataLoaderImageChunks;
 
     std::map<int, DefDataMidi> _defDataMidis;
+    std::map<int, DefDataOpen> _defDataOpens;
 
     std::map<int, DefDataSprite> _defDataSprites;
     SpritesAddrLut _spritesAddrLut;
@@ -211,6 +212,7 @@ namespace Compiler
     std::vector<DefDataLoaderImageChunk>& getDefDataLoaderImageChunks(void) {return _defDataLoaderImageChunks;}
 
     std::map<int, DefDataMidi>& getDefDataMidis(void) {return _defDataMidis;}
+    std::map<int, DefDataOpen>& getDefDataOpens(void) {return _defDataOpens;}
 
     std::map<int, DefDataSprite>& getDefDataSprites(void) {return _defDataSprites;}
     SpritesAddrLut& getSpritesAddrLut(void) {return _spritesAddrLut;}
@@ -5465,6 +5467,7 @@ REDO_STATEMENT:
         _defDataImages.clear();
         _defDataLoaderImageChunks.clear();
         _defDataMidis.clear();
+        _defDataOpens.clear();
         _defDataSprites.clear();
         _defDataFonts.clear();
         _defFunctions.clear();

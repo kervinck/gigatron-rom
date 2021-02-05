@@ -37,6 +37,34 @@
 
 namespace Cpu
 {
+    class RAM_s {
+        size_t  size;
+        uint8_t ram[4][0x8000];
+        uint16_t ctrl;
+        uint8_t  xin;
+        int bank;
+    public:
+        RAM_s(size_t size) {
+            resize(size);}
+        const uint8_t& operator[](uint16_t address) const {
+            return (ctrl&1)?xin:ram[(address&0x8000)?bank:0][address&0x7fff];}
+        uint8_t& operator[](uint16_t address) {
+            return ram[(address&0x8000)?bank:0][address&0x7fff];}
+        bool has_extension() {
+            return size==0x20000;}
+        void setctrl(uint16_t c) {
+            if (has_extension()) {ctrl=(c&0x80fd); bank=(ctrl&0xC0)>>6;} }
+        uint16_t getctrl() { return ctrl; }
+        void setxin(uint8_t x) {xin=x;}
+        uint8_t getxin() { return xin; }
+        void resize(size_t s) {
+            bank=(s>=0x10000)?1:0; ctrl=uint16_t((bank<<6)|0x3c); size=s;
+            if (size!=0x8000 && size!=0x10000 && size!=0x20000) abort(); }
+        uint8_t get(uint32_t addr) {return ram[(addr>>15)&3][addr&0x7fff];}
+        void set(uint32_t addr,uint8_t data) {ram[(addr>>15)&3][addr&0x7fff]=data;}
+    } _RAM(0x8000);
+
+
     const uint8_t _endianBytes[] = {0x00, 0x01, 0x02, 0x03};
 
     int _numRoms = 0;
@@ -52,33 +80,6 @@ namespace Cpu
     bool _initAudio = true;
     bool _consoleSaveFile = true;
 
-    class RAM_s {
-      size_t  size;
-      uint8_t ram[4][0x8000];
-      uint16_t ctrl;
-      uint8_t  xin;
-      int bank;
-    public:
-      RAM_s(size_t size) {
-        resize(size);}
-      const uint8_t& operator[](uint16_t address) const {
-        return (ctrl&1)?xin:ram[(address&0x8000)?bank:0][address&0x7fff];}
-      uint8_t& operator[](uint16_t address) {
-        return ram[(address&0x8000)?bank:0][address&0x7fff];}
-      bool has_extension() {
-        return size==0x20000;}
-      void setctrl(uint16_t c) {
-        if (has_extension()) {ctrl=(c&0x80fd); bank=(ctrl&0xC0)>>6;} }
-      uint16_t getctrl() { return ctrl; }
-      void setxin(uint8_t x) {xin=x;}
-      uint8_t getxin() { return xin; }
-      void resize(size_t s) {
-        bank=(s>=0x10000)?1:0; ctrl=(bank<<6)|0x3c; size=s;
-        if (size!=0x8000 && size!=0x10000 && size!=0x20000) abort(); }
-      uint8_t get(uint32_t addr) {return ram[(addr>>15)&3][addr&0x7fff];}
-      void set(uint32_t addr,uint8_t data) {ram[(addr>>15)&3][addr&0x7fff]=data;}
-    } _RAM(0x8000);
-
     uint8_t _ROM[ROM_SIZE][2];
     std::vector<uint8_t*> _romFiles;
     RomType _romType = ROMERR;
@@ -90,6 +91,7 @@ namespace Cpu
     int _scanlineMode = ScanlineMode::Normal;
 
     std::vector<InternalGt1> _internalGt1s;
+
 
     int getNumRoms(void) {return _numRoms;}
     int getRomIndex(void) {return _romIndex;}
@@ -343,8 +345,8 @@ namespace Cpu
     int64_t _clockStall = CLOCK_RESET;
     int64_t _clock = CLOCK_RESET;
     uint8_t _IN = 0xFF, _XOUT = 0x00;
-    uint16_t _vPC = 0x0200;
     State _stateS, _stateT;
+    vCpuPc _vPC;
 
 #ifdef _WIN32
     HWND _consoleWindowHWND;
@@ -359,7 +361,8 @@ namespace Cpu
     uint8_t getXOUT(void) {return _XOUT;}
     uint16_t getCTRL(void) {return _RAM.getctrl();}
     uint8_t getXIN(void) {return _RAM.getxin();}
-    uint16_t getVPC(void) {return _vPC;}
+    uint16_t getVPC(void) {return _vPC.first;}
+    uint16_t getOldVPC(void) {return _vPC.second;}
     uint8_t getRAM(uint16_t address) {return _RAM[address];}
     uint8_t getXRAM(uint32_t address) {return _RAM.get(address);}
     uint8_t getROM(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01];}
@@ -368,6 +371,7 @@ namespace Cpu
     uint16_t getROM16(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01] | (_ROM[(address+1) & (ROM_SIZE-1)][page & 0x01]<<8);}
     float getvCpuUtilisation(void) {return _vCpuUtilisation;}
 
+    void setOldVPC(uint16_t oldVPC) {_vPC.second = oldVPC;}
     void setColdBoot(bool coldBoot) {_coldBoot = coldBoot;}
     void setIsInReset(bool isInReset) {_isInReset = isInReset;}
     void setClock(int64_t clock) {_clock = clock;}
@@ -904,7 +908,7 @@ namespace Cpu
             }
             break;
 
-#if 0
+#if 1
             case 0x00: // ld D
             {
                 T._AC = S._D;
@@ -1103,8 +1107,7 @@ namespace Cpu
         Memory::initialise();
         reset(false);
     }
-  
-    // Counts maximum and used vCPU instruction slots available per frame
+
     void vCpuUsage(const State& S, const State& T)
     {
         UNREFERENCED_PARAM(T);
@@ -1112,12 +1115,12 @@ namespace Cpu
         // All ROM's so far v1 through v5a/DEVROM use the same vCPU dispatch address!
         if(S._PC == ROM_VCPU_DISPATCH)
         {
-            _vPC = (getRAM(0x0017) <<8) | getRAM(0x0016);
-            if(_vPC < Editor::getCpuUsageAddressA()  ||  _vPC > Editor::getCpuUsageAddressB()) _vCpuInstPerFrame++;
+            _vPC.first = (getRAM(0x0017) <<8) | getRAM(0x0016);
+            if(_vPC.first < Editor::getCpuUsageAddressA()  ||  _vPC.first > Editor::getCpuUsageAddressB()) _vCpuInstPerFrame++;
             _vCpuInstPerFrameMax++;
 
             // Soft reset
-            if(_vPC == VCPU_SOFT_RESET) softReset();
+            if(_vPC.first == VCPU_SOFT_RESET) softReset();
 
             static uint64_t prevFrameCounter = 0;
             double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
@@ -1159,7 +1162,7 @@ namespace Cpu
         // Update CPU
         cycle(_stateS, _stateT);
 
-        // vCPU instruction slot utilisation
+        // vCPU instruction slot utilisation, also updates _vPC
         vCpuUsage(_stateS, _stateT);
 
         _hSync = (_stateT._OUT & 0x40) - (_stateS._OUT & 0x40);
@@ -1211,7 +1214,7 @@ namespace Cpu
         }
 #endif        
 
-        // RomType and Watchdog
+        // RomType, init audio and watchdog
         if(_clock > STARTUP_DELAY_CLOCKS)
         {
             if(_isInReset)
@@ -1250,8 +1253,11 @@ namespace Cpu
             //Audio::fillBuffer();
             Audio::fillCallbackBuffer();
 
-            // Loader
+#if defined(HARDWARE_LOADER)
+            // TODO: don't enable until Loader::upload is fixed!
+            // Emulation of hardware Loader
             if(_clock > STARTUP_DELAY_CLOCKS*10.0) Loader::upload(_vgaY);
+#endif
 
             // Horizontal timing errors
             if(_vgaY >= 0  &&  _vgaY < SCREEN_HEIGHT)

@@ -2374,23 +2374,15 @@ namespace Assembler
 
     void handleGprintfs(void)
     {
-        static uint16_t pVPC = 0x0000;
-
         if(_gprintfs.size() == 0) return;
 
-        // Emulator can cycle many times for one vCPU cycle, so check only once per vPC change
-        if(Cpu::getVPC() != pVPC)
+        if(_gprintfs.find(Cpu::getVPC()) != _gprintfs.end())
         {
-            if(_gprintfs.find(Cpu::getVPC()) != _gprintfs.end())
-            {
-                std::string gstring;
-                const Gprintf& gprintf = _gprintfs[Cpu::getVPC()];
+            std::string gstring;
+            const Gprintf& gprintf = _gprintfs[Cpu::getVPC()];
 
-                getGprintfString(gprintf, gstring);
-                fprintf(stderr, "gprintf() : 0x%04X : %s\n", gprintf._address, gstring.c_str());
-            }
-
-            pVPC = Cpu::getVPC();
+            getGprintfString(gprintf, gstring);
+            fprintf(stderr, "gprintf() : 0x%04X : %s\n", gprintf._address, gstring.c_str());
         }
     }
 #endif

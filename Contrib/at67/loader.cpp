@@ -124,7 +124,7 @@ namespace Loader
             }
 
             // Read segment
-            int segmentSize = (segment._segmentSize == 0) ? 256 : segment._segmentSize;
+            int segmentSize = (segment._segmentSize == 0) ? SEGMENT_SIZE : segment._segmentSize;
             segment._dataBytes.resize(segmentSize);
             infile.read((char *)&segment._dataBytes[0], segmentSize);
             if(infile.eof() || infile.bad() || infile.fail())
@@ -168,12 +168,12 @@ namespace Loader
 
         // Merge page 0 segments together
         Gt1Segment page0;
-        int segments = 0;
-        for(int i=0; i<int(gt1File._segments.size()); i++) if(gt1File._segments[i]._hiAddress == 0x00) segments++;
-        if(segments > 1)
+        int page0Segments = 0;
+        for(int i=0; i<int(gt1File._segments.size()); i++) if(gt1File._segments[i]._hiAddress == 0x00) page0Segments++;
+        if(page0Segments > 1)
         {
             uint8_t start = gt1File._segments[0]._loAddress;
-            uint8_t end = gt1File._segments[segments-1]._loAddress + uint8_t(gt1File._segments[segments-1]._dataBytes.size()) - 1;
+            uint8_t end = gt1File._segments[page0Segments-1]._loAddress + uint8_t(gt1File._segments[page0Segments-1]._dataBytes.size()) - 1;
 
             // Reserve space taking into account ONE_CONST_ADDRESS
             page0._loAddress = start;
@@ -182,8 +182,8 @@ namespace Loader
             if(start <= ONE_CONST_ADDRESS && end >= ONE_CONST_ADDRESS) page0._dataBytes[ONE_CONST_ADDRESS-start] = 0x01;
 
             // Copy page 0 segments
-            fprintf(stderr, "\n* Merging %d page 0 segments\n", segments);
-            for(int i=0; i<segments; i++)
+            fprintf(stderr, "\n* Merging %d page 0 segments\n", page0Segments);
+            for(int i=0; i<page0Segments; i++)
             {
                 int j = 0;
                 int seg = gt1File._segments[i]._loAddress - start;
@@ -205,15 +205,87 @@ namespace Loader
             }
 
             // Erase old page 0 segments
-            for(int i=0; i<segments; i++) gt1File._segments.erase(gt1File._segments.begin());
+            for(int i=0; i<page0Segments; i++) gt1File._segments.erase(gt1File._segments.begin());
 
-            // Insert merged page0 segment
+            // Insert merged page 0 segment
             gt1File._segments.insert(gt1File._segments.begin(), page0);
             fprintf(stderr, "* Merged:       start: 0x%0x  end: 0x%02x  size: 0x%02x\n", gt1File._segments[0]._loAddress, 
-                                                                                       gt1File._segments[0]._loAddress + uint8_t(gt1File._segments[0]._dataBytes.size()) - 1, 
-                                                                                       uint8_t(gt1File._segments[0]._dataBytes.size()));
+                                                                                         gt1File._segments[0]._loAddress + uint8_t(gt1File._segments[0]._dataBytes.size()) - 1, 
+                                                                                         uint8_t(gt1File._segments[0]._dataBytes.size()));
         }
 
+#if 1
+        // Merge non page 0 segments together
+        std::vector<Gt1Segment> segmentsOut;
+        int lastPage = int((Memory::getSizeRAM() - 1) >>8);
+        for(int j=1; j<=lastPage; j++)
+        {
+            uint8_t hiAddr = uint8_t(j);
+            std::vector<Gt1Segment> segmentsIn;
+            for(int i=0; i<int(gt1File._segments.size()); i++)
+            {
+                if(gt1File._segments[i]._hiAddress == hiAddr) segmentsIn.push_back(gt1File._segments[i]);
+            }
+
+            if(segmentsIn.size())
+            {
+                // Sort segmentsIn from lowest low byte address to highest low byte address
+                std::sort(segmentsIn.begin(), segmentsIn.end(), [](const Gt1Segment& segmentA, const Gt1Segment& segmentB)
+                {
+                    return (segmentA._loAddress < segmentB._loAddress);
+                });
+
+                bool lastSegFractured = false;
+                Gt1Segment segment = {false, hiAddr, segmentsIn[0]._loAddress, uint8_t(segmentsIn[0]._dataBytes.size()), segmentsIn[0]._dataBytes};
+                for(int i=0; i<int(segmentsIn.size()); i++)
+                {
+                    if(segment._dataBytes.size() == 0)
+                    {
+                        lastSegFractured = false;
+                        segment._loAddress = segmentsIn[i]._loAddress;
+                        segment._dataBytes = segmentsIn[i]._dataBytes;
+                        segment._segmentSize = uint8_t(segmentsIn[i]._dataBytes.size());
+                    }
+
+                    if(i<int(segmentsIn.size()-1)  &&  segmentsIn[i]._loAddress + segmentsIn[i]._dataBytes.size()  ==  segmentsIn[i + 1]._loAddress)
+                    {
+                        segment._dataBytes.insert(segment._dataBytes.end(), segmentsIn[i + 1]._dataBytes.begin(), segmentsIn[i + 1]._dataBytes.end());
+
+                        uint16_t segmentSize = segment._segmentSize + segmentsIn[i + 1]._segmentSize;
+                        if(segmentSize > SEGMENT_SIZE)
+                        {
+                            fprintf(stderr, "Loader::saveGt1File() : total segment size:%d > %d in segment %d\n", segment._segmentSize, SEGMENT_SIZE, i);
+                            return false;
+                        }
+
+                        segment._segmentSize += segmentsIn[i + 1]._segmentSize;
+                        if(segmentSize == SEGMENT_SIZE) segment._segmentSize = 0;
+                    }
+                    else
+                    {
+                        lastSegFractured = true;
+                        segmentsOut.push_back(segment);
+                        segment._dataBytes.clear();
+                    }
+                }
+                if(!lastSegFractured) segmentsOut.push_back(segment);
+            }
+        }
+
+        // Erase pages 1 to N and insert new pages, (page 0 exists and has already been merged into first segment)
+        if(gt1File._segments[0]._hiAddress == 0x00)
+        {
+            gt1File._segments.erase(gt1File._segments.begin() + 1, gt1File._segments.end());
+        }
+        // Erase all pages and insert new pages
+        else
+        {
+            gt1File._segments.clear();
+        }
+        gt1File._segments.insert(gt1File._segments.end(), segmentsOut.begin(), segmentsOut.end());
+#endif
+
+        // Output
         for(int i=0; i<int(gt1File._segments.size()); i++)
         {
             // Write header
@@ -225,7 +297,7 @@ namespace Loader
             }
 
             // Write segment
-            int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
+            int segmentSize = (gt1File._segments[i]._segmentSize == 0) ? SEGMENT_SIZE : gt1File._segments[i]._segmentSize;
             outfile.write((char *)&gt1File._segments[i]._dataBytes[0], segmentSize);
             if(outfile.bad() || outfile.fail())
             {
@@ -258,11 +330,14 @@ namespace Loader
             if(gt1File._segments[i]._hiAddress)
             {
                 uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
-                uint16_t segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
+                uint16_t segmentSize = (gt1File._segments[i]._segmentSize == 0) ? SEGMENT_SIZE : gt1File._segments[i]._segmentSize;
                 //if((address + segmentSize - 1) < Memory::getSizeRAM()  &&  !Memory::isVideoRAM(address)) totalSize += segmentSize;
                 if((address + segmentSize - 1) < Memory::getSizeRAM()) totalSize += segmentSize;
-                if((address & 0x00FF) + segmentSize > 256) fprintf(stderr, "\nLoader::printGt1Stats() : Page overflow : segment %d : address 0x%04x : segmentSize %3d :" 
-                                                                           "ignore if non code segment and if data does not spill into allocated RAM, (video, audio, zero page, etc)\n", i, address, segmentSize);
+                if((address & SEGMENT_MASK) + segmentSize > SEGMENT_SIZE)
+                {
+                    fprintf(stderr, "\nLoader::printGt1Stats() : Page overflow : segment %d : address 0x%04x : segmentSize %3d\n", i, address, segmentSize);
+                    return 0;
+                }
             }
         }
         uint16_t startAddress = gt1File._loStart + (gt1File._hiStart <<8);
@@ -270,7 +345,7 @@ namespace Loader
         fprintf(stderr, "*                     Creating .gt1                    \n");
         fprintf(stderr, "*******************************************************\n");
         fprintf(stderr, "* %-20s : 0x%04x  : %5d bytes                          \n", output.c_str(), startAddress, totalSize);
-#if 0
+#if 1
         fprintf(stderr, "*******************************************************\n");
         fprintf(stderr, "*   Segment   :  Type  : Address :    Size             \n");
         fprintf(stderr, "*******************************************************\n");
@@ -282,7 +357,7 @@ namespace Loader
         for(int i=0; i<int(gt1File._segments.size()); i++)
         {
             uint16_t address = gt1File._segments[i]._loAddress + (gt1File._segments[i]._hiAddress <<8);
-            uint16_t segmentSize = (gt1File._segments[i]._segmentSize == 0) ? 256 : gt1File._segments[i]._segmentSize;
+            uint16_t segmentSize = (gt1File._segments[i]._segmentSize == 0) ? SEGMENT_SIZE : gt1File._segments[i]._segmentSize;
             std::string memory = "RAM";
             if(gt1File._segments[i]._isRomAddress)
             {
@@ -302,7 +377,7 @@ namespace Loader
             }
 
             // New contiguous segment
-            if(segmentSize == 256)
+            if(segmentSize == SEGMENT_SIZE)
             {
                 if(contiguousSegments == 0)
                 {
@@ -321,7 +396,7 @@ namespace Loader
                 // Contiguous segment < 256 bytes
                 else
                 {
-                    fprintf(stderr, "*    %4d     :  %s   : 0x%04x  : %5d bytes (%dx256)\n", startContiguousSegment, memory.c_str(), startContiguousAddress, contiguousSegments*256, contiguousSegments);
+                    fprintf(stderr, "*    %4d     :  %s   : 0x%04x  : %5d bytes (%dx%d)\n", startContiguousSegment, memory.c_str(), startContiguousAddress, contiguousSegments*SEGMENT_SIZE, contiguousSegments, SEGMENT_SIZE);
                     fprintf(stderr, "*    %4d     :  %s   : 0x%04x  : %5d bytes\n", i, memory.c_str(), address, segmentSize);
                     contiguousSegments = 0;
                 }
@@ -344,7 +419,6 @@ namespace Loader
     enum FrameState {Resync=0, Frame, Execute, NumFrameStates};
 
 
-    UploadTarget _uploadTarget = None;
     bool _disableUploads = false;
 
     int _gt1UploadSize = 0;
@@ -542,9 +616,6 @@ namespace Loader
 
     const std::string& getCurrentGame(void) {return _currentGame;}
     void setCurrentGame(const std::string& currentGame) {_currentGame = currentGame;}
-
-    UploadTarget getUploadTarget(void) {return _uploadTarget;}
-    void setUploadTarget(UploadTarget target) {_uploadTarget = target;}
 
     int getConfigRomsSize(void) {return int(_configRoms.size());}
     ConfigRom* getConfigRom(int index)
@@ -835,7 +906,7 @@ namespace Loader
         Graphics::setUploadFilename(filename);
 
         _gt1UploadSize = int(gt1file.gcount());
-        SDL_CreateThread(uploadToGigaThread, VERSION_STR, (void*)&_gt1UploadSize);
+        SDL_CreateThread(uploadToGigaThread, "gtemuAT67::Loader::uploadToGiga()", (void*)&_gt1UploadSize);
     }
 
     void disableUploads(bool disable)
@@ -1230,7 +1301,7 @@ namespace Loader
     }
 
     // Uploads directly into the emulator's RAM/ROM or to real Gigatron hardware if available
-    void uploadDirect(UploadTarget uploadTarget, const std::string& name)
+    void uploadDirect(UploadTarget uploadTarget)
     {
         Gt1File gt1File;
 
@@ -1244,10 +1315,14 @@ namespace Loader
         uint16_t execAddress = USER_CODE_START;
         std::string gtbFilepath;
 
-        size_t slash = name.find_last_of("\\/");
+        if(Editor::getCurrentFileEntryName())
+        {
+            _filePath = Editor::getBrowserPath() + *Editor::getCurrentFileEntryName();
+        }
 
-        std::string filepath = name;
-        std::string filename = name.substr(slash + 1);
+        std::string filepath = _filePath;
+        size_t slash = filepath.find_last_of("\\/");
+        std::string filename = filepath.substr(slash + 1);
 
         Expression::replaceText(filepath, "\\", "/");
 
@@ -1628,23 +1703,9 @@ namespace Loader
         static uint8_t payload[RAM_SIZE_HI];
         static uint8_t payloadSize = 0;
 
-        if(_uploadTarget != None  ||  frameUploading)
+        if(frameUploading)
         {
             uint16_t execAddress = Editor::getLoadBaseAddress();
-            if(_uploadTarget != None)
-            {
-                if(Editor::getCurrentFileEntryName())
-                {
-                    _filePath = Editor::getBrowserPath() + *Editor::getCurrentFileEntryName();
-                }
-
-                //fprintf(stderr, "\nLoader::upload() : %s\n", _filePath.c_str());
-
-                uploadDirect(_uploadTarget, _filePath);
-                _uploadTarget = None;
-
-                return;
-            }
 
             frameUploading = true;            
             static uint8_t checksum = 0;

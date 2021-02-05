@@ -828,7 +828,7 @@ namespace Editor
             FileType fileType = getCurrentFileEntryType();
             switch(fileType)
             {
-                case File: Loader::setUploadTarget(Loader::Emulator); break;
+                case File: Loader::uploadDirect(Loader::Emulator); break;
                 case Dir:  changeBrowseDirectory();                   break;
 
                 default: break;
@@ -883,7 +883,7 @@ namespace Editor
             FileType fileType = getCurrentFileEntryType();
             switch(fileType)
             {
-                case File: Loader::setUploadTarget(Loader::Hardware); break;
+                case File: Loader::uploadDirect(Loader::Hardware); break;
 
                 default: break;
             }
@@ -1547,19 +1547,22 @@ namespace Editor
     // Debug mode, handles it's own input and rendering
     bool handleDebugger(void)
     {
-        // Gprintfs
-        Assembler::handleGprintfs();
-
-        // Minimum vSP value
-        static uint16_t vPC = Cpu::getVPC();
-        if(vPC != Cpu::getVPC())
+        // Minimum vSP value and GPRINT's only checked when vPC has changed
+        bool vPCchanged = false;
+        if(Cpu::getVPC() != Cpu::getOldVPC())
         {
+            vPCchanged = true;
+            Cpu::setOldVPC(Cpu::getVPC());
+
             uint8_t vSP = Cpu::getRAM(0x001C);
             uint8_t vSpMin = Assembler::getvSpMin();
             if(vSP  &&  (vSpMin == 0x00  ||  vSP < vSpMin))
             {
                 Assembler::setvSpMin(vSP);
             }
+
+            // GPRINTF's
+            Assembler::handleGprintfs();
         }
 
         // Debug
@@ -1607,10 +1610,8 @@ namespace Editor
                 }
             }
             // vCPU debugging, (this code can potentially run for every Native instruction, for efficiency we check vPC so this code only runs for each vCPU instruction)
-            else if(vPC != Cpu::getVPC()  ||  clocks >= MAX_SINGLE_STEP_CLOCKS)
+            else if(vPCchanged  ||  clocks >= MAX_SINGLE_STEP_CLOCKS)
             {
-                vPC = Cpu::getVPC();
-
                 // Timeout on change of variable
                 if(SDL_GetTicks() - _singleStepTicks > SINGLE_STEP_STALL_CLOCKS)
                 {
@@ -1629,10 +1630,10 @@ namespace Editor
                         }
                         else
                         {
-                            auto it = std::find(_vpcBreakPoints.begin(), _vpcBreakPoints.end(), vPC);
+                            auto it = std::find(_vpcBreakPoints.begin(), _vpcBreakPoints.end(), Cpu::getVPC());
                             if(it != _vpcBreakPoints.end())
                             {
-                                beginStep(vPC);
+                                beginStep(Cpu::getVPC());
                             }
                         }
                     }
@@ -1641,13 +1642,13 @@ namespace Editor
                     case StepPC:
                     {
                         // Step whenever program counter changes or when MAX_SINGLE_STEP_CLOCKS clocks have occured, (to avoid deadlocks)
-                        if(vPC != _singleStepVpc  ||  clocks >= MAX_SINGLE_STEP_CLOCKS) beginStep(vPC);
+                        if(Cpu::getVPC() != _singleStepVpc  ||  clocks >= MAX_SINGLE_STEP_CLOCKS) beginStep(Cpu::getVPC());
                     }
                     break;
 
                     case StepWatch:
                     {
-                        if(Cpu::getRAM(_singleStepAddress) != _singleStepVpc) beginStep(vPC);
+                        if(Cpu::getRAM(_singleStepAddress) != _singleStepVpc) beginStep(Cpu::getVPC());
                     }
                     break;
 
