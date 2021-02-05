@@ -22,7 +22,7 @@ namespace Memory
     int getFreeGtbRAM(int numLines)
     {
         int free = ((0x80 - HI_BYTE(GTB_LINE0_ADDRESS))*NUM_GTB_LINES_PER_ROW - numLines)*MAX_GTB_LINE_SIZE - MAX_GTB_LINE_SIZE;
-        if(_sizeRAM == RAM_SIZE_HI) free += RAM_EXPANSION_SIZE;
+        if(_sizeRAM == RAM_SIZE_HI) free += RAM_UPPER_SIZE;
         return free;
     }
 
@@ -47,7 +47,7 @@ namespace Memory
         for(uint16_t i=RAM_SEGMENTS_START; i<=RAM_SEGMENTS_END; i+=RAM_SEGMENTS_OFS) _freeRam.push_back({i, RAM_SEGMENTS_SIZE});
 
         // 0x8000 <-> 0xFF00
-        if(_sizeRAM == RAM_SIZE_HI) _freeRam.push_back({RAM_EXPANSION_START, RAM_EXPANSION_SIZE});
+        if(_sizeRAM == RAM_SIZE_HI) _freeRam.push_back({RAM_UPPER_START, RAM_UPPER_SIZE});
 
         // VRAM 0x0800 <-> 0x7F00, 160x120 pixels, offscreen areas start at 0xXXA0 and end at 0xXXFF, (can be used for horizontal scrolling or code/data storage)
         for(uint16_t i=RAM_VIDEO_START; i<=RAM_VIDEO_END; i+=RAM_VIDEO_OFS) _videoRam.push_back({i, RAM_SCANLINE_SIZE});

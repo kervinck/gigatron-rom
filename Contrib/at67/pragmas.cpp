@@ -143,7 +143,7 @@ namespace Pragmas
         Compiler::setRuntimeStart(address);
 
         // Re-initialise memory manager for 64K
-        if(address >= RAM_EXPANSION_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
+        if(address >= RAM_UPPER_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
         {
             Memory::setSizeRAM(RAM_SIZE_HI);
             Memory::initialise();
@@ -226,7 +226,7 @@ namespace Pragmas
         Compiler::setArraysStart(address);
 
         // Re-initialise memory manager for 64K
-        if(address >= RAM_EXPANSION_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
+        if(address >= RAM_UPPER_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
         {
             Memory::setSizeRAM(RAM_SIZE_HI);
             Memory::initialise();
@@ -263,7 +263,7 @@ namespace Pragmas
         Compiler::setStringsStart(address);
 
         // Re-initialise memory manager for 64K
-        if(address >= RAM_EXPANSION_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
+        if(address >= RAM_UPPER_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
         {
             Memory::setSizeRAM(RAM_SIZE_HI);
             Memory::initialise();
@@ -404,13 +404,13 @@ namespace Pragmas
             return false;
         }
         uint16_t maxNumSprites = uint16_t(std::lround(maxNumNumeric._value));
-        if(Compiler::getRuntimeStart() < RAM_EXPANSION_START  &&  maxNumSprites > MAX_NUM_SPRITES_LO)
+        if(Compiler::getRuntimeStart() < RAM_UPPER_START  &&  maxNumSprites > MAX_NUM_SPRITES_LO)
         {
             fprintf(stderr, "Pragmas::MAXNUMSPRITES() : 'Main:%d' : maximum number of sprites for 32K RAM is limited to %d, found %s : %s\n", codeLineIndex + 1, MAX_NUM_SPRITES_LO, tokens[0].c_str(), input.c_str());
             return false;
         }
 
-        if(Compiler::getRuntimeStart() >= RAM_EXPANSION_START  &&  maxNumSprites > MAX_NUM_SPRITES_HI)
+        if(Compiler::getRuntimeStart() >= RAM_UPPER_START  &&  maxNumSprites > MAX_NUM_SPRITES_HI)
         {
             fprintf(stderr, "Pragmas::MAXNUMSPRITES() : 'Main:%d' : maximum number of sprites for 64K RAM is limited to %d, found %s : %s\n", codeLineIndex + 1, MAX_NUM_SPRITES_HI, tokens[0].c_str(), input.c_str());
             return false;
