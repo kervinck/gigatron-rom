@@ -250,13 +250,16 @@ namespace Loader
                     if(i<int(segmentsIn.size()-1)  &&  segmentsIn[i]._loAddress + segmentsIn[i]._dataBytes.size()  ==  segmentsIn[i + 1]._loAddress)
                     {
                         segment._dataBytes.insert(segment._dataBytes.end(), segmentsIn[i + 1]._dataBytes.begin(), segmentsIn[i + 1]._dataBytes.end());
-                        segment._segmentSize += segmentsIn[i + 1]._segmentSize;
-                        if(segment._segmentSize == SEGMENT_SIZE) segment._segmentSize = 0;
-                        if(segment._segmentSize > SEGMENT_SIZE)
+
+                        uint16_t segmentSize = segment._segmentSize + segmentsIn[i + 1]._segmentSize;
+                        if(segmentSize > SEGMENT_SIZE)
                         {
                             fprintf(stderr, "Loader::saveGt1File() : total segment size:%d > %d in segment %d\n", segment._segmentSize, SEGMENT_SIZE, i);
                             return false;
                         }
+
+                        segment._segmentSize += segmentsIn[i + 1]._segmentSize;
+                        if(segmentSize == SEGMENT_SIZE) segment._segmentSize = 0;
                     }
                     else
                     {
