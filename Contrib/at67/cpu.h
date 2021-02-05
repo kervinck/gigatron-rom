@@ -119,6 +119,8 @@ namespace Cpu
     bool patchSplitGt1IntoRom(const std::string& splitGt1path, const std::string& splitGt1name, uint16_t startAddress, InternalGt1Id gt1Id);
 
 #ifndef STAND_ALONE
+    using vCpuPc = std::pair<uint16_t, uint16_t>;
+
     bool getColdBoot(void);
     bool getIsInReset(void);
     State& getStateS(void);
@@ -127,12 +129,14 @@ namespace Cpu
     uint8_t getIN(void);
     uint8_t getXOUT(void);
     uint16_t getVPC(void);
+    uint16_t getOldVPC(void);
     uint8_t getRAM(uint16_t address);
     uint8_t getROM(uint16_t address, int page);
     uint16_t getRAM16(uint16_t address);
     uint16_t getROM16(uint16_t address, int page);
     float getvCpuUtilisation(void);
 
+    void setOldVPC(uint16_t oldVPC);
     void setColdBoot(bool coldBoot);
     void setIsInReset(bool isInReset);
     void setClock(int64_t clock);
@@ -158,7 +162,6 @@ namespace Cpu
     void reset(bool coldBoot=false);
     void softReset(void);
     void swapMemoryModel(void);
-    void vCpuUsage(const State& S, const State& T);
     bool process(bool disableOutput=false);
 
 #ifdef _WIN32

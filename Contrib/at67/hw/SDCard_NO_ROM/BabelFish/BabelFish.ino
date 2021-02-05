@@ -288,12 +288,13 @@
 #define sdChipSelectPin 2
 #endif
 
+void (*resetFunc)(void) = 0;
+
 /*----------------------------------------------------------------------+
  |                                                                      |
  |      Built-in GT1 images                                             |
  |                                                                      |
  +----------------------------------------------------------------------*/
-
 const byte Browser_SDCard_ROMv2_v1_gt1[] PROGMEM =
 {
     #include "Browser_SDCard_ROMv2_v1.h"
@@ -383,7 +384,8 @@ byte *gt1ProgmemLoc;
 File rootSD;
 String pathSD = "";
 byte dirDepthSD = 0;
-bool parentDirSD = true;
+bool validSD = false;
+bool createBackDirSD = false;
 File transferFileSD;
 #endif
 
@@ -411,12 +413,7 @@ void setup()
     // Open upstream communication
 #if hasSerial
     Serial.begin(115200);
-    doVersion();
-#endif
-
-    // Initialize sd card
-#if sdChipSelectPin >= 0
-    SD.begin(sdChipSelectPin);
+    //doVersion();
 #endif
 
     // Cache for speed
@@ -437,45 +434,66 @@ void setup()
  */
 void loop()
 {
-    enum CmdSdCard {CmdSDEnd=0, CmdSDDir=1, CmdSDExec=2, CmdSDOpen=3, CmdSDClose=4};
+    enum CmdSdCard {CmdSDEnd=0, CmdSDList=1, CmdSDExec=2, CmdSDOpen=3, CmdSDClose=4, CmdSDBegin=5, CmdSDInit=6, NumCmdSD};
 
-    static bool hasChars = false; // keeps track of partial lines
-    static bool cmdSDTerm = false;
-    static byte cmdSDCard = CmdSDEnd;
+    static bool hasChars = false;     // keeps track of partial lines
+    static bool cmdSDComm = false;    // blocks all input from affecting SDCard comms
+    static bool cmdSDMulti = false;   // Some SDCard comms commands have multiple bytes with a 0 terminator
+    static byte cmdSDCard = CmdSDEnd; // valid SDCard comms command
 
     // Check Gigatron's vPulse for incoming data
     int inByte = vSyncByte();
-    if(inByte < 0)
+
+    // Idle, be robust against partial lines
+    if(inByte == -1)
     {
-        // Idle, be robust against partial lines
-        if(inByte == -1)
-        {
-            hasChars = false;
-            cmdSDTerm = false;
-            cmdSDCard = CmdSDEnd;
-        }
+        hasChars = false;
+        cmdSDMulti = false;
+        cmdSDCard = CmdSDEnd;
+    }
+    // Building byte so stop all input and comms
+    else if(inByte < -1)
+    {
+#if 0
+        Serial.print(inByte);
+#endif
+        return;
     }
     // Valid byte received
     else
     {
+#if 0
+        Serial.print(F(" "));
+        Serial.print(dirDepthSD);
+        Serial.print(cmdSDMulti);
+        Serial.print(cmdSDComm);
+        Serial.print(validSD);
+        Serial.print(rootSD);
+        Serial.print(F(" "));
+        Serial.print(pathSD);
+        Serial.print(F(" "));
+        Serial.print(inByte);
+        Serial.println();
+        Serial.println();
+#endif
+
         // Some commands are terminated by a zero trailer
-        if(cmdSDTerm || inByte <= CmdSDClose)
+        if(cmdSDMulti  ||  inByte < NumCmdSD)
         {
             static char filename[13] = "", *namePtr = filename;
             static char filepath[13] = "", *pathPtr = filepath;
 
             // Valid command
-            if(!cmdSDTerm  &&  inByte >= CmdSDDir  &&  inByte <= CmdSDClose) cmdSDCard = inByte;
+            if(!cmdSDMulti  &&  inByte >= CmdSDList) cmdSDCard = inByte;
 
             // If a command is active
             switch(cmdSDCard)
             {
                 // Send 63 bytes worth of directory to Gigatron
-                case CmdSDDir:
+                case CmdSDList:
                 {
                     //Serial.print(F("."));
                     cmdSDCard = CmdSDEnd;
-
                     doSDDirPayload();
                 }
                 break;
@@ -483,7 +501,8 @@ void loop()
                 // Execute file on Gigatron
                 case CmdSDExec:
                 {
-                    cmdSDTerm = true;
+                    // Multi-byte command
+                    cmdSDMulti = true;
 
                     // Build file name
                     if(inByte >= 32  &&  inByte < 127)
@@ -494,7 +513,8 @@ void loop()
                     else if(inByte == CmdSDEnd)
                     {
                         //Serial.print(F("Execute: "));
-                        cmdSDTerm = false;
+                        cmdSDComm = false;
+                        cmdSDMulti = false;
                         cmdSDCard = CmdSDEnd;
 
                         // Need to delay to make sure Gigatron's ROM loader is active
@@ -515,7 +535,8 @@ void loop()
                 // Open SDCard
                 case CmdSDOpen:
                 {
-                    cmdSDTerm = true;
+                    // Multi-byte command
+                    cmdSDMulti = true;
 
                     // Build path name
                     if(inByte >= 32  &&  inByte < 127)
@@ -525,8 +546,8 @@ void loop()
                     // Found terminator so process command
                     else if(inByte == CmdSDEnd)
                     {
-                        //Serial.print("Open SDCard: ");
-                        cmdSDTerm = false;
+                        //Serial.print(F("Open SDCard: "));
+                        cmdSDMulti = false;
                         cmdSDCard = CmdSDEnd;
     
                         // Terminate string and reset pointer
@@ -536,6 +557,9 @@ void loop()
                         // Found a sub dir
                         if(strlen(filepath))
                         {
+                            // Has a parent directory, (is a sub directory)
+                            createBackDirSD = true;
+
                             // Selected parent directory
                             if(strcmp(filepath, "..") == 0)
                             {
@@ -543,33 +567,39 @@ void loop()
                                 unsigned int slash = pathSD.lastIndexOf('/');
                                 if(slash >= 0)
                                 {
-                                    strcpy(filepath, "");
+                                    // Root and sub dirs treat '/' differently
                                     (dirDepthSD <= 1) ? pathSD.remove(slash + 1) : pathSD.remove(slash);
                                     dirDepthSD --;
                                 }
                             }
                             else
                             {
+                                // Root and sub dirs treat '/' differently
                                 dirDepthSD++;
+                                pathSD = (dirDepthSD <= 1) ? pathSD + filepath : pathSD + "/" + filepath;
                             }
 
-                            // Has a parent directory, (is a sub directory)
-                            parentDirSD = true;
-
-                            // Root and sub dirs treat '/' differently
-                            pathSD = (dirDepthSD <= 1) ? pathSD + filepath : pathSD + "/" + filepath;
                             strcpy(filepath, "");
                         }
                         // Root dir
                         else
                         {
                             dirDepthSD = 0;
-                            parentDirSD = false;
+                            createBackDirSD = false;
                             pathSD = "/";
                         }
 
                         // Open dir
-                        rootSD = SD.open(pathSD);
+                        if(validSD) rootSD = SD.open(pathSD);
+                        if(!validSD  ||  !rootSD)
+                        {
+                            dirDepthSD = 0;
+                            createBackDirSD = false;
+                            pathSD = "";
+                        }
+
+                        // Tell the vCPU browser that we are ready
+                        wakeBrowser();
                         //Serial.println(pathSD);
                     }
                 }
@@ -579,9 +609,29 @@ void loop()
                 case CmdSDClose:
                 {
                     //Serial.println(F("\nClose SDCard:"));
+                    cmdSDComm = false;
                     cmdSDCard = CmdSDEnd;
 
-                    rootSD.close();
+                    if(validSD  &&  rootSD) rootSD.close();
+                }
+                break;
+
+                // Begin SDCard
+                case CmdSDBegin:
+                {
+                    cmdSDCard = CmdSDEnd;
+                    validSD = SD.begin(sdChipSelectPin);
+
+                    // Tell the vCPU browser that we are ready
+                    wakeBrowser();
+                }
+                break;
+
+                // Init SDCard comms
+                case CmdSDInit:
+                {
+                    cmdSDComm = true;
+                    cmdSDCard = CmdSDEnd;
                 }
                 break;
 
@@ -591,22 +641,25 @@ void loop()
         // TinyBASIC EEPROM saving
         else
         {
-            if(saveIndex < EEPROM_length)          // Store byte in EEPROM if possible
+            if(saveIndex < EEPROM_length)      // Store byte in EEPROM if possible
                 EEPROM.write(saveIndex++, inByte);
-            else if(hasChars)                      // Full, but only break if line is non-empty
-                sendController(3, 10);             // Send long Ctrl-C back to stop sender
+            else if(hasChars)                  // Full, but only break if line is non-empty
+                sendController(3, 10);            // Send long Ctrl-C back to stop sender
             if(inByte >= 32)
-                hasChars = true;                   // Mark printable characters as non-empty
+                hasChars = true;                  // Mark printable characters as non-empty
             else if(inByte == '\n')
             {
-                if(!hasChars)                      // Empty lines delete the old program
+                if(!hasChars)                    // Empty lines delete the old program
                     saveIndex = fileStart;
-                if(saveIndex < EEPROM_length)      // EOF terminator
+                if(saveIndex < EEPROM_length)    // EOF terminator
                     EEPROM.write(saveIndex, 255);
                 hasChars = false;
             }
         }
     }
+
+    // Skip all input during SDCard comms, (from start to close)
+    if(cmdSDComm) return;
 
     // Game controller pass through (Courtesy norgate)
 #if gameControllerDataPin >= 0
@@ -629,8 +682,11 @@ void loop()
             doTransfer(readNextProgmem, NULL);      // Send SDCard browser to Gigatron
             break;
         }
-
-        sendController(serialByte, 2);              // Forward byte to Gigatron
+        if(!sendController(serialByte, 1))          // Forward byte to Gigatron
+        {
+            cmdSDComm = true;
+            return;                                 // Received data from gigatron so bail
+        }
     } // Loop locally while active to skip PS/2 and waitVSync
 
     // Allow PS/2 interrupts for a reasonable window
@@ -661,7 +717,7 @@ void loop()
             }
         }
         for(;;)                             // Focus all attention on PS/2 until state is idle again
-        {                                    
+        {       
             if(!fnKey(key ^ 64))            // Filter away the Ctrl+Fn combinations here
             {                                
                 critical();
@@ -694,6 +750,16 @@ void loop()
         }
     }
 #endif
+}
+
+bool wakeBrowser()
+{
+    critical();
+    bool result = sendFirstByte(0);
+    PORTB |= gigatronDataBit;      // send 1 when idle
+    nonCritical();
+
+    return result;
 }
 
 void prompt()
@@ -729,7 +795,7 @@ void sendEcho(char next, char last)
 {
 #if hasSerial
     if(echo)
-        switch (next)
+        switch(next)
         {
             case 127:  Serial.print(F("\b \b")); break;
 
@@ -746,7 +812,7 @@ void sendEcho(char next, char last)
 void doCommand(char line[])
 {
     int arg = line[0] ? atoi(&line[1]) : 0;
-    switch (toupper(line[0]))
+    switch(toupper(line[0]))
     {
         case 'V': doVersion();                              break;
         case 'H': doHelp();                                 break;
@@ -799,7 +865,6 @@ void doVersion()
 #if gameControllerDataPin >= 0
     Serial.println(F(": Controller data=" Q(gameControllerDataPin) " latch=" Q(gameControllerLatchPin) " pulse=" Q(gameControllerPulsePin)));
 #endif
-
     Serial.println(F(":EEPROM:"));
     Serial.print(F(": size="));
     Serial.print(EEPROM.length());
@@ -861,9 +926,8 @@ void doEcho(byte value)
 
 void doHelp()
 {
-#if 1
 #if hasSerial
-    //Serial.println(F(":Commands are"));
+    Serial.println(F(":Commands are"));
     Serial.println(F(": V        Show configuration"));
     Serial.println(F(": H        Show this help"));
     Serial.println(F(": R        Reset Gigatron"));
@@ -882,7 +946,6 @@ void doHelp()
     Serial.println(F(": W/A/S/D  Up/left/down/right arrow"));
     Serial.println(F(": Z/X      A/B button"));
     Serial.println(F(": Q/E      Select/start button"));
-#endif
 #endif
 }
 
@@ -961,8 +1024,7 @@ void doBytes(char *line)
 void doTerminal()
 {
 #if hasSerial
-    Serial.println(F(":Entering terminal mode"));
-    Serial.println(F(":Exit with Ctrl-D"));
+    Serial.println(F("Terminal mode: exit with Ctrl-D"));
     char next = 0, last;
     bool ansi = false;
     for(;;)
@@ -976,7 +1038,7 @@ void doTerminal()
 
             // Mappings for newline and arrow sequences
             out = next;
-            switch (next)
+            switch(next)
             {
                 case 4:                                 return;   // Ctrl-D (EOT)
                 case 9: out = ~buttonB;                 break;    // Same as PS/2 above
@@ -1013,7 +1075,7 @@ void doTerminal()
 void doProgmemFileTransfer(int arg)
 {
 #if hasSerial
-    Serial.println(F(":Sending from PROGMEM"));
+    //Serial.println(F(":Sending from PROGMEM"));
 #endif
     if(0 <= arg && arg < arrayLen(gt1Files))
     {
@@ -1025,16 +1087,16 @@ void doProgmemFileTransfer(int arg)
 void doSDFileTransfer(char *filename, bool serialEnabled)
 {
 #if hasSerial
-    if(serialEnabled)
-        Serial.println(F(":Sending from SD card"));
+    //if(serialEnabled)
+    //    Serial.println(F(":Sending from SD card"));
 #endif
 #if sdChipSelectPin >= 0
     File dataFile = SD.open(filename);
     if(!dataFile)
     {
 #if hasSerial
-        if(serialEnabled)
-            Serial.println(F("!Not on SD"));
+    //    if(serialEnabled)
+    //        Serial.println(F("!Not on SD"));
 #endif
         return;
     }
@@ -1046,6 +1108,8 @@ void doSDFileTransfer(char *filename, bool serialEnabled)
 
 void doSDDirPayload()
 {
+    enum EntryType {EntryFile=1, EntryDir=2, EntryError=3};
+
     const byte kNameLength = 12;
     static char paths[8][kNameLength + 1];
 
@@ -1064,13 +1128,22 @@ void doSDDirPayload()
         byte nameSize = 0;
         char *nameEntry = nullptr;
 
-        // Create parent directory entry
-        if(dirDepthSD  &&  parentDirSD)
+        // SDCard error, (missing or incorrect format, etc)
+        if(!isLast  &&  (!validSD  ||  !rootSD))
         {
-            parentDirSD = false;
+            // Add error entry
+            isLast = 1;
+            nameEntry = "SDCard Error";
+            nameSize = strlen(nameEntry);
+            payload[index++] = EntryError;
+        }
+        // Create parent directory entry
+        else if(dirDepthSD  &&  createBackDirSD)
+        {
+            createBackDirSD = false;
             nameEntry = (char *)parentDir;
             nameSize = strlen(nameEntry);
-            payload[index++] = 2;
+            payload[index++] = EntryDir;
         }
         // Create file/dir entry
         else
@@ -1084,40 +1157,42 @@ void doSDDirPayload()
             }
 
             // Get next entry
-            entry = rootSD.openNextFile();
-            if(!entry)
+            if(validSD  &&  rootSD) entry = rootSD.openNextFile();
+            if(!validSD  ||  !rootSD  ||  !entry)
             {
                 // This is the last payload
                 isLast = 1;
-                entry.close();
-                rootSD.rewindDirectory();
+                if(validSD  &&  rootSD) rootSD.rewindDirectory();
                 break;
             }
-
-            // Entry name and size
-            nameEntry = entry.name();
-            nameSize = strlen(nameEntry);
-
-            // File
-            if(!entry.isDirectory())
-            {
-                // Accept .gt1 and .gt1x files
-                String name = nameEntry;
-                if(name.endsWith(".GT1") || name.endsWith(".GT1X"))
-                {
-                    payload[index++] = 1;
-                }
-                // Filter everything else
-                else
-                {
-                    entry.close();
-                    continue;
-                }
-            }
-            // Dir
+            // Valid entry
             else
             {
-                payload[index++] = 2;
+                // Entry name and size
+                nameEntry = entry.name();
+                nameSize = strlen(nameEntry);
+
+                // File
+                if(!entry.isDirectory())
+                {
+                    // Accept .gt1 and .gt1x files
+                    String name = nameEntry;
+                    if(name.endsWith(".GT1") || name.endsWith(".GT1X"))
+                    {
+                        payload[index++] = EntryFile;
+                    }
+                    // Filter everything else
+                    else
+                    {
+                        entry.close();
+                        continue;
+                    }
+                }
+                // Dir
+                else
+                {
+                    payload[index++] = EntryDir;
+                }
             }
         }
 
@@ -1148,14 +1223,14 @@ void doSDDirPayload()
 void doPrintSDFiles()
 {
 #if hasSerial and sdChipSelectPin >= 0
-    Serial.println(F(":Files:"));
+    //Serial.println(F(":Files:"));
     File root = SD.open("/");
     File current;
     while(current = root.openNextFile())
     {
         if(!current.isDirectory())
         {
-            Serial.print(F(": File: "));
+            //Serial.print(F(": File: "));
             Serial.println(current.name());
         }
         current.close();
@@ -1306,7 +1381,7 @@ void doTransfer(int(*readNext)(), void(*ask)(int))
         if((address & 255) + len > 256)
         {
 #if hasSerial
-            Serial.println(F("!Data error (page overflow)"));
+        //    Serial.println(F("!Data error (page overflow)"));
 #endif
             return;
         }
@@ -1349,8 +1424,7 @@ int nextSerial()
 {
 #if hasSerial
     unsigned long timeout = millis() + 5000;
-    while(!Serial.available() && millis() < timeout)
-        ;
+    while(!Serial.available() && millis() < timeout);
 
     int nextByte = Serial.read();
     if(nextByte < 0)
@@ -1428,8 +1502,7 @@ void sendGt1Segment(word address, int len)
 
     // Wait for vPulse to start so we're 100% sure to skip one frame and
     // the checksum resets on the other side. (This is a bit pedantic)
-    while(PINB & gigatronLatchBit) // ~160 us
-        ;
+    while(PINB & gigatronLatchBit); // ~160 us
 }
 
 // Send execute command
@@ -1443,16 +1516,24 @@ void sendGt1Execute(word address, byte data[])
 
 // Pretend to be a game controller
 // Send the same byte a few frames, just like a human user
-void sendController(byte value, int n)
+bool sendController(byte value, int n)
 {
     // Send controller code for n frames
     // E.g. 4 frames = 3/60s = ~50 ms
     critical();
     for(int i = 0; i < n; i++)
-        sendFirstByte(value);
+    {
+        if(!sendFirstByte(value))
+        {
+            nonCritical();
+            return false;
+        }
+    }
     nonCritical();
 
     PORTB |= gigatronDataBit; // Send 1 when idle
+
+    return true;
 }
 
 void resetChecksum()
@@ -1479,9 +1560,9 @@ void sendFrame(byte firstByte, byte len, word address, byte message[])
     sendFirstByte(firstByte);    // Protocol byte
     checksum += firstByte << 6;  // Keep Loader.gcl dumb
     sendBits(len, 6);            // Length 0, 1..60
-    sendBits(address & 255, 8);    // Low address bits
-    sendBits(address >> 8, 8);     // High address bits
-    for(byte i = 0; i < N; i++)     // Payload bytes
+    sendBits(address & 255, 8);  // Low address bits
+    sendBits(address >> 8, 8);   // High address bits
+    for(byte i = 0; i < N; i++)  // Payload bytes
         sendBits(message[i], 8);
     byte lastByte = -checksum;   // Checksum must come out as 0
     sendBits(lastByte, 8);
@@ -1489,11 +1570,10 @@ void sendFrame(byte firstByte, byte len, word address, byte message[])
     PORTB |= gigatronDataBit;    // Send 1 when idle
 }
 
-void sendFirstByte(byte value)
+bool sendFirstByte(byte value)
 {
     // Wait vertical sync NEGATIVE edge to sync with loader
-    while(~PINB & gigatronLatchBit) // Ensure vSync is HIGH first
-        ;
+    while(~PINB & gigatronLatchBit); // Ensure vSync is HIGH first
 
     // Send first bit in advance
     if(value & 128)
@@ -1501,26 +1581,25 @@ void sendFirstByte(byte value)
     else
         PORTB &= ~gigatronDataBit;
 
-    while(PINB & gigatronLatchBit) // Then wait for vSync to drop
-        ;
+    while(PINB & gigatronLatchBit);  // Then wait for vSync to drop
 
     // Wait for bit transfer at horizontal sync RISING edge. As this is at
     // the end of a short (3.8 us) pulse following VERY shortly (0.64us) after
     // vSync drop, this timing is tight. That is the reason that interrupts
     // must be disabled on the microcontroller (and why 1 MHz isn't enough).
-    while(PINB & gigatronPulseBit) // Ensure hSync is LOW first
-        ;
-    while(~PINB & gigatronPulseBit) // Then wait for hSync to rise
-        ;
+    while(PINB & gigatronPulseBit);  // Ensure hSync is LOW first
+
+    while(~PINB & gigatronPulseBit); // Then wait for hSync to rise
 
     // Send remaining bits
-    sendBits(value, 7);
+    return sendBits(value, 7);
 }
 
 // Send n bits, highest first
-void sendBits(byte value, byte n)
+bool sendBits(byte value, byte n)
 {
-    for(byte bit = 1 << (n - 1); bit; bit >>= 1)
+    byte count = 0;
+    for(byte bit=1<<(n-1); bit; bit>>=1)
     {
         // Send next bit
         if(value & bit)
@@ -1529,12 +1608,18 @@ void sendBits(byte value, byte n)
             PORTB &= ~gigatronDataBit;
 
         // Wait for bit transfer at horizontal sync POSITIVE edge.
-        while(PINB & gigatronPulseBit)  // Ensure hSync is LOW first
-            ;
-        while(~PINB & gigatronPulseBit) // Then wait for hSync to rise
-            ;
+        while(PINB & gigatronPulseBit);  // Ensure hSync is LOW first
+
+        if(~PINB & gigatronLatchBit)     // While in vPulse count hSync's
+            count++;
+        while(~PINB & gigatronPulseBit); // Then wait for hSync to rise
     }
+
     checksum += value;
+
+    if(count != n) return false;         // Received a zero bit from Gigatron, so bail
+
+    return true;
 }
 
 // Check Gigatron's vPulse for incoming data
@@ -1548,7 +1633,7 @@ int vSyncByte()
     nonCritical();
 
     inByte &= ~inBit;                       // Clear current bit
-    switch (count)
+    switch(count)
     {
         case 9: inByte |= inBit;            // Received a one bit
                 // !!! FALL THROUGH !!!
@@ -1588,12 +1673,12 @@ byte waitVSync()
     byte count = 0;
     for(;;)
     {
-        while(PINB & gigatronPulseBit)  // Ensure hSync is LOW first
-            ;
-        if(PINB & gigatronLatchBit)     // Not in vPulse anymore
+        while(PINB & gigatronPulseBit);  // Ensure hSync is LOW first
+
+        if(PINB & gigatronLatchBit)      // Not in vPulse anymore
             break;
-        while(~PINB & gigatronPulseBit) // Then wait for hSync to rise
-            ;
+        while(~PINB & gigatronPulseBit); // Then wait for hSync to rise
+
         count += 1;
     }
     return count;
@@ -1618,7 +1703,7 @@ void sendPulse(byte pin)
 void sendSavedFile()
 {
 #if hasSerial
-    Serial.println(F(":Sending from EEPROM"));
+    //Serial.println(F(":Sending from EEPROM"));
 #endif
     word i = fileStart, j = 0;            // i is the file index. j is the line index
     int lineDelay = 50;                   // Default extra delay time for "line feed"

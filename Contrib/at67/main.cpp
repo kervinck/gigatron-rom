@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 
         Assembler::setIncludePath(path);
         Loader::setFilePath(path + "/" + name);
-        Loader::setUploadTarget(Loader::Emulator);
+        Loader::uploadDirect(Loader::Emulator);
 
         // Choose memory model
         if(name.find("64k") != std::string::npos  ||  name.find("64K") != std::string::npos)

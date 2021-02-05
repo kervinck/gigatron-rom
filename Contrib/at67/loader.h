@@ -9,7 +9,8 @@
 
 
 #define PAYLOAD_SIZE            60
-#define SEGMENT_SIZE            255
+#define SEGMENT_SIZE            256
+#define SEGMENT_MASK            0x00FF
 #define SEGMENT_HEADER_SIZE     3
 #define GT1FILE_TRAILER_SIZE    3
 #define DEFAULT_EXEC_ADDRESS_HI 0x02
@@ -85,9 +86,7 @@ namespace Loader
 
     void setCurrentGame(const std::string& currentGame);
 
-    UploadTarget getUploadTarget(void);
-    void setUploadTarget(UploadTarget target);
-    void uploadDirect(UploadTarget uploadTarget, const std::string& name);
+    void uploadDirect(UploadTarget uploadTarget);
 
     int getConfigRomsSize(void);
     ConfigRom* getConfigRom(int index);

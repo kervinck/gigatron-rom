@@ -150,6 +150,7 @@ namespace Keywords
         _keywords["BCDCPY"  ] = {"BCDCPY",   BCDCPY,  Compiler::SingleStatementParsed};
         _keywords["GPRINTF" ] = {"GPRINTF",  GPRINTF, Compiler::SingleStatementParsed};
         _keywords["EXEC"    ] = {"EXEC",     EXEC,    Compiler::SingleStatementParsed};
+        _keywords["OPEN"    ] = {"OPEN",     OPEN,    Compiler::SingleStatementParsed};
 
         return true;
     }
@@ -6695,6 +6696,88 @@ RESTART_PRINT:
 
         // SYS_Exec_88
         Compiler::emitVcpuAsm("%RomExec", "",  false);
+
+        return true;
+    }
+
+    void openUsage(Compiler::CodeLine& codeLine, int codeLineStart)
+    {
+        fprintf(stderr, "Keywords::OPEN() : '%s:%d' : usage, 'OPEN #<id>, <path>, <file>, <mode>', where mode is one of 'r', 'w', 'a', 'r+', 'w+', 'a+' : %s\n", codeLine._moduleName.c_str(),
+                                                                                                                                                                 codeLineStart, codeLine._text.c_str());
+    }
+    bool OPEN(Compiler::CodeLine& codeLine, int codeLineIndex, int codeLineStart, int tokenIndex, size_t foundPos, KeywordFuncResult& result)
+    {
+        UNREFERENCED_PARAM(result);
+        UNREFERENCED_PARAM(tokenIndex);
+
+        std::vector<std::string> tokens = Expression::tokenise(codeLine._code.substr(foundPos), ',', false);
+        if(tokens.size() != 4)
+        {
+            openUsage(codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::OPEN() : '%s:%d' : syntax error, wrong number of parameters : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
+            return false;
+        }
+
+        // file id
+        std::string hashToken = tokens[0];
+        Expression::stripWhitespace(hashToken);
+        if(hashToken[0] != '#')
+        {
+            openUsage(codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::OPEN() : '%s:%d' : syntax error, missing '#' in '#<id>' : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
+            return false;
+        }
+        Expression::Numeric idNumeric;
+        std::string idOperand;
+        std::string idToken = hashToken.substr(1);
+        if(Compiler::parseStaticExpression(codeLineIndex, idToken, idOperand, idNumeric) == Compiler::OperandInvalid)
+        {
+            openUsage(codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::OPEN() : '%s:%d' : syntax error in %s : %s\n", codeLine._moduleName.c_str(), codeLineStart, idToken.c_str(), codeLine._text.c_str());
+            return false;
+        }
+        int openId = int(std::lround(idNumeric._value));
+        if(Compiler::getDefDataOpens().find(openId) != Compiler::getDefDataOpens().end())
+        {
+            openUsage(codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::OPEN() : '%s:%d' : #%d is not unique : %s\n", codeLine._moduleName.c_str(), codeLineStart, openId, codeLine._text.c_str());
+            return false;
+        }
+
+        // File path
+        std::string pathToken = tokens[1];
+        Expression::stripWhitespace(pathToken);
+        if(pathToken == "") pathToken = "/";
+
+        // File name
+        std::string fileToken = tokens[2];
+        Expression::stripWhitespace(fileToken);
+        if(fileToken == "")
+        {
+            openUsage(codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::OPEN() : '%s:%d' : syntax error, <file> is empty : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
+            return false;
+        }
+
+        // Open mode
+        Compiler::DefDataOpen::OpenMode openMode;
+        std::string modeToken = tokens[3];
+        Expression::stripWhitespace(modeToken);
+        Expression::strToUpper(modeToken);
+        if(modeToken == "R")       openMode = Compiler::DefDataOpen::OpenRead;
+        else if(modeToken == "W")  openMode = Compiler::DefDataOpen::OpenWrite;
+        else if(modeToken == "A")  openMode = Compiler::DefDataOpen::OpenAppend;
+        else if(modeToken == "R+") openMode = Compiler::DefDataOpen::OpenUpdateRW;
+        else if(modeToken == "W+") openMode = Compiler::DefDataOpen::OpenCreateRW;
+        else if(modeToken == "A+") openMode = Compiler::DefDataOpen::OpenAppendR;
+        else
+        {
+            openUsage(codeLine, codeLineStart);
+            fprintf(stderr, "Keywords::OPEN() : '%s:%d' : syntax error, <mode> is expecting one of 'r', 'w', 'a', 'r+', 'w+', 'a+', : %s\n", codeLine._moduleName.c_str(), codeLineStart, codeLine._text.c_str());
+            return false;
+        }
+
+        Compiler::getDefDataOpens()[openId] = {openId, pathToken, fileToken, openMode};
 
         return true;
     }

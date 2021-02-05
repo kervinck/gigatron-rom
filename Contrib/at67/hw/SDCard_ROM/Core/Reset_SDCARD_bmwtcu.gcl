@@ -1,0 +1,162 @@
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Reset Gigatron (pseudo) hardware                                |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x
+
+{ No need for romType check because Reset.gcl gets hard-compiled in  }
+
+{ CheckMemory }
+[def
+  push
+
+  \memSize, 1- 255& 1+ i=       {Number of pages as counted at boot}
+
+  { Convert memory page count to K in two decimals }
+
+  $2f2f Char= i                 {Two ASCII counters, both starting at '0'-1}
+  [do <Char++ 40- if>=0loop] 40+{Count number of 10K chunks}
+  [do >Char++  4- if>=0loop]    {Count number of 1K chunks}
+
+  PrintChar!
+  >Char, Char= PrintChar!
+
+  pop ret
+] CheckMemory=
+
+{ PrintS }
+[def
+  {
+     Print ASCII string to screen
+  }
+  push
+  Text=
+  [do
+    Text, if<>0
+    Char=
+    10^ [if<>0                  {Check for CR}
+      PrintChar!
+    else
+      2 <Pos. >Pos, 8+ >Pos.    {Move one text line down, indented}
+    ]
+    <Text++
+    loop]
+  pop ret
+] PrintS=
+
+{ PrintChar }
+[def
+  {
+    Draw ASCII character on screen using the 5x8 pixel built-in font
+  }
+  <Char, 82-                    {Map ASCII code to offset in font table}
+  [if<0 50+ i= \font32up        {First page for ASCII 32..81}
+   else     i= \font82up] j=    {Second page is ASCII 82..127}
+  i 2<< i+                      {Multiply by 5}
+  j+ j=                         {Add page address to reach bitmap data}
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS call}
+  $3f20 \sysArgs0:              {Blue/White}
+  Pos \sysArgs4:                {Position of character}
+  6+ Pos=                       {Advance position by 6 pixels for next call}
+  5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
+    j 0?? \sysArgs2.            {Get byte from ROM using `LUP 0' instruction}
+    134!!                       {Invoke SYS function to draw 8 vertical pixels}
+    <j++ <\sysArgs4++           {Advance to next slice in ROM and on screen}
+    i 1- if>0loop]              {Looping}
+  ret
+] PrintChar=
+
+{-----------------------------------------------------------------------+
+|} >\vLR++ ret {        RAM page 3                                      |
++-----------------------------------------------------------------------}
+*=$0300
+
+{ SetupChannel }
+[def
+  {
+    Setup a note on one channel
+    High byte is channel, low byte is note (should be even)
+    Reset the oscillators and channel variables
+  }
+  i= 255| 255^ $fa| p=          {Pointer to channel struct}
+  <i, i=                        {Extract note}
+  0 p. <p++                     {.wavA}
+  3 p. <p++                     {.wavX, 3=Sawtooth}
+  \notesTable i+ 0?? p. <p++    {.keyL}
+  \notesTable i+ 1?? p. <p++    {.keyH}
+  p. <p++                       {.oscL}
+  p.                            {.oscH}
+  ret
+] SetupChannel=
+
+{-----------------------------------------------------------------------+
+|}>\vLR++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+*=$0400
+
+{ Resetting waveform tables after video/audio/vCPU have started }
+\SYS_ResetWaveforms_v4_50 \sysFn: 0 50!!
+\SYS_ShuffleNoise_v4_46   \sysFn: 0 46!! 46!! 46!! 46!!
+
+{ Setup a G-major chord with 4 channels, but don't play it yet }
+$158 {1: G-3} SetupChannel!
+$270 {2: G-4} SetupChannel!
+$378 {3: B-4} SetupChannel!
+$47e {4: D-5} SetupChannel!
+
+{ Setup video }
+[
+  { Setup video indirection table }
+  $100 p= {videoTable}
+  $800 q= {frame}
+  [do
+    >q,  p. <p++                { Y[i] = 8..127}
+    0    p. <p++                {dX[i] = 0}
+    >q++ q  if>0loop]
+
+  { Clear screen }
+  \SYS_SetMemory_v2_54 _sysFn=  {!!! Not in ROM v1 !!!}
+  32 \sysArgs1.                 {Color blue}
+  $800 [do
+    p= _sysArgs2=               {Destination}
+    160 \sysArgs0.              {Count}
+    54!!                        {SYS call}
+    $100 p+ if>0loop]
+]
+
+{ Restart blinkenlights }
+\ledState_v2, 128&              {Check if sequencer still running}
+[if=0 \ledState_v2. \ledTimer.] {For continuity only restart when paused}
+9 \ledTempo.                    {6.0 Hz ( = 60/(9+1)), was 5.5 Hz}
+
+{
+  Print startup message
+  +--------------------------+
+  |   *** Gigatron ??K ***   |
+  | TTL microcomputer ROM vX |
+
+  +--------------------------+
+  |  *** Gigatron 128K ***   | <-- TODO Try 1 char less indent for 128K...
+  | TTL microcomputer ROM vX |
+}
+$814 Pos=
+[def `***`Gigatron` #0] PrintS!
+CheckMemory!
+[def `K`***` #10
+  ``TTL`microcomputer
+  ``SDCard #0]                  {ROM`vN for versioned release ROMs}
+PrintS!
+
+{ Change into default video mode }
+\SYS_SetMode_v2_80 _sysFn=      {!!! Not in ROM v1 !!!}
+1 80!!                          {Mode 1 -> "ABC-"}
+
+{ Load and start ROM program }
+\Main _sysArgs0= $200 _vLR= \SYS_Exec_88 _sysFn= 88!!
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
+

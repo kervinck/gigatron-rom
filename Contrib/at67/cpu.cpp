@@ -317,8 +317,8 @@ namespace Cpu
     int64_t _clockStall = CLOCK_RESET;
     int64_t _clock = CLOCK_RESET;
     uint8_t _IN = 0xFF, _XOUT = 0x00;
-    uint16_t _vPC = 0x0200;
     State _stateS, _stateT;
+    vCpuPc _vPC;
 
 #ifdef _WIN32
     HWND _consoleWindowHWND;
@@ -331,13 +331,15 @@ namespace Cpu
     int64_t getClock(void) {return _clock;}
     uint8_t getIN(void) {return _IN;}
     uint8_t getXOUT(void) {return _XOUT;}
-    uint16_t getVPC(void) {return _vPC;}
+    uint16_t getVPC(void) {return _vPC.first;}
+    uint16_t getOldVPC(void) {return _vPC.second;}
     uint8_t getRAM(uint16_t address) {return _RAM[address & (Memory::getSizeRAM()-1)];}
     uint8_t getROM(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01];}
     uint16_t getRAM16(uint16_t address) {return _RAM[address & (Memory::getSizeRAM()-1)] | (_RAM[(address+1) & (Memory::getSizeRAM()-1)]<<8);}
     uint16_t getROM16(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01] | (_ROM[(address+1) & (ROM_SIZE-1)][page & 0x01]<<8);}
     float getvCpuUtilisation(void) {return _vCpuUtilisation;}
 
+    void setOldVPC(uint16_t oldVPC) {_vPC.second = oldVPC;}
     void setColdBoot(bool coldBoot) {_coldBoot = coldBoot;}
     void setIsInReset(bool isInReset) {_isInReset = isInReset;}
     void setClock(int64_t clock) {_clock = clock;}
@@ -863,7 +865,7 @@ namespace Cpu
             }
             break;
 
-#if 0
+#if 1
             case 0x00: // ld D
             {
                 T._AC = S._D;
@@ -1054,20 +1056,20 @@ namespace Cpu
         reset(false);
     }
 
-    // Counts maximum and used vCPU instruction slots available per frame
-    void vCpuUsage(const State& S, const State& T)
+    // Counts maximum and used vCPU instruction slots available per frame, updates _vPC and performs a softReset if needed
+    void vCpuUpdate(const State& S, const State& T)
     {
         UNREFERENCED_PARAM(T);
 
         // All ROM's so far v1 through v5a/DEVROM use the same vCPU dispatch address!
         if(S._PC == ROM_VCPU_DISPATCH)
         {
-            _vPC = (getRAM(0x0017) <<8) | getRAM(0x0016);
-            if(_vPC < Editor::getCpuUsageAddressA()  ||  _vPC > Editor::getCpuUsageAddressB()) _vCpuInstPerFrame++;
+            _vPC.first = (getRAM(0x0017) <<8) | getRAM(0x0016);
+            if(_vPC.first < Editor::getCpuUsageAddressA()  ||  _vPC.first > Editor::getCpuUsageAddressB()) _vCpuInstPerFrame++;
             _vCpuInstPerFrameMax++;
 
             // Soft reset
-            if(_vPC == VCPU_SOFT_RESET) softReset();
+            if(_vPC.first == VCPU_SOFT_RESET) softReset();
 
             static uint64_t prevFrameCounter = 0;
             double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
@@ -1109,8 +1111,8 @@ namespace Cpu
         // Update CPU
         cycle(_stateS, _stateT);
 
-        // vCPU instruction slot utilisation
-        vCpuUsage(_stateS, _stateT);
+        // vCPU instruction slot utilisation, also updates _vPC
+        vCpuUpdate(_stateS, _stateT);
 
         _hSync = (_stateT._OUT & 0x40) - (_stateS._OUT & 0x40);
         _vSync = (_stateT._OUT & 0x80) - (_stateS._OUT & 0x80);
@@ -1161,7 +1163,7 @@ namespace Cpu
         }
 #endif        
 
-        // RomType and Watchdog
+        // RomType, init audio and watchdog
         if(_clock > STARTUP_DELAY_CLOCKS)
         {
             if(_isInReset)
@@ -1200,8 +1202,11 @@ namespace Cpu
             //Audio::fillBuffer();
             Audio::fillCallbackBuffer();
 
-            // Loader
+#if defined(HARDWARE_LOADER)
+            // TODO: don't enable until Loader::upload is fixed!
+            // Emulation of hardware Loader
             if(_clock > STARTUP_DELAY_CLOCKS*10.0) Loader::upload(_vgaY);
+#endif
 
             // Horizontal timing errors
             if(_vgaY >= 0  &&  _vgaY < SCREEN_HEIGHT)

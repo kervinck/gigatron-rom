@@ -350,6 +350,16 @@ namespace Compiler
         std::vector<uint16_t> _segmentAddrs;
     };
 
+    struct DefDataOpen
+    {
+        enum OpenMode {OpenRead, OpenWrite, OpenAppend, OpenUpdateRW, OpenCreateRW, OpenAppendR};
+
+        int _id;
+        std::string _path;
+        std::string _name;
+        OpenMode _mode;
+    };
+
     struct DefDataSprite
     {
         int _id;
@@ -484,6 +494,7 @@ namespace Compiler
     std::vector<DefDataLoaderImageChunk>& getDefDataLoaderImageChunks(void);
 
     std::map<int, DefDataMidi>& getDefDataMidis(void);
+    std::map<int, DefDataOpen>& getDefDataOpens(void);
 
     std::map<int, DefDataSprite>& getDefDataSprites(void);
     SpritesAddrLut& getSpritesAddrLut(void);

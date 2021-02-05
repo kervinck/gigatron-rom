@@ -160,9 +160,7 @@ inline static char* find_chars_or_comment(const char* s, const char* chars)
 /* Version of strncpy that ensures dest (size bytes) is null-terminated. */
 inline static char* strncpy0(char* dest, const char* src, size_t size)
 {
-#if defined(_WIN32)
-    strncpy(dest, src, size);
-#elif __GNUC__ >= 8
+#if __GNUC__ >= 8
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
     strncpy(dest, src, size);
