@@ -1,0 +1,1458 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Recreation of Tiny BASIC for Gigatron TTL microcomputer         |
+|                                                                       |
+|       - Integer BASIC, with PRINT supporting string constants         |
+|       - Supports roughly 300 line programs in the 32K system          |
+|       - Multiple statements per line, up to 25 characters combined    |
+|       - Based on Dennis Allison's original 1976 Tiny BASIC            |
+|       - Extended with POKE/PEEK/RND/FOR/NEXT/CLS/AT/PUT/MODE/Arrays/  |
+|         LINE/SAVE                                                     |
+|                                                                       |
++-----------------------------------------------------------------------}
+gcl0x
+
+{
+  History:
+  2018-06-19 (marcelk) Scaffolding: can evaluate direct print statements
+  2018-06-21 (marcelk) Can edit programs, delete lines, but no RUN yet
+  2018-06-23 (marcelk) Can RUN, GOTO, GOSUB, RETURN and break program
+  2018-06-24 (marcelk) Can do IF/THEN, INPUT and END: feature complete
+  2018-06-25 (marcelk) LIST shows free bytes; Trailing (semi-)colon in PRINT;
+                       LET is now optional; PEEK/POKE; Better INPUT;
+                       NEW clears variables; Aliases for PRINT and REM
+  2018-07-03 (marcelk) Add RND(), with 0 <= RND(n) < |n|; USR()
+  2018-07-18 (marcelk) Fix GOSUB/RETURN parsing bug causing syntax error
+  2018-07-22 (marcelk) Add PUT, FOR/NEXT, ':', MODE (ROMv2), AT, CLS, arrays
+  2018-08-14 (marcelk) SAVE, LINE (both draft)
+  2018-08-22 (marcelk) LINE now wraps around edges to stay on screen
+  2018-08-31 (marcelk) SAVE into BabelFish EEPROM
+  2018-09-04 (marcelk) Faster start; Error when SAVE not there; Tiny BASIC v2
+  2019-07-06 (marcelk) Update GCL notation (no changes to GT1 file)
+  2019-07-07 (marcelk) PrintChar accepts arrow chars; Fix indent issue #40
+  2019-07-08 (marcelk) Reenable video on input after MODE 1975; Tiny BASIC v3
+  2019-12-14 (marcelk) Accept hexadecimal numbers $....; Tiny BASIC DEV
+
+  Formal grammar:
+
+  Line        ::= Number Statements | Statements
+  Statements  ::= Statement (':' Statement)*
+  Statement   ::= ('PRINT'|'?') ((String|Expression) [,;])*
+                                 (String|Expression)?
+               |  'AT' Expression (',' Expression)?
+               |  'PUT' Expression
+               |  'CLS'
+               |  'LINE' Expression ',' Expression
+               |  'IF' Expression RelOp Expression 'THEN'? Statements
+               |  'GOTO' Expression
+               |  'INPUT' Variable (',' Variable)*
+               |  'LET'? Variable ('(' Expression ')')? '=' Expression
+               |  'FOR' Variable '=' Expression 'TO' Expression
+               |  'NEXT' Variable
+               |  'POKE' Expression ',' Expression
+               |  'GOSUB' Expression
+               |  'RETURN'
+               |  ('REM'|"'") Character*
+               |  'MODE' Expression
+               |  'NEW'
+               |  'LIST'
+               |  'RUN'
+               |  'END'
+               |  'SAVE'
+  Expression  ::= [+-]? Term ([+-] Term)*
+  Term        ::= Factor ([*/%] Factor)*
+  Factor      ::= Variable | Number | Hexnum
+               |  (Variable|'PEEK'|'RND'|'USR')? '(' Expression ')'
+  RelOp       ::= '=' | '<' | '>' | '<=' | '>=' | '<>'
+  Number      ::= [0-9]+
+  Hexnum      ::= $[0-9A-F]+
+  Variable    ::= [A-Z] | '@'
+  String      ::= '"' ([#x20-#x21] | [#x23-#x7E])* '"'
+  Character   ::= [#x20-#x7E]
+
+  Recommended filename extension:
+        .gtb            GigaTron BASIC / Gigatron Tiny BASIC
+
+  Error messages:
+        Break error     Program (or LIST command) interrupted /
+                        Out of space for SAVE (510 bytes for ATTiny85!)
+        Syntax error    Parse error / Program too large for memory (~300 lines)
+        Value error     Value or index out of range / Calculation error
+                        (division by 0) / NEXT without FOR / Wrong ROM version
+        Stack error     GOSUB nesting too deep / RETURN without GOSUB
+        Line error      Line number not found / RUN empty program
+
+  Memory allocation:
+          $30 -   $7f   BASIC interpreter variables
+          $81 -   $ff   Stack for BASIC and vCPU (>50 GOSUB levels)
+         $200 - $19ff   BASIC interpreter, partly next to screen memory
+        $1ba0 - $1bbf   Input buffer ('line 0')
+        $1bc0 -         Programs stored in the invisible part of screen memory
+              - $7ebf   Arrays at the end, growing down
+        $7ec0 - $7eff   FOR-NEXT loop pointers
+        $7fa0 - $7fbf   SAVE buffer
+        $7fc0 - $7fff   BASIC variables A..Z
+        $8000 - $ffff   Optional extra memory for BASIC programs (64K extension)
+                        (Variables etcetera move to the last two pages)
+
+  Undocumented features and/or bugs:
+        PRINT vs. print Keywords and variable names are case-insensitive
+        PRINT 6/-2      Syntax error (original Tiny BASIC quirk, to be solved)
+        PRINT a;b       Concatenates output without separation
+        IF statement    There is no syntax check for trailing garbage
+        RETURN          There is no syntax check for trailing garbage
+        ><              For 'not equal' is not implemented. Use just <>
+        <>=             Also works as (useless) operator in condition of IF
+        No 'GO TO'      Must be typed as 'GOTO'. Also 'GOSUB', not 'GO SUB'
+        INPUT           Accepts full expressions as input, including variables!
+        INPUT           Can give syntax error in direct mode (buffer conflict)
+        Break error     Gives the line it was about to start: resume with GOTO
+        PRINT "xxx      An unterminated string is silently accepted
+        60000 vs. 90000 Many (too) large constants give an error, but not all!
+        A(256)          Many (too) large idexes give an error, but not all!
+        Lowercase @     The backquote ('`') is recognized as alias for '@'
+        FOR-NEXT        Doesn't work over 16-bit ranges (FOR i=-30000 TO 30000)
+
+  References:
+        https://en.wikipedia.org/wiki/Tiny_BASIC
+        Wikipedia article
+
+        http://www.ittybittycomputers.com/IttyBitty/TinyBasic/DDJ1/Design.html
+        DESIGN NOTES FOR TINY BASIC (Dennis Allison et al.)
+
+        http://www.ittybittycomputers.com/IttyBitty/TinyBasic/
+        Tom Pittman's implementation
+
+        http://p112.sourceforge.net/tbp112.html
+        P112 Tiny Basic User's Guide (V1.0, 18 FEB 1999)
+
+        http://www.bitsavers.org/pdf/interfaceAge/197612/092-108.pdf
+        Dr. Wang's Palo Alto Tiny Basic (Roger Rauskolb)
+
+        https://www.applefritter.com/node/2859
+        Apple 1 BASIC
+
+  'Maybe in vN+1' list:
+    A(0)=x,y,z  Array assignment with list expression
+    A$ .. Z$    String variables (only in LET, PRINT, INPUT?)
+    Boot        Some kind of autorun of a saved program
+    Speed       Cache result of the statement detection (checkpointing)
+    Speed       Alternative: LET detection is now last, but should be first
+    IF          Reintroduce the missing syntax error check
+    A="...      As poor-men's substitute for DATA/READ?
+    @           Give it an implicit meaning such as "max index in arrays"?
+    Speed       Cache result of NextBlock (at offset 30 of block?)
+
+  'Maybe in vN+2' list:
+    Unary minus Original Tiny BASIC does it wrong in some edge cases: 8/-2
+    Speed       Cache GOTO/GOSUB target (only for constant targets...)
+    Speed       SYS functions for NextBlock, EndOfLine, Number
+    TUNE/PLAY   Play a note/score
+    ABS(/SGN(   Built-in function
+    A$()        Indexing in string variable, gives integer (handle in Factor)
+    Speed       Move stack check from Expression to Factor (and GOSUB)
+    LEN()/A$()= More string stuff
+
+  'Probably not soon' list:
+    NEXT        Without variable (complicates 'Variable' subroutine)
+    A0 .. Z9    Much more variable space (as in Apple-1 basic)
+    ROM peek    rpeek()? Some predefined USR functions?
+    A$(i,j)     Substrings (only in PRINT)
+    LOAD        From where? EPROM? "Cassette interface".
+    DIM A()     And bound checks...
+    TI/TI$      Built-in variable for time? (only in MS BASICs). Setting also?
+    TAB()       As in Apple-1 BASIC (Weird: TAB(N) advances to N-1...)
+    SPC()       Spaces
+    Speed       Binary search for GotoValue -> Only speeds up large programs
+    "" or """   For printing the quote character itself (use: PUT 34)
+    Overflow    Errors on overflow for + - and *
+    WAIT/PAUSE  -> Make a loop subroutine
+    LIST <n>    List one line
+    a-z A-Z     As different variables
+    ><          For unequal
+    CLEAR       For NEW ('CLEAR' is original TinyBASIC syntax, but who cares..)
+    READ, DATA  Possibly put in unused lines? (RESTORE)
+    AND OR NOT  At least in IF statements
+    ELSE        Will slow down IF, because it has to scan for this
+    DEF FNx
+
+        Memory layout:
+
+        a0          b0          c0          d0          e0          f0       ff
+       +-----------------------+-----------------------+-----------------------+
+$1ba0  | Input buffer   Begin->| Program line 10       | Program line 20       |
+       +-----------------------+-----------------------+-----------------------+
+$1ca0  | Program line 30       | Program line 40       | Program line 45       |
+       +-----------------------+-----------------------+-----------------------+
+$1da0  | Program line 50       | Program line 60  End->|K(96)             Z(96)|
+       +-----------------------+-----------------------+-----------------------+
+       |                       |         @(95)    J(95)|K(95)             Z(95)|
+       :                       :                       :                       :
+       :                       :                       :                       :
+       :                       :                       :                       :
+       |                       |         @(1)      J(1)|K(1)               Z(1)|
+       +-----------------------+-----------------------+-----------------------+
+$7da0  |                       |         @(0)      J(0)|K(0)               Z(0)|
+       +-----------------------+-----------------------+-----------------------+
+$7ea0  |                       | For loops @ A B ... J | K ... S T U V W X Y Z |
+       +-----------------------+-----------------------+-----------------------+
+$7fa0  | SAVE buffer           | Variables @ A B ... J | K ... S T U V W X Y Z |
+       +-----------------------+-----------------------+-----------------------+
+
+        Totally random ideas:
+
+        Alternative byte allocation in block:
+        0       Checkpoint offset (set by Insert to 5)
+        1-2     Checkpoint address (set by Insert to Statement)
+        3-4     Line number
+        5-29    Text (without line number) and terminating zero
+        30-31   Next block address? Goto address?
+
+        Some concepts to fake strings
+                Variable = String
+                PRINT Variable '$'
+
+                Variable '$' '=' (Variable '$' | String)
+                PRINT Variable '$'
+
+        But how about INPUT A$?
+
+        Ideas for demo programs:
+            Rainbow     Show palette in a nice way
+            Clock
+            Maze        The famous one-liner with / and \ -> Easter egg in ROMv2
+            Circles     Lots of math
+            Music       Play tones, vary with waveforms
+            Sprites     Fake sprites with printing chars at arbitrary positions
+}
+
+{-----------------------------------------------------------------------+
+|                       RAM page 2                                      |
++-----------------------------------------------------------------------}
+
+$01df deek Pos=                 {Bottom character row in screen memory}
+                                {Slightly cheating with endianness}
+
+{ Process an expression factor, result in Value }
+[def
+  push
+
+  Number!                       {Test for decimal constant}
+  [if>=0
+    Spaces!
+    pop ret]                    {Result already in Value}
+
+  Active, $24^ [if=0            {Test for hexadecimal constant $....}
+    &_Hexnum call
+    Spaces!
+    pop ret]
+
+  Keyword! `( #0
+  [if<>0
+    Expression!
+  else
+
+  Keyword! `peek( #0
+  [if<>0
+    Expression!
+    peek Value=
+  else
+
+  Keyword! `rnd( #0
+  [if<>0
+    Expression!
+    \SYS_Random_34 _sysFn=      {Prepare SYS call}
+    [do 34!! if<0loop]          {Get positive random number}
+    Divide!                     {Modulo expression}
+    i Value=
+  else
+
+  Keyword! `usr( #0
+  [if<>0
+    Expression!
+    Value! Value=               {vCPU call and result}
+  else
+
+    Variable! k=                {Otherwise it MUST be a variable}
+    Spaces!
+    Keyword! `( #0
+    [if<>0                      {Optional array index}
+      push k %0=                {Save address on stack}
+      Expression!
+      [if<0 ValueError!]        {Index must be non-negative}
+      %0 k= pop                 {Pop address from stack}
+      >k, Value- 2- >k.
+      End k^                    {64K safe bound check}
+      [if<0 End                 {Opposite signs}
+       else k End-]             {Equal signs}
+      [if<0 ValueError!]
+      Keyword! `) #0
+      if=0 SyntaxError!]
+
+    k; Value=                   {Fetch value}
+    pop ret
+  ]]]]
+
+  Keyword! `) #0
+  [if=0 SyntaxError!]
+  pop ret
+] Factor=
+
+{ Print inline string. Returns 0 }
+[def
+  \vLR; tmp=                    {vLR points to inline argument}
+  [do
+    tmp, <tmp++                 {Grab next character}
+    if<>0 PrintChar!            {Print as long as non-zero}
+    loop]
+  tmp!                          {Returns to caller}
+] PrintS=
+
+[def
+  \serialRaw, 3^                {Test for Ctrl-C (ASCII ETX) as break request}
+  [if=0
+    PrintCharScreen PrintChar=  {In case we break a SAVE command}
+    Prompt! `Break #0]
+  ret
+] TestBreak=
+
+{-----------------------------------------------------------------------+
+|} >\vLR++ ret {        RAM page 3                                      |
++-----------------------------------------------------------------------}
+*=$0300
+
+{ Print ASCII character (32..131) on screen in 5x8 pixels }
+{ For valid characters, return the actual position }
+[def
+  k=                            {Temporarily save character}
+  [131- if<=0                   {Suppress characters >131}
+   >Pos, 120- if<=0             {Suppress when vertically protruding
+                                 screen memory (note this can be in the
+                                 middle of the screen after scrolling
+                                 and using AT with non-multiples of 8,
+                                 leading to unexpected missing of text}
+
+      <Pos, 154- [if>0          {Automatic newline BEFORE printing}
+        push Newline! pop]
+
+      k 82-                     {Map ASCII code to offset in font table}
+      [if<0 50+ i= \font32up    {ASCII 32..81}
+       else     i= \font82up]   {ASCII 82..127}
+      k=
+      i if>=0                   {Suppress characters <32}
+      2<< i+                    {Multiply by 5}
+      k+ k=                     {Add to page address to reach bitmap data}
+
+      \SYS_VDrawBits_134        {Prepare SYS calls}
+      _sysFn=
+      _sysArgs6 _sysArgs0=      {Apply caller-defined colors}
+      Pos \sysArgs4:            {Position for character}
+      %-2=                      {Temporarily park return value on the stack}
+      6+ Pos=                   {Advance position by 6 pixels}
+
+      5 [do i=                  {Draw 5 vertical slices}
+        k 0?? \sysArgs2.        {Get slice from ROM}
+        134!!                   {Invoke SYS function to draw pixels}
+        <k++ <\sysArgs4++       {Advance to next slice}
+        i 1- if>0loop]          {Looping}
+
+      \sysArgs2. 134!!          {Render 6th slice}
+
+      %-2]                      {Return effective position}
+  ret
+] PrintChar=
+  PrintCharScreen=
+
+{ Accept ASCII characters from console input with line editting }
+[def
+  push
+
+  tmp=                          {Line number}
+
+  { On ROM v4 and higher `MODE 1975' disables all video/audio/IO/etc }
+  { completely. Better reactivate it before waiting for new input.   }
+  \SYS_SetMode_v2_80 _sysFn=
+  \romType, \romTypeValue_ROMv4-
+  [if>=0 255- 80!!]             {Any value <0 will restore signal, except -177.}
+                                {But -177+255+$38 isn't valid romType content,}
+                                {so that's just fine.}
+
+  &_Buffer Active=              {Input buffer}
+  tmp Active:                   {For error messages}
+  $a2 <Active.                  {Text area}
+
+  [do {NEXTCHAR}
+    127 PrintChar! Pos=         {Draw cursor symbol}
+
+    \serialRaw, [do             {Wait for key change}
+      tmp=                      {Remember previous value}
+      \serialRaw, Active.       {Read new input value}
+      tmp^ if=0                 {If no change}
+        Active, loop]           {Keep waiting}
+
+    Active, 10^ if<>0           {Enter/return breaks NEXTCHAR loop}
+
+    117^ [if=0                  {Delete pressed (10^127 == 117)}
+      $20 PrintChar! Pos=       {Remove cursor}
+      <Pos, 6- [if>=0           {If not on first position}
+        <Pos.                   {Step back}
+        Active 1- Active=]      {Remove character from buffer}
+      loop]                     {To NEXTCHAR}
+
+    96- if>=0loop               {Ignore apparent unprintable garbage}
+
+    <Pos, 150- [if>=0           {Fewer than 2 chars or 11 pixels will fit}
+      $a2 <Active.              {Discard of too long input}
+      $5c PrintChar!            {Overflow indicator '\'}
+      loop]                     {To NEXTCHAR, cursor will print on new line}
+
+    Active, PrintChar!          {Print accepted characters}
+    <Active++                   {Advance pointer, keeping the character}
+    loop]                       {To NEXTCHAR}
+
+  &_GetLine2 call               {Part2}
+]
+
+{-----------------------------------------------------------------------+
+|} >\vLR++ ret {        RAM page 4                                      |
++-----------------------------------------------------------------------}
+*=$0400
+GetLine=
+
+{ Statement executor. Doesn't return through vLR }
+{ Active must point to text or terminating zero, NOT to the line number }
+[def
+  Spaces!
+
+  Keyword! `goto #0
+  [if<>0
+    Expression!                 {Computed goto}
+    GotoValue!]                 {Find that line and continue there}
+
+  Keyword! `gosub #0
+  [if<>0
+    Expression!                 {Also does the stack check}
+    push Active %0=             {Push current line to stack}
+    GotoValue!]                 {Find that line and continue there}
+
+  Keyword! `return #0
+  [if<>0
+    \vSP, [if=0 StackError!]    {Top of stack}
+    deek Active= pop            {Pop line from stack}
+    EndOfLine!]
+
+  Keyword! `if #0
+  [if<>0
+    Expression!
+    4-- %2=                     {Push first value on stack}
+    RelOp!
+    [if=0 SyntaxError!]
+    %0=                         {Park RelOp bits on stack}
+    Expression!
+    Keyword! `then #0           {Optional}
+    %2 Value^                   {Do the comparison, beware of overflows}
+    [if<0 %2                    {Opposite signs}
+     else %2 Value-]            {Same signs}
+    [if>0 4]                    {First is greater}
+    [if<0 1]                    {Second is greater}
+    [if=0 2]                    {Values are equal}
+    i= %0 i&                    {Compare to RelOp bits}
+    4++                         {Restore stack}
+    [if<>0 Statements!]         {Conditional execution}
+    [do
+      Active, if<>0             {Find end of line}
+      <Active++ loop]
+    EndOfLine!]                 {Continue with next line}
+
+  Keyword! `poke #0
+  [if<>0
+    Expression!
+    Address=
+    Keyword! `, #0
+    [if=0 SyntaxError!]
+    Expression!
+    Address.                    {Write byte to memory}
+    EndOfLine!]
+
+  Keyword! `' #0
+  [if=0 Keyword! `rem #0]
+  [if<>0
+    [do
+      Active, if<>0             {Find end of line}
+      <Active++ loop]
+    EndOfLine!]
+
+  Keyword! `line #0
+  [if<>0 &_Line call]
+
+  Keyword! `end #0
+  [if<>0 Prompt! #0]
+
+  &_Statements2 call            {Continue in another page}
+] Statements=
+
+>\vLR++ >\vLR++ ret             {Hop over next page}
+
+{-----------------------------------------------------------------------+
+|                       RAM page 5                                      |
++-----------------------------------------------------------------------}
+*=$0500
+
+_Statements2=*
+
+{ Continuation of Statement }
+
+  Keyword! `next #0
+  [if<>0
+    Variable! Address=          {Pointer to loop variable}
+    push Active %0=             {Park program index on stack}
+    -$100 Address+ deek         {Retrieve loop pointer}
+    [if=0 ValueError!]          {NEXT without FOR error}
+    Active=                     {Switch back to tail of FOR statement}
+    Expression!                 {Evaluate end value}
+    Address; 1+ Address:        {Increment loop variable}
+    Value-                      {Compare with end value}
+{   Value^                      {XXX 16-bit safe comparison}
+    [if<0 Value^                {Opposite signs}
+     else Value^ Value-] }      {Same signs}
+    [if>0                       {Loop variable > End value}
+      %0 Active=                {Break the loop}
+      Spaces!]
+    pop                         {Shorter than 2++}
+    TestBreak!                  {Test for break request}
+    EndOfLine!]
+
+  Keyword! `for #0
+  [if<>0
+    Variable! Address=          {Pointer to loop variable}
+    Spaces!
+    Keyword! `= #0
+    [if=0 SyntaxError!]
+    Expression!                 {Evaluate expression}
+    Address:                    {Store value in variable}
+    Keyword! `to #0
+    [if=0 SyntaxError!]
+    -$100 Address+ j=           {Retrieve loop pointer}
+    Active j:                   {Remember return point for NEXT}
+    Expression!                 {Evaluate but ignore result}
+    EndOfLine!]
+
+  Keyword! `at #0
+  [if<>0
+    Expression!                 {X position}
+    [if<0 ValueError!]
+    <Pos.
+    Keyword! `, #0
+    [if<>0
+      Expression!               {Optional Y position}
+      [if<0 ValueError!]
+      120-
+      [if>=0 ValueError!]       {Point into videoTable}
+      248+ 1<<                  {\videoTable+2*y}
+      peek >Pos.]
+    EndOfLine!]
+
+  Keyword! `put #0
+  [if<>0
+    Expression!
+    PrintChar!
+    EndOfLine!]
+
+  Keyword! `mode #0
+  [if<>0
+    Expression!                 {Degrade gracefully in ROM v1}
+    \romType,
+    \romTypeValue_ROMv2-
+    [if>=0
+      \SYS_SetMode_v2_80        {Available from ROM v2}
+      _sysFn= Value 80!!]
+    EndOfLine!]
+
+  &_Statements3 call
+
+_Hexnum=*
+  0 [do
+    Value=                      {Update partial result}
+    4<< i=                      {Multiply by 16 before adding hex digit}
+    <Active++ Active,           {Grab next character}
+    $30- {'0'} if>=0            {Bail out if out of range}
+    10-  {'9'} [if<0            {Decimal digit}
+      10+                       {Map in 0..9 range}
+      i+ loop]                  {Add it to value}
+    $df&                        {Ignore case}
+    7- {'A'} if>=0              {Skip :;<=>?@ and Z[\]^_`}
+    6- {'F'} [if<0              {A..F or a..f}
+      16+                       {Map in 10..15 range}
+      i+ loop]                  {Add it to value}
+  ]                             {Silently accepts bare $ as 0}
+  ret
+
+{-----------------------------------------------------------------------+
+|                       RAM page 6                                      |
++-----------------------------------------------------------------------}
+*=$0600
+
+{
+ Six scenarios for InsertLine          Check   Search  Shift   Copy    Shift
+                                       memory  line    down    buffer  up
+ 1. Append a new line > last            X       -       -       X       -
+ 2. True insert of a new line < last    X       X       X       X       -
+ 3. Overwrite of existing line <= last  -       X       -       X       -
+ 4. Delete of existing line <= last     -       X       -       -       X
+ 5. Delete of non-existing line < last  X(!)    X       X(!)    -       X(!)
+ 6. Delete of non-existing line > last  -       -       -       -       -
+}
+{ Handle commands that start with a line number }
+[def
+  push
+  Number!
+  [if>0
+    { Lookup line number in program }
+    End i= j=                   {Setup i and j for below}
+    Begin^ [if<>0               {Last line number is zero when no program}
+      End PrevBlock! deek]      {Or read it from the last block}
+    Value-                      {Compare to given number}
+    [if>=0                      {If insert/modify instead of append}
+      Begin [do i=              {Loop over program from beginning}
+        i; Value- if<0          {Stop if found or past it}
+        i NextBlock! loop]      {Advance to next line}
+      if>0                      {Insert scenario}
+        0; End^                 {Compare against top of memory}
+        [if<>0                  {Do the copy only when safe (give error later)}
+          [do                   {Copy rest of program one one slot up}
+            j k= PrevBlock!     {Go up one block}
+            j= tmp=
+            [do                 {Copy tmp[0:31] to k[0:31]}
+              tmp, k.           {Copy as bytes, don't bother with word copy}
+              <tmp++ <k++       {Advance both pointers}
+              tmp 31&
+              if<>0loop]        {Copy all 32 bytes}
+
+            j i^ if<>0loop]
+        ]
+        1                       {Non-zero to trigger advancing of End below}
+    ]
+    { Expand program space if needed }
+    [if<>0
+      0; $80- $c0-              {Correct for variables}
+      End^                      {Compare End against top of memory}
+      [if=0 SyntaxError!]       {Out of memory error if equal}
+      End NextBlock! End=]      {Otherwise grab space for new line}
+
+    Active,                     {Inspect if line has any content}
+    [if<>0
+      { Copy line from buffer into program }
+      Value i:                  {Copy line number}
+      <i++                      {Copy line text}
+      [do
+        <i++
+        Active, <Active++       {From input buffer}
+        i.                      {Into program memory}
+        if<>0loop]              {Until terminating zero}
+    else
+      { Bare line number means delete that line }
+      i j=                      {i still points at line to be deleted}
+      [do
+          End^ if<>0            {Until end of program}
+          j NextBlock! j= tmp=  {Go down one block}
+          [do                   {Copy tmp[0:31] to i[0:31]}
+            tmp, i.             {Copy as bytes, don't bother with word copy}
+            <tmp++ <i++         {Advance both pointers}
+            tmp 31& if<>0loop]  {Copy all 32 bytes}
+          j i=
+          loop]
+      End PrevBlock! End=       {Remove last line from program}
+    ]
+    Value                       {Report line number to caller}
+  ]
+  pop ret
+] Insert=
+
+$353f \sysArgs6:                {Pen color blue/purple, background color white}
+
+{ Note: It is safe here to call functions before hopping over to page 8 }
+
+&_Newline Newline= call         {Scroll and clear last line}
+
+{ Welcome message }
+PrintS! `***`Tiny`BASIC`DEV #0
+Newline!
+
+{ Hop to next page }
+$08a0 _vLR= ret
+
+_GetLine2=*
+
+{ Continuation of GetLine }
+
+  0 Active.                     {Terminate input with zero}
+  $20 PrintChar!                {Remove cursor}
+  Newline!
+  $a2 <Active.                  {Back to start of buffer}
+  Spaces!                       {Process leading spaces}
+  Active,                       {Tell caller if there is input}
+  pop ret
+
+{-----------------------------------------------------------------------+
+|                       RAM page 8                                      |
++-----------------------------------------------------------------------}
+*=$08a0
+
+{ Calculate address of next 32-byte block for storing BASIC lines }
+{ Realign if needed }
+[def
+  31| 1+ tmp=                   {Advance to next 32-byte memory block}
+  [if>0                         {In the first 32K...}
+    $e0& if=0                   {...wrap around visible screen memory}
+      tmp 160+ ret]
+  tmp
+  ret
+] NextBlock=
+
+{ Go to previous block. Assume vAC already aligned to valid 32-byte block }
+[def
+  32- tmp=                      {Move back to previous 32 byte memory block}
+  [if>=0                        {In the first 32K...}
+    $60& if=0                   {...wrap around visible screen memory}
+      tmp 160- ret]
+  tmp
+  ret
+] PrevBlock=
+
+{ Find line with line number equal to Value and go there }
+[def
+  Begin [do i=                  {Loop over program from beginning}
+    End^ if<>0                  {Until end of program}
+    i; Value^ [if=0             {Or if matching value found}
+      i 2+ Active=              {Skip past line number}
+      TestBreak!                {Test for break request}
+      Statements!]              {And continue from there}
+    i NextBlock! loop]          {Otherwise try next line}
+  Prompt! `Line #0              {Line error}
+] {GotoValue=}
+
+{-----------------------------------------------------------------------+
+|} >\vLR++ ret {        RAM page 9                                      |
++-----------------------------------------------------------------------}
+*=$09a0
+GotoValue=
+
+{ Destructively print Value as signed decimal number }
+[def
+  push
+
+  [if<0                         {If vAC is negative (vAC, NOT value!)}
+    0 Value- Value=             {Negate value}
+    $2d PrintChar!]             {Print minus sign}
+
+  0 k=                          {Suppress leading zeroes}
+
+  Value [if<0                   {Bring large unsigned values in range}
+    -30000 Value+ Value=        {Now Value<=35535, we need Value<=42767: OK}
+    3 k=]
+
+  10000 PrintDigit!             {Print ten thousands, largest for 16 bits}
+   1000 PrintDigit!             {Print thousands}
+    100 PrintDigit!             {Print hundreds}
+     10 PrintDigit!             {Print tens}
+    $30 Value+ PrintChar!       {Print ones}
+
+  pop ret
+] PrintValue=
+
+[def
+  Prompt! `Stack #0             {Stack error}
+] StackError=
+
+[def
+  Prompt! `Syntax #0            {Syntax error}
+] SyntaxError=
+
+{-----------------------------------------------------------------------+
+|} >\vLR++ ret {        RAM page 10                                     |
++-----------------------------------------------------------------------}
+*=$0aa0
+
+{ Parse an inline keyword. Returns 0 for failure }
+[def
+  \vLR; tmp=                    {vLR points to inline argument}
+  Active j=                     {Save Active in case word match fails}
+  [do
+    tmp, <tmp++                 {Next expected character from argument}
+    if<>0                       {Compare until non-zero}
+    i=
+    Active,                     {Grab next character from line}
+    $20|                        {Ignore case}
+    i^ [if=0 <Active++ loop]    {Accept if character matches}
+    j Active=                   {Restore program pointer on mismatch}
+    [do tmp, <tmp++ if<>0loop]  {Eat remaining characters}
+    tmp!]
+  Spaces!                       {Remove trailing whitespace on match}
+  tmp!                          {Effectively returns past the keyword}
+] Keyword=
+
+{ Parse an unsigned decimal number and put in Value }
+[def
+  $8000                         {Stays negative if we don't see any digits}
+  [do
+    Value=                      {Update partial result}
+    2<< Value+ 1<< i=           {Multiply by 10 before adding decimal}
+
+    Active,                     {Grab next character}
+    $30- {'0'} if>=0            {Bail out if out of range}
+    10-  {'9'} if<0             {Decimal digit}
+      10+                       {Map in 0..9 range}
+      i+                        {Add it to value}
+      <Active++
+      loop]
+  Value                         {Result, negative value indicates error}
+  ret
+] {Number=}
+
+{-----------------------------------------------------------------------+
+|} >\vLR++ ret {        RAM page 11                                     |
++-----------------------------------------------------------------------}
+*=$0ba0
+Number=
+
+{ Verify that there is nothing else on the line, then continue with next }
+[def
+  Active, [if<>0
+    $3a^ [if=0                  {Accept statements separated by colon (':')}
+      <Active++ Statements!]
+    SyntaxError!]               {There must be nothing left on the line}
+  Active NextBlock! Active=     {Advance to next line}
+  End^ [if<>0                   {Stop at end of program}
+    &_BasicProgram Active^      {Also stop if we came from the input buffer}
+    if<>0 Active 2+ Active=     {Skip past line number}
+    Statements!]                {And continue from there}
+  Prompt! #0                    {Program finished ok}
+] EndOfLine=
+
+{ Clear variables but not arrays. Returns begin address for programs }
+[def
+  0; i=                         {Top of memory}
+  2                             {Clear variables and FOR state}
+  [do
+    j=
+    i 54- i=                    {i -= 2*27}
+    [do
+      0 i.                      {Clear byte}
+      <i++                      {Advance pointer}
+      <i, if<>0loop]            {Until end of page}
+    j 1- if<>0loop]
+  &_BasicProgram Begin=
+  ret
+] {Clear=}
+
+{-----------------------------------------------------------------------+
+|} >\vLR++ ret {        RAM page 12                                     |
++-----------------------------------------------------------------------}
+*=$0ca0
+Clear=
+
+{ Process a full expression, result in Value and vAC }
+[def
+  push
+
+  \vSP, 141-                    {Check stack for at least 12 bytes above $81}
+                                {Expression: 4, Term: 4, Factor: 4}
+  [if<0 StackError!]            {Too complex expression AND too deep}
+
+                                {First term}
+  Keyword! `- #0
+  [if<>0                        {Accept unary minus}
+    Term!
+    0 Value-                    {Negate}
+  else
+    Keyword! `+ #0              {Ignore unary plus}
+    Term!]
+
+  push %0=                      {Put partial result on stack}
+  [do                           {Optional additional terms}
+    Keyword! `+ #0
+    [if<>0
+       Term!
+       %0 Value+ %0=            {Perform addition}
+       loop]
+    Keyword! `- #0
+    [if<>0
+       Term!
+       %0 Value- %0=            {Perform subtraction}
+       loop]
+  ]
+  %0 Value= pop                 {Make stack value the result}
+  pop ret
+] Expression=
+
+[def
+  Prompt! `Value #0             {Value error}
+] ValueError=
+
+{-----------------------------------------------------------------------+
+|} >\vLR++ ret {        RAM page 13                                     |
++-----------------------------------------------------------------------}
+*=$0da0
+
+{ Process an expression term, result in Value and vAC }
+[def
+  push
+  Factor!                       {First factor}
+  push Value %0=                {Put partial result on stack}
+  [do                           {Optional additional factors}
+    Keyword! `* #0
+    [if<>0
+       Factor!
+       %0 Multiply! %0=
+       loop]
+    Keyword! `/ #0
+    [if<>0
+       Factor!
+       %0 Divide! %0=
+       loop]
+    Keyword! `% #0
+    [if<>0
+       Factor!
+       %0 Divide! i %0=
+       loop]
+  ]
+  %0 Value= pop                 {Make stack value the result}
+  pop ret
+] Term=
+
+>\vLR++ ret                     {Hop to next page}
+
+_Statements5=*                  {Borrow a few bytes here for RUN}
+
+  Keyword! `run #0
+  [if<>0
+    Clear!                      {Clear variables}
+    deek Value=                 {First program line, if any}
+    GotoValue!]                 {Also tests for break}
+
+  &_Statements6 call
+
+{-----------------------------------------------------------------------+
+|                       RAM page 14                                     |
++-----------------------------------------------------------------------}
+*=$0ea0
+
+{ Calculate vAC / Value, result in vAC, remainder in i }
+[def
+  j=                            {i:j is the Remainder:Quotient pair}
+  Value^ k=                     {Park sign information}
+  j     [if<0 0 j-     j=    ]  {Non-negative}
+  Value [if<0 0 Value- Value=]  {Non-negative}
+  [if=0 ValueError!]            {Avoid division by zero}
+
+  0 i=
+  [do
+    tmp=                        {Loop counter}
+    i i+ i=                     {Shift left}
+    j [if<0 <i++]               {Carry bit over to i}
+    j j+ j=                     {Shift left}
+    i Value- [if>=0 i= <j++]    {Result bit}
+    tmp 1+ 15&                  {Iterate 16 times}
+    if<>0loop]
+
+  k [if<0 0 j- ret]             {Return with corrected sign}
+  j ret
+] {Divide=}
+
+{-----------------------------------------------------------------------+
+|} >\vLR++ ret {        RAM page 15                                     |
++-----------------------------------------------------------------------}
+*=$0fa0
+Divide=
+
+{ Calculate vAC * Value, result in vAC }
+[def
+  tmp=
+  0 j=                          {Result variable}
+  1                             {First bit}
+  [do                           {Loop over all 16 bits}
+    i= tmp&                     {Test next bit left}
+    [if<>0 j Value+ j=]         {Add partial term}
+    Value Value+ Value=         {Shift left}
+    i i+ if<>0loop]             {Until all done}
+  j
+  ret
+] Multiply=
+
+{ Get variable and calculate its address }
+[def
+  0; i=                         {Top of memory as base for variables}
+  Active,                       {Next character from line}
+  $5f&                          {Ignore case}
+  $40- {'@'} [if>=0             {Bail out if out of range}
+   27- {'Z'} if<0               {Letter A..Z, @ or a..z}
+    <Active++                   {Accept character}
+    1<< i+                      {Address is base-52+2*n}
+    ret]                        {Return address on success}
+  SyntaxError!
+] Variable=
+
+{ Eat whitespace. Returns non-zero }
+[def
+  [do Active, $20^ if=0 <Active++ loop]
+  ret
+] Spaces=
+
+{-----------------------------------------------------------------------+
+|} >\vLR++ ret {        RAM page 16                                     |
++-----------------------------------------------------------------------}
+*=$10a0
+
+{ List program, count and print free bytes }
+[def
+  push
+
+  Begin                         {List program from start of program memory}
+  [do                           {Loop over all program lines}
+    j=
+    End^ if<>0                  {Repeat until the last line}
+    TestBreak!                  {Test for break request}
+    j; Value= PrintValue!       {Print line number}
+    <j++                        {Print line text}
+    [do                         {Loop over all characters in program line}
+      <j++ j,
+      if<>0 PrintChar!
+      loop]
+    Newline!
+    j NextBlock!                {Advance to next block}
+  loop]
+
+  [do                           {Continue looping, now over free memory}
+    Value=                      {Subtotal}
+    0;                          {Retrieve top of memory from RAM[0:1]}
+    $80- $c0-                   {Correct for space used by variables}
+    j^ if<>0                    {If not equal to j}
+    j NextBlock! j=             {Advance to next block}
+    Value 32+                   {Count another 32-byte block}
+    loop]
+
+  PrintChar PrintCharScreen^
+  [if=0                         {When not in SAVE mode}
+    PrintValue!                 {vAC>=0 triggers conversion without sign}
+    PrintS! ``bytes`free #0
+  ]
+
+  pop ret
+] {List=}
+
+{-----------------------------------------------------------------------+
+|} >\vLR++ ret {        RAM page 17                                     |
++-----------------------------------------------------------------------}
+*=$11a0
+List=
+
+{ Conditionally print leading decimal digit }
+[def
+  push
+  i=                            {Radix as argument, keep in i}
+  Value [do                     {Calculate Value/Radix}
+    i-                          {Subtract i}
+    if>=0                       {As many times as fits}
+    Value=
+    <k++                        {Increment 0..9 times}
+    loop]
+  k [if<>0                      {If non-zero digit or non-leading zero}
+     $30| PrintChar!            {Map to $30..$39 range and print digit}
+     $30 k=]                    {And mark all further zeroes as non-leading}
+  pop ret
+] PrintDigit=
+
+{ Parse relational operator }
+{ Use same encoding as original Tiny BASIC }
+{ Doesn't accept >< (just use <>) }
+[def
+  push
+  0 k=
+
+  Keyword! `< #0                {'<' in bit 0}
+  [if<>0 <k++]
+
+  Keyword! `> #0                {'>' in bit 2}
+  [if<>0 k 4+ k=]
+
+  Keyword! `= #0                {'=' in bit 1}
+  [if<>0 k 2+ k=]
+
+  k
+  pop ret
+] RelOp=
+
+&_Buffer deek End=              {At startup 'End' comes from loaded segment}
+2+ {Active=}                    {BASIC command(s) to run at startup}
+
+{-----------------------------------------------------------------------+
+|} >\vLR++ ret {        RAM page 18                                     |
++-----------------------------------------------------------------------}
+*=$12a0
+Active=
+
+{ Error reporting function and re-entry point for main loop }
+{ Call with inline partial error message, or with #0 for no error }
+[def
+  \vLR; tmp=                    {vLR points to inline string argument}
+  [<Pos, 2- if>0 Newline!]      {Conditional newline}
+  0 \vSP.                       {Reset stack}
+  tmp, [if<>0                   {Test for error in first byte of message}
+    $3f                         {Begin error messages with '?'}
+    [do                         {Print inline string as prelude}
+      PrintChar!
+      tmp, <tmp++
+      if<>0loop]
+    PrintS! ``error #0
+    32-                         {$ffe0}
+    Active&                     {Align to begin of block}
+{   0+}{dummy offset} deek      {Fetch active line number from offset 0}
+    [if<>0                      {Input buffer has line number 0, don't print}
+      Value=                    {Prepare line number for printing}
+      PrintS! ``in` #0
+      PrintValue!]              {Print line number}
+    Newline!]
+
+  PrintS! `Ok #0                {'Ok'}
+  Newline!
+
+  { Main loop }
+  [do
+    0                           {Interactive mode is 'line 0'}
+    GetLine!                    {Get line from console}
+    if=0loop                    {Do nothing for empty lines}
+    Insert!                     {Test for line number and insert or delete}
+    if>0loop]                   {If success, continue without prompt}
+
+  #\LDWI                        {1-byte hack to fall through and skip 'Prompt='}
+] Prompt=
+
+Statements!                     {Execute statements}
+
+{-----------------------------------------------------------------------+
+|                       RAM page 19                                     |
++-----------------------------------------------------------------------}
+*=$13a0
+
+_Print=*
+
+{PRINT}
+
+  Active, [if<>0                {Special case for newlines}
+  $3a^ if<>0                    {Same for colon}
+
+    [do {PRINTLIST}
+      Active, if<>0             {Until end of line}
+      $3a^ if<>0                {or ':'}
+      $18^                      {'"' = $22 = $3a^$18}
+      [if=0
+        [do {PRINTSTRING}       {String constant}
+          <Active++             {Skip past opening quote or string character}
+          Keyword! #$22 #0      {'"'}
+          if=0
+          Active,               {Next character}
+          if<>0                 {Silently accept unterminated string}
+          PrintChar!
+          loop]                 {To PRINTSTRING}
+      else
+        Expression!
+        PrintValue!]
+      Keyword! #$2c #0          {','}
+      [if<>0
+        [do
+          $20 PrintChar!
+          <Pos, 2-              {Correct for 2 pixel indentation}
+          7& if<>0loop]         {Tab stops every 4 characters}
+        loop]                   {To PRINTLIST}
+      Keyword! #$3b #0          {';'}
+      if<>0loop                 {To PRINTLIST}
+      Newline!]                 {When no trailing ',' or ';'}
+  else
+    Newline!]                   {Special case for newlines and colon}
+
+  EndOfLine!
+
+{-----------------------------------------------------------------------+
+|                       RAM page 20                                     |
++-----------------------------------------------------------------------}
+*=$14a0
+
+_Statements3=*
+
+  Keyword! `? #0
+  [if=0 Keyword! `print #0]
+  [if<>0 &_Print call]          {PRINT}
+
+  Keyword! `input #0
+  [if<>0
+    [do
+      Active,
+      PrintChar!                {Be nice and show variable name in prompt}
+      Variable!                 {Parse variable name}
+      Address=                  {Park here}
+      Spaces!
+      4-- Active %2=            {Save program pointer on stack}
+      31| 31- deek %0=          {Current line number in program}
+      [do
+        $3f PrintChar!          {'?'}
+        Newline!                {Avoid dealing with partially printed lines}
+        %0                      {Line number for errors}
+        GetLine!                {Let user type something}
+        if=0loop]               {Repeat with prompt when nothing is typed}
+      Expression!               {Accept arbitrary expression as input \o/}
+      Address:                  {Store received value in variable}
+      %2 Active= 4++            {Restore program pointer from stack}
+      Keyword! `, #0            {','}
+      if<>0loop]                {Next variable}
+    EndOfLine!]
+
+  &_Statements4 call
+
+{-----------------------------------------------------------------------+
+|                       RAM page 21                                     |
++-----------------------------------------------------------------------}
+*=$15a0
+
+_Statements4=*
+
+  Keyword! `cls #0
+  [if<>0
+    $100 peek >Pos.             {Start at top of page}
+    14 [do                      {14 newlines}
+      j=
+      Newline!
+      j 1- if>0loop]
+    [do                         {Continue until video table is normal}
+      Newline!
+      $100 peek 8^ if<>0loop]
+    8 >Pos.                     {Return cursor to top of page}
+    EndOfLine!]
+
+  Keyword! `list #0
+  [if<>0 List! EndOfLine!]
+
+  Keyword! `save #0
+  [if<>0
+    \romType, \romTypeValue_ROMv3-
+    [if<0 ValueError!]          {Error on ROM before v3}
+    &_Save call]
+
+  &_Statements5 call
+
+{-----------------------------------------------------------------------+
+|                       RAM page 22                                     |
++-----------------------------------------------------------------------}
+*=$16a0
+
+_Statements6=*
+
+  Keyword! `new #0
+  [if<>0
+    Clear!                      {Clear variables}
+    End=                        {Clear program}
+    List!                       {To print number of free bytes}
+    Prompt! #0]                 {Return to prompt}
+
+  Keyword! `let #0              {LET is optional}
+  Variable!
+  Address=                      {Park here}
+  Spaces!
+  Keyword! #$28 #0              {'('}
+  [if<>0                        {Optional array index}
+    Expression!
+    [if<0 ValueError!]          {Index must be non-negative}
+    >Address, Value- 2- >Address.
+    End Address^                {64K safe bound check}
+    [if<0 End                   {Opposite signs}
+     else Address End-]         {Equal signs}
+    [if<0 ValueError!]
+    Keyword! #$29 #0            {')'}
+    if=0 SyntaxError!]
+  Keyword! `= #0                {'='}
+  [if=0 SyntaxError!]
+  Expression!                   {Evaluate expression}
+  Address:                      {Store value in variable}
+  EndOfLine!
+
+{-----------------------------------------------------------------------+
+|                       RAM page 23                                     |
++-----------------------------------------------------------------------}
+*=$17a0
+
+_Save=*
+
+{SAVE}
+
+  { Saving works by redirecting PrintChar and then calling List.
+    The first line out will be an implicit bare newline. This signals
+    to BabelFish that a new program starts and the old can be deleted. }
+
+  0;
+  \sysArgs3.                    {Number of bits to send (zero)}
+  96- Address=                  {SAVE line buffer}
+
+  [def
+    push
+    k=
+    \sysArgs3, 8+ \sysArgs3.    {Always count 8 more bits}
+    <Pos, 6-                    {At or near left margin}
+    [if<0                       {A newline has started}
+      10 Address.               {Terminate the save line}
+      Address 31| 31^ Address=  {Back to start of buffer}
+      \sysArgs0:                {Prepare SYS call}
+      1 \sysArgs2.              {First bit}
+      \SYS_SendSerial1_v3_80
+      _sysFn= 80!!              {SYS call to send bits to serial port}
+      [if<>0                    {'BreakError' would be better}
+        3 \serialRaw.           {Not a great hack...}
+        TestBreak!]             {...to initiate a break error}
+      8 \sysArgs3.]
+    k Address. <Address++       {Put in buffer}
+    PrintCharScreen!            {Print to screen as well}
+    pop ret
+  ] PrintChar=                  {Globally redefines original PrintChar}
+
+  [do
+     \serialRaw, 255^           {Wait for BabelFish to appear idle}
+     if<>0loop]
+
+  List!                         {List whole program, redirected}
+  32 PrintChar!                 {Flushes the last line}
+
+  PrintCharScreen PrintChar=    {Restore PrintChar}
+  EndOfLine!
+
+{-----------------------------------------------------------------------+
+|                       RAM page 24                                     |
++-----------------------------------------------------------------------}
+*=$18a0
+
+_Newline=*
+
+{Newline}
+
+  { Prepare for printing on new line }
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS call}
+
+  0 <Pos.                       {Go back to start of line}
+  \sysArgs2.                    {All-zero output pattern}
+
+  >Pos, 15+                     {Go down upto 8 upto 15 lines}
+  120& [if=0 8]                 {Wrap around and re-align to 8-fold if needed}
+  >Pos.
+
+  \sysArgs6; \sysArgs0:         {Apply caller-defined colors}
+
+  Pos \sysArgs4:                {sysArgs[4:5] is position on screen}
+  [do
+    134!! <\sysArgs4++          {SYS call and advance to next slice}
+    134!! <\sysArgs4++          {A bit unrolling for speed}
+    \sysArgs4, 160^             {Test for end of screen}
+    if<>0loop]
+
+  \videoTable i=                {videoTable}
+  255| deek                     {Gets [$100] aka Y[0] in vAC high byte}
+  Pos- \vACH,                   {Compare with Y position}
+  [if=0
+    do
+      i 16+ _sysArgs0=          {sysArgs0 looks 8 entries ahead of i}
+      peek \sysArgs2.           {Swap scanlines}
+      i,   _sysArgs0.
+      \sysArgs2,   i.
+      <i++ <i++                 {Advance to next entry in video table}
+      <i, 224^ if<>0loop]       {Until all done}
+
+  <Pos++ <Pos++                 {Indent by 2 pixels}
+  ret
+
+{-----------------------------------------------------------------------+
+|                       RAM page 25                                     |
++-----------------------------------------------------------------------}
+*=$19a0
+
+_Line=*
+
+{LINE}
+
+  1 \sysArgs0: $100 \sysArgs2:  {Vector pair U, V}
+
+  Expression! push %0=          {Park dX argument on stack}
+  Keyword! `, #0                {','}
+  [if=0 SyntaxError!]
+  Expression! j=                {dY argument as j}
+
+  [if<0                         {Make dY >= 0}
+    0 #\SUBW #\sysArgs2         {Inline assembly}
+    \sysArgs2:                  {V = -V}
+    0 j- j=]
+
+  %0 i=                         {dX argument as i}
+  [if<0                         {Make dX >= 0}
+    0 #\SUBW #\sysArgs0         {Inline assembly}
+    \sysArgs0:                  {U = -U}
+    0 i- i=]
+
+  j- [if<0                      {Make dX >= dY}
+    i tmp= j i= tmp j=          {Swap i, j}
+    \sysArgs0; tmp= \sysArgs2;  {Swap U, V}
+    \sysArgs0: tmp  \sysArgs2:]
+
+  pop                           {Shorter than 2++}
+
+  &_Line2 call
+
+{-----------------------------------------------------------------------+
+|                       RAM page 26                                     |
++-----------------------------------------------------------------------}
+*=$1aa0
+
+_Line2=*
+
+{Continuation of LINE}
+
+  Value                         {dY argument}
+  [if<0 $7800 else $8800]       {Vertical gap}
+  \sysArgs4:
+
+  i tmp=                        {Setup line drawing inner loop}
+  k=                            {Bresenham's error}
+
+  [do                           {Inner loop}
+    \sysArgs7, Pos.             {Plot pixel in pen color}
+
+    tmp 1- tmp= if>=0           {Loop counter}
+
+    k j- j- k=                  {Update Bresenham's error}
+    [if<0                       {If threshold exceeded}
+      i+ i+ k=
+      \sysArgs2; Pos+ Pos=]     {Pos += V {Step along short side}}
+    \sysArgs0; Pos+ Pos=        {Pos += U {Step along long side}}
+
+    <Pos, 160- [if>=0           {Wrapping around left/right border}
+      [if>0 >Pos++ 64+] <Pos.]  {Map X back into 0..159 range}
+
+    >Pos, $78& [if=0            {This occurs midscreen if text has scrolled}
+      \sysArgs4; Pos+ Pos=]     {Map Y back into 8..127 range}
+
+    loop]
+
+  EndOfLine!                    { :-) }
+
+{-----------------------------------------------------------------------+
+|                       BASIC data                                      |
++-----------------------------------------------------------------------}
+
+{ BASIC data begins here. In this setup the interpreter can be patched
+  to include a BASIC program and a first command for execution }
+
+*=$1ba0 _Buffer=*               {Must be the "line" before user program}
+       ##_Buffer                {Initial end pointer, points to startup command}
+       `NEW #0                  {'NEW' to start interactive session}
+
+*=$1bc0 _BasicProgram=*         {BASIC program starts here}
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
+
