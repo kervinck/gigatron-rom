@@ -452,7 +452,7 @@ GetLine=
     Expression!
     Keyword! `then #0           {Optional}
     %2 Value^                   {Do the comparison, beware of overflows}
-    [if<0 %2                    {Opposite signs}
+    [if<0 %2 1|                 {Opposite signs}
      else %2 Value-]            {Same signs}
     [if>0 4]                    {First is greater}
     [if<0 1]                    {Second is greater}
