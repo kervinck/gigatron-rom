@@ -3,8 +3,11 @@
 _gtemu*.pyd
 /Release/
 __pycache__/
-/roms/*.rom
-/roms/*.lst
+/roms/
 /*.exe
 /*.obj
 .vscode
+/install-test/
+/build/
+/py_gtemu.egg-info/
+/dist/

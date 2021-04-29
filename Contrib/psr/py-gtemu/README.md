@@ -46,15 +46,19 @@ On Windows I think it's sufficient to install Python from Python.org or the Micr
 
 On other platforms, I'm afraid you're on your own.
 
-Once you have these dependencies in place, you should be able to use `pip` to install the modules, by pointing it at this directory. It assumes that this directory is part of a full Gigatron source tree - i.e. gtemu.c is in ..\..\..\Docs\ If you have struggles with the extension module (error messages involving difficulties importing cffi for example), check that you are using an up to date pip, as I think all of the metadata that should tell pip to install cffi is in place.
-
 As always when working with external dependencies with Python it is very strongly advisable to use an isolated Python environment to avoid messing up your Python installation, particularly on Linux distributions where it is a core part of your operating system.
+
+Once you have these dependencies in place, you should be to run `python setup.py install` from within this directory to install the modules. Don't use pip to install it (at least not from source); because we assume that this directory is part of a full Gigatron source tree - i.e. gtemu.c is in ../../../Docs/, pip's current policy of copying the source tree doesn't work for us.
+
+The extension module assumes that asm.py is on the module search path, as it uses this for disassembly (and referencing symbols - but that only works under special circumstances).
 
 For development of py-gtemu itself you will need to install cffi with pip, and to run the tests pytest as well. Check psakefile.ps1 to see how I manage this - even if you don't use psake to build, it should give the right idea.
 
+Note: The tests don't currently pass!
+
 ## Development
 
-This was spun out from the Forth project when I needed to add the ability to test routines that perform serial IO. The code I added to read the serial output was complicated enough that I was sure it would have bugs, and I couldn't really debug both the system under test and the test harness at the same time. That explains why that is the only area with anything like tests.
+This was spun out from the Forth project when I needed to add the ability to test routines that perform serial IO. The code I added to read the serial output was complicated enough that I was sure it would have bugs, and I couldn't really debug both the system under test and the test harness at the same time. That explains why that is the only area with anything like test coverage.
 
 My idea was to have various GCL programs which could be built in to complete ROM images by making them the Main entry point, as I have with echo.gcl. psakefile.ps1 contains code to generate a ROM from each .gcl file in the scripts directory, and the tests can then load these.
 
@@ -62,6 +66,7 @@ My idea was to have various GCL programs which could be built in to complete ROM
 
 The following might be worth doing in future:
 
+* Finish the Echo tests.
 * A Makefile for Linux / macOS development.
 * The ability to capture and restore emulator state for better fixtures
 * Make a full PDB style debugger, using the cmd module. This should be pretty easy.

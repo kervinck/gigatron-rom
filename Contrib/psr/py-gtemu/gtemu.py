@@ -3,8 +3,9 @@
 
 import itertools
 
-import _gtemu
 import asm
+
+import _gtemu
 
 __all__ = ["Emulator", "RAM", "ROM"]
 
@@ -12,8 +13,7 @@ _BLANK_RAM = bytearray([0 for _ in range(1 << 15)])
 
 
 def _make_state_field_accessor(name):
-    """Return a descriptor that accesses the fields of the state
-    """
+    """Return a descriptor that accesses the fields of the state"""
 
     def _getter(self):
         state = self._state
@@ -24,15 +24,16 @@ def _make_state_field_accessor(name):
         setattr(state, name, value)
 
     return property(
-        _getter, _setter, doc=f"Get or set the current state of the {name} register",
+        _getter,
+        _setter,
+        doc=f"Get or set the current state of the {name} register",
     )
 
 
 def _make_zero_page_accessor(
     name, address, *, width=2, byteorder="little", signed=False
 ):
-    """Return a descriptor that accesses zero-page memory
-    """
+    """Return a descriptor that accesses zero-page memory"""
 
     def _getter(self):
         return int.from_bytes(
@@ -48,8 +49,7 @@ def _make_zero_page_accessor(
 
 
 class _Emulator:
-    """Provides programatic control over the a Gigatron Emulator
-    """
+    """Provides programatic control over the a Gigatron Emulator"""
 
     def __init__(self):
         self.reset()
@@ -81,21 +81,21 @@ class _Emulator:
     @property
     def XOUT(self):
         """State of the eXtended OUTput register
-        
+
         This is set from AC when the hsync signal is low
         """
         return self._xout
 
     @property
     def hsync(self):
-        """Return the state of the HSYNC signal. 
+        """Return the state of the HSYNC signal.
 
         True is high, and False is low, but remember this is an active low signal"""
         return bool(self.OUT & _HSYNC)
 
     @property
     def vsync(self):
-        """Return the state of the VSYNC value. 
+        """Return the state of the VSYNC value.
 
         True is high, and False is low, but remember this is an active low signal"""
         return bool(self.OUT & _VSYNC)
@@ -218,7 +218,7 @@ class _Emulator:
 
     def run_to_hblank(self):
         """Run the emulator until we get to the next horizontal blank period
-        
+
         This is the "front-porch" period which follows the visible pixels
         and preceeds the hsync signal going low
 
@@ -239,7 +239,7 @@ class _Emulator:
 
     def run_to_vblank(self):
         """Run the emulator until we get to the next vertical blank period
-        
+
         This is the "front-porch" period which follows the visible lines
         and preceeds the vsync signal going low
 
@@ -294,7 +294,7 @@ class _Emulator:
         try:
             self._print = False
             if self.run_for(1000) == 1000:
-                if not self.next_instruction in breakpoints:
+                if self.next_instruction not in breakpoints:
                     raise ValueError("timeout")
         finally:
             self._print = print_
@@ -315,8 +315,7 @@ class _Emulator:
             print(self.vcpu_state)
 
     def send_byte(self, value):
-        """Send a byte through the input port
-        """
+        """Send a byte through the input port"""
         # While communication to the Gigatron is serial,
         # it's captured by a shift register, and is presented as a byte
         # so for our purposes we can just write the byte.
@@ -421,7 +420,7 @@ class _Emulator:
                 print(f"Frame {frame} has {hsync_edges} line vsync pulse")
                 yield hsync_edges
 
-        lines_per_vsync = debug_counting(lines_per_vsync)
+        # lines_per_vsync = debug_counting(lines_per_vsync)
         # Skip frames with 8 line VSYNC signals
         lines_per_vsync = itertools.dropwhile(lambda count: count == 8, lines_per_vsync)
         # and continue until we return to 8

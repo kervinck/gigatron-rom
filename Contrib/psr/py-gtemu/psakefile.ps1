@@ -1,56 +1,67 @@
 $ErrorActionPreference = 'Stop';
 
-$dirExcludes = '.venv', '.pytest_cache'
-$fileExcludes = @()
-$filesToFormat = @(get-childitem -Exclude $dirExcludes -Directory | % { get-childitem -path $_ -Recurse -Include '*.py' })
-$filesToFormat += get-item 'gtemu_extension_build.py', 'gtemu.py'
+# Path of the root of the repository
+$REPO_ROOT_PATH = Join-Path $PSScriptRoot '..\..\..' -Resolve
+# Python search path for modules
+$VENV_DIR = Join-Path $PSScriptRoot '.venv'
+$SCRIPT_DIR = Join-Path $VENV_DIR 'Scripts'
+
+$dirExcludes = '.venv', '.pytest_cache', 'install-test'
+$filesToFormat = @(get-childitem -Exclude $dirExcludes -Directory | ForEach-Object { get-childitem -path $_ -Recurse -Include '*.py' })
+$filesToFormat += @(get-childitem -Name '*.py')
+
+$PACKAGES = 'cffi', 'ipython', 'pytest', 'hypothesis', 'flake8', 'isort', 'black'
 
 task default -depends isort, Blacken, Flake8, Extension, Test
 
-task isort {
-    & '.\.venv\Scripts\isort.exe' $filesToFormat
-    if ($LASTEXITCODE -ne 0 ) {
-        throw "isort failed";
+function executeScript($script, $params) {
+    $scriptPath = Join-Path $SCRIPT_DIR -ChildPath $script
+    try {
+        get-item $scriptPath -ErrorAction Stop > $null
     }
+    catch {
+        Invoke-Task Packages
+    }
+    & "$scriptPath" @($params)
+    if ($LASTEXITCODE -ne 0 ) {
+        throw "$script failed";
+    }
+
+}
+
+task isort {
+    executeScript 'isort.exe'  $filesToFormat
 }
 
 task Blacken {
-    & '.\.venv\Scripts\black.exe' $filesToFormat
-    if ($LASTEXITCODE -ne 0 ) {
-        throw "Black failed";
-    }
+    executeScript 'black.exe' $filesToFormat
 }
 
 task Flake8 {
-    & '.\.venv\Scripts\flake8.exe' 'src' 'tests'
-    if ($LASTEXITCODE -ne 0 ) {
-        throw "Flake8 failed";
-    }
+    executeScript 'flake8.exe' ('gtemu.py', 'gtemu_extension_build.py', 'tests')
 }
 
 
 task Virtualenv {
     try {
-        get-item '.venv' -ErrorAction Stop > $null
+        get-item "$VENV_DIR" -ErrorAction Stop > $null
     }
     catch {
-        py -3.6 -m venv '.\.venv'
+        python3 -m venv "$VENV_DIR"
+        & "$SCRIPT_DIR\python" @('-m', 'pip', 'install', '--upgrade', 'pip')
     }
 }
 
-task Upgrade-Packages -depends Virtualenv {
-    .\.venv\Scripts\python -m pip install --upgrade pip cffi ipython pytest hypothesis flake8
+task Upgrade-Packages {
+    executeScript 'pip.exe' (('install', '--upgrade') + $PACKAGES)
 }
 
-task Packages -depends Virtualenv {
-    .\.venv\Scripts\pip install cffi ipython pytest hypothesis flake8 isort black
-    if ($LASTEXITCODE -ne 0 ) {
-        throw "Packages failed"
-    }
+task Packages -depends VirtualEnv {
+    executeScript 'pip.exe' (@(, 'install') + $PACKAGES)
 }
 
-task Extension -depends Packages {
-    .\.venv\Scripts\python.exe .\gtemu_extension_build.py
+task Extension {
+    executeScript python.exe .\gtemu_extension_build.py
     if ($LASTEXITCODE -ne 0 ) {
         throw "Extension failed"
     }
@@ -66,9 +77,19 @@ task RomFiles {
     catch {
         New-Item 'roms' -Type Directory | Push-Location
     }
+    # We're going to use the roms directory as the working directory when we run the rom.py script
+    # So we need to make sure that some expected files are present
+    Copy-Item (Join-Path $REPO_ROOT_PATH 'interface.json')
     try {
-        $testScripts | foreach {
-            ..\.venv\Scripts\python.exe ..\ROMv4.py "Reset=$($_.FullName)"
+        Get-Item 'Core' -ErrorAction 'stop' > $null
+    }
+    catch {
+        New-Item -type Directory 'Core' > $null 
+    }
+    Copy-Item (Join-Path (Join-Path $REPO_ROOT_PATH 'Core') 'v6502.json') 'Core'
+    try {
+        $testScripts | ForEach-Object {
+            executeScript python.exe ((Join-Path (Join-Path $REPO_ROOT_PATH 'Core') 'ROMv4.py'), "Reset=$($_.FullName)")
             if ($LASTEXITCODE -ne 0 ) {
                 throw "Failed to generate ROM from $($_.FullName)";
             }
@@ -82,8 +103,12 @@ task RomFiles {
 }
 
 task Test -depends RomFiles {
-    .\.venv\Scripts\pytest
-    if ($LASTEXITCODE -ne 0 ) {
-        throw "Test failure";
+    $oldPythonPath = $env:PYTHONPATH
+    $env:PYTHONPATH = Join-Path $REPO_ROOT_PATH 'Core'
+    try {
+        executeScript 'pytest'
+    }
+    finally {
+        $env:PYTHONPATH = $oldPythonPath
     }
 }

@@ -18,29 +18,8 @@
 
 gcl0x
 
-{{ Setup video }
-[
-  { Setup video indirection table }
-  $100 p= {videoTable}
-  $800 q= {frame}
-  [do
-    >q,  p. <p++                { Y[i] = 8..127}
-    0    p. <p++                {dX[i] = 0}
-    >q++ q  if>0loop]
-
-  { Clear screen }
-  \SYS_SetMemory_v2_54 _sysFn=  {!!! Not in ROM v1 !!!}
-  32 \sysArgs1.                 {Color blue}
-  $800 [do
-    p= _sysArgs2=               {Destination}
-    160 \sysArgs0.              {Count}
-    54!!                        {SYS call}
-    $100 p+ if>0loop]
-]
-}
-
-{ Change into default video mode }
-\SYS_SetMode_v2_80 _sysFn=      {!!! Not in ROM v1 !!!}
+{ Change into default video mode - Needs to happen on system boot }
+\SYS_SetMode_v2_80 _sysFn=
 1 80!!                          {Mode 1 -> "ABC-"}
 
 { Convert vAC into a valid index, zeroing the MSB of the low-byte }
