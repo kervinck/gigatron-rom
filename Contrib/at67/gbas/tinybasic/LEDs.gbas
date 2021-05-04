@@ -1,0 +1,15 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv2
+
+10'Stop LED sequencer
+20 set LED_STATE,1
+30 FOR N=0 TO 15
+39'Set LED state
+40 set XOUT_MASK,N
+49'Reset frame counter
+50 set FRAME_COUNT,0
+59'Wait half second
+60 IF get("FRAME_COUNT")<30 THEN GOTO 60
+70 NEXT N
+80'Restart LED sequencer
+90 set LED_STATE,0

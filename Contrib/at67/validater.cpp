@@ -55,7 +55,7 @@ namespace Validater
     }
 
     auto insertPageJumpInstruction(const std::vector<Compiler::CodeLine>::iterator& itCode, const std::vector<Compiler::VasmLine>::iterator& itVasm,
-                                   const std::string& opcode, const std::string& code, uint16_t address, int vasmSize)
+                                   const std::string& opcode, const std::string& operand, const std::string& code, uint16_t address, int vasmSize)
     {
         if(itVasm >= itCode->_vasm.end())
         {
@@ -65,11 +65,11 @@ namespace Validater
 
         Memory::takeFreeRAM(address, vasmSize, true);
 
-        return itCode->_vasm.insert(itVasm, {address, opcode, code, "", true, vasmSize});
+        return itCode->_vasm.insert(itVasm, {address, opcode, operand, code, "", true, vasmSize});
     }
 
     // TODO: make this more flexible, (e.g. sound channels off etc)
-    bool checkForRelocation(const std::string& opcode, uint16_t vPC, uint16_t& nextPC, bool& print)
+    bool checkForRelocation(const std::string& opcode, uint16_t vPC, uint16_t& nextPC, uint16_t& numThunks, uint16_t& totalThunkSize, bool& print)
     {
 #define CALL_PAGE_JUMP_SIZE    7
 #define CALLI_PAGE_JUMP_SIZE   3
@@ -99,7 +99,7 @@ namespace Validater
             if(opcodeSize)
             {
                 // Increase opcodeSize by size of page jump prologue
-                int opSize = ((Assembler::getUseOpcodeCALLI()) ? CALLI_PAGE_JUMP_SIZE : CALL_PAGE_JUMP_SIZE) + opcodeSize;
+                int opSize = (Compiler::getCodeRomType() >= Cpu::ROMv5a) ? opcodeSize + CALLI_PAGE_JUMP_SIZE : opcodeSize + CALL_PAGE_JUMP_SIZE;
 
                 // Code can't straddle page boundaries
                 if(HI_BYTE(vPC) == HI_BYTE(vPC + opSize)  &&  Memory::isFreeRAM(vPC, opSize))
@@ -110,7 +110,11 @@ namespace Validater
                 }
 
                 // Get next free code address after page jump prologue and relocate code, (return true)
-                if(!Memory::getNextCodeAddress(Memory::FitAscending, vPC, opSize, nextPC)) return false;
+                if(!Memory::getNextCodeAddress(Memory::FitAscending, vPC, opSize, nextPC))
+                {
+                    fprintf(stderr, "Validater::checkForRelocation(): Memory alloc at 0x%0x4 of size %d failed\n", vPC, opSize);
+                    return false;
+                }
 
                 if(!print)
                 {
@@ -122,7 +126,19 @@ namespace Validater
                     fprintf(stderr, "*******************************************************\n");
                 }
 
-                uint16_t newPC = ((Assembler::getUseOpcodeCALLI()) ? CALLI_PAGE_JUMP_OFFSET : CALL_PAGE_JUMP_OFFSET) + nextPC;
+                numThunks++;
+
+                uint16_t newPC = nextPC;
+                if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
+                {
+                    newPC += CALLI_PAGE_JUMP_OFFSET;
+                    totalThunkSize += CALLI_PAGE_JUMP_SIZE + CALLI_PAGE_JUMP_OFFSET;
+                }
+                else
+                {
+                    newPC += CALL_PAGE_JUMP_OFFSET;
+                    totalThunkSize += CALL_PAGE_JUMP_SIZE + CALL_PAGE_JUMP_OFFSET;
+                }
                 fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes : 0x%04x\n", opcode.c_str(), vPC, opcodeSize, newPC);
                 return true;
             }
@@ -135,6 +151,7 @@ namespace Validater
     {
         std::string line;
         bool print = false;
+        uint16_t numThunks = 0, totalThunkSize = 0;
         for(auto itCode=Compiler::getCodeLines().begin(); itCode!=Compiler::getCodeLines().end();)
         {
             if(itCode->_vasm.size() == 0)
@@ -148,7 +165,7 @@ namespace Validater
             for(auto itVasm=itCode->_vasm.begin(); itVasm!=itCode->_vasm.end();)
             {
                 uint16_t nextPC;
-                bool excluded = checkForRelocation(itVasm->_opcode, itVasm->_address, nextPC, print);
+                bool excluded = checkForRelocation(itVasm->_opcode, itVasm->_address, nextPC, numThunks, totalThunkSize, print);
 
                 if(!itVasm->_pageJump  &&  excluded)
                 {
@@ -158,26 +175,38 @@ namespace Validater
                     // Insert PAGE JUMP
                     int restoreOffset = 0;
                     std::string nextPClabel = "_page_" + Expression::wordToHexString(nextPC);
-                    if(Assembler::getUseOpcodeCALLI())
+                    if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
                     {
                         // CALLI PAGE JUMP
                         std::string codeCALLI;
                         int sizeCALLI = Compiler::createVcpuAsm("CALLI", nextPClabel, codeLineIndex, codeCALLI);
-                        itVasm = insertPageJumpInstruction(itCode, itVasm, "CALLI",  codeCALLI,  uint16_t(currPC), sizeCALLI);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm, "CALLI", nextPClabel, codeCALLI,  uint16_t(currPC), sizeCALLI);
                     }
                     else
                     {
                         // ROMS that don't have CALLI save and restore vAC
                         std::string codeSTW, codeLDWI, codeCALL, codeLDW;
+#define VAC_SAVE_STACK
+#ifdef VAC_SAVE_STACK
+                        int sizeSTW  = Compiler::createVcpuAsm("STLW", "0xFE", codeLineIndex, codeSTW);
+                        int sizeLDWI = Compiler::createVcpuAsm("LDWI", nextPClabel, codeLineIndex, codeLDWI);
+                        int sizeCALL = Compiler::createVcpuAsm("CALL", "giga_vAC", codeLineIndex, codeCALL);
+                        int sizeLDW  = Compiler::createVcpuAsm("LDLW", "0xFE", codeLineIndex, codeLDW);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 0, "STLW", "0xFE", codeSTW,  uint16_t(currPC), sizeSTW);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", nextPClabel, codeLDWI, uint16_t(currPC + sizeSTW), sizeLDWI);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", "giga_vAC", codeCALL, uint16_t(currPC + sizeSTW + sizeLDWI), sizeCALL);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDLW", "0xFE", codeLDW,  uint16_t(nextPC), sizeLDW);
+#else
+#define VAC_SAVE_START  0x00D6
                         int sizeSTW  = Compiler::createVcpuAsm("STW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, codeSTW);
                         int sizeLDWI = Compiler::createVcpuAsm("LDWI", nextPClabel, codeLineIndex, codeLDWI);
                         int sizeCALL = Compiler::createVcpuAsm("CALL", "giga_vAC", codeLineIndex, codeCALL);
                         int sizeLDW  = Compiler::createVcpuAsm("LDW", Expression::byteToHexString(VAC_SAVE_START), codeLineIndex, codeLDW);
-                        itVasm = insertPageJumpInstruction(itCode, itVasm + 0, "STW",  codeSTW,  uint16_t(currPC),                      sizeSTW);
-                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", codeLDWI, uint16_t(currPC + sizeSTW),            sizeLDWI);
-                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", codeCALL, uint16_t(currPC + sizeSTW + sizeLDWI), sizeCALL);
-                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDW",  codeLDW,  uint16_t(nextPC),                      sizeLDW);
-
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 0, "STW",  Expression::byteToHexString(VAC_SAVE_START), codeSTW,  uint16_t(currPC), sizeSTW);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDWI", nextPClabel, codeLDWI, uint16_t(currPC + sizeSTW), sizeLDWI);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "CALL", "giga_vAC", codeCALL, uint16_t(currPC + sizeSTW + sizeLDWI), sizeCALL);
+                        itVasm = insertPageJumpInstruction(itCode, itVasm + 1, "LDW",  Expression::byteToHexString(VAC_SAVE_START), codeLDW,  uint16_t(nextPC), sizeLDW);
+#endif
                         // New page address is offset by size of vAC restore
                         restoreOffset = sizeLDW;
                     }
@@ -190,8 +219,8 @@ namespace Validater
                     // Check for existing label, (after label adjustments)
                     int labelIndex = -1;
                     std::string labelName;
-                    Compiler::VasmLine* vasm0 = &itCode->_vasm[itVasm - itCode->_vasm.begin()]; // points to CALLI and LDW
-                    Compiler::VasmLine* vasm1 = &itCode->_vasm[itVasm + 1 - itCode->_vasm.begin()]; // points to instruction after CALLI and after LDW
+                    Compiler::VasmLine* vasmCurr = &itCode->_vasm[itVasm - itCode->_vasm.begin()]; // points to CALLI and LDW
+                    Compiler::VasmLine* vasmNext = &itCode->_vasm[itVasm + 1 - itCode->_vasm.begin()]; // points to instruction after CALLI and after LDW
                     if(Compiler::findLabel(nextPC) >= 0)
                     {
                         labelIndex = Compiler::findLabel(nextPC);
@@ -200,38 +229,38 @@ namespace Validater
                     if(labelIndex == -1)
                     {
                         // Create CALLI page jump label, (created later in outputCode())
-                        if(Assembler::getUseOpcodeCALLI())
+                        if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
                         {
                             // Code referencing these labels must be fixed later in outputLabels, (discarded label addresses must be updated if they match page jump address)
-                            if(vasm1->_internalLabel.size())
+                            if(vasmNext->_internalLabel.size())
                             {
-                                Compiler::getDiscardedLabels().push_back({vasm1->_address, vasm1->_internalLabel});
-                                Compiler::adjustDiscardedLabels(vasm1->_internalLabel, vasm1->_address);
+                                Compiler::getDiscardedLabels().push_back({vasmNext->_address, vasmNext->_internalLabel});
+                                Compiler::adjustDiscardedLabels(vasmNext->_internalLabel, vasmNext->_address);
                             }
             
-                            vasm1->_internalLabel = nextPClabel;
+                            vasmNext->_internalLabel = nextPClabel;
                         }
                         // Create pre-CALLI page jump label, (created later in outputCode())
                         else
                         {
                             // Code referencing these labels must be fixed later in outputLabels, (discarded label addresses must be updated if they match page jump address)
-                            if(vasm0->_internalLabel.size())
+                            if(vasmCurr->_internalLabel.size())
                             {
-                                Compiler::getDiscardedLabels().push_back({vasm0->_address, vasm0->_internalLabel});
-                                Compiler::adjustDiscardedLabels(vasm0->_internalLabel, vasm0->_address);
+                                Compiler::getDiscardedLabels().push_back({vasmCurr->_address, vasmCurr->_internalLabel});
+                                Compiler::adjustDiscardedLabels(vasmCurr->_internalLabel, vasmCurr->_address);
                             }
 
-                            vasm0->_internalLabel = nextPClabel;
+                            vasmCurr->_internalLabel = nextPClabel;
                         }
                     }
                     // Existing label at the PAGE JUMP address, so use it
                     else
                     {
                         // Update CALLI page jump label
-                        if(Assembler::getUseOpcodeCALLI())
+                        if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
                         {
                             // Macro labels are underscored by default
-                            vasm0->_code = (labelName[0] == '_') ? "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + labelName : "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "_" + labelName;
+                            vasmCurr->_code = (labelName[0] == '_') ? "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + labelName : "CALLI" + std::string(OPCODE_TRUNC_SIZE - 4, ' ') + "_" + labelName;
                         }
                         // Update pre-CALLI page jump label
                         else
@@ -249,20 +278,32 @@ namespace Validater
             itCode++;
         }
 
-        if(print) fprintf(stderr, "*******************************************************\n");
+        if(print)
+        {
+            fprintf(stderr, "*******************************************************\n");
+            fprintf(stderr, "* Number of page jumps = %4d, RAM used = %5d bytes *\n", numThunks, totalThunkSize);
+            fprintf(stderr, "*******************************************************\n");
+        }
 
         return true;
     }
 
-    bool opcodeIsBranch(const std::string& opcode)
+    bool opcodeHasBranch(const std::string& opcode)
     {
-        if(opcode == "BRA") return true;
-        if(opcode == "BEQ") return true;
-        if(opcode == "BNE") return true;
-        if(opcode == "BGE") return true;
-        if(opcode == "BLE") return true;
-        if(opcode == "BGT") return true;
-        if(opcode == "BLT") return true;
+        if(opcode == "BRA")                return true;
+        if(opcode == "BEQ")                return true;
+        if(opcode == "BNE")                return true;
+        if(opcode == "BGE")                return true;
+        if(opcode == "BLE")                return true;
+        if(opcode == "BGT")                return true;
+        if(opcode == "BLT")                return true;
+        if(opcode == "%ForNextInc")        return true;
+        if(opcode == "%ForNextDec")        return true;
+        if(opcode == "%ForNextDecZero")    return true;
+        if(opcode == "%ForNextAdd")        return true;
+        if(opcode == "%ForNextSub")        return true;
+        if(opcode == "%ForNextVarAdd")     return true;
+        if(opcode == "%ForNextVarSub")     return true;
 
         return false;
     }
@@ -271,22 +312,35 @@ namespace Validater
     {
         for(int i=0; i<int(Compiler::getCodeLines().size()); i++)
         {
+            // Line number taking into account modules
+            int codeLineStart = Compiler::getCodeLineStart(i);
+
             for(int j=0; j<int(Compiler::getCodeLines()[i]._vasm.size()); j++)
             {
                 uint16_t opcAddr = Compiler::getCodeLines()[i]._vasm[j]._address;
                 std::string opcode = Compiler::getCodeLines()[i]._vasm[j]._opcode;
-                std::string code = Compiler::getCodeLines()[i]._vasm[j]._code;
-                std::string label = Compiler::getCodeLines()[i]._vasm[j]._internalLabel;
-                std::string basic = Compiler::getCodeLines()[i]._code;
+                const std::string& code = Compiler::getCodeLines()[i]._vasm[j]._code;
+                const std::string& basic = Compiler::getCodeLines()[i]._text;
 
                 Expression::stripWhitespace(opcode);
-                if(opcodeIsBranch(opcode))
+                if(opcodeHasBranch(opcode))
                 {
-                    std::vector<std::string> tokens = Expression::tokenise(code, " ", false);
-                    if(tokens.size() != 2) continue;
+                    std::vector<std::string> tokens = Expression::tokenise(code, ' ', false);
+                    if(tokens.size() < 2) continue;
 
-                    Expression::stripWhitespace(tokens[1]);
-                    std::string operand = tokens[1];
+                    // Normal branch
+                    std::string operand;
+                    if(tokens.size() == 2)
+                    {
+                        Expression::stripWhitespace(tokens[1]);
+                        operand = tokens[1];
+                    }
+                    // Branch embedded in a FOR NEXT macro
+                    else if(tokens.size() > 2)
+                    {
+                        Expression::stripWhitespace(tokens[2]);
+                        operand = tokens[2];
+                    }
 
                     // Remove underscores from BASIC labels for matching
                     if(operand.size() > 1  &&  operand[0] == '_') operand.erase(0, 1);
@@ -298,9 +352,8 @@ namespace Validater
                         uint16_t labAddr = Compiler::getLabels()[labelIndex]._address;
                         if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                         {
-                            fprintf(stderr, "\nValidater::checkBranchLabels() : *** Warning ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i + 1);
-                            //_PAUSE_;
-                            Compiler::setCompilingError(true);
+                            fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), codeLineStart);
+                            return false;
                         }
                     }
                     // Check internal label
@@ -315,9 +368,8 @@ namespace Validater
                             uint16_t labAddr = Compiler::getInternalLabels()[labelIndex]._address;
                             if(HI_MASK(opcAddr) != HI_MASK(labAddr))
                             {
-                                fprintf(stderr, "\nValidater::checkBranchLabels() : *** Warning ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), i + 1);
-                                //_PAUSE_;
-                                Compiler::setCompilingError(true);
+                                fprintf(stderr, "\nValidater::checkBranchLabels() : *** Error ***, %s is branching from 0x%04x to 0x%04x, for '%s' on line %d\n\n", opcode.c_str(), opcAddr, labAddr, basic.c_str(), codeLineStart);
+                                return false;
                             }
                         }
                     }
@@ -338,7 +390,7 @@ namespace Validater
             success = false;
             Compiler::ForNextData forNextData = Compiler::getForNextDataStack().top();
             int codeLineIndex = forNextData._codeLineIndex;
-            std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
+            const std::string& code = Compiler::getCodeLines()[codeLineIndex]._code;
             fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing NEXT statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
             Compiler::getForNextDataStack().pop();
         }
@@ -349,29 +401,18 @@ namespace Validater
             success = false;
             Compiler::ElseIfData elseIfData = Compiler::getElseIfDataStack().top();
             int codeLineIndex = elseIfData._codeLineIndex;
-            std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
+            const std::string& code = Compiler::getCodeLines()[codeLineIndex]._code;
             fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing ELSE or ELSEIF statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
             Compiler::getElseIfDataStack().pop();
         }
 
-        // Check ENDIF blocks
-        while(!Compiler::getEndIfDataStack().empty())
-        {
-            success = false;
-            Compiler::EndIfData endIfData = Compiler::getEndIfDataStack().top();
-            int codeLineIndex = endIfData._codeLineIndex;
-            std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
-            fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing ENDIF statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
-            Compiler::getEndIfDataStack().pop();
-        }
-        
         // Check WHILE WEND blocks
         while(!Compiler::getWhileWendDataStack().empty())
         {
             success = false;
             Compiler::WhileWendData whileWendData = Compiler::getWhileWendDataStack().top();
             int codeLineIndex = whileWendData._codeLineIndex;
-            std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
+            const std::string& code = Compiler::getCodeLines()[codeLineIndex]._code;
             fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing WEND statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
             Compiler::getWhileWendDataStack().pop();
         }
@@ -382,11 +423,56 @@ namespace Validater
             success = false;
             Compiler::RepeatUntilData repeatUntilData = Compiler::getRepeatUntilDataStack().top();
             int codeLineIndex = repeatUntilData._codeLineIndex;
-            std::string code = Compiler::getCodeLines()[codeLineIndex]._code;
+            const std::string& code = Compiler::getCodeLines()[codeLineIndex]._code;
             fprintf(stderr, "Validater::checkStatementBlocks() : Syntax error, missing UNTIL statement, for '%s' on line %d\n", code.c_str(), codeLineIndex);
             Compiler::getRepeatUntilDataStack().pop();
         }
 
         return success;
+    }
+
+    bool checkCallProcFuncData(void)
+    {
+        bool success = true;
+
+        // Check PROC's corresponding CALL's
+        for(auto it=Compiler::getCallDataMap().begin(); it!=Compiler::getCallDataMap().end(); ++it)
+        {
+            int numParams = it->second._numParams;
+            int codeLineIndex = it->second._codeLineIndex;
+            const std::string& procName = it->second._name;
+            const std::string& code = Compiler::getCodeLines()[codeLineIndex]._code;
+
+            if(Compiler::getProcDataMap().find(procName) == Compiler::getProcDataMap().end())
+            {
+                fprintf(stderr, "Validator::checkCallProcFuncData() : Syntax error, 'CALL <NAME>' cannot find a corresponding 'PROC <NAME>', in '%s' on line %d\n", code.c_str(), codeLineIndex);
+                success = false;
+                continue;
+            }
+
+            if(Compiler::getProcDataMap()[procName]._numParams != numParams)
+            {
+                fprintf(stderr, "Validator::checkCallProcFuncData() : Syntax error, 'CALL <NAME>' has incorrect number of parameters compared to 'PROC <NAME>', in '%s' on line %d\n", code.c_str(), codeLineIndex);
+                success = false;
+                continue;
+            }
+        }
+
+        return success;
+    }
+
+    bool checkRuntimeVersion(void)
+    {
+        int16_t runtimeVersion = Assembler::getRuntimeVersion();
+        if(runtimeVersion != RUNTIME_VERSION)
+        {
+            fprintf(stderr, "\n*************************************************************************************************\n");
+            fprintf(stderr, "* Expected runtime version %04d : Found runtime version %04d\n", RUNTIME_VERSION, runtimeVersion);
+            fprintf(stderr, "*************************************************************************************************\n\n");
+
+            return false;
+        }
+
+        return true;
     }
 }

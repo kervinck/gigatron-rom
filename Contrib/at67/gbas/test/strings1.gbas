@@ -1,0 +1,49 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+const fgBgColour = &h0008
+
+set FGBG_COLOUR, fgBgColour
+cls
+
+dim aa(20) = 0
+
+const a = 120
+
+ch$ = chr$(a)
+hb$ = hex$(a, 2)
+const bb = &hAA77
+hw$ = hex$(bb, 4)
+
+const a$="yes "
+const z$="no"
+const b$="hello test world"
+
+cc = 5
+ 
+c$=left$(b$, cc)
+d$ = right$ (b$,5)
+e$=mid$(b$, cc+1, cc-1)
+ 
+f$ = b$ + b$ + b$ + b$ + b$ + b$
+g$ = b$
+h$ = left$(b$, cc) + right$ (b$,5) + mid$(b$, cc+1, cc-1)
+
+print a$;" ";b$;" ";aa(0)
+print c$;" ";d$;" ";e$
+print left$("dogcat", 3);" ";left$(b$, cc)
+print right$("dogcat", 3);" ";right$(b$, 5)
+print mid$("dogcat", 2, 2);" ";mid$(b$, cc+1, cc-1)
+
+input iii$
+
+print c$;" ";d$;" ";e$
+print f$;" ";len(f$)
+print g$
+print ch$;" ";hb$;" ";hw$
+print chr$(65);" ";hex$(15, 2);" ";hex$(bb, 4);" ";left$("dogcat", 3);" ";left$(b$, 5)
+
+for i=32 to 127
+    print chr$(i);
+next i
+end

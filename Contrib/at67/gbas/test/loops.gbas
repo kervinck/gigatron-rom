@@ -1,0 +1,22 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+cls
+
+a=1
+
+const count = 6 + 1
+
+repeat
+    print a
+    inc a
+until a &&= count + 1
+
+while a &&> 0
+    if a &&= 1
+        print a;
+    else
+        print a
+    endif
+    a=a-1
+wend

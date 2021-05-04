@@ -1,0 +1,35 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &h7FFF
+_codeRomType_ ROMv2
+
+const colourBits = &h06F8
+def byte(colourBits) = &h01, &h02, &h04, &h08, &h10, &h20, &h40, &h3F
+
+mode 1 : cls
+
+xy = 0
+colour = rnd(0) AND 63
+
+loop:
+    colour = colour XOR peek(colourBits + (rnd(0) AND 7))    
+    set FG_COLOUR, colour
+        
+    r = rnd(0) AND 1
+    if r &&= 0
+        set CURSOR_XY, xy
+        line 7, 7
+    elseif r &&= 1
+        set CURSOR_XY, xy + 7
+        line -7, 7
+    endif
+    
+    xy.lo = xy.lo + 8
+    if xy.lo &&>= 160
+        xy.lo = 0
+        xy.hi = xy.hi + 8
+        if xy.hi &&>= 120
+            xy.hi = 112
+            print
+        endif
+    endif
+goto &loop

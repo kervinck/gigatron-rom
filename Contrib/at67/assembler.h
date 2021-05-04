@@ -7,14 +7,14 @@
 #include <map>
 
 
-#define OPCODE_LD  0x00
-#define OPCODE_AND 0x20
-#define OPCODE_OR  0x40
-#define OPCODE_XOR 0x60
-#define OPCODE_ADD 0x80
-#define OPCODE_SUB 0xA0
-#define OPCODE_ST  0xC0
-#define OPCODE_J   0xE0
+#define OPCODE_N_LD  0x00
+#define OPCODE_N_AND 0x20
+#define OPCODE_N_OR  0x40
+#define OPCODE_N_XOR 0x60
+#define OPCODE_N_ADD 0x80
+#define OPCODE_N_SUB 0xA0
+#define OPCODE_N_ST  0xC0
+#define OPCODE_N_J   0xE0
 
 #define EA_0D_AC    0x00
 #define EA_0X_AC    0x04
@@ -39,12 +39,18 @@
 #define BRA_CC_LE     0x18
 #define BRA_CC_ALWAYS 0x1C
 
-#define DEFAULT_START_ADDRESS  0x0200
-#define DEFAULT_CALL_TABLE     0x0000
+#define DEFAULT_EXEC_ADDRESS 0x0200
+#define DEFAULT_CALL_TABLE   0x0000
 
-#define USER_ROM_ADDRESS  0x0B00 // pictures in ROM v1
+#define USER_ROMv1_ADDRESS 0x0B00 // pictures in ROM v1
 
-#define VCPU_BRANCH_OPCODE 0x35
+#define OPCODE_V_BRA   0x90
+#define OPCODE_V_BCC   0x35
+#define OPCODE_V_CALL  0xCF
+#define OPCODE_V_HALT  0xB4
+#define OPERAND_V_HALT 0x80
+
+#define GIGA_V_AC 0x18
 
 
 namespace Assembler
@@ -72,8 +78,8 @@ namespace Assembler
 
     struct InstructionType
     {
-        uint8_t _opcode;
-        uint8_t _branch;
+        uint8_t _opcode0;
+        uint8_t _opcode1;
         ByteSize _byteSize;
         OpcodeType _opcodeType;
     };
@@ -95,9 +101,36 @@ namespace Assembler
         std::string _includeName;
     };
 
+    struct Gprintf
+    {
+        enum Format {Chr, Int, Bin, Oct, Hex, Str};
+        struct Var
+        {
+            int _indirection = 0;
+            Format _format;
+            int _width;
+            uint16_t _data;
+            std::string _text;
+        };
 
-    bool getUseOpcodeCALLI(void);
-    const std::string& getIncludePath(void);
+        uint16_t _address;
+        int _lineNumber;
+        std::string _lineToken;
+        std::string _format;
+        std::vector<Var> _vars;
+        std::vector<std::string> _subs;
+    };
+
+    struct Define
+    {
+        bool _enabled = false;
+        bool _toggle = false;
+        int16_t _value = 0;
+        std::string _name;
+    };
+
+
+    uint8_t getvSpMin(void);
     uint16_t getStartAddress(void);
     int getCurrDasmByteCount(void);
     int getPrevDasmByteCount(void);
@@ -105,23 +138,35 @@ namespace Assembler
     int getCurrDasmPageByteCount(void);
     int getDisassembledCodeSize(void);
     DasmCode* getDisassembledCode(int index);
+    const std::string& getIncludePath(void);
 
-    void setUseOpcodeCALLI(bool useOpcodeCALLI);
+    void setvSpMin(uint8_t vSpMin);
     void setIncludePath(const std::string& includePath);
 
     int getAsmOpcodeSize(const std::string& opcodeStr);
     int getAsmOpcodeSizeText(const std::string& textStr);
     int getAsmOpcodeSizeFile(const std::string& filename);
 
+    void clearDefines(void);
+    bool createDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex);
+    bool handleIfDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex);
+    bool handleEndIfDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex);
+    bool handleElseDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex);
+    bool isCurrentDefineDisabled(void);
+    int16_t getRuntimeVersion(void);
+
     void initialise(void);
-    void clearAssembler(void);
+    void clearAssembler(bool dontClearGprintfs=false);
     bool getNextAssembledByte(ByteCode& byteCode, bool debug=false);
 
-    bool assemble(const std::string& filename, uint16_t startAddress=DEFAULT_START_ADDRESS);
+    bool assemble(const std::string& filename, uint16_t startAddress=DEFAULT_EXEC_ADDRESS, bool dontClearGprintfs=false);
     int disassemble(uint16_t address);
 
 #ifndef STAND_ALONE
-    void printGprintfStrings(void);
+    bool addGprintf(const Gprintf& gprintf, uint16_t address);
+    bool parseGprintfFormat(const std::string& fmtstr, const std::vector<std::string>& variables, std::vector<Gprintf::Var>& vars, std::vector<std::string>& subs);
+    bool getGprintfString(const Gprintf& gprintf, std::string& gstring);
+    void handleGprintfs(void);
 #endif
 }
 

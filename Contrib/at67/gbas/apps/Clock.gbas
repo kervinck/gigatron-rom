@@ -1,0 +1,184 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+'Keeping time using the
+'59.98 Hz frame counter
+
+const TICKS = 60
+const SECSX = &h60A0
+const SECSY = &h61A0
+const MINSX = &h62A0
+const MINSY = &h63A0
+const HOURX = &h64A0
+const HOURY = &h65A0
+
+const CENTERX = 80
+const CENTERY = 59
+
+const SECS_LEN = 45
+const MINS_LEN = 37
+const HOUR_LEN = 29
+
+const BACK_COLOUR = &h30
+const DIAL_COLOUR = &h10
+const DIAL_RADIUS = 43
+
+'Seconds
+def byte(SECSX, x, -90.0, 270.0, TICKS) = cos(x)*SECS_LEN + CENTERX
+def byte(SECSY, y, -90.0, 270.0, TICKS) = sin(y)*SECS_LEN + CENTERY
+
+'Minutes
+def byte(MINSX, x, -90.0, 270.0, TICKS) = cos(x)*MINS_LEN + CENTERX
+def byte(MINSY, y, -90.0, 270.0, TICKS) = sin(y)*MINS_LEN + CENTERY
+
+'Hours
+def byte(HOURX, x, -90.0, 270.0, TICKS) = cos(x)*HOUR_LEN + CENTERX
+def byte(HOURY, y, -90.0, 270.0, TICKS) = sin(y)*HOUR_LEN + CENTERY
+
+restart:
+
+' disable video, (except last line so that we don't lose sync), for fast cls
+set VIDEO_TOP, 238
+set BG_COLOUR, BACK_COLOUR
+set FG_COLOUR, &h0F
+cls
+set VIDEO_TOP, 0  'enable video
+
+scroll off
+at 2, 119 : print "Press Enter to reset clock";
+at 2, 0   : input "Enter Time ", H,"H:";2;, M,"M:";2;, S,"S:";2;
+B=get("FRAME_COUNT")
+scroll off
+at 2,0   : print "                          ";
+at 2,119 : print "                          ";
+
+H = H % 13 : if H &&= 0 then H = 12
+M = M % 60
+S = S % 60
+
+HH=H : MM=M : SS=S
+
+Hm12=H%12
+Md12=M/12 : MMd12=Md12
+
+' disable video, (except last line so that we don't lose sync), for fast dial draw
+set VIDEO_TOP, 238  'disable video
+gosub drawDial
+gosub drawClock
+set VIDEO_TOP, 0  'enable video
+
+20 T=S*60 : V=3599 : goto &50
+30 if T &&>= V then T=T-V : inc M
+40 if M &&> 59 then M=M-60 : inc H
+50 if H &&> 12 then H=H-12
+60 S=T/60 : if S &&<> SS then gosub drawClock : SS=S
+70 A=B : B=get("FRAME_COUNT") : A=B-A
+80 if A &&< 0 then A=A+256
+90 T=T+A
+
+'restart
+if get("SERIAL_RAW") <> 255
+    goto restart
+endif
+goto &30 'use T=T+2500 for debugging
+
+drawClock:
+    gosub drawDigits
+    gosub drawSeconds
+    gosub drawMinutes
+    gosub drawHours
+return
+
+drawDigits:
+    set FGBG_COLOUR, &h0C00
+    at 57,82 : print H/10;H%10;":";M/10;M%10;":";S/10;S%10;
+    set BG_COLOUR, DIAL_COLOUR
+return
+
+drawSeconds:
+    gosub eraseSecondHand
+    i=SS : gosub drawTicks
+    gosub drawSecondHand
+return
+
+drawMinutes:
+    if M &<> MM 
+        gosub eraseMinuteHand
+        MM=M : Md12=M/12
+        if Md12 &<> MMd12
+            gosub eraseHourHand
+            MMd12=Md12
+        endif
+    endif
+    gosub drawMinuteHand
+return
+
+drawHours:
+    if H &<> HH
+        HH=H : Hm12=H%12
+    endif
+    Hx5=(Hm12 LSL 2)+Hm12
+    gosub drawHourHand
+return
+
+drawTicks:
+    x = peek(SECSX + i)
+    y = peek(SECSY + i) + 8
+    poke (y LSL 8) + x, &h3F
+return
+
+
+drawDial:
+    set FG_COLOUR, DIAL_COLOUR
+    circlef CENTERX, CENTERY, DIAL_RADIUS
+    
+    ox=CENTERX : oy=CENTERY
+    cr=DIAL_RADIUS + 1 : cc=&h00 : gosub jitterCircle
+    cr=DIAL_RADIUS + 3 : cc=&h00 : gosub jitterCircle
+    cr=DIAL_RADIUS + 5 : cc=&h01 : gosub jitterCircle
+    cr=DIAL_RADIUS + 9 : cc=&h03 : gosub jitterCircle
+    cr=DIAL_RADIUS + 7 : cc=&h02 : gosub jitterCircle
+    
+    for i=0 &to TICKS-1
+        gosub drawTicks
+    next i
+return
+
+eraseSecondHand:
+    set FG_COLOUR, DIAL_COLOUR
+    line CENTERX,CENTERY, peek(SECSX + SS),peek(SECSY + SS)
+return
+    
+drawSecondHand:
+    set FG_COLOUR, &h3F
+    line CENTERX,CENTERY, peek(SECSX + S),peek(SECSY + S)
+return
+
+eraseMinuteHand:
+    set FG_COLOUR, DIAL_COLOUR
+    line CENTERX,CENTERY, peek(MINSX + MM),peek(MINSY + MM)
+return
+
+drawMinuteHand:
+    set FG_COLOUR, &h2A
+    line CENTERX,CENTERY, peek(MINSX + M),peek(MINSY + M)
+return
+
+eraseHourHand:
+    set FG_COLOUR, DIAL_COLOUR
+    line CENTERX,CENTERY, peek(HOURX + Hx5 + MMd12),peek(HOURY + Hx5 + MMd12)
+return
+
+drawHourHand:
+    set FG_COLOUR, &h15
+    line CENTERX,CENTERY, peek(HOURX + Hx5 + Md12),peek(HOURY + Hx5 + Md12)
+return
+
+jitterCircle:
+    for oxx=ox-1 to ox+1
+        for oyy=oy-1 to oy+1
+                set FG_COLOUR, cc
+            circle oxx, oyy, cr
+        next oyy
+    next oxx
+return

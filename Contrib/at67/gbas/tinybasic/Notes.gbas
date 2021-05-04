@@ -1,0 +1,38 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+'
+' Setup sound channels
+'
+10 for c=1 to 4
+11 p=(c LSL 8)+252
+12 poke p-1,2:'Pulse
+13 poke p,0:poke p+1,0
+14 next c
+'
+' Setup vCPU note lookup
+' &hD8 to &hE7 reserved for function/procedure params and local vars
+' this can change with revisions of gtBASIC, so caveat emptor
+' when writing code like this, prefer to use ASM ENDASM instead
+const ASM_CODE = &hD8
+
+20 poke ASM_CODE+0, 17  : 'LDWI $9xx
+21 poke ASM_CODE+2, 9
+22 poke ASM_CODE+3, 127 : 'LUP 0
+23 poke ASM_CODE+4, 0
+24 poke ASM_CODE+5, 147 : 'INC ASM_CODE+1
+25 poke ASM_CODE+6, ASM_CODE+1
+26 poke ASM_CODE+7, 255 : 'RET
+'
+' Play all notes
+'
+30 for n=1 to 95
+31 print "Playing note ";n
+32 poke ASM_CODE+1,n+n:'$900+n*2
+33 for c=1 to 4 : p=(c LSL 8)+252
+34 poke p,  usr(ASM_CODE):'Flo
+35 poke p+1,usr(ASM_CODE):'Fhi
+36 next c
+37 set SOUND_TIMER,15:'0.25 secs
+38 if get("SOUND_TIMER") >0 then goto 38
+39 next n

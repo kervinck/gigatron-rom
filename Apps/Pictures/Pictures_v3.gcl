@@ -1,0 +1,95 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Pictures with small images                                      |
+|                                                                       |
++-----------------------------------------------------------------------}
+gcl0x
+
+{
+  Based on the original Easter Egg "hidden" in ROM v1.
+
+  The image data is a stream of packed 6-bit pixels from ROM.
+  The pixel data is XORed with all-ones (63).
+  The value after a raw zero is a repeat count for 1..63 white pixels.
+  If the repeat count is 0, we are at the end of the image.
+}
+
+$0101 ShiftControl=
+
+[def
+  { Select random screen memory position `q': }
+  { X ranges from 0..255 and Y from 8..127 }
+  [do
+    \SYS_Random_34 _sysFn= 34!! q=
+    q>, 120- if>=0loop]
+  128+ q>.
+
+  q r= 64+ r<.                  {End of line `r', 64 pixels wide image}
+  0 i=                          {Index in unpacked byte buffer}
+  n=                            {Count, or -1 when reading new count}
+
+  { Loop until end of image stream }
+  [do
+    { Fill buffer with next group of 4 bytes when needed }
+    n [if<=0
+      i [if=0                   {Reached end of unpack buffer}
+        p 0?? \sysArgs0.        {Packed byte 0}
+        p 1?? \sysArgs1.        {Packed byte 1}
+        p 2?? \sysArgs2.        {Packed byte 2}
+        p 3+ p= 255&            {Advance read pointer}
+        249^ [if=0 p 7+ p=]     {Skip trampolines}
+        \SYS_Unpack_56 _sysFn=
+        56!!                    {Unpack 3 to 4 bytes}
+      ]
+      n
+    ]
+
+    [if<0                       {n == -1}
+      { Read repeat count for white pixels }
+      \sysArgs0 i+ peek n=
+      [if=0 ret]                {End of image}
+      i 1+ 3& i=                {Rotate through 4-byte unpack buffer}
+    else
+      [if>0                     {n > 0}
+        { Force white pixel }
+        63 q.
+        n 1- n=
+        q<++                    {Update X, but don't update i}
+      else                      {n == 0, normal operation}
+        { Consume next pixel from stream }
+        \sysArgs0 i+ peek [if<>0
+          63^ q.                {New pixel, not white}
+          q<++
+        else
+          -1 n=                 {Next value is a repeat count}
+        ]
+        i 1+ 3& i=              {Rotate through 4-byte unpack buffer}
+      ]
+    ]
+
+    { Wrap write pointer }
+    q r- [if=0
+       0 q.                     {1 pixel border/shadow on the right side}
+       q 64- q<. q>++           {Next line}
+       q [if<0 $8800 q+ q=]     {Wrap around bottom of screen memory}
+       q>, r>.
+    ]
+
+    \frameCount, ShiftControl.  {Smooth scrolling}
+  loop]
+] Transfer=
+
+{--- Run ---}
+
+[do
+  \packedPictures p=            {Pointer to packed image data}
+  Transfer!                     {Unpack and draw three images}
+  Transfer!
+  Transfer!
+  loop]                         {Repeat forever}
+
+{-----------------------------------------------------------------------+
+|       End                                                             |
++-----------------------------------------------------------------------}
+

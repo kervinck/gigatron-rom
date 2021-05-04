@@ -1,0 +1,19 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+cls
+
+loop: 
+    p=peek(15)
+
+    if p &&= 49
+        at 2,40 : print "one  ";
+    elseif p &&= 50
+        at 2,40 : print "two  ";
+    elseif p &&= 51
+        at 2,40 : print "three";
+    else
+        at 2,40 : print "none ";
+    endif
+
+goto &loop

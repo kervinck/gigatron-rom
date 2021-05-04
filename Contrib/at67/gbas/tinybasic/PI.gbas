@@ -1,0 +1,14 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+DIM Z(94)=0:CLS:D=0
+
+10 REM 28 digits of pi
+20 M=94:FOR I=0 TO M-1
+30 Z(I)=20:NEXT I:PRINT "PI=";
+40 E=D%100:D=0:FOR I=1 TO M
+50 J=M-I:D=D+D*J+Z(J)*100
+60 A=J+J+1:Z(J)=D%A:D=D/A
+70 NEXT I:M=M-6:E=E+D/100
+80 PRINT E/10;:IF M &&= 88 THEN PRINT ".";
+90 PRINT E%10;:IF M &&> 10 THEN GOTO 40

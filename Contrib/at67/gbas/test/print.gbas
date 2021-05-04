@@ -1,0 +1,38 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+dim s%(14) = 0, 12, 'F', 'A', 'S', 'T', 'L', 'I', '~', '1', '.', 'G', 'T', '1', 0
+
+yup$ = "dog"
+
+cls
+
+point = point(0, 0)
+print hex$(point, 2)
+dokee = 3
+deeke = 3
+
+const a$="hello test world"
+b$="hello test world"
+
+a = 1234
+b = -5678
+c = 100
+d = 2
+
+a$ = str$(a)
+b$ = str$(b)
+c$ = str$(c)
+d$ = string$(@s + 1)
+e$ = string$(@s + d)
+
+print a$;" ";b$;" ";c$;" "
+print string$(@s+1);" ";d$;left$(d$, 1);
+print string$(@s+d);" ";e$;left$(e$, 1)
+
+print spc$(3);".";spc$(d);"."
+f$ = spc$(3)
+g$ = spc$(d)
+print f$;".";g$;"."
+
+end

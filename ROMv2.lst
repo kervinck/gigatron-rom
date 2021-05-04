@@ -1,4 +1,4 @@
-* source: Core/ROMv2.py
+* source: Core/ROMv2.asm.py
               address
               |    encoding
               |    |     instruction

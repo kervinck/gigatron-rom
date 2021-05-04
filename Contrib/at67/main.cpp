@@ -1,5 +1,5 @@
 /*******************************************************************************/
-/* gtemuAT67 ver0.8.15                                                         */
+/* gtemuAT67 Ver 1.0.5R, (Rlease)                                              */
 /*                                                                             */ 
 /* gtemuAT67 is an emulator, controller, assembler, (vCPU and Native code),    */
 /* disassembler, debugger and  BASIC compiler for the Gigatron TTL             */
@@ -17,12 +17,15 @@
 #include "timing.h"
 #include "image.h"
 #include "graphics.h"
+#include "menu.h"
 #include "terminal.h"
 #include "expression.h"
 #include "assembler.h"
 #include "compiler.h"
 #include "operators.h"
 #include "keywords.h"
+#include "pragmas.h"
+#include "functions.h"
 #include "optimiser.h"
 #include "validater.h"
 #include "linker.h"
@@ -37,19 +40,23 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    // TODO: the order of some of these is important
     Memory::initialise();
-    Cpu::initialise();
     Loader::initialise();
-    Audio::initialise();
+    Cpu::initialise();
     Image::initialise();
     Editor::initialise();
+    Audio::initialise();
     Graphics::initialise();
+    Menu::initialise();
     Terminal::initialise();
     Expression::initialise();
     Assembler::initialise();
     Compiler::initialise();
     Operators::initialise();
+    Functions::initialise();
     Keywords::initialise();
+    Pragmas::initialise();
     Optimiser::initialise();
     Validater::initialise();
     Linker::initialise();
@@ -59,7 +66,6 @@ int main(int argc, char* argv[])
     {
         std::string name = std::string(argv[1]);
         size_t slash = name.find_last_of("\\/");
-        size_t ram64k = name.find("64k");
         std::string path = (slash != std::string::npos) ? name.substr(0, slash) : ".";
         Expression::replaceText(path, "\\", "/");
         name = (slash != std::string::npos) ? name.substr(slash + 1) : name;
@@ -70,8 +76,17 @@ int main(int argc, char* argv[])
 
         Assembler::setIncludePath(path);
         Loader::setFilePath(path + "/" + name);
-        Loader::setUploadTarget(Loader::Emulator);
-        if(ram64k != std::string::npos) Cpu::swapMemoryModel();
+        Loader::uploadDirect(Loader::Emulator);
+
+        // Choose memory model
+        if(name.find("64k") != std::string::npos  ||  name.find("64K") != std::string::npos)
+        {
+            if(Memory::getSizeRAM() == RAM_SIZE_LO)
+            {
+                Memory::setSizeRAM(RAM_SIZE_HI);
+                Cpu::setSizeRAM(Memory::getSizeRAM());
+            }
+        }
     }
 
 #if 0
@@ -115,29 +130,15 @@ int main(int argc, char* argv[])
 #endif
 #endif
 
-    //Compiler::compile("gbas/test.gbas", "gbas/test.gasm");
-
     while(1)
     {
         switch(Editor::getEditorMode())
         {
-            case Editor::Term:
-            {
-                Terminal::process();
-            }
-            break;
+            case Editor::Term:  Terminal::process(); break;
+            case Editor::Image: Image::process();    break;
+            case Editor::Audio: Audio::process();    break;
 
-            case Editor::Image:
-            {
-                Image::process();
-            }
-            break;
-
-            default:
-            {
-                Cpu::process();
-            }
-            break;
+            default: Cpu::process(); break;
         }
     }
 

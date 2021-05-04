@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "memory.h"
+#include "assembler.h"
 #include "cpu.h"
 
 #ifndef STAND_ALONE
@@ -20,6 +21,7 @@
 #include "gigatron_0x20.h"
 #include "gigatron_0x28.h"
 #include "gigatron_0x38.h"
+#include "gigatron_0x40.h"
 #endif
 
 #ifdef _WIN32
@@ -35,6 +37,36 @@
 
 namespace Cpu
 {
+    class RAM_s {
+        size_t  size;
+        uint8_t ram[4][0x8000];
+        uint16_t ctrl;
+        uint8_t  xin;
+        int bank;
+    public:
+        RAM_s(size_t size) {
+            resize(size);}
+        const uint8_t& operator[](uint16_t address) const {
+            return (ctrl&1)?xin:ram[(address&0x8000)?bank:0][address&0x7fff];}
+        uint8_t& operator[](uint16_t address) {
+            return ram[(address&0x8000)?bank:0][address&0x7fff];}
+        bool has_extension() {
+            return size==0x20000;}
+        void setctrl(uint16_t c) {
+            if (has_extension()) {ctrl=(c&0x80fd); bank=(ctrl&0xC0)>>6;} }
+        uint16_t getctrl() { return ctrl; }
+        void setxin(uint8_t x) {xin=x;}
+        uint8_t getxin() { return xin; }
+        void resize(size_t s) {
+            bank=(s>=0x10000)?1:0; ctrl=uint16_t((bank<<6)|0x3c); size=s;
+            if (size!=0x8000 && size!=0x10000 && size!=0x20000) abort(); }
+        uint8_t get(uint32_t addr) {return ram[(addr>>15)&3][addr&0x7fff];}
+        void set(uint32_t addr,uint8_t data) {ram[(addr>>15)&3][addr&0x7fff]=data;}
+    } _RAM(0x8000);
+
+
+    const uint8_t _endianBytes[] = {0x00, 0x01, 0x02, 0x03};
+
     int _numRoms = 0;
     int _romIndex = 0;
     int _vCpuInstPerFrame = 0;
@@ -48,10 +80,11 @@ namespace Cpu
     bool _initAudio = true;
     bool _consoleSaveFile = true;
 
-    std::vector<uint8_t> _RAM;
     uint8_t _ROM[ROM_SIZE][2];
     std::vector<uint8_t*> _romFiles;
     RomType _romType = ROMERR;
+    std::map<std::string, RomType> _romTypeMap = {{"ROMV1", ROMv1}, {"ROMV2", ROMv2}, {"ROMV3", ROMv3}, {"ROMV4", ROMv4}, {"ROMV5A", ROMv5a}, {"SDCARD", SDCARD}, {"DEVROM", DEVROM}};
+    std::map<RomType, std::string> _romTypeStr = {{ROMv1, "ROMv1"}, {ROMv2, "ROMv2"}, {ROMv3, "ROMv3"}, {ROMv4, "ROMv4"}, {ROMv5a, "ROMv5A"}, {SDCARD, "SDCARD"}, {DEVROM, "DEVROM"}};
 
     std::vector<uint8_t> _scanlinesRom0;
     std::vector<uint8_t> _scanlinesRom1;
@@ -59,13 +92,26 @@ namespace Cpu
 
     std::vector<InternalGt1> _internalGt1s;
 
+
     int getNumRoms(void) {return _numRoms;}
     int getRomIndex(void) {return _romIndex;}
 
     uint8_t* getPtrToROM(int& romSize) {romSize = sizeof(_ROM); return (uint8_t*)_ROM;}
     RomType getRomType(void) {return _romType;}
+    std::map<std::string, RomType>& getRomTypeMap(void) {return _romTypeMap;}
 
-    const uint8_t _endianBytes[] = {0x00, 0x01, 0x02, 0x03};
+    bool getRomTypeStr(RomType romType, std::string& romTypeStr)
+    {
+        if(_romTypeStr.find(romType) == _romTypeStr.end())
+        {
+            romTypeStr = "";
+            return false;
+        }
+
+        romTypeStr = _romTypeStr[romType];
+
+        return true;
+    }
 
 
 //#define COLLECT_INST_STATS
@@ -87,7 +133,7 @@ namespace Cpu
             return (a._count > b._count);
         });
 
-        for(int i=0; i<_instCounts.size(); i++)
+        for(int i=0; i<<int(_instCounts.size()); i++)
         {
             float percent = float(_instCounts[i]._count)/float(_totalCount)*100.0f;
             if(percent > 1.0f)
@@ -299,8 +345,8 @@ namespace Cpu
     int64_t _clockStall = CLOCK_RESET;
     int64_t _clock = CLOCK_RESET;
     uint8_t _IN = 0xFF, _XOUT = 0x00;
-    uint16_t _vPC = 0x0200;
     State _stateS, _stateT;
+    vCpuPc _vPC;
 
 #ifdef _WIN32
     HWND _consoleWindowHWND;
@@ -313,26 +359,41 @@ namespace Cpu
     int64_t getClock(void) {return _clock;}
     uint8_t getIN(void) {return _IN;}
     uint8_t getXOUT(void) {return _XOUT;}
-    uint16_t getVPC(void) {return _vPC;}
-    uint8_t getRAM(uint16_t address) {return _RAM[address & (Memory::getSizeRAM()-1)];}
+    uint16_t getCTRL(void) {return _RAM.getctrl();}
+    uint8_t getXIN(void) {return _RAM.getxin();}
+    uint16_t getVPC(void) {return _vPC.first;}
+    uint16_t getOldVPC(void) {return _vPC.second;}
+    uint8_t getRAM(uint16_t address) {return _RAM[address];}
+    uint8_t getXRAM(uint32_t address) {return _RAM.get(address);}
     uint8_t getROM(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01];}
-    uint16_t getRAM16(uint16_t address) {return _RAM[address & (Memory::getSizeRAM()-1)] | (_RAM[(address+1) & (Memory::getSizeRAM()-1)]<<8);}
+    uint16_t getRAM16(uint16_t address) {return _RAM[address] | (_RAM[address+1]<<8);}
+    uint16_t getXRAM16(uint32_t address) {return _RAM.get(address) | (_RAM.get(address+1)<<8);}
     uint16_t getROM16(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01] | (_ROM[(address+1) & (ROM_SIZE-1)][page & 0x01]<<8);}
     float getvCpuUtilisation(void) {return _vCpuUtilisation;}
 
+    void setOldVPC(uint16_t oldVPC) {_vPC.second = oldVPC;}
     void setColdBoot(bool coldBoot) {_coldBoot = coldBoot;}
     void setIsInReset(bool isInReset) {_isInReset = isInReset;}
     void setClock(int64_t clock) {_clock = clock;}
     void setIN(uint8_t in) {_IN = in;}
     void setXOUT(uint8_t xout) {_XOUT = xout;}
+    void setCTRL(uint16_t ctrl) {_RAM.setctrl(ctrl);}
+    void setXIN(uint8_t xin) {_RAM.setxin(xin);}
 
     void setRAM(uint16_t address, uint8_t data)
     {
         // Constant "0" and "1" are stored here
         if(address == ZERO_CONST_ADDRESS  &&  data != 0x00) {fprintf(stderr, "Cpu::setRAM() : Warning writing to address : 0x%04x : 0x%02x\n", address, data); return;}
         if(address == ONE_CONST_ADDRESS   &&  data != 0x01) {fprintf(stderr, "Cpu::setRAM() : Warning writing to address : 0x%04x : 0x%02x\n", address, data); return;}
+        _RAM[address] = data;
+    }
 
-        _RAM[address & (Memory::getSizeRAM()-1)] = data;
+    void setXRAM(uint32_t address, uint8_t data)
+    {
+        if (address < 0x8000)
+           setRAM((uint16_t)address, data);
+        else
+           _RAM.set(address, data);
     }
 
     void setROM(uint16_t base, uint16_t address, uint8_t data)
@@ -343,12 +404,19 @@ namespace Cpu
 
     void setRAM16(uint16_t address, uint16_t data)
     {
-        // Constant "0" and "1" are stored here
-        if(address == 0x0000) return;
-        if(address == 0x0080) return;
+        setRAM(address, uint8_t(LO_BYTE(data)));
+        setRAM(address+1, uint8_t(HI_BYTE(data)));
+    }
 
-        _RAM[address & (Memory::getSizeRAM()-1)] = uint8_t(LO_BYTE(data));
-        _RAM[(address+1) & (Memory::getSizeRAM()-1)] = uint8_t(HI_BYTE(data));
+    void setXRAM16(uint32_t address, uint16_t data)
+    {
+        setXRAM(address, uint8_t(LO_BYTE(data)));
+        setXRAM(address+1, uint8_t(HI_BYTE(data)));
+    }
+
+    void setSizeRAM(int size)
+    {
+        _RAM.resize(size_t(size));
     }
 
     void clearUserRAM(void)
@@ -378,13 +446,47 @@ namespace Cpu
         if(!_checkRomType) return;
         _checkRomType = false;
 
-        uint8_t romType = getRAM(ROM_TYPE) & ROM_TYPE_MASK;
-        switch((RomType)romType)
+        uint8_t romType = ROMERR;
+#if 1
+        // This is the correct way to do it
+        romType = getRAM(ROM_TYPE) & ROM_TYPE_MASK;
+#else
+        // Directly read from hard coded addresses in ROM, because RAM can be corrupted in emulation mode and resets to 
+        // correct the corruption are not guaranteed, (unlike real hardware)
+        if(getROM(0x009A, 1) == 0x1C)
+        {
+            romType = ROMv1;
+        }
+        else if(getROM(0x0098, 1) == 0x20)
+        {
+            romType = ROMv2;
+        }
+        else if(getROM(0x0098, 1) == 0x28)
+        {
+            romType = ROMv3;
+        }
+        else if(getROM(0x007E, 1) == 0x38)
+        {
+            romType = ROMv4;
+        }
+        else if(getROM(0x005E, 1) == 0x40)
+        {
+            romType = ROMv5a;
+        }
+        else if(getROM(0x005E, 1) == 0xF0)
+        {
+            romType = SDCARD;
+        }
+        else if(getROM(0x005E, 1) == 0xF8)
+        {
+            romType = DEVROM;
+        }
+#endif
+        _romType = (RomType)romType;
+        switch(_romType)
         {
             case ROMv1:
             {
-                _romType = (RomType)romType;
-
                 // Patches SYS_Exec_88 loader to accept page0 segments as the first segment and works with 64KB SRAM hardware
                 patchSYS_Exec_88();
 
@@ -394,12 +496,13 @@ namespace Cpu
             }
             break;
 
-            case ROMv2:  
-            case ROMv3:  
-            case ROMv4:  
-            case DEVROM: 
+            case ROMv2: 
+            case ROMv3: 
+            case ROMv4:
+            case ROMv5a:
+            case SDCARD:
+            case DEVROM:
             {
-                _romType = (RomType)romType;
                 setRAM(VIDEO_MODE_D, 0xEC);
                 setRAM(VIDEO_MODE_B, 0x0A);
                 setRAM(VIDEO_MODE_C, 0x0A);
@@ -512,6 +615,8 @@ namespace Cpu
             }
         }
 
+        Loader::shutdown();
+
         SDL_Quit();
     }
 
@@ -530,6 +635,119 @@ namespace Cpu
         }
     }
 #endif
+
+    // Enable experimental 6bit sound
+    void enable6BitSound(RomType romType, bool enable)
+    {
+        const std::vector<uint16_t> romv5aAddrs    = {0x0056, 0x005E, 0x012C, 0x015C, 0x01A6, 0x01A7, 0x02D6, 0x02D7};
+        const std::vector<uint8_t>  romv5aOpcodes  = {0x00,   0x00,   0x00,   0x00,   0x40,   0x20,   0x40,   0x20  };
+        const std::vector<uint8_t>  romv5aOperands = {0x03,   0x03,   0x03,   0xFC,   0x03,   0xFC,   0x03,   0xFC  };
+
+        static bool firstTime = true;
+        static std::map<uint16_t, uint8_t[2]> romv5aBackup;
+
+        switch(romType)
+        {
+            case ROMv5a:
+            case SDCARD:
+            case DEVROM:
+            {
+                if(getRomType() < Cpu::ROMv5a)
+                {
+                    if(enable)
+                    {
+                        std::string romTypeStr;
+                        getRomTypeStr(getRomType(), romTypeStr);
+                        fprintf(stderr, "\nCpu::enable6BitSound() : Error, ROM version must be >= ROMv5a, current ROM is %s\n", romTypeStr.c_str());
+                    }
+                    return;
+                }
+
+                if(firstTime) romv5aBackup.clear();
+
+                // LED pattern reduced to lower 2 LED's
+                for(uint16_t a=0x0130; a<=0x0147; a++)
+                {
+                    if(firstTime)
+                    {
+                        romv5aBackup[a][0] = _ROM[a][ROM_INST];
+                        romv5aBackup[a][1] = _ROM[a][ROM_DATA];
+                    }
+
+                    if(enable)
+                    {
+                        _ROM[a][ROM_INST] = 0x00;
+                        _ROM[a][ROM_DATA] = a & 0x03;
+                    }
+                    else
+                    {
+                        _ROM[a][ROM_INST] = romv5aBackup[a][0];
+                        _ROM[a][ROM_DATA] = romv5aBackup[a][1];
+                    }
+                }
+
+                // Codes
+                for(int i=0; i<int(romv5aAddrs.size()); i++)
+                {
+                    if(firstTime)
+                    {
+                        romv5aBackup[romv5aAddrs[i]][0] = _ROM[romv5aAddrs[i]][ROM_INST];
+                        romv5aBackup[romv5aAddrs[i]][1] = _ROM[romv5aAddrs[i]][ROM_DATA];
+                    }
+
+                    if(enable)
+                    {
+                        _ROM[romv5aAddrs[i]][ROM_INST] = romv5aOpcodes[i];
+                        _ROM[romv5aAddrs[i]][ROM_DATA] = (romv5aAddrs[i] == 0x005E) ? uint8_t(romType) | romv5aOperands[i] : romv5aOperands[i];
+                    }
+                    else
+                    {
+                        _ROM[romv5aAddrs[i]][ROM_INST] = romv5aBackup[romv5aAddrs[i]][0];
+                        _ROM[romv5aAddrs[i]][ROM_DATA] = romv5aBackup[romv5aAddrs[i]][1];
+                    }
+                }
+
+#if 0
+                // LED mask
+                _ROM[0x0056][ROM_INST] = 0x00;
+                _ROM[0x0056][ROM_DATA] = 0x03;
+        
+                // ROM version and enable all 4 channels
+                _ROM[0x005E][ROM_INST] = 0x00;
+                _ROM[0x005E][ROM_DATA] = uint8_t(romType) | 0x03;
+
+                // LED mask
+                _ROM[0x012C][ROM_INST] = 0x00;
+                _ROM[0x012C][ROM_DATA] = 0x03;
+        
+                // Audio mask
+                _ROM[0x015C][ROM_INST] = 0x00;
+                _ROM[0x015C][ROM_DATA] = 0xFC;
+        
+                // LED mask
+                _ROM[0x01A6][ROM_INST] = 0x40;
+                _ROM[0x01A6][ROM_DATA] = 0x03;
+
+                // Audio mask
+                _ROM[0x01A7][ROM_INST] = 0x20;
+                _ROM[0x01A7][ROM_DATA] = 0xFC;
+        
+                // LED mask
+                _ROM[0x02D6][ROM_INST] = 0x40;
+                _ROM[0x02D6][ROM_DATA] = 0x03;
+
+                // Audio mask
+                _ROM[0x02D7][ROM_INST] = 0x20;
+                _ROM[0x02D7][ROM_DATA] = 0xFC;
+#endif
+                firstTime = false;
+            }
+            break;
+
+            default: break;
+        }
+    }
+
 
     void initialise(void)
     {
@@ -556,8 +774,8 @@ namespace Cpu
 
         _RAM.resize(Memory::getSizeRAM());
 
-        // Memory
-        srand((unsigned int)time(NULL)); // Initialize with randomized data
+        // Memory, initialize with randomized data
+        srand((unsigned int)time(NULL));
         garble((uint8_t*)_ROM, sizeof(_ROM));
         garble(&_RAM[0], Memory::getSizeRAM());
         garble((uint8_t*)&_stateS, sizeof(_stateS));
@@ -567,8 +785,9 @@ namespace Cpu
         _romFiles.push_back(_gigatron_0x20_rom);
         _romFiles.push_back(_gigatron_0x28_rom);
         _romFiles.push_back(_gigatron_0x38_rom);
-        uint8_t types[NUM_INT_ROMS] = {0x1c, 0x20, 0x28, 0x38};
-        std::string names[NUM_INT_ROMS] = {"ROMv1.rom", "ROMv2.rom", "ROMv3.rom", "ROMv4.rom"};
+        _romFiles.push_back(_gigatron_0x40_rom);
+        uint8_t types[NUM_INT_ROMS] = {0x1c, 0x20, 0x28, 0x38, 0x40};
+        std::string names[NUM_INT_ROMS] = {"ROMv1.rom", "ROMv2.rom", "ROMv3.rom", "ROMv4.rom", "ROMv5a.rom"};
         for(int i=0; i<NUM_INT_ROMS; i++) Editor::addRomEntry(types[i], names[i]);
 
         // Latest internal ROM is the one that is loaded at startup
@@ -618,7 +837,7 @@ namespace Cpu
 //#define CREATE_ROM_HEADER
 #ifdef CREATE_ROM_HEADER
         // Create a header file representation of a ROM, (match the ROM type number with the ROM file before enabling and running this code)
-        createRomHeader((uint8_t *)_ROM, "gigatron_xxxx.h", "_gigatron_xxxx_rom", sizeof(_ROM));
+        createRomHeader((uint8_t *)_ROM, "gigatron_0x40.h", "_gigatron_0x40_rom", sizeof(_ROM));
 #endif
 
 //#define CUSTOM_ROM
@@ -647,6 +866,9 @@ namespace Cpu
             fprintf(stderr, "Cpu::initialise() : failed to initialise SDL.\n");
             _EXIT_(EXIT_FAILURE);
         }
+
+        // Initialise COM port here so that we can see error messages
+        Loader::openComPort();
     }
 
     void cycle(const State& S, State& T)
@@ -665,7 +887,7 @@ namespace Cpu
             case 0x5D: // ora [Y,X++],OUT
             {
                 uint16_t addr = MAKE_ADDR(S._Y, S._X);
-                T._OUT = _RAM[addr & (Memory::getSizeRAM()-1)] | S._AC;
+                T._OUT = _RAM[addr] | S._AC;
                 T._X++;
                 T._PC = S._PC + 1;
                 return;
@@ -674,7 +896,7 @@ namespace Cpu
 
             case 0xC2: // st [D]
             {
-                _RAM[S._D & (Memory::getSizeRAM()-1)] = S._AC;
+                _RAM[S._D] = S._AC;
                 T._PC = S._PC + 1;
                 return;
             }
@@ -682,13 +904,13 @@ namespace Cpu
 
             case 0x01: // ld [D]
             {
-                T._AC = _RAM[S._D & (Memory::getSizeRAM()-1)];
+                T._AC = _RAM[S._D];
                 T._PC = S._PC + 1;
                 return;
             }
             break;
 
-#if 0
+#if 1
             case 0x00: // ld D
             {
                 T._AC = S._D;
@@ -715,7 +937,7 @@ namespace Cpu
             case 0x0D: // ld [Y,X]
             {
                 uint16_t addr = MAKE_ADDR(S._Y, S._X);
-                T._AC = _RAM[addr & (Memory::getSizeRAM()-1)];
+                T._AC = _RAM[addr];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -738,7 +960,7 @@ namespace Cpu
 
             case 0x81: // adda [D]
             {
-                T._AC += _RAM[S._D & (Memory::getSizeRAM()-1)];
+                T._AC += _RAM[S._D];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -747,7 +969,7 @@ namespace Cpu
             case 0x89: // adda [Y,D]
             {
                 uint16_t addr = MAKE_ADDR(S._Y, S._D);
-                T._AC += _RAM[addr & (Memory::getSizeRAM()-1)];
+                T._AC += _RAM[addr];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -803,14 +1025,15 @@ namespace Cpu
         switch(bus)
         {
             case 0: B=S._D;                                            break;
-            case 1: if (!W) B = _RAM[addr & (Memory::getSizeRAM()-1)]; break;
+            case 1: if (!W) B = _RAM[addr]; else _RAM.setctrl(addr);   break;
             case 2: B=S._AC;                                           break;
             case 3: B=_IN;                                             break;
 
             default: break;
         }
 
-        if(W) _RAM[addr & (Memory::getSizeRAM()-1)] = B; // Random Access Memory
+        if(W && (bus != 1 || !_RAM.has_extension()))
+            _RAM[addr] = B; // Random Access Memory
 
         uint8_t ALU = 0; // Arithmetic and Logic Unit
         switch(ins)
@@ -859,8 +1082,11 @@ namespace Cpu
         setClock(CLOCK_RESET);
 
         Memory::initialise();
+        Assembler::setvSpMin(0x00);
         Graphics::resetVTable();
-        Editor::setSingleStepAddress(VIDEO_Y_ADDRESS);
+        Editor::setSingleStepAddress(FRAME_COUNT_ADDRESS);
+
+        Audio::restoreWaveTables();
     }
 
     void softReset(void)
@@ -870,26 +1096,33 @@ namespace Cpu
 
     void swapMemoryModel(void)
     {
-        (Memory::getSizeRAM() == RAM_SIZE_LO) ? Memory::setSizeRAM(RAM_SIZE_HI) : Memory::setSizeRAM(RAM_SIZE_LO);
-        _RAM.resize(Memory::getSizeRAM());
+        if (Memory::getSizeRAM() == RAM_SIZE_LO) {
+            Memory::setSizeRAM(RAM_SIZE_HI);
+            _RAM.resize(RAM_SIZE_HI);
+        } else if (! _RAM.has_extension()) {
+            Memory::setSizeRAM(RAM_SIZE_HI);
+            _RAM.resize(RAM_SIZE_HI * 2);
+        } else {
+            Memory::setSizeRAM(RAM_SIZE_LO);
+            _RAM.resize(RAM_SIZE_LO);
+        }
         Memory::initialise();
         reset(false);
     }
 
-    // Counts maximum and used vCPU instruction slots available per frame
     void vCpuUsage(const State& S, const State& T)
     {
         UNREFERENCED_PARAM(T);
 
-        // All ROM's so far v1 through v4 use the same vCPU dispatch address!
+        // All ROM's so far v1 through v5a/DEVROM use the same vCPU dispatch address!
         if(S._PC == ROM_VCPU_DISPATCH)
         {
-            _vPC = (getRAM(0x0017) <<8) | getRAM(0x0016);
-            if(_vPC < Editor::getCpuUsageAddressA()  ||  _vPC > Editor::getCpuUsageAddressB()) _vCpuInstPerFrame++;
+            _vPC.first = (getRAM(0x0017) <<8) | getRAM(0x0016);
+            if(_vPC.first < Editor::getCpuUsageAddressA()  ||  _vPC.first > Editor::getCpuUsageAddressB()) _vCpuInstPerFrame++;
             _vCpuInstPerFrameMax++;
 
             // Soft reset
-            if(_vPC == 0x01F0) softReset();
+            if(_vPC.first == VCPU_SOFT_RESET) softReset();
 
             static uint64_t prevFrameCounter = 0;
             double frameTime = double(SDL_GetPerformanceCounter() - prevFrameCounter) / double(SDL_GetPerformanceFrequency());
@@ -915,8 +1148,10 @@ namespace Cpu
         }
     }
 
-    void process(void)
+    bool process(bool disableOutput)
     {
+        bool vBlank = false;
+
         // MCP100 Power-On Reset
         if(_clock < 0)
         {
@@ -929,7 +1164,7 @@ namespace Cpu
         // Update CPU
         cycle(_stateS, _stateT);
 
-        // vCPU instruction slot utilisation
+        // vCPU instruction slot utilisation, also updates _vPC
         vCpuUsage(_stateS, _stateT);
 
         _hSync = (_stateT._OUT & 0x40) - (_stateS._OUT & 0x40);
@@ -938,19 +1173,28 @@ namespace Cpu
         // Falling vSync edge
         if(_vSync < 0)
         {
+            vBlank = true;
+
             _clockStall = _clock;
             _vgaY = VSYNC_START;
 
             if(!_debugging)
             {
+                if(disableOutput)
+                {
+                    Timing::synchronise();
+                }
                 // Input and graphics 60 times per second
-                Editor::handleInput();
-                Graphics::render(true);
+                else
+                {
+                    Editor::handleInput();
+                    Graphics::render(true);
+                }
             }
         }
 
         // Pixel
-        if(_vgaX++ < HLINE_END)
+        if(_vgaX++ < HLINE_END  &&  !disableOutput)
         {
             if(_vgaY >= 0  &&  _vgaY < SCREEN_HEIGHT)
             {
@@ -972,7 +1216,7 @@ namespace Cpu
         }
 #endif        
 
-        // RomType and Watchdog
+        // RomType, init audio and watchdog
         if(_clock > STARTUP_DELAY_CLOCKS)
         {
             if(_isInReset)
@@ -983,7 +1227,9 @@ namespace Cpu
 
             if(_initAudio  &&  _clock > STARTUP_DELAY_CLOCKS*10.0)
             {
-                Audio::initialiseChannels(_coldBoot, _romType);
+                // ROM's V1 to V3 do not re-initialise RAM Audio Wave Tables on soft reboot, (we re-initialise them for ALL ROM versions)
+                Audio::initialiseChannels();
+                Audio::saveWaveTables();
 
                 _coldBoot = false;
                 _initAudio = false;
@@ -1009,8 +1255,11 @@ namespace Cpu
             //Audio::fillBuffer();
             Audio::fillCallbackBuffer();
 
-            // Loader
+#if defined(HARDWARE_LOADER)
+            // TODO: don't enable until Loader::upload is fixed!
+            // Emulation of hardware Loader
             if(_clock > STARTUP_DELAY_CLOCKS*10.0) Loader::upload(_vgaY);
+#endif
 
             // Horizontal timing errors
             if(_vgaY >= 0  &&  _vgaY < SCREEN_HEIGHT)
@@ -1020,7 +1269,7 @@ namespace Cpu
                 if(_vgaX != 200  &&  _vgaX != 400) // Support for 6.25Mhz and 12.5MHz
                 {
                     colour = 0xFFFF0000;
-                    fprintf(stderr, "main(): Horizontal timing error : vgaX %03d : vgaY %03d : xout %02x : time %0.3f\n", _vgaX, _vgaY, _stateT._AC, float(_clock)/float(CLOCK_FREQ));
+                    //fprintf(stderr, "Cpu::process(): Horizontal timing error : vgaX %03d : vgaY %03d : xout %02x : time %0.3f\n", _vgaX, _vgaY, _stateT._AC, float(_clock)/float(CLOCK_FREQ));
                 }
                 if((_vgaY % 4) == 3) Graphics::refreshTimingPixel(_stateS, GIGA_WIDTH, _vgaY / 4, colour, _debugging);
             }
@@ -1037,6 +1286,8 @@ namespace Cpu
 
         _stateS = _stateT;
         _clock++;
+
+        return vBlank;
     }
 
 #ifdef _WIN32
@@ -1052,9 +1303,9 @@ namespace Cpu
 
             int xpos, ypos, width, height;
             sscanf_s(line.c_str(), "%d %d %d %d", &xpos, &ypos, &width, &height);
-            if(xpos < -2000  ||  xpos > 4000  ||  ypos < 320  ||  ypos > 1000  ||  width < 100  ||  width > 2000  ||  height < 100 ||  height > 1000)
+            if(xpos < -2000  ||  xpos > 4000  ||  ypos < 120  ||  ypos > 1000  ||  width < 100  ||  width > 2000  ||  height < 100 ||  height > 1000)
             {
-                xpos = -1000; ypos = 320; width = 1000; height = 1000;
+                xpos = -1000; ypos = 120; width = 1000; height = 1000;
             }
 
             MoveWindow(_consoleWindowHWND, xpos, ypos, width, height, true);

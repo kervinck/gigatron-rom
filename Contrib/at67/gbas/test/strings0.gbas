@@ -1,0 +1,49 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+yup$ = "dog"
+dim dog(3) = @yup$, len(yup$), rnd(0), sin(-90)*10000 + rnd(20)
+
+def word(&h08A0) = sin(3.141526)*200.0 + 1000.0, rnd(5000)
+
+cls
+
+const a$="hello test world"
+b$="hello test world"
+
+num0$ = "-1234"
+num1$ = "1234"
+print val("-4532");" ";val(a$);" ";val(num0$);" &h";hex$(val("0x1234"), 4);" &h";hex$(val("&hFFFF"), 4);" &h";hex$(val("&b0000000011110000"), 4);" &h";hex$(val("&o777"), 4);" ";val(num1$)
+
+c$=left$(b$, 5)
+d$ = right$ (b$,5)
+e$=mid$(b$, 6, 4)
+
+print a$;" ";b$;"  ";c$;" ";d$;" ";e$
+
+x$ = "YOUR TEXT BACKWARDS IS"
+for j = len(x$)-1 downto 0
+    print mid$(x$, j, 1);
+next j
+
+a = strcmp("dog", "dog")
+b = strcmp("dog", "Dog")
+c = strcmp("dog", "dog1")
+d = strcmp("yes", a$)
+e = strcmp(a$, b$)
+print
+f = asc("dog")
+g = abs(-5)
+h = @a
+i = len(a)
+zzz = -4
+print a;" ";b;" ";c;" ";d;" ";e;" "
+print abs(-3);" ";abs(zzz);" ";strcmp("world", d$);" ";asc("dog");" ";f;" ";g
+print hex$(h, 2);" ";i;" ";hex$(@a, 2);" ";len(a)
+print hex$(dog(0), 4);" ";dog(1);" ";dog(2);" ";dog(3)
+print deek(&h08A0);" ";deek(&h08A2)
+print a$
+print b$
+print c$;" ";d$;" ";e$
+
+end

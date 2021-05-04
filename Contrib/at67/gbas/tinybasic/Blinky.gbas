@@ -1,0 +1,9 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+10'Blink center pixel
+20X=160/2:Y=120/2:I=0
+30'Video table lookup
+40P=(PEEK(256+Y+Y) LSL 8)+X
+50'Main loop
+60POKE P,I:INC I:GOTO &60

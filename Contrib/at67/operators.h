@@ -9,54 +9,67 @@
 #include "compiler.h"
 
 
-#define MATH_PI 3.1415926535897932384626433832795028
-
 namespace Operators
 {
+    std::vector<std::string>& getOperators(void);
+
     bool initialise(void);
 
+    void changeToTmpVar(Expression::Numeric& numeric);
+    void createSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric);
     void handleSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric);
+    void selectSingleOp(const std::string& opcodeStr, Expression::Numeric& numeric);
 
     // Unary logic operators
-    Expression::Numeric operatorPOS(Expression::Numeric& numeric);
-    Expression::Numeric operatorNEG(Expression::Numeric& numeric);
-    Expression::Numeric operatorNOT(Expression::Numeric& numeric);
+    Expression::Numeric POS(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric NEG(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric NOT(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
 
     // Unary math operators
-    Expression::Numeric operatorSIN(Expression::Numeric& numeric);
-    Expression::Numeric operatorCOS(Expression::Numeric& numeric);
-    Expression::Numeric operatorTAN(Expression::Numeric& numeric);
-    Expression::Numeric operatorASIN(Expression::Numeric& numeric);
-    Expression::Numeric operatorACOS(Expression::Numeric& numeric);
-    Expression::Numeric operatorATAN(Expression::Numeric& numeric);
-    Expression::Numeric operatorRAND(Expression::Numeric& numeric);
-    Expression::Numeric operatorREV16(Expression::Numeric& numeric);
-    Expression::Numeric operatorREV8(Expression::Numeric& numeric);
-    Expression::Numeric operatorREV4(Expression::Numeric& numeric);
+    Expression::Numeric CEIL(Expression::Numeric&  numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric FLOOR(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric POWF(Expression::Numeric&  numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric SQRT(Expression::Numeric&  numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric EXP(Expression::Numeric&   numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric EXP2(Expression::Numeric&  numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric LOG(Expression::Numeric&   numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric LOG2(Expression::Numeric&  numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric LOG10(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric SIN(Expression::Numeric&   numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric COS(Expression::Numeric&   numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric TAN(Expression::Numeric&   numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric ASIN(Expression::Numeric&  numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric ACOS(Expression::Numeric&  numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric ATAN(Expression::Numeric&  numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric ATAN2(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric RAND(Expression::Numeric&  numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric REV16(Expression::Numeric& numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric REV8(Expression::Numeric&  numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric REV4(Expression::Numeric&  numeric, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
 
     // Binary logic operators
-    Expression::Numeric operatorAND(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorXOR(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorOR(Expression::Numeric&  left, Expression::Numeric& right);
-    Expression::Numeric operatorLSL(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorLSR(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorASR(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric AND(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric XOR(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric OR(Expression::Numeric&  left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric LSL(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric LSR(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric ASR(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
 
     // Binary math operators
-    Expression::Numeric operatorADD(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorSUB(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorMUL(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorDIV(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorMOD(Expression::Numeric& left, Expression::Numeric& right);
-    Expression::Numeric operatorPOW(Expression::Numeric& left, Expression::Numeric& right);
+    Expression::Numeric ADD(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric SUB(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric MUL(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric DIV(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric MOD(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric POW(Expression::Numeric& left, Expression::Numeric& right, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
 
     // Relational operators
-    Expression::Numeric operatorEQ(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
-    Expression::Numeric operatorNE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
-    Expression::Numeric operatorLE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
-    Expression::Numeric operatorGE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
-    Expression::Numeric operatorLT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
-    Expression::Numeric operatorGT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType);
+    Expression::Numeric EQ(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric NE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric LE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric GE(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric LT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
+    Expression::Numeric GT(Expression::Numeric& left, Expression::Numeric& right, Expression::CCType ccType, const std::string& moduleName, const std::string& codeLineText, int codeLineStart);
 }
 
 #endif

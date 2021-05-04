@@ -5,8 +5,9 @@
 # assembler! Specifically, asm.py is just the back end, while the Python
 # interpreter acts as the front end. By using Python in this way, we get
 # parsing and a powerful macro system for free. Assembly source files are
-# simple .py files, not .asm files. (But we can produce .lst files as a program
-# listing in a more conventional notation.)
+# Python files and not traditional .asm files. We recognize them with the
+# .asm.py extension. During assembly we produce .lst files as a program
+# listing in a more conventional notation.
 
 import inspect
 import json
@@ -114,7 +115,7 @@ def define(name, newValue):
   if name in _symbols:
     oldValue =  _symbols[name]
     if newValue != oldValue:
-      print('Warning: redefining %s (old %s new %s)' % (name, oldValue, newValue))
+      highlight('Warning: redefining %s (old %s new %s)' % (name, oldValue, newValue))
   _symbols[name] = newValue
 
 def symbol(name):
@@ -223,27 +224,18 @@ def trampoline():
 
 def end():
   """Resolve symbols and write output"""
-  global _errors
   for name, where in _refsL:
     if name in _symbols:
-      _rom1[where] += _symbols[name] # adding allows some label tricks
+      _rom1[where] += _symbols[name] # Addition allows some label tricks
       _rom1[where] &= 255
     else:
-      print('Error: Undefined symbol %s' % repr(name))
-      _symbols[name] = 0 # No more errors
-      _errors += 1
+      highlight('Error: Undefined symbol %s' % repr(name))
 
   for name, where in _refsH:
     if name in _symbols:
       _rom1[where] += _symbols[name] >> 8
     else:
-      print('Error: Undefined symbol %s' % repr(name))
-      _errors += 1
-
-  if _errors:
-    print('%d error(s)' % _errors)
-    print()
-    sys.exit(1)
+      highlight('Error: Undefined symbol %s' % repr(name))
 
   align(1)
 
@@ -257,7 +249,6 @@ _symbols, _refsL, _refsH = {}, [], []
 _labels = {} # Inverse of _symbols, but only when made with label(). For disassembler
 _comments = {}
 _rom0, _rom1, _linenos = [], [], []
-_errors = 0
 _listing, _listingSource, _lineno = None, None, None
 
 # General instruction layout
@@ -343,9 +334,7 @@ def _assemble(op, val, to=AC, addr=None):
   # Only accept floats when representing a whole number
   if isinstance(val, float):
     if not val.is_integer():
-      print('Error: Non-integer operand %s' % val)
-      global _errors
-      _errors += 1
+      highlight('Error: Non-integer operand %s' % val)
     val = int(val)
 
   # Process list notation for addressing mode
@@ -478,13 +467,12 @@ def disableListing():
   _listing = None
 
 def _emit(opcode, operand):
-  global _romSize, _maxRomSize, _errors
+  global _romSize, _maxRomSize
   lineno = inspect.getframeinfo(_listing).lineno if has(_listing) else None
   if _romSize >= _maxRomSize:
       disassembly = disassemble(opcode, operand)
       print('%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly))
-      print('Error: Program size limit exceeded')
-      _errors += 1
+      highlight('Error: Program size limit exceeded')
       _maxRomSize = 0x10000 # Extend to full address space to prevent more of the same errors
   _rom0.append(opcode)
   _rom1.append(operand)
@@ -505,7 +493,7 @@ def _emit(opcode, operand):
     opcode & _maskCc in [ _jGT, _jLT, _jNE, _jEQ, _jGE, _jLE ]: # XXX Only check jGT, jLT, jNE?
     disassembly = disassemble(opcode, operand)
     print('%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly))
-    print('Warning: large propagation delay (conditional branch with RAM on bus)')
+    highlight('Warning: large propagation delay (conditional branch with RAM on bus)')
 
 def loadBindings(symfile):
   # Load JSON file into symbol table
@@ -523,7 +511,8 @@ def getRom1():
 def writeRomFiles(sourceFile):
 
   # Determine stem for file names
-  stem, _ = splitext(sourceFile)
+  stem, _ = splitext(sourceFile)        # Remove .py
+  stem, _ = splitext(stem)              # Remove .asm
   stem = basename(stem)
   if stem == '': stem = 'out'
 
@@ -661,5 +650,22 @@ def writeRomFiles(sourceFile):
   with open(filename, 'wb') as file:
     file.write(_rom2)
 
-  print('OK used %d free %d size %d' % (_romSize, _maxRomSize-_romSize, len(_rom2)))
+  print('ROM bytes %d words %d' % (len(_rom2), len(_rom2)//2))
+  print('Words used %d unused %d' % (_romSize, _maxRomSize-_romSize))
+  print('Assembly OK')
+
+# print() wrapper to highlights message on terminal with ANSI escape codes
+def highlight(*args):
+  line = ' '.join(args)
+  if sys.stdout.isatty():
+    ansiBold   = '\033[1m'
+    ansiNormal = '\033[0m'
+    print(ansiBold + line + ansiNormal)
+  else:
+    print(line)
+
+  # Exit on first error
+  if line.upper().startswith('ERROR'):
+    print('Assembly failed')
+    sys.exit(1)
 

@@ -1,0 +1,136 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv2
+
+' two different ways of telling compiler not to use memory above &h87FF
+_runtimeStart_ &h87FF ' maximum runtime address
+'alloc &h8800, &h77A0 ' allocate address + size of RAM, making it unavailable to the compiler
+
+_stringWorkArea_ &h7FA0 ' manually set the string work area, (returns previously allocated work area RAM to free list)
+
+
+' don't double buffer the entire screen, just enough for the size of the cube
+const VideoTableStart = &h0140
+const VideoTableEnd = &h01B0
+
+videoTable = VideoTableStart
+scanLine = &h00
+pageFlip = &h00
+
+'DRAW 3D CUBE WITH SOME
+'ROTATION AROUND X
+
+K=0:X=K:M=X:N=M:I=N:A=I:B=A:L=B:F=L
+DIM P(7)=0 : DIM PP(7)=0
+DIM Q(7)=0 : DIM QQ(7)=0
+
+init time, noupdate
+mode 3
+
+' disable video, (except last line so that we don't lose sync), for fast cls, cls both buffers, enable video
+set VIDEO_TOP, 238
+cls : cls &h8800
+set VIDEO_TOP, 0
+
+10 U=48:GOTO setup
+
+'ROTATION AND PROJECTION
+20 R=K+L+F
+25 P(I)=80+X/R
+30 Q(I)=60+(M-N)/R
+35 P(I+4)=160-P(I)
+40 Q(I+4)=Q(I)
+45 INC I:RETURN
+
+50 LINE P(A), Q(A)+pageFlip, P(B), Q(B)+pageFlip
+   tick time : return
+
+60 LINE PP(A), QQ(A)+pageFlip, PP(B), QQ(B)+pageFlip
+   tick time : return
+
+' S=SIN C=COS F=FLEN
+setup: 
+    S=45:C=45:F=4*U
+    gosub process
+    gosub draw
+    pageFlip = &h80
+
+timer=0
+for i=0 to 100
+    gosub 254
+next i    
+timer = get("TIMER")
+
+set FG_COLOUR, &h0F
+print timer/60;" ";timer % 60;"/60"
+end
+
+'loop: 
+'    gosub get("BUTTON_STATE")
+'goto &loop
+
+process: 
+    for j=0 to 7 : PP(j)=P(j) : QQ(j)=Q(j) : next j
+    I=0:X=U*U
+    K=S:M=U*C
+    L=C:N=U*S:GOSUB 20
+    L=-L:N=-N:GOSUB 20
+    K=-K:M=-M:GOSUB 20
+    L=-L:N=-N:GOSUB 20
+return
+
+draw: 
+    A=0:B=1:GOSUB 50
+    A=1:B=2:GOSUB 50
+    A=2:B=3:GOSUB 50
+    A=3:B=0:GOSUB 50
+    A=4:B=5:GOSUB 50
+    A=5:B=6:GOSUB 50
+    A=6:B=7:GOSUB 50
+    A=7:B=4:GOSUB 50
+    A=4:B=0:GOSUB 50
+    A=5:B=1:GOSUB 50
+    A=6:B=2:GOSUB 50
+    A=7:B=3:GOSUB 50
+return
+
+erase: 
+    A=0:B=1:GOSUB 60
+    A=1:B=2:GOSUB 60
+    A=2:B=3:GOSUB 60
+    A=3:B=0:GOSUB 60
+    A=4:B=5:GOSUB 60
+    A=5:B=6:GOSUB 60
+    A=6:B=7:GOSUB 60
+    A=7:B=4:GOSUB 60
+    A=4:B=0:GOSUB 60
+    A=5:B=1:GOSUB 60
+    A=6:B=2:GOSUB 60
+    A=7:B=3:GOSUB 60
+return
+
+254: S = S + 5 : if S &&>= 45 then S = -40
+
+     set FG_COLOUR, &h0F : gosub process : gosub draw
+     gosub flip
+     set FG_COLOUR, &h20 : gosub erase
+     return
+     
+253: S = S - 5 : if S &&<= -45 then S = 40
+    
+     set FG_COLOUR, &h0F : gosub process : gosub draw
+     gosub flip
+     set FG_COLOUR, &h20 : gosub erase
+     return
+     
+flip: 
+    videoTable = VideoTableStart
+    scanLine = pageFlip OR &h28
+    repeat
+        poke videoTable, scanLine
+        inc scanLine
+        inc videoTable
+        inc videoTable
+    until videoTable &&= VideoTableEnd
+       
+    pageFlip = pageFlip XOR &h80
+return

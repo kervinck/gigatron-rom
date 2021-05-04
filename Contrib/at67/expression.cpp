@@ -9,6 +9,8 @@
 
 #include "expression.h"
 
+#define UNREFERENCED_PARAM(P) ((void)P)
+
 
 namespace Expression
 {
@@ -18,7 +20,6 @@ namespace Expression
     int _lineNumber = 0;
 
     bool _advanceError = false;
-    bool _containsQuotes = false;
     bool _enableOptimisedPrint = false;
 
     bool _binaryChars[256]      = {false};
@@ -33,7 +34,7 @@ namespace Expression
 
 
     // Forward declarations
-    Numeric expression(void);
+    Numeric expression(bool);
 
     // Helpers
     uint32_t revHelper(uint32_t input, uint32_t n)
@@ -62,34 +63,86 @@ namespace Expression
     }
 
     // Unary math operators
+    Numeric& operatorCEIL(Numeric& numeric)
+    {
+        numeric._value = ceil(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorFLOOR(Numeric& numeric)
+    {
+        numeric._value = floor(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorPOWF(Numeric& numeric)
+    {
+        if(numeric._params.size() > 0) numeric._value = pow(numeric._value, numeric._params[0]._value);
+        numeric._params.clear();
+        return numeric;
+    }
+    Numeric& operatorSQRT(Numeric& numeric)
+    {
+        if(numeric._value > 0.0) numeric._value = sqrt(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorEXP(Numeric& numeric)
+    {
+        numeric._value = exp(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorEXP2(Numeric& numeric)
+    {
+        numeric._value = exp2(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorLOG(Numeric& numeric)
+    {
+        if(numeric._value > 0.0) numeric._value = log(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorLOG2(Numeric& numeric)
+    {
+        if(numeric._value > 0.0) numeric._value = log2(numeric._value);
+        return numeric;
+    }
+    Numeric& operatorLOG10(Numeric& numeric)
+    {
+        if(numeric._value > 0.0) numeric._value = log10(numeric._value);
+        return numeric;
+    }
     Numeric& operatorSIN(Numeric& numeric)
     {
-        numeric._value = sin(numeric._value);
+        numeric._value = sin(numeric._value*MATH_PI/180.0);
         return numeric;
     }
     Numeric& operatorCOS(Numeric& numeric)
     {
-        numeric._value = cos(numeric._value);
+        numeric._value = cos(numeric._value*MATH_PI/180.0);
         return numeric;
     }
     Numeric& operatorTAN(Numeric& numeric)
     {
-        numeric._value = tan(numeric._value);
+        numeric._value = tan(numeric._value*MATH_PI/180.0);
         return numeric;
     }
     Numeric& operatorASIN(Numeric& numeric)
     {
-        numeric._value = asin(numeric._value);
+        numeric._value = asin(numeric._value)/MATH_PI*180.0;
         return numeric;
     }
     Numeric& operatorACOS(Numeric& numeric)
     {
-        numeric._value = acos(numeric._value);
+        numeric._value = acos(numeric._value)/MATH_PI*180.0;
         return numeric;
     }
     Numeric& operatorATAN(Numeric& numeric)
     {
-        numeric._value = atan(numeric._value);
+        numeric._value = atan(numeric._value)/MATH_PI*180.0;
+        return numeric;
+    }
+    Numeric& operatorATAN2(Numeric& numeric)
+    {
+        if(numeric._params.size() > 0  &&  (numeric._value != 0.0  ||  numeric._params[0]._value != 0.0)) numeric._value = atan2(numeric._value, numeric._params[0]._value)/MATH_PI*180.0;
+        numeric._params.clear();
         return numeric;
     }
     Numeric& operatorRAND(Numeric& numeric)
@@ -230,6 +283,11 @@ namespace Expression
         return isspace((unsigned char)chr);
     }
 
+    bool isNumber(const std::string& input)
+    {
+        return !input.empty()  &&  std::find_if(input.begin(), input.end(), [](unsigned char c) { return !isdigit(c); }) == input.end();
+    }
+
     ExpressionType isExpression(const std::string& input)
     {
         if(input.find_first_of("[]") != std::string::npos) return IsInvalid;
@@ -241,22 +299,80 @@ namespace Expression
         return HasNumbers;
     }
 
-    bool isVarNameValid(const std::string& varName)
+    // First char must be alpha, all chars except first can be numerics, all chars except first and last can be underscores, can contain valid brackets as an array reference
+    TokType isVarNameValid(const std::string& varName)
     {
-        if(varName.size() == 0)  return false;
-        if(!isalpha((unsigned char)varName[0])) return false;
+        TokType tokType = Invalid;
 
-        for(int i=1; i<int(varName.size())-1; i++)
+        if(varName.size() == 0) return Invalid;
+        if(!isalpha((unsigned char)varName[0])) return Invalid;
+
+        size_t lbra, rbra;
+        if(!findMatchingBrackets(varName, 0, lbra, rbra))
         {
-            if(!isalnum((unsigned char)varName[i])) return false;
+            tokType = Variable;
+            lbra = varName.size();
+        }
+        else
+        {
+            tokType = Array;
         }
 
-        if(!isalnum((unsigned char)varName[varName.size() - 1])  &&  varName[varName.size() - 1] != '$') return false;
+        if(!isalnum((unsigned char)varName[lbra - 1])) return Invalid;
+
+        for(int i=1; i<int(lbra-1); i++)
+        {
+            if(!isalnum((unsigned char)varName[i])  &&  varName[i] != '_') return Invalid;
+        }
+
+        return tokType;
+    }
+
+    // First char must be alpha, all chars except first can be numerics, all chars except first and last can be underscores, last char can be a dollar sign, can contain valid brackets as an array reference
+    TokType isStrNameValid(const std::string& strName)
+    {
+        TokType tokType = Invalid;
+
+        if(strName.size() == 0) return Invalid;
+        if(!isalpha((unsigned char)strName[0])) return Invalid;
+
+        size_t lbra, rbra;
+        if(!findMatchingBrackets(strName, 0, lbra, rbra))
+        {
+            tokType = Variable;
+            lbra = strName.size();
+        }
+        else
+        {
+            tokType = Array;
+        }
+
+        if(strName[lbra - 1] != '$') return Invalid;
+
+        for(int i=1; i<int(lbra-1); i++)
+        {
+            if(!isalnum((unsigned char)strName[i])  &&  strName[i] != '_') return Invalid;
+        }
+
+        return tokType;
+    }
+
+    // First char must be alpha, all chars except first can be numerics, all chars except first and last can be underscores
+    bool isLabNameValid(const std::string& labName)
+    {
+        if(labName.size() == 0) return false;
+        if(!isalpha((unsigned char)labName[0])) return false;
+        if(!isalnum((unsigned char)labName[labName.size() - 1])) return false;
+
+        for(int i=1; i<int(labName.size())-1; i++)
+        {
+            if(!isalnum((unsigned char)labName[i])  &&  labName[i] != '_') return false;
+        }
 
         return true;
     }
 
-    bool isValidString(const std::string& input)
+    bool isStringValid(const std::string& input)
     {
         std::string str = input;
         stripNonStringWhitespace(str);
@@ -265,7 +381,7 @@ namespace Expression
         {
             for(int i=1; i<int(str.size())-1; i++)
             {
-                if(str[i] == '"') return false;
+                if(str[i] == '"'  &&  str[i-1] != '\\') return false;
             }
 
             return true;
@@ -274,42 +390,105 @@ namespace Expression
         return false;
     }
 
+    int _chrBra = -1;
+    int _chrPrev = -1;
+    bool _containsQuotes = false;
+    void initHasHelpers(int bra=-1)
+    {
+        _chrBra = bra;
+        _chrPrev = -1;
+        _containsQuotes = false;
+    }
     bool hasNonStringWhiteSpace(int chr)
     {
-        if(chr == '"') _containsQuotes = !_containsQuotes;
-        if(!isspace((unsigned char)chr) || _containsQuotes) return false;
-        return true;    
-    }
+        bool result = true;
 
+        if(chr == '"'  &&  _chrPrev != '\\') _containsQuotes = !_containsQuotes;
+        if(!isspace((unsigned char)chr) || _containsQuotes) result = false;
+
+        _chrPrev = chr;
+        return result;
+    }
     bool hasNonStringEquals(int chr)
     {
-        if(chr == '"') _containsQuotes = !_containsQuotes;
-        if(chr != '='  ||  _containsQuotes) return false;
-        return true;    
-    }
+        bool result = true;
 
+        if(chr == '"'  &&  _chrPrev != '\\') _containsQuotes = !_containsQuotes;
+        if(chr != '='  ||  _containsQuotes) result = false;
+
+        _chrPrev = chr;
+        return result;
+    }
     bool hasNonStringColon(int chr)
     {
-        if(chr == '"') _containsQuotes = !_containsQuotes;
-        if(chr != ':'  ||  _containsQuotes) return false;
-        return true;    
+        bool result = true;
+
+        if(chr == '"'  &&  _chrPrev != '\\') _containsQuotes = !_containsQuotes;
+        if(chr != ':'  ||  _containsQuotes) result = false;
+
+        _chrPrev = chr;
+        return result;
+    }
+    bool hasNonStringBracket(int chr)
+    {
+        bool result = true;
+
+        if(chr == '"'  &&  _chrPrev != '\\') _containsQuotes = !_containsQuotes;
+        if(chr != _chrBra  ||  _containsQuotes) result = false;
+
+        _chrPrev = chr;
+        return result;
+    }
+
+    bool hasOnlyWhiteSpace(const std::string& input)
+    {
+        if(std::find_if_not(input.begin(), input.end(), isspace) != input.end()) return false;
+
+        return true;
+    }
+
+    void isInComment(const std::string& input, int index, bool& output)
+    {
+        // Once a comment is found this function must instantly return when called again, otherwise the logic breaks
+        if(output) return;
+
+        if(index >= int(input.size())) return;
+    
+        // In comment if trailing a single quote or if NOT a forward char literal or if trailing a 'REM' sequence
+        if((input[index] == '\''  &&  index > int(input.size())-3)  ||  (index <= int(input.size())-3  &&  input[index] == '\''  &&  input[index+2] != '\'')  ||
+           (index <= int(input.size()) - 3  &&  toupper((unsigned char)input[index]) == 'R'  &&  toupper((unsigned char)input[index+1]) == 'E'  &&  toupper((unsigned char)input[index+2]) == 'M'))
+        {
+            output = true;
+
+            // Not in comment if a reverse char literal
+            if(index >= 2  &&  input[index] == '\''  &&  input[index-2] == '\'')
+            {
+                output = false;
+            }
+        }
     }
 
     std::string::const_iterator findNonStringEquals(const std::string& input)
     {
-        _containsQuotes = false;
+        initHasHelpers();
         return std::find_if(input.begin(), input.end(), hasNonStringEquals);
     }
 
     std::string::const_iterator findNonStringColon(const std::string& input)
     {
-        _containsQuotes = false;
+        initHasHelpers();
         return std::find_if(input.begin(), input.end(), hasNonStringColon);
+    }
+
+    std::string::const_iterator findNonStringBracket(const std::string& input, int bra)
+    {
+        initHasHelpers(bra);
+        return std::find_if(input.begin(), input.end(), hasNonStringBracket);
     }
 
     void stripNonStringWhitespace(std::string& input)
     {
-        _containsQuotes = false;
+        initHasHelpers();
         input.erase(remove_if(input.begin(), input.end(), hasNonStringWhiteSpace), input.end());
     }
 
@@ -318,20 +497,33 @@ namespace Expression
         input.erase(remove_if(input.begin(), input.end(), isSpace), input.end());
     }
 
+    bool stripChars(std::string& input, const std::string& chars)
+    {
+        std::string output = input;
+        for(int i=0; i<int(chars.size()); i++)
+        {
+            output.erase(std::remove(output.begin(), output.end(), chars[i]), output.end()) == output.end();
+        }
+
+        input = output;
+
+        return true;
+    }
+
     std::string stripStrings(const std::string& input)
     {
-        size_t start = 0, end = 0;
-
+        size_t start = 0, end = std::string::npos;
         std::string output = input;
 
-        while(start != std::string::npos  &&  end != std::string::npos)
+        for(;;)
         {
             start = output.find_first_of('"', end + 1);
             end = output.find_first_of('"', start + 1);
             if(start == std::string::npos  ||  end == std::string::npos) break;
 
             output.erase(start, end - start + 1);
-            start = 0, end = 0;
+            start = 0;
+            end = std::string::npos;
         }
 
         return output;
@@ -389,7 +581,11 @@ namespace Expression
     void trimWhitespace(std::string& input)
     {
         size_t start = input.find_first_not_of(" \n\r\f\t\v");
-        if(start == std::string::npos) return;
+        if(start == std::string::npos)
+        {
+            stripWhitespace(input);
+            return;
+        }
 
         size_t end = input.find_last_not_of(" \n\r\f\t\v");
         size_t size = end - start + 1;
@@ -414,7 +610,7 @@ namespace Expression
 
         for(int i=0; i<int(input.size()); i++)
         {
-            if(input[i] == '\"') inString = !inString;
+            if((i==0  &&  input[i] == '\"')  ||  (i > 0  &&  input[i] == '\"'  &&  input[i-1] != '\\')) inString = !inString;
 
             if(isspace((unsigned char)input[i]))
             {
@@ -446,19 +642,16 @@ namespace Expression
         for(int i=0; i<int(input.size()); i++)
         {
             // Check for string
-            if(!inComment  &&  input[i] == '\"') inString = !inString;
-
-            // Check for comment, ' and REM
-            if(!inString)
+            if(!inComment)
             {
-                if((input[i] == '\'')  ||  (i <= int(input.size()) - 3  &&  toupper((unsigned char)input[i]) == 'R'  &&  toupper((unsigned char)input[i+1]) == 'E'  &&  toupper((unsigned char)input[i+2]) == 'M'))
-                {
-                    inComment = true;
-                }
+                if((i==0  &&  input[i] == '"')  ||  (i > 0  &&  input[i] == '"'  &&  input[i-1] != '\\')) inString = !inString;
             }
 
             if(!inString)
             {
+                // Check for comment, ' and REM
+                isInComment(input, i, inComment);
+
                 // If not in string but in comment, skip char
                 if(inComment) continue;
 
@@ -502,8 +695,18 @@ namespace Expression
         return length;
     }
 
-    bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra)
+    bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra, char obra)
     {
+        char cbra = 0;
+        switch(obra)
+        {
+            case '(': cbra = ')'; break;
+            case '{': cbra = '}'; break;
+            case '[': cbra = ']'; break;
+
+            default: return false;
+        }
+
         lbra = std::string::npos;
         rbra = std::string::npos;
 
@@ -512,7 +715,7 @@ namespace Expression
 
         for(size_t i=start; i<input.size(); i++)
         {
-            if(input[i] == '(')
+            if(input[i] == obra)
             {
                 if(!startMatching)
                 {
@@ -522,7 +725,7 @@ namespace Expression
                 matched++;
             }
 
-            if(input[i] == ')')
+            if(input[i] == cbra)
             {
                 rbra = i;
                 matched--;
@@ -535,6 +738,15 @@ namespace Expression
         rbra = std::string::npos;
 
         return false;
+    }
+
+    bool findMatchingBrackets(const std::string& input, size_t start, size_t& lbra, size_t& rbra, char obra, std::string& name, int& paramNum)
+    {
+        bool result = findMatchingBrackets(input, start, lbra, rbra, obra);
+        std::vector<std::string> params = Expression::tokenise(input.substr(lbra + 1, rbra - (lbra + 1)), ',', true);
+        name = (lbra) ? input.substr(0, lbra): input;
+        paramNum = (result) ? int(params.size()) : 0;
+        return result;
     }
 
     void operatorReduction(std::string& input)
@@ -592,6 +804,20 @@ namespace Expression
         return "0x" + ss.str();
     }
 
+    std::string strLower(const std::string& s)
+    {
+        std::string str = s;
+        std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) {return char(tolower(c));} );
+        return str;
+    }
+
+    std::string strUpper(const std::string& s)
+    {
+        std::string str = s;
+        std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c) {return char(toupper(c));} );
+        return str;
+    }
+
     std::string& strToLower(std::string& s)
     {
         std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {return char(tolower(c));} );
@@ -606,8 +832,8 @@ namespace Expression
 
     bool subAlphaHelper(int i)
     {
-        // Valid chars are alpha and 'address of'
-        return (isalpha((unsigned char)i) || (i=='@'));
+        // Valid chars are alpha, 'address of' and 'size of'
+        return (isalpha((unsigned char)i) || (i=='@') || (i=='#'));
     }
     std::string getSubAlpha(const std::string& s)
     {
@@ -757,7 +983,7 @@ namespace Expression
     }
 
     // Tokenise using a list of chars as delimiters, returns all tokens, (i.e. start, end and whole if no delimiters)
-    std::vector<std::string> tokenise(const std::string& text, const std::string& delimiters, bool toUpper)
+    std::vector<std::string> tokeniseMulti(const std::string& text, const std::string& delimiterStr, bool toUpper)
     {
         size_t offset0 = 0;
         size_t offset1 = SIZE_MAX;
@@ -766,7 +992,7 @@ namespace Expression
 
         for(;;)
         {
-            offset0 = text.find_first_of(delimiters, offset1 + 1);
+            offset0 = text.find_first_of(delimiterStr, offset1 + 1);
             if(offset0 == std::string::npos)
             {
                 // Entire text is a token
@@ -793,7 +1019,7 @@ namespace Expression
                 tokeniseHelper(result, text, offset1 + 1, offset0 - (offset1 + 1), toUpper);
             }
 
-            offset1 = text.find_first_of(delimiters, offset0 + 1);
+            offset1 = text.find_first_of(delimiterStr, offset0 + 1);
             if(offset1 == std::string::npos)
             {
                 // Last token
@@ -806,7 +1032,7 @@ namespace Expression
         }
     }
 
-    // Tokenise using any char as a delimiter, returns tokens, preserve strings
+    // Tokenise using any char as a delimiter, returns tokens, preserve strings, preserves bracketed expressions
     std::vector<std::string> tokenise(const std::string& text, char c, bool skipSpaces, bool toUpper)
     {
         std::vector<std::string> result;
@@ -817,9 +1043,12 @@ namespace Expression
             const char *begin = str;
 
             int numQuotes = 0;
-            while((*str  &&  *str != c)  ||  (numQuotes & 1))
+            int numBrackets = 0;
+            while(*str  &&  (*str != c  ||  (numQuotes & 1)  ||  numBrackets))
             {
-                if(*str == '"') numQuotes++;
+                if(*str == '"'  &&  (str == begin  ||  (str > begin  &&  *(str-1) != '\\'))) numQuotes++;
+                if(*str == '(') numBrackets++;
+                if(*str == ')') numBrackets--;
                 str++;
             }
 
@@ -830,13 +1059,13 @@ namespace Expression
                 result.push_back(s);
             }
         }
-        while (*str++ != 0);
+        while(*str++ != 0);
 
         return result;
     }
 
     // Tokenise using any char as a delimiter, returns tokens and their offsets in original text, preserve strings
-    std::vector<std::string> tokenise(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces, bool toUpper)
+    std::vector<std::string> tokeniseOffsets(const std::string& text, char c, std::vector<size_t>& offsets, bool skipSpaces, bool toUpper)
     {
         std::vector<std::string> result;
         const char* str = text.c_str();
@@ -846,9 +1075,9 @@ namespace Expression
             const char *begin = str;
 
             int numQuotes = 0;
-            while((*str  &&  *str != c)  ||  (numQuotes & 1))
+            while(*str  &&  (*str != c  ||  (numQuotes & 1)))
             {
-                if(*str == '"') numQuotes++;
+                if(*str == '"'  &&  (str == begin  ||  (str > begin  &&  *(str-1) != '\\'))) numQuotes++;
                 str++;
             }
 
@@ -865,8 +1094,8 @@ namespace Expression
         return result;
     }
 
-    // Tokenise using whitespace and single or double quotes, preserves strings
-    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiters)
+    // Tokenise using delimiters and single quotes, preserves strings
+    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiterStr)
     {
         std::string token = "";
         bool delimiterStart = true;
@@ -893,7 +1122,7 @@ namespace Expression
             else
             {
                 // White space delimiters
-                if(strchr(delimiters.c_str(), line[i]))
+                if(strchr(delimiterStr.c_str(), line[i]))
                 {
                     if(delimiterState != Quotes)
                     {
@@ -901,8 +1130,8 @@ namespace Expression
                         delimiterStart = false;
                     }
                 }
-                // String delimiters
-                else if(strchr("\'\"", line[i]))
+                // Single quote string delimiters, skip escaped quotes
+                else if((i == 0  ||  (i > 0  &&  line[i-1] != '\\'))  &&  line[i] == '\'')
                 {
                     delimiterState = Quotes;
                     stringStart = !stringStart;
@@ -917,7 +1146,7 @@ namespace Expression
                     // Don't save delimiters
                     if(delimiterStart)
                     {
-                        if(!strchr(delimiters.c_str(), line[i])) token += line[i];
+                        if(!strchr(delimiterStr.c_str(), line[i])) token += line[i];
                     }
                     else
                     {
@@ -953,8 +1182,8 @@ namespace Expression
         return tokens;
     }
 
-    // Tokenise using whitespace and double quotes, preserves strings, outputs offsets to tokens
-    std::vector<std::string> tokeniseLine(const std::string& line, const std::string& delimiters, std::vector<size_t>& offsets)
+    // Tokenise using delimiters and double quotes, preserves strings, outputs offsets to tokens
+    std::vector<std::string> tokeniseLineOffsets(const std::string& line, const std::string& delimiterStr, std::vector<size_t>& offsets)
     {
         std::string token = "";
         bool delimiterStart = true;
@@ -981,7 +1210,7 @@ namespace Expression
             else
             {
                 // White space delimiters
-                if(strchr(delimiters.c_str(), line[i]))
+                if(strchr(delimiterStr.c_str(), line[i]))
                 {
                     if(delimiterState != Quotes)
                     {
@@ -989,8 +1218,8 @@ namespace Expression
                         delimiterStart = false;
                     }
                 }
-                // String delimiters
-                else if(strchr("\"", line[i]))
+                // String delimiters, skip escaped quotes
+                else if((i==0  &&  line[i] == '\"')  ||  (i > 0  &&  line[i] == '\"'  &&  line[i-1] != '\\'))
                 {
                     delimiterState = Quotes;
                     stringStart = !stringStart;
@@ -1005,7 +1234,7 @@ namespace Expression
                     // Don't save delimiters
                     if(delimiterStart)
                     {
-                        if(!strchr(delimiters.c_str(), line[i])) token += line[i];
+                        if(!strchr(delimiterStr.c_str(), line[i])) token += line[i];
                     }
                     else
                     {
@@ -1046,9 +1275,9 @@ namespace Expression
         return tokens;
     }
 
-    void replaceText(std::string& input, const std::string& text, const std::string& replace)
+    void replaceText(std::string& input, const std::string& text, const std::string& replace, size_t offset)
     {
-        for(size_t foundPos=0; ; foundPos+=replace.size())
+        for(size_t foundPos=offset; ; foundPos+=replace.size())
         {
             foundPos = input.find(text, foundPos);
             if(foundPos == std::string::npos) break;
@@ -1067,11 +1296,11 @@ namespace Expression
     std::string& getExpressionToParseString(void) {return _expressionToParse;}
     int getLineNumber(void) {return _lineNumber;}
 
-    void setExpression(const std::string& expression)
+    void setExpression(const std::string& expression, intptr_t n)
     {
         _advanceError = false;
         _expressionToParse = expression;
-        _expression = (char*)_expressionToParse.c_str();
+        _expression = (char*)_expressionToParse.c_str() + n;
     }
 
     char peek(void)
@@ -1101,11 +1330,11 @@ namespace Expression
         _expression = (char *)_advancePtr;
     }
 
-    bool advance(uintptr_t n)
+    bool advance(intptr_t n)
     {
         if(size_t(_expression + n - _expressionToParse.c_str()) >= _expressionToParse.size())
         {
-            _expression = (char*)_expressionToParse.c_str() + _expressionToParse.size() - 1;
+            _expression = (char*)_expressionToParse.c_str() + _expressionToParse.size();
             _advanceError = true;
             return false;
         }
@@ -1127,6 +1356,26 @@ namespace Expression
         {
             advance(text.size());
             return true;
+        }
+
+        return false;
+    }
+
+    // Searches for a function name in expression and then expects a left bracket before any other non whitespace char
+    bool findFunc(const std::string& text)
+    {
+        size_t pos = size_t(_expression - _expressionToParse.c_str());
+        std::string expr = _expressionToParse.substr(pos, text.size());
+        std::string expression = _expressionToParse.substr(pos);
+        stripNonStringWhitespace(expression);
+        if(strToUpper(expr) == text  &&  expression.size() > text.size())
+        {
+            char lbra = expression[text.size()];
+            if(lbra == '(')
+            {
+                advance(text.size());
+                return true;
+            }
         }
 
         return false;
@@ -1166,7 +1415,7 @@ namespace Expression
 
             if(peek() != ')')
             {
-                fprintf(stderr, "Expression::factor() : Missing ')' in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
+                fprintf(stderr, "Expression::factor() : '%s:%d' : missing ')'\n", _expressionToParse.c_str(), _lineNumber + 1);
                 numeric = Numeric();
             }
             get();
@@ -1175,52 +1424,84 @@ namespace Expression
         {
             if(!number(value))
             {
-                fprintf(stderr, "Expression::factor() : Bad numeric data in '%s' on line %d\n", _expressionToParse.c_str(), _lineNumber + 1);
+                fprintf(stderr, "Expression::factor() : '%s:%d' : bad numeric data\n", _expressionToParse.c_str(), _lineNumber + 1);
                 numeric = Numeric();
             }
             else
             {
-                numeric = Numeric(value, -1, true, Number, BooleanCC, Int16Both, std::string(""), std::string(""));
+                numeric = Numeric(value, -1, true, false, false, Number, BooleanCC, Int16Both, std::string(""), std::string(""));
             }
         }
         // Functions
-        else if(Expression::find("SIN"))
+        else if(find("POW"))
+        {
+            numeric = factor(0); numeric = operatorPOWF(numeric);
+        }
+        else if(find("SQRT"))
+        {
+            numeric = factor(0); numeric = operatorSQRT(numeric);
+        }
+        else if(find("EXP2"))
+        {
+            numeric = factor(0); numeric = operatorEXP2(numeric);
+        }
+        else if(find("EXP"))
+        {
+            numeric = factor(0); numeric = operatorEXP(numeric);
+        }
+        else if(find("LOG10"))
+        {
+            numeric = factor(0); numeric = operatorLOG10(numeric);
+        }
+        else if(find("LOG2"))
+        {
+            numeric = factor(0); numeric = operatorLOG2(numeric);
+        }
+        else if(find("LOG"))
+        {
+            numeric = factor(0); numeric = operatorLOG(numeric);
+        }
+        else if(find("SIN"))
         {
             numeric = factor(0); numeric = operatorSIN(numeric);
         }
-        else if(Expression::find("COS"))
+        else if(find("COS"))
         {
             numeric = factor(0); numeric = operatorCOS(numeric);
         }
-        else if(Expression::find("TAN"))
+        else if(find("TAN"))
         {
             numeric = factor(0); numeric = operatorTAN(numeric);
         }
-        else if(Expression::find("ASIN"))
+        else if(find("ASIN"))
         {
             numeric = factor(0); numeric = operatorASIN(numeric);
         }
-        else if(Expression::find("ACOS"))
+        else if(find("ACOS"))
         {
             numeric = factor(0); numeric = operatorACOS(numeric);
         }
-        else if(Expression::find("ATAN"))
+        else if(find("ATAN2"))
+        {
+            numeric = factor(0); numeric = operatorATAN2(numeric);
+        }
+        else if(find("ATAN"))
         {
             numeric = factor(0); numeric = operatorATAN(numeric);
         }
-        else if(Expression::find("RAND"))
+        else if(find("RAND"))
         {
             numeric = factor(0); numeric = operatorRAND(numeric);
         }
-        else if(Expression::find("REV16"))
+        else if(find("REV16"))
         {
             numeric = factor(0); numeric = operatorREV16(numeric);
         }
-        else if(Expression::find("REV8"))
+        else if(find("REV8"))
         {
             numeric = factor(0); numeric = operatorREV8(numeric);
         }
-        else if(Expression::find("REV4"))
+        else if(find("REV4"))
         {
             numeric = factor(0); numeric = operatorREV4(numeric);
         }
@@ -1234,7 +1515,7 @@ namespace Expression
                 case '~': get(); numeric = factor(0); numeric = operatorNOT(numeric); break;
 
                 // Unknown
-                default: numeric = Numeric(defaultValue, -1, true, Number, BooleanCC, Int16Both, std::string(_expression), std::string("")); break;
+                default: numeric = Numeric(defaultValue, -1, true, false, false, Number, BooleanCC, Int16Both, std::string(_expression), std::string("")); break;
             }
         }
 
@@ -1282,8 +1563,10 @@ namespace Expression
         }
     }
 
-    Numeric expression(void)
+    Numeric expression(bool returnAddress)
     {
+        UNREFERENCED_PARAM(returnAddress);
+
         Numeric numeric, result = logical();
             
         for(;;)
@@ -1308,7 +1591,19 @@ namespace Expression
 
         _expression = (char*)_expressionToParse.c_str();
 
-        numeric = _exprFunc();
+        numeric = _exprFunc(numeric._returnAddress);
+
+        // If there are trailing chars left over and they are not whitespace, then syntax error
+        char* chr = _expression;
+        while(*chr)
+        {
+            if(!isspace(*chr++))
+            {
+                numeric._isValid = false;
+                break;
+            }
+        }
+
         return numeric._isValid;
     }
 }

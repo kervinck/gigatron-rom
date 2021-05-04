@@ -1,0 +1,56 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+' draw random ellipses, not mathematically correct because of cheat avoiding overflows!
+
+cls
+
+loop: 
+    color = rnd(0) AND &h3F
+    a = rnd(39) + 1 : b = rnd(39) + 1
+    if a &&> b
+        t = a
+    else
+        t = b
+    endif
+    mx = rnd(160 - (t LSL 1)) + t
+    my = rnd(120 - (t LSL 1)) + t
+    gosub ellipse
+    goto loop
+
+end
+
+
+ellipse:
+    pixel.lo = mx : pixel.hi = my + 8
+    poke pixel + a, color
+    poke pixel - a, color
+
+    mx1 = mx - a : my1 = my
+    mx2 = mx + a : my2 = my
+
+    ' should be aa=a*a and bb=b*b, but we're avoiding overflows as we only want pretty pixels
+    aa = a      : dx = aa LSL 1
+    bb = b      : dy = bb LSL 1
+    r  = a * bb : rx = r  LSL 1
+    ry = 0
+    x  = a
+
+    while x &> 0
+        if r &> 0 
+            inc my1 : dec my2
+            ry = ry + dx : r = r - ry
+        else
+            dec x : inc mx1 : dec mx2
+            rx = rx - dy : r = rx + r
+        endif
+
+        pixel.hi = my1 + 8
+        pixel.lo = mx1 : poke pixel, color
+        pixel.lo = mx2 : poke pixel, color
+
+        pixel.hi = my2 + 8
+        pixel.lo = mx1 : poke pixel, color
+        pixel.lo = mx2 : poke pixel, color
+    wend
+return

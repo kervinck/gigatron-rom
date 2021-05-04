@@ -8,15 +8,17 @@
 #include "timing.h"
 
 
-#define PAYLOAD_SIZE              60
-#define SEGMENT_SIZE              255
-#define SEGMENT_HEADER_SIZE       3
-#define GT1FILE_TRAILER_SIZE      3
-#define DEFAULT_START_ADDRESS_HI  0x02
-#define DEFAULT_START_ADDRESS_LO  0x00
+#define PAYLOAD_SIZE            60
+#define SEGMENT_SIZE            256
+#define SEGMENT_MASK            0x00FF
+#define SEGMENT_HEADER_SIZE     3
+#define GT1FILE_TRAILER_SIZE    3
+#define DEFAULT_EXEC_ADDRESS_HI 0x02
+#define DEFAULT_EXEC_ADDRESS_LO 0x00
 
-#define ZERO_CONST_ADDRESS        0x00
-#define ONE_CONST_ADDRESS         0x80
+#define ZERO_CONST_ADDRESS 0x00
+#define ONE_CONST_ADDRESS  0x80
+#define CHANNEL_MASK       0x21
 
 #define LOADER_CONFIG_INI  "loader_config.ini"
 #define HIGH_SCORES_INI    "high_scores.ini"
@@ -37,8 +39,8 @@ namespace Loader
     {
         std::vector<Gt1Segment> _segments;
         uint8_t _terminator=0;
-        uint8_t _hiStart=DEFAULT_START_ADDRESS_HI;
-        uint8_t _loStart=DEFAULT_START_ADDRESS_LO;
+        uint8_t _hiStart=DEFAULT_EXEC_ADDRESS_HI;
+        uint8_t _loStart=DEFAULT_EXEC_ADDRESS_LO;
     };
 
     const std::string& getExePath(void);
@@ -49,7 +51,7 @@ namespace Loader
 
     bool loadGt1File(const std::string& filename, Gt1File& gt1File);
     bool saveGt1File(const std::string& filepath, Gt1File& gt1File, std::string& filename);
-    uint16_t printGt1Stats(const std::string& filename, const Gt1File& gt1File);
+    uint16_t printGt1Stats(const std::string& filename, const Gt1File& gt1File, bool isGbasFile);
 
 #ifdef _WIN32
     char* getcwd(char* dst, int size);
@@ -82,28 +84,30 @@ namespace Loader
     };
 
 
+    void shutdown(void);
+
     void setCurrentGame(const std::string& currentGame);
 
-    UploadTarget getUploadTarget(void);
-    void setUploadTarget(UploadTarget target);
-    void uploadDirect(UploadTarget uploadTarget, const std::string& name);
+    void uploadDirect(UploadTarget uploadTarget);
 
     int getConfigRomsSize(void);
     ConfigRom* getConfigRom(int index);
+    const std::string& getConfigComPort(void);
 
     void disableUploads(bool disable);
 
-    void openComPort(void);
+    bool openComPort(void);
     void closeComPort(void);
 
     bool readCharGiga(char* chr);
     bool readLineGiga(std::string& line);
     bool readLineGiga(std::vector<std::string>& text);
     bool readUntilPromptGiga(std::vector<std::string>& text);
+    bool waitForPromptGiga(std::string& line);
 
     bool sendCharGiga(char chr);
-    void sendCommandToGiga(char cmd, std::string& line, bool wait);
-    void sendCommandToGiga(char cmd, bool wait);
+    bool sendCommandToGiga(char cmd, std::string& line, bool wait);
+    bool sendCommandToGiga(char cmd, bool wait);
     bool sendCommandToGiga(const std::string& cmd, std::vector<std::string>& text);
 
     bool loadDataFile(SaveData& saveData);

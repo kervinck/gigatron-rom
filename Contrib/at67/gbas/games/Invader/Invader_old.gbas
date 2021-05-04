@@ -1,0 +1,438 @@
+_runtimePath_ "../../runtime"
+_runtimeStart_ &h7FFF
+_arraysStart_ &h7FFF
+_codeRomType_ ROMv3
+
+'size of your most complex expression, (temporary variables required)*2, defaults to 8
+_tempVarSize_ 4
+
+'free string work area, (better not use any of the string runtime!)
+free STRINGWORKAREA
+
+'use this after _runtimeStart_ to specify maximum number of sprites if you have more than 48
+'_maxNumSprites_ 61
+
+'defines the amount of contiguous RAM needed for sprite stripes, (in this case 15*6 + 1), also min address and search direction
+_spriteStripeChunks_ 15, &h3BA0, descending
+
+const Barrier = 0
+load sprite, ../../../res/image/Invader/Barrier.tga, Barrier, NoFlip
+
+const Saucer = 1
+load sprite, ../../../res/image/Invader/Saucer.tga, Saucer + 0, NoFlip
+load sprite, ../../../res/image/Invader/Saucer.tga, Saucer + 1, FlipX
+
+const Player = 3
+load sprite, ../../../res/image/Invader/Player.tga, Player + 0, NoFlip
+load sprite, ../../../res/image/Invader/Player.tga, Player + 1, FlipX
+
+const InvBigLt = 5
+load sprite, ../../../res/image/Invader/InvBig_0.tga, InvBigLt + 0, NoFlip
+load sprite, ../../../res/image/Invader/InvBig_1.tga, InvBigLt + 1, NoFlip
+
+const InvBigRt = 7 'instance and hardware flip, (native code), in the X direction to save memory
+load sprite, ../../../res/image/Invader/InvBig_0.tga, InvBigRt + 0, FlipX
+load sprite, ../../../res/image/Invader/InvBig_1.tga, InvBigRt + 1, FlipX
+
+const InvMedLt = 9
+load sprite, ../../../res/image/Invader/InvMed_0.tga, InvMedLt + 0, NoFlip
+load sprite, ../../../res/image/Invader/InvMed_1.tga, InvMedLt + 1, NoFlip
+
+const InvMedRt = 11 'instance and hardware flip, (native code), in the X direction to save memory
+load sprite, ../../../res/image/Invader/InvMed_0.tga, InvMedRt + 0, FlipX
+load sprite, ../../../res/image/Invader/InvMed_1.tga, InvMedRt + 1, FlipX
+
+const InvSmlLt = 13
+load sprite, ../../../res/image/Invader/InvSml_0.tga, InvSmlLt + 0, NoFlip
+load sprite, ../../../res/image/Invader/InvSml_1.tga, InvSmlLt + 1, NoFlip
+
+const InvSmlRt = 15 'instance and hardware flip, (native code), in the X direction to save memory
+load sprite, ../../../res/image/Invader/InvSml_0.tga, InvSmlRt + 0, FlipX
+load sprite, ../../../res/image/Invader/InvSml_1.tga, InvSmlRt + 1, FlipX
+
+const InvBlk = 17
+load sprite, ../../../res/image/Invader/InvBlk.tga, InvBlk, NoFlip
+
+const IExplode = 18
+load sprite, ../../../res/image/Invader/IExplode.tga, IExplode + 0, NoFlip
+load sprite, ../../../res/image/Invader/IExplode.tga, IExplode + 1, FlipX
+
+const SCORE_LEN = 7
+dim highBCD%(SCORE_LEN - 1) = 0
+dim scoreBCD%(SCORE_LEN - 1) = 0
+dim pointsBCD%(SCORE_LEN - 1) = 0
+
+const INVADERS_J = 5
+const INVADERS_I = 10
+dim invaders(INVADERS_J - 1, INVADERS_I - 1) = {1+0*256, 1+0*256, 1+0*256, 1+0*256, 1+0*256, 1+0*256, 1+0*256, 1+0*256, 1+0*256, 1+0*256,
+                                                1+1*256, 1+1*256, 1+1*256, 1+1*256, 1+1*256, 1+1*256, 1+1*256, 1+1*256, 1+1*256, 1+1*256,
+                                                1+1*256, 1+1*256, 1+1*256, 1+1*256, 1+1*256, 1+1*256, 1+1*256, 1+1*256, 1+1*256, 1+1*256,
+                                                1+2*256, 1+2*256, 1+2*256, 1+2*256, 1+2*256, 1+2*256, 1+2*256, 1+2*256, 1+2*256, 1+2*256,
+                                                1+2*256, 1+2*256, 1+2*256, 1+2*256, 1+2*256, 1+2*256, 1+2*256, 1+2*256, 1+2*256, 1+2*256}
+
+const INVADERS_H = 8
+const INVADERS_Y = 10
+const INVADERS_X = 12
+
+dim iaddress(INVADERS_J - 1) = @invaders(0,0), @invaders(1,0), @invaders(2,0), @invaders(3,0), @invaders(4,0)
+dim iypos%(INVADERS_J - 1) = 4*INVADERS_Y, 3*INVADERS_Y, 2*INVADERS_Y, 1*INVADERS_Y, 0*INVADERS_Y
+dim ixpos%(INVADERS_I - 1) = 0*INVADERS_X, 1*INVADERS_X, 2*INVADERS_X, 3*INVADERS_X, 4*INVADERS_X, 5*INVADERS_X, 6*INVADERS_X, 7*INVADERS_X, 8*INVADERS_X, 9*INVADERS_X
+
+const DIVX = &h0500
+def byte(DIVX, x, 0.0, 160.0, 160) = floor(x / INVADERS_X)
+
+const DIVY = &h0600
+def byte(DIVY, x, 0.0, 120.0, 120) = floor(x / INVADERS_Y)
+
+const IORIGIN_Y = 57
+const IORIGIN_X = 1
+
+const INV_SML = 0
+const INV_MED = 0
+const INV_BIG = 0
+
+const MAX_LIVES    = 3
+const NUM_IBULLETS = 3
+const NUM_ITYPES   = 3
+const NUM_BARRIERS = 3
+
+const BARRIER_Y = 90
+const BARRIER_X = 20
+const BARRIER_OFFSET = 48
+
+const PLAYER_Y = 114
+const PLAYER_X = 1
+const PLAYER_XEND = 147
+
+
+dim irsprites%(NUM_ITYPES - 1) = InvSmlRt, InvMedRt, InvBigRt
+dim ilsprites%(NUM_ITYPES - 1) = InvSmlLt, InvMedLt, InvBigLt
+
+def livesLevel, px, py, ixorigin, iyorigin, ii, jj, xflip, iflip, timeTicks, pflip, imarch, gameOver, pbxy, pbullet, icount, iexplode, itimer, buttonPrev
+
+
+call initSystem
+    
+reset:
+    call resetLevel
+    
+start:
+    call startLevel
+    
+init:
+    call initVars
+
+repeat
+    wait
+
+    call checkInvaders
+    call drawPlayerBullet
+    call drawInvaders
+    
+    if &(gameOver) then goto reset
+    
+    call handleInput
+
+    call drawPlayer
+    call movePlayer
+    
+    inc timeTicks.lo
+    if timeTicks.lo &&= 60
+        timeTicks.lo = 0
+        inc timeTicks.hi
+    endif
+&forever
+
+
+proc drawPlayerBullet
+    'no bullets while invader is asploding
+    if &(iexplode) then return
+    
+    'no bullet so exit
+    if pbullet.hi &&= 0 then return
+
+    asm 'setup SYS function
+        LDWI    SYS_VDrawBits_134
+        STW     giga_sysFn
+    endasm
+
+    if peek(pbxy) &&= &h0C
+        pbullet.lo = 0
+        
+        gosub smashBarrier
+    endif
+
+    asm 'setup SYS params
+        LDWI    0x3F00
+        STW     giga_sysArg0
+        LDW     _pbxy
+        STW     giga_sysArg4        
+    endasm
+
+    if &(pbullet.lo)
+        asm 'draw bullet
+            LDI     0xF8
+            ST      giga_sysArg2
+            SYS     134
+        endasm
+        
+        pbxy.hi = pbxy.hi - 2
+        if pbxy.hi &&< 8
+            pbullet = 0
+            
+            asm 'erase bullet if top of screen
+                LDI     0x00
+                ST      giga_sysArg2
+                SYS     134
+            endasm
+        endif
+        return
+    endif
+    
+    asm 'erase bullet if pbullet.lo = 0
+        LDI     0x00
+        ST      giga_sysArg2
+        SYS     134
+    endasm
+    
+    pbullet = 0
+endproc
+
+proc drawPlayer
+    if (pflip.lo)
+        sprite FlipX,  Player + 1, px, py
+    else
+        sprite NoFlip, Player + 0, px, py
+    endif
+endproc
+
+proc handleInput
+    local button
+    
+    button = get("BUTTON_STATE") XOR 255
+    if &(button AND &h01) then pflip = &h0101
+    if &(button AND &h02) then pflip = &h0100
+    if &((buttonPrev AND &h80) = 0)
+        if &(button AND &h80)
+            gosub playerBullet
+        endif
+    endif
+    buttonPrev = button
+endproc
+
+playerBullet:
+    if &(pbullet.hi) then return
+    
+    pbullet = &h0101
+    if &(pflip.lo)
+        pbxy = (px + 6) + ((py - 5 + 8) LSL 8)
+    else
+        pbxy = (px + 5) + ((py - 5 + 8) LSL 8)
+    endif
+return
+
+proc movePlayer
+    if &(pflip.hi)
+        pflip.hi = 0
+
+        if &(pflip.lo)
+            inc px
+            if px &&> PLAYER_XEND
+                px = PLAYER_XEND
+            endif
+        else
+            dec px
+            if px &&< PLAYER_X
+               px = PLAYER_X
+            endif
+        endif
+    endif
+endproc
+
+proc initVars
+    'initialises all variables, (to zero), starting at @timeTicks
+    init vars @timeTicks
+endproc
+
+proc startLevel
+    bcdint @pointsBCD, 0
+endproc
+
+proc drawInvaders
+    local x, y, invader
+    
+    if &(iexplode) then return
+    
+    repeat
+        invader = deek(iaddress(jj) + ii + ii)
+        if &(invader.lo)
+            x = ixorigin + ixpos(ii)
+            y = iyorigin - iypos(jj)
+
+            if y &&>= PLAYER_Y - 6
+                wait 120
+                gameOver = 1
+                return
+            endif
+
+            if xflip &&= 2
+                sprite FlipX, irsprites(invader.hi) + ((x LSR 1) AND 1), x, y
+            else
+                sprite NoFlip, ilsprites(invader.hi) + ((x LSR 1) AND 1), x, y
+            endif
+            
+            if &(imarch.lo)
+                sprite NoFlip, InvBlk, x, y - INVADERS_Y
+            endif
+            
+            if x &&>= PLAYER_XEND
+                iflip = -2
+            elseif x &&<= 1
+                iflip = 2
+            endif
+        endif
+        
+        inc ii
+        if ii &= INVADERS_I
+            ii = 0
+            dec jj
+            if jj &&< 0
+                if &(imarch.lo) then imarch.lo = 0
+
+                jj = INVADERS_J - 1
+                if iflip &&<> xflip
+                    imarch.lo = 1
+                    iyorigin = iyorigin + INVADERS_H
+                else
+                    ixorigin = ixorigin + iflip
+                endif
+
+                xflip = iflip
+            endif
+        endif
+            
+    until (invader.lo)
+endproc
+
+smashBarrier:
+    asm
+        LDWI    0x0C00
+        STW     giga_sysArg0        'FGBG colour
+        LDWI    0xFEFF
+        ADDW    _pbxy
+        STW     giga_sysArg4        'offset
+        LD      giga_rand0
+        ANDI    0xC0
+        ST      giga_sysArg2
+        SYS     134                 'left damage
+        INC     giga_sysArg4
+        LDI     0x00
+        ST      giga_sysArg2
+        SYS     134                 'center damage
+        INC     giga_sysArg4
+        LD      giga_rand2
+        ANDI    0xC0
+        ST      giga_sysArg2
+        SYS     134                 'right damage
+    endasm
+return
+
+proc drawBarriers
+    local i, x, y
+    
+    x = BARRIER_X : y = BARRIER_Y
+    for i=0 &to NUM_BARRIERS - 1
+        sprite NoFlip, Barrier, x, y
+        x = x + BARRIER_OFFSET
+    next i
+endproc
+
+proc checkInvaders
+    local i, j, x, y, iaddr
+
+    'erase invader explosion and restart invader march
+    if &(iexplode)
+        inc itimer
+        if itimer &&= 10
+            sprite NoFlip, InvBlk, iexplode.lo, iexplode.hi
+            itimer = 0 : iexplode = itimer
+        endif
+        return
+    endif
+
+    if pbullet.hi &&= 0 then return
+
+    y = iyorigin - (pbxy.hi - (8 + 3))
+    if y &&< 0 then return
+    
+    x = pbxy.lo - ixorigin
+    if x &&< 0 then return
+
+    i = peek(DIVX + x)
+    if i &&>= INVADERS_I then return
+
+    j = (INVADERS_J - 1) - peek(DIVY + y)
+    if j &&>= INVADERS_J then return
+    if j &&< 0 then return
+    
+    iaddr = iaddress(j) + i + i : if peek(iaddr) &= 0 then return
+    
+    'erase invader
+    poke iaddr, 0
+    pbullet.lo = 0
+    
+    'explode invader
+    x = ixorigin + ((i LSL 3) + (i LSL 2))  'x = ixorigin + i*INVADERS_X
+    j = (INVADERS_J - 1) - j
+    y = iyorigin - ((j LSL 3) + j + j)      'y = iyorigin - j*INVADERS_Y;
+    
+    if xflip &> 0
+        sprite NoFlip, IExplode, x, y
+    else
+        sprite FlipX, IExplode + 1, x, y
+    endif
+
+    'halt march to display explosion
+    itimer = 0 : iexplode = x + (y LSL 8)
+
+    'erase previous row invader if invaders just marched vertically
+    if &(imarch.lo)
+        sprite NoFlip, InvBlk, x, y - INVADERS_Y
+    endif
+    
+    inc icount
+    if icount &&= (INVADERS_J * INVADERS_I)
+        gameOver = 1
+    endif
+endproc
+
+
+proc resetLevel
+    local i, j
+    
+    for j=0 to INVADERS_J - 1
+        for i=0 to INVADERS_I - 1
+            invaders(j, i).lo = 1
+        next i
+    next j
+    
+    cls
+    livesLevel = 3*256 + 0
+    bcdint @scoreBCD, 0
+
+    px = PLAYER_X : py = PLAYER_Y
+    
+    ixorigin = IORIGIN_X : iyorigin = IORIGIN_Y
+    ii = 0 : jj = INVADERS_J - 1
+    iflip = 2 : xflip = iflip
+    
+    call drawBarriers
+endproc
+
+proc initSystem
+    'audio fix for ROMv5a
+    poke &h21, peek(&h21) OR 3
+
+    mode 2
+    set FGBG_COLOUR, 0
+endproc

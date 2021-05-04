@@ -3,6 +3,7 @@
 #include <string.h>
 #include <cmath>
 #include <vector>
+#include <stack>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
@@ -79,35 +80,14 @@ namespace Assembler
         std::vector<std::string> _lines;
     };
 
-    struct Gprintf
-    {
-        enum Type {Chr, Int, Bin, Oct, Hex, Str};
-        struct Var
-        {
-            bool _indirect = false;
-            Type _type;
-            int _width;
-            uint16_t _data;
-            std::string _var;
-        };
-
-        bool _displayed = false;
-        uint16_t _address;
-        int _lineNumber;
-        std::string _lineToken;
-        std::string _format;
-        std::vector<Var> _vars;
-        std::vector<std::string> _subs;
-    };
-
 
     int _lineNumber;
 
-    bool _useOpcodeCALLI_ = false;
+    uint8_t _vSpMin = 0x00;
 
     uint16_t _byteCount = 0;
     uint16_t _callTablePtr = 0x0000;
-    uint16_t _startAddress = DEFAULT_START_ADDRESS;
+    uint16_t _startAddress = DEFAULT_EXEC_ADDRESS;
     uint16_t _currentAddress = _startAddress;
     uint16_t _currDasmByteCount = 1, _prevDasmByteCount = 1;
     uint16_t _currDasmPageByteCount = 0, _prevDasmPageByteCount = 0;
@@ -121,29 +101,33 @@ namespace Assembler
     std::vector<CallTableEntry> _callTableEntries;
     std::vector<std::string> _reservedWords;
     std::vector<DasmCode> _disassembledCode;
-    std::vector<Gprintf> _gprintfs;
 
     std::map<std::string, InstructionType> _asmOpcodes;
     std::map<uint8_t, InstructionDasm> _vcpuOpcodes;
     std::map<uint8_t, InstructionDasm> _nativeOpcodes;
+    std::map<uint16_t, Gprintf> _gprintfs;
+    std::map<std::string, Define> _defines;
+    std::stack<std::string> _currentDefine;
 
 
-    bool getUseOpcodeCALLI(void) {return _useOpcodeCALLI_;}
-    const std::string& getIncludePath(void) {return _includePath;}
+    uint8_t getvSpMin(void) {return _vSpMin;}
     uint16_t getStartAddress(void) {return _startAddress;}
     int getPrevDasmByteCount(void) {return _prevDasmByteCount;}
     int getCurrDasmByteCount(void) {return _currDasmByteCount;}
     int getPrevDasmPageByteCount(void) {return _prevDasmPageByteCount;}
     int getCurrDasmPageByteCount(void) {return _currDasmPageByteCount;}
     int getDisassembledCodeSize(void) {return int(_disassembledCode.size());}
+    const std::string& getIncludePath(void) {return _includePath;}
     DasmCode* getDisassembledCode(int index) {return &_disassembledCode[index % _disassembledCode.size()];}
 
-    void setUseOpcodeCALLI(bool useOpcodeCALLI) {_useOpcodeCALLI_ = useOpcodeCALLI;}
+    void setvSpMin(uint8_t vSpMin) {_vSpMin = vSpMin;}
     void setIncludePath(const std::string& includePath) {_includePath = includePath;}
 
 
     int getAsmOpcodeSize(const std::string& opcodeStr)
     {
+        if(opcodeStr[0] == ';') return 0;
+
         if(_asmOpcodes.find(opcodeStr) != _asmOpcodes.end())
         {
             return _asmOpcodes[opcodeStr]._byteSize;
@@ -156,7 +140,7 @@ namespace Assembler
     {
         for(auto it=_asmOpcodes.begin(); it!=_asmOpcodes.end(); ++it)
         {
-            if(textStr.find(it->first) != std::string::npos)
+            if(textStr.find(it->first) != std::string::npos  &&  _asmOpcodes.find(it->first) != _asmOpcodes.end())
             {
                 return _asmOpcodes[it->first]._byteSize;
             }
@@ -169,39 +153,40 @@ namespace Assembler
     void initialiseOpcodes(void)
     {
         // Gigatron vCPU instructions
-        _asmOpcodes["ST"]    = {0x5E, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["STW"]   = {0x2B, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["STLW"]  = {0xEC, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["LD"]    = {0x1A, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["LDI"]   = {0x59, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["LDWI"]  = {0x11, 0x00, ThreeBytes, vCpu};
-        _asmOpcodes["LDW"]   = {0x21, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["LDLW"]  = {0xEE, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["ADDW"]  = {0x99, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["SUBW"]  = {0xB8, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["ADDI"]  = {0xE3, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["SUBI"]  = {0xE6, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["LSLW"]  = {0xE9, 0x00, OneByte,    vCpu};
-        _asmOpcodes["INC"]   = {0x93, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["ANDI"]  = {0x82, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["ANDW"]  = {0xF8, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["ORI"]   = {0x88, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["ORW"]   = {0xFA, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["XORI"]  = {0x8C, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["XORW"]  = {0xFC, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["PEEK"]  = {0xAD, 0x00, OneByte,    vCpu};
-        _asmOpcodes["DEEK"]  = {0xF6, 0x00, OneByte,    vCpu};
-        _asmOpcodes["POKE"]  = {0xF0, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["DOKE"]  = {0xF3, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["LUP"]   = {0x7F, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["BRA"]   = {0x90, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["CALL"]  = {0xCF, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["RET"]   = {0xFF, 0x00, OneByte,    vCpu};
-        _asmOpcodes["PUSH"]  = {0x75, 0x00, OneByte,    vCpu};
-        _asmOpcodes["POP"]   = {0x63, 0x00, OneByte,    vCpu};
+        _asmOpcodes["ST"   ] = {0x5E, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["STW"  ] = {0x2B, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["STLW" ] = {0xEC, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["LD"   ] = {0x1A, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["LDI"  ] = {0x59, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["LDWI" ] = {0x11, 0x00, ThreeBytes, vCpu};
+        _asmOpcodes["LDW"  ] = {0x21, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["LDLW" ] = {0xEE, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["ADDW" ] = {0x99, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["SUBW" ] = {0xB8, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["ADDI" ] = {0xE3, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["SUBI" ] = {0xE6, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["LSLW" ] = {0xE9, 0x00, OneByte,    vCpu};
+        _asmOpcodes["INC"  ] = {0x93, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["ANDI" ] = {0x82, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["ANDW" ] = {0xF8, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["ORI"  ] = {0x88, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["ORW"  ] = {0xFA, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["XORI" ] = {0x8C, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["XORW" ] = {0xFC, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["PEEK" ] = {0xAD, 0x00, OneByte,    vCpu};
+        _asmOpcodes["DEEK" ] = {0xF6, 0x00, OneByte,    vCpu};
+        _asmOpcodes["POKE" ] = {0xF0, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["DOKE" ] = {0xF3, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["LUP"  ] = {0x7F, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["BRA"  ] = {0x90, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["CALL" ] = {0xCF, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["RET"  ] = {0xFF, 0x00, OneByte,    vCpu};
+        _asmOpcodes["PUSH" ] = {0x75, 0x00, OneByte,    vCpu};
+        _asmOpcodes["POP"  ] = {0x63, 0x00, OneByte,    vCpu};
         _asmOpcodes["ALLOC"] = {0xDF, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["SYS"]   = {0xB4, 0x00, TwoBytes,   vCpu};
-        _asmOpcodes["DEF"]   = {0xCD, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["SYS"  ] = {0xB4, 0x00, TwoBytes,   vCpu};
+        _asmOpcodes["HALT" ] = {0xB4, 0x80, TwoBytes,   vCpu};
+        _asmOpcodes["DEF"  ] = {0xCD, 0x00, TwoBytes,   vCpu};
         _asmOpcodes["CALLI"] = {0x85, 0x00, ThreeBytes, vCpu};
         _asmOpcodes["CMPHS"] = {0x1F, 0x00, TwoBytes,   vCpu};
         _asmOpcodes["CMPHU"] = {0x97, 0x00, TwoBytes,   vCpu};
@@ -215,28 +200,28 @@ namespace Assembler
         _asmOpcodes["BGE"] = {0x35, 0x53, ThreeBytes, vCpu};
 
         // Reserved assembler opcodes
-        _asmOpcodes["DB"]  = {0x00, 0x00, TwoBytes,   ReservedDB };
-        _asmOpcodes["DW"]  = {0x00, 0x00, ThreeBytes, ReservedDW };
+        _asmOpcodes["DB" ] = {0x00, 0x00, TwoBytes,   ReservedDB };
+        _asmOpcodes["DW" ] = {0x00, 0x00, ThreeBytes, ReservedDW };
         _asmOpcodes["DBR"] = {0x00, 0x00, TwoBytes,   ReservedDBR};
         _asmOpcodes["DWR"] = {0x00, 0x00, ThreeBytes, ReservedDWR};
                                                                            
         // Gigatron native instructions                                    
-        _asmOpcodes[".LD"]   = {0x00, 0x00, TwoBytes, Native};
-        _asmOpcodes[".NOP"]  = {0x02, 0x00, TwoBytes, Native};
+        _asmOpcodes[".LD"  ] = {0x00, 0x00, TwoBytes, Native};
+        _asmOpcodes[".NOP" ] = {0x02, 0x00, TwoBytes, Native};
         _asmOpcodes[".ANDA"] = {0x20, 0x00, TwoBytes, Native};
-        _asmOpcodes[".ORA"]  = {0x40, 0x00, TwoBytes, Native};
+        _asmOpcodes[".ORA" ] = {0x40, 0x00, TwoBytes, Native};
         _asmOpcodes[".XORA"] = {0x60, 0x00, TwoBytes, Native};
         _asmOpcodes[".ADDA"] = {0x80, 0x00, TwoBytes, Native};
         _asmOpcodes[".SUBA"] = {0xA0, 0x00, TwoBytes, Native};
-        _asmOpcodes[".ST"]   = {0xC0, 0x00, TwoBytes, Native};
-        _asmOpcodes[".JMP"]  = {0xE0, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BGT"]  = {0xE4, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BLT"]  = {0xE8, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BNE"]  = {0xEC, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BEQ"]  = {0xF0, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BGE"]  = {0xF4, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BLE"]  = {0xF8, 0x00, TwoBytes, Native};
-        _asmOpcodes[".BRA"]  = {0xFC, 0x00, TwoBytes, Native};
+        _asmOpcodes[".ST"  ] = {0xC0, 0x00, TwoBytes, Native};
+        _asmOpcodes[".JMP" ] = {0xE0, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BGT" ] = {0xE4, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BLT" ] = {0xE8, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BNE" ] = {0xEC, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BEQ" ] = {0xF0, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BGE" ] = {0xF4, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BLE" ] = {0xF8, 0x00, TwoBytes, Native};
+        _asmOpcodes[".BRA" ] = {0xFC, 0x00, TwoBytes, Native};
 
         // Gigatron vCPU instructions
         _vcpuOpcodes[0x5E] = {0x5E, 0x00, TwoBytes,   vCpu, "ST"   };
@@ -277,12 +262,12 @@ namespace Assembler
         _vcpuOpcodes[0x97] = {0x97, 0x00, TwoBytes,   vCpu, "CMPHU"};
 
         // Gigatron vCPU branch instructions, (this works because condition code is still unique compared to opcodes)
-        _vcpuOpcodes[0x3F] = {VCPU_BRANCH_OPCODE, 0x3F, ThreeBytes, vCpu, "BEQ"};
-        _vcpuOpcodes[0x72] = {VCPU_BRANCH_OPCODE, 0x72, ThreeBytes, vCpu, "BNE"};
-        _vcpuOpcodes[0x50] = {VCPU_BRANCH_OPCODE, 0x50, ThreeBytes, vCpu, "BLT"};
-        _vcpuOpcodes[0x4D] = {VCPU_BRANCH_OPCODE, 0x4D, ThreeBytes, vCpu, "BGT"};
-        _vcpuOpcodes[0x56] = {VCPU_BRANCH_OPCODE, 0x56, ThreeBytes, vCpu, "BLE"};
-        _vcpuOpcodes[0x53] = {VCPU_BRANCH_OPCODE, 0x53, ThreeBytes, vCpu, "BGE"};
+        _vcpuOpcodes[0x3F] = {OPCODE_V_BCC, 0x3F, ThreeBytes, vCpu, "BEQ"};
+        _vcpuOpcodes[0x72] = {OPCODE_V_BCC, 0x72, ThreeBytes, vCpu, "BNE"};
+        _vcpuOpcodes[0x50] = {OPCODE_V_BCC, 0x50, ThreeBytes, vCpu, "BLT"};
+        _vcpuOpcodes[0x4D] = {OPCODE_V_BCC, 0x4D, ThreeBytes, vCpu, "BGT"};
+        _vcpuOpcodes[0x56] = {OPCODE_V_BCC, 0x56, ThreeBytes, vCpu, "BLE"};
+        _vcpuOpcodes[0x53] = {OPCODE_V_BCC, 0x53, ThreeBytes, vCpu, "BGE"};
 
         // Gigatron native instructions
         _nativeOpcodes[0x00] = {0x00, 0x00, TwoBytes, Native, "LD"  };
@@ -305,20 +290,24 @@ namespace Assembler
 
     void initialise(void)
     {
-        _reservedWords.push_back("_callTable_");
-        _reservedWords.push_back("_breakPoint_");
-        _reservedWords.push_back("_breakpoint_");
-        _reservedWords.push_back("_startAddress_");
-        _reservedWords.push_back("_singleStepWatch_");
-        _reservedWords.push_back("_disableUpload_");
-        _reservedWords.push_back("_cpuUsageAddressA_");
-        _reservedWords.push_back("_cpuUsageAddressB_");
-        _reservedWords.push_back("%include");
+        _reservedWords.push_back("_CALLTABLE_");
+        _reservedWords.push_back("_BREAKPOINT_");
+        _reservedWords.push_back("_STARTADDRESS_");
+        _reservedWords.push_back("_SINGLESTEPWATCH_");
+        _reservedWords.push_back("_DISABLEUPLOAD_");
+        _reservedWords.push_back("_CPUUSAGEADDRESSA_");
+        _reservedWords.push_back("_CPUUSAGEADDRESSB_");
+        _reservedWords.push_back("%INCLUDE");
+        _reservedWords.push_back("%DEFINE");
+        _reservedWords.push_back("%IF");
+        _reservedWords.push_back("%ELSE");
+        _reservedWords.push_back("%ELSEIF");
+        _reservedWords.push_back("%ENDIF");
         _reservedWords.push_back("%MACRO");
         _reservedWords.push_back("%ENDM");
         _reservedWords.push_back("%SUB");
-        _reservedWords.push_back("%END");
-        _reservedWords.push_back("gprintf");
+        _reservedWords.push_back("%ENDS");
+        _reservedWords.push_back("GPRINTF");
 
         initialiseOpcodes();
     }
@@ -336,7 +325,7 @@ namespace Assembler
             {
                 uint8_t size = uint8_t(address - addr); // no instruction is longer than 3 bytes
                 uint8_t inst = Cpu::getRAM(addr);
-                if(inst == VCPU_BRANCH_OPCODE) inst = Cpu::getRAM(addr + 1);
+                if(inst == OPCODE_V_BCC) inst = Cpu::getRAM(addr + 1);
                 if(_vcpuOpcodes.find(inst) != _vcpuOpcodes.end()  &&  _vcpuOpcodes[inst]._opcodeType == vCpu  &&  _vcpuOpcodes[inst]._byteSize == size)
                 {
                     _prevDasmByteCount = size;
@@ -363,7 +352,7 @@ namespace Assembler
             {
                 uint8_t size = uint8_t(address - addr); // no instruction is longer than 3 bytes
                 uint8_t inst = Cpu::getRAM(addr);
-                if(inst == VCPU_BRANCH_OPCODE) inst = Cpu::getRAM(addr + 1);
+                if(inst == OPCODE_V_BCC) inst = Cpu::getRAM(addr + 1);
                 if(_vcpuOpcodes.find(inst) != _vcpuOpcodes.end()  &&  _vcpuOpcodes[inst]._opcodeType == vCpu  &&  _vcpuOpcodes[inst]._byteSize == size)
                 {
                     foundInstruction = true;
@@ -384,8 +373,7 @@ namespace Assembler
     std::string removeBrackets(const char* str)
     {
         std::string string = str;
-        string.erase(std::remove(string.begin(), string.end(), '['), string.end());
-        string.erase(std::remove(string.begin(), string.end(), ']'), string.end());
+        Expression::stripChars(string, "[]");
         return string;
     }
 
@@ -513,13 +501,13 @@ namespace Assembler
                     {
                         sprintf(dasmText, "%04x  $%02x $%02x", address, instruction, data0);
                         dasmCode._address = address;
-                        address = (address + 1) & (Memory::getSizeRAM() - 1);
+                        address++;
                         break;
                     }
 
                     sprintf(dasmText, "%04x  %s", address, mnemonic);
                     dasmCode._address = address;
-                    address = (address + 1) & (Memory::getSizeRAM() - 1);
+                    address++;
                 }
                 break;
 
@@ -531,7 +519,7 @@ namespace Assembler
                     data1 = Cpu::getRAM(address + 2);
 
                     // Invalid instruction or invalid address space
-                    if((_vcpuOpcodes.find(instruction) == _vcpuOpcodes.end()  &&  instruction != VCPU_BRANCH_OPCODE)  ||
+                    if((_vcpuOpcodes.find(instruction) == _vcpuOpcodes.end()  &&  instruction != OPCODE_V_BCC)  ||
                        (address >= GIGA_CH0_WAV_A  &&  address <= GIGA_CH0_OSC_H) ||  (address >= GIGA_CH1_WAV_A  &&  address <= GIGA_CH1_OSC_H) ||
                        (address >= GIGA_CH2_WAV_A  &&  address <= GIGA_CH2_OSC_H) ||  (address >= GIGA_CH3_WAV_A  &&  address <= GIGA_CH3_OSC_H))
                     {
@@ -543,7 +531,7 @@ namespace Assembler
 
                     // Branch instructions
                     bool foundBranch = false;
-                    if(instruction == VCPU_BRANCH_OPCODE)
+                    if(instruction == OPCODE_V_BCC)
                     {
                         instruction = data0;
                         if(_vcpuOpcodes.find(instruction) == _vcpuOpcodes.end())
@@ -556,14 +544,24 @@ namespace Assembler
                         foundBranch = true;
                     }
 
-                    byteSize = _vcpuOpcodes[instruction]._byteSize;
-                    switch(byteSize)
+                    // Halt instruction
+                    if(instruction == OPCODE_V_HALT  &&  data0 == OPERAND_V_HALT)
                     {
-                        case OneByte:  sprintf(dasmText, "%04x  %-5s", address, _vcpuOpcodes[instruction]._mnemonic.c_str());              break;
-                        case TwoBytes: sprintf(dasmText, "%04x  %-5s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data0); break;
-                        case ThreeBytes: (foundBranch) ? sprintf(dasmText, "%04x  %-5s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1) : sprintf(dasmText, "%04x  %-5s $%02x%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1, data0); break;
+                        byteSize = TwoBytes;
+                        sprintf(dasmText, "%04x  %-5s", address, "HALT");
+                    }
+                    // Valid instruction
+                    else
+                    {
+                        byteSize = _vcpuOpcodes[instruction]._byteSize;
+                        switch(byteSize)
+                        {
+                            case OneByte:  sprintf(dasmText, "%04x  %-5s", address, _vcpuOpcodes[instruction]._mnemonic.c_str());              break;
+                            case TwoBytes: sprintf(dasmText, "%04x  %-5s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data0); break;
+                            case ThreeBytes: (foundBranch) ? sprintf(dasmText, "%04x  %-5s $%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1) : sprintf(dasmText, "%04x  %-5s $%02x%02x", address, _vcpuOpcodes[instruction]._mnemonic.c_str(), data1, data0); break;
 
-                        default: break;
+                            default: break;
+                        }
                     }
                     dasmCode._address = address;
                     address = uint16_t((address + byteSize) & (Memory::getSizeRAM() - 1));
@@ -628,7 +626,7 @@ namespace Assembler
         }
 
         // User code is RAM code or ROM code in user ROM space
-        isUserCode = !byteCode._isRomAddress  ||  (byteCode._isRomAddress  &&  customAddress >= USER_ROM_ADDRESS);
+        isUserCode = !byteCode._isRomAddress  ||  (byteCode._isRomAddress  &&  customAddress >= USER_ROMv1_ADDRESS);
 
         // Seperate sections
         if(debug  &&  byteCode._isCustomAddress  &&  isUserCode) fprintf(stderr, "\n");
@@ -652,17 +650,48 @@ namespace Assembler
                 fprintf(stderr, "Assembler::getNextAssembledByte() : RAM : %04X  %02X\n", address, byteCode._data);
             }
         }
+
         address++;
+
         return false;
     }    
 
-    InstructionType getOpcode(const std::string& opcodeStr)
+    bool parseDefineOffset(const std::string& token, uint16_t& offset, size_t& lbra)
     {
+        size_t rbra;
+        if(Expression::findMatchingBrackets(token, 0, lbra, rbra))
+        {
+            Expression::Numeric value;
+            if(Expression::parse(token.substr(lbra + 1, rbra - (lbra + 1)), _lineNumber, value))
+            {
+                offset = uint16_t(std::lround(value._value));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    InstructionType getOpcode(const std::string& opcodeStr, uint16_t& offset)
+    {
+        offset = 0;
         std::string opcode = opcodeStr;
         Expression::strToUpper(opcode); 
-        if(_asmOpcodes.find(opcode) == _asmOpcodes.end()) return {0x00, 0x00, BadSize, vCpu};
+        if(_asmOpcodes.find(opcode) != _asmOpcodes.end())
+        {
+            return _asmOpcodes[opcode];
+        }
 
-        return _asmOpcodes[opcode];
+        size_t lbra;
+        if(parseDefineOffset(opcode, offset, lbra))
+        {
+            if(_asmOpcodes.find(opcode.substr(0, lbra)) != _asmOpcodes.end())
+            {
+                return _asmOpcodes[opcode.substr(0, lbra)];
+            }
+        }
+
+        return {0x00, 0x00, BadSize, vCpu};
     }
 
     void preProcessExpression(const std::vector<std::string>& tokens, int tokenIndex, std::string& input, bool stripWhiteSpace)
@@ -688,7 +717,7 @@ namespace Assembler
         const size_t len = input.length();
         if(pos >= len) return std::string::npos;
 
-        const std::string separators = "+-*/().,!?;#'\"[]<> \t\n\r";
+        const std::string separators = "+-*/().,!?;#'[]<> \t\n\r";
         const std::vector<std::string> operators = {"**", ">>", "<<", "==", "!=", "<=", ">="};
 
         for(;;)
@@ -828,7 +857,9 @@ namespace Assembler
 
     EvaluateResult evaluateEquates(const std::vector<std::string>& tokens, ParseType parse)
     {
-        if(tokens[1] == "EQU"  ||  tokens[1] == "equ")
+        std::string token0 = Expression::strUpper(tokens[0]);
+        std::string token1 = Expression::strUpper(tokens[1]);
+        if(token1 == "EQU")
         {
             if(parse == MnemonicPass)
             {
@@ -839,39 +870,34 @@ namespace Assembler
                 }
 
                 // Reserved word, (equate), _callTable_
-                if(tokens[0] == "_callTable_")
+                if(token0 == "_CALLTABLE_")
                 {
                     _callTablePtr = equate._operand;
                 }
                 // Reserved word, (equate), _startAddress_
-                else if(tokens[0] == "_startAddress_")
+                else if(token0 == "_STARTADDRESS_")
                 {
                     _startAddress = equate._operand;
                     _currentAddress = _startAddress;
                 }
-                // Reserved word, (equate), _useOpcodeCALLI_
-                else if(tokens[0] == "_useOpcodeCALLI_")
-                {
-                    _useOpcodeCALLI_ = true;
-                }
 #ifndef STAND_ALONE
                 // Disable upload of the current assembler module
-                else if(tokens[0] == "_disableUpload_")
+                else if(token0 == "_DISABLEUPLOAD_")
                 {
                     Loader::disableUploads(equate._operand != 0);
                 }
                 // Reserved word, (equate), _singleStepWatch_
-                else if(tokens[0] == "_singleStepWatch_")
+                else if(token0 == "_SINGLESTEPWATCH_")
                 {
                     Editor::setSingleStepAddress(equate._operand);
                 }
                 // Start address of vCPU exclusion zone
-                else if(tokens[0] == "_cpuUsageAddressA_")
+                else if(token0 == "_CPUUSAGEADDRESSA_")
                 {
                     Editor::setCpuUsageAddressA(equate._operand);
                 }
                 // End address of vCPU exclusion zone
-                else if(tokens[0] == "_cpuUsageAddressB_")
+                else if(token0 == "_CPUUSAGEADDRESSB_")
                 {
                     Editor::setCpuUsageAddressB(equate._operand);
                 }
@@ -982,17 +1008,19 @@ namespace Assembler
         return Success;
     }
 
-    bool handleDefineByte(const std::vector<std::string>& tokens, int tokenIndex, const Instruction& instruction, bool createInstruction, int& dbSize)
+    bool handleDefineByte(std::vector<std::string>& tokens, int tokenIndex, const Instruction& instruction, bool createInstruction, uint16_t defineOffset, int& dbSize)
     {
         bool success = false;
 
         // Handle case where first operand is a string
-        size_t quote1 = tokens[tokenIndex].find_first_of("'\"");
-        size_t quote2 = tokens[tokenIndex].find_first_of("'\"", quote1+1);
+        size_t quote1 = tokens[tokenIndex].find_first_of("'");
+        size_t quote2 = tokens[tokenIndex].find_last_of("'");
         bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos  &&  (quote2 - quote1 > 1));
         if(quotes)
         {
+            // Remove escape sequence
             std::string token = tokens[tokenIndex].substr(quote1+1, quote2 - (quote1+1));
+            Expression::stripChars(token, "\\");
             if(createInstruction)
             {
                 for(int j=1; j<int(token.size()); j++) // First instruction was created by callee
@@ -1008,12 +1036,14 @@ namespace Assembler
         for(int i=tokenIndex+1; i<int(tokens.size()); i++)
         {
             // Handle all other variations of strings
-            quote1 = tokens[i].find_first_of("'\"");
-            quote2 = tokens[i].find_first_of("'\"", quote1+1);
+            quote1 = tokens[i].find_first_of("'");
+            quote2 = tokens[i].find_last_of("'");
             quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos);
             if(quotes)
             {
+                // Remove escape sequence
                 std::string token = tokens[i].substr(quote1+1, quote2 - (quote1+1));
+                Expression::stripChars(token, "\\");
                 if(createInstruction)
                 {
                     for(int j=0; j<int(token.size()); j++)
@@ -1068,7 +1098,10 @@ namespace Assembler
 
                 if(createInstruction)
                 {
-                    Instruction inst = {instruction._isRomAddress, false, OneByte, operand, 0x00, 0x00, 0x0000, instruction._opcodeType};
+                    bool hasDefineOffset = (defineOffset != 0);
+                    uint16_t address = (hasDefineOffset) ? _currentAddress : 0x0000;
+                    Instruction inst = {instruction._isRomAddress, hasDefineOffset, OneByte, operand, 0x00, 0x00, address, instruction._opcodeType};
+                    _currentAddress += defineOffset;
                     _instructions.push_back(inst);
                 }
                 dbSize++;
@@ -1079,7 +1112,7 @@ namespace Assembler
     }
 
 
-    bool handleDefineWord(const std::vector<std::string>& tokens, int tokenIndex, const Instruction& instruction, bool createInstruction, int& dwSize)
+    bool handleDefineWord(const std::vector<std::string>& tokens, int tokenIndex, const Instruction& instruction, bool createInstruction, uint16_t defineOffset, int& dwSize)
     {
         bool success = false;
 
@@ -1129,7 +1162,10 @@ namespace Assembler
 
             if(createInstruction)
             {
-                Instruction inst = {instruction._isRomAddress, false, TwoBytes, uint8_t(LO_BYTE(operand)), uint8_t(HI_BYTE(operand)), 0x00, 0x0000,  instruction._opcodeType};
+                bool hasDefineOffset = (defineOffset != 0);
+                uint16_t address = (hasDefineOffset) ? _currentAddress : 0x0000;
+                Instruction inst = {instruction._isRomAddress, hasDefineOffset, TwoBytes, uint8_t(LO_BYTE(operand)), uint8_t(HI_BYTE(operand)), 0x00, address, instruction._opcodeType};
+                _currentAddress += defineOffset * 2;
                 _instructions.push_back(inst);
             }
             dwSize += 2;
@@ -1406,10 +1442,13 @@ namespace Assembler
 
                 // Force a new segment, (this could fail if an instruction straddles a page boundary, but
                 // the page boundary crossing detection logic will stop the assembler before we get here)
-                if(!_instructions[i]._isCustomAddress  &&  segmentOffset % 256 == 0)
+                if(!_instructions[i]._isCustomAddress  &&  (HI_BYTE(segmentAddress + segmentOffset) != HI_BYTE(segmentAddress)))
                 {
+                    segmentAddress += segmentOffset;
+                    segmentOffset = 0x0000;
+
                     _instructions[i]._isCustomAddress = true;
-                    _instructions[i]._address = segmentAddress + segmentOffset;
+                    _instructions[i]._address = segmentAddress;
                 }
 
                 segmentOffset += uint16_t(_instructions[i]._byteSize);
@@ -1451,7 +1490,9 @@ namespace Assembler
                (start >= GIGA_CH2_WAV_A  &&  start <= GIGA_CH2_OSC_H)  ||  (end >= GIGA_CH2_WAV_A  &&  end <= GIGA_CH2_OSC_H)  ||
                (start >= GIGA_CH3_WAV_A  &&  start <= GIGA_CH3_OSC_H)  ||  (end >= GIGA_CH3_WAV_A  &&  end <= GIGA_CH3_OSC_H))
             {
-                fprintf(stderr, "Assembler::assemble() : Warning, audio channel boundary compromised, (if you've disabled the audio channels, then ignore this warning) : 0x%04X <-> 0x%04X\nAssembler::assemble() : '%s'\nAssembler::assemble() : in '%s' on line %d\n", start, end, lineToken._text.c_str(), filename.c_str(), lineNumber+1);
+                fprintf(stderr, "Assembler::checkInvalidAddress() : Warning, audio channel boundary compromised, (if you've disabled the audio channels, then ignore this warning) ");
+                fprintf(stderr, "Assembler::checkInvalidAddress() : '%s:%d' : 0x%04X <-> 0x%04X\nAssembler::checkInvalidAddress() : '%s'\nAssembler::checkInvalidAddress()\n",
+                        filename.c_str(), lineNumber+1, start, end, lineToken._text.c_str());
             }
         }
 
@@ -1466,7 +1507,7 @@ namespace Assembler
             uint16_t newAddress = (instruction._isRomAddress) ? customAddress + (LO_BYTE(currentAddress)>>1) : currentAddress;
             if((oldAddress >>8) != (newAddress >>8))
             {
-                fprintf(stderr, "Assembler::assemble() : Page boundary compromised : %04X : %04X : '%s' : in '%s' on line %d\n", oldAddress, newAddress, lineToken._text.c_str(), filename.c_str(), lineNumber+1);
+                fprintf(stderr, "Assembler::checkInvalidAddress() : '%s:%d' : page boundary compromised : %04X : %04X : '%s'\n", filename.c_str(), lineNumber+1, oldAddress, newAddress, lineToken._text.c_str());
                 return false;
             }
         }
@@ -1480,7 +1521,7 @@ namespace Assembler
         // Check include syntax
         if(tokens.size() != 2)
         {
-            fprintf(stderr, "Assembler::handleInclude() : Bad %%include statement : '%s' : on line %d\n", lineToken.c_str(), lineIndex);
+            fprintf(stderr, "Assembler::handleInclude() : '%s:%d' : bad %%include statement\n", lineToken.c_str(), lineIndex);
             return false;
         }
 
@@ -1489,7 +1530,7 @@ namespace Assembler
         std::ifstream infile(filepath);
         if(!infile.is_open())
         {
-            fprintf(stderr, "Assembler::handleInclude() : Failed to open file : '%s'\n", filepath.c_str());
+            fprintf(stderr, "Assembler::handleInclude() : failed to open file '%s'\n", filepath.c_str());
             return false;
         }
 
@@ -1503,7 +1544,7 @@ namespace Assembler
 
             if(!infile.good() && !infile.eof())
             {
-                fprintf(stderr, "Assembler::handleInclude() : Bad lineToken : '%s' : in '%s' on line %d\n", includeLineToken._text.c_str(), filepath.c_str(), lineNumber - lineIndex);
+                fprintf(stderr, "Assembler::handleInclude() : '%s:%d' : bad lineToken '%s'\n", filepath.c_str(), lineNumber - lineIndex, includeLineToken._text.c_str());
                 return false;
             }
         }
@@ -1518,7 +1559,7 @@ namespace Assembler
         {
             if(!macros[i]._complete)
             {
-                fprintf(stderr, "Assembler::handleMacros() : Bad macro : missing 'ENDM' : in '%s' : on line %d\n", macros[i]._filename.c_str(), macros[i]._fileStartLine);
+                fprintf(stderr, "Assembler::handleMacros() : '%s:%d' : bad macro, missing 'ENDM'\n", macros[i]._filename.c_str(), macros[i]._fileStartLine);
                 return false;
             }
         }
@@ -1647,13 +1688,13 @@ namespace Assembler
 
             if(macroMissing)
             {
-                //fprintf(stderr, "Assembler::handleMacros() : Warning, macro is never called : '%s' : in '%s' : on line %d\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
+                //fprintf(stderr, "Assembler::handleMacros() : '%s:%d' : warning, macro '%s' is never called\n", macro._filename.c_str(), macro._fileStartLine, macro._name.c_str());
                 continue;
             }
 
             if(macroMissingParams)
             {
-                fprintf(stderr, "Assembler::handleMacros() : Missing macro parameters : '%s' : in '%s' : on line %d\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
+                fprintf(stderr, "Assembler::handleMacros() : '%s:%d' : missing macro parameters for '%s'\n", macro._filename.c_str(), macro._fileStartLine, macro._name.c_str());
                 return false;
             }
         }
@@ -1669,7 +1710,7 @@ namespace Assembler
         // Check macro syntax
         if(tokens.size() < 2)
         {
-            fprintf(stderr, "Assembler::handleMacroStart() : Bad macro : missing name : in '%s' : on line %d\n", macroFileName.c_str(), lineNumber);
+            fprintf(stderr, "Assembler::handleMacroStart() : '%s:%d' : bad macro, missing name\n", macroFileName.c_str(), lineNumber);
             return false;
         }                    
 
@@ -1691,7 +1732,7 @@ namespace Assembler
         {
             if(macro._name == macros[i]._name)
             {
-                fprintf(stderr, "Assembler::handleMacroEnd() : Bad macro : duplicate name : '%s' : in '%s' : on line %d\n", macro._name.c_str(), macro._filename.c_str(), macro._fileStartLine);
+                fprintf(stderr, "Assembler::handleMacroEnd() : '%s:%d' : bad macro, duplicate name '%s'\n", macro._filename.c_str(), macro._fileStartLine, macro._name.c_str());
                 return false;
             }
         }
@@ -1704,6 +1745,140 @@ namespace Assembler
         macro._complete = false;
 
         return true;
+    }
+
+    void clearDefines(void)
+    {
+        _defines.clear();
+        while(!_currentDefine.empty()) _currentDefine.pop();
+    }
+
+    bool createDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex)
+    {
+        if(tokens.size() < 2  ||  tokens.size() > 3)
+        {
+            fprintf(stderr, "Assembler::createDefine() : '%s:%d' : %%define requires one or two params\n", filename.c_str(), adjustedLineIndex);
+            return false;
+        }
+
+        // Define name
+        std::string defineName = tokens[1];
+        if(_defines.find(defineName) != _defines.end())
+        {
+            fprintf(stderr, "Assembler::createDefine() : '%s:%d' : found duplicate define '%s'\n", filename.c_str(), adjustedLineIndex, defineName.c_str());
+            return false;
+        }
+
+        // Define value
+        int16_t defineValue = 0;
+        if(tokens.size() == 3)
+        {
+            if(!evaluateExpression(tokens[2], false, defineValue))
+            {
+                fprintf(stderr, "Assembler::createDefine() : '%s:%d' : found invalid define value '%s'\n", filename.c_str(), adjustedLineIndex, tokens[2].c_str());
+                return false;
+            }
+        }
+
+        _defines[defineName] = {true, false, defineValue, defineName};
+
+        return true;
+    }
+
+    bool handleIfDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex)
+    {
+        if(tokens.size() != 2)
+        {
+            fprintf(stderr, "Assembler::handleIfDefine() : '%s:%d' : %%if requires one param\n", filename.c_str(), adjustedLineIndex);
+            return false;
+        }
+
+        std::string define = tokens[1];
+        if(_defines.find(define) == _defines.end())
+        {
+            _defines[define] = {false, false, 0, define};
+        }
+
+        // Push current define to stack
+        _currentDefine.push(define);
+
+        return true;
+    }
+
+    bool handleEndIfDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex)
+    {
+        if(tokens.size() != 1)
+        {
+            fprintf(stderr, "Assembler::handleEndIfDefine() : '%s:%d' : %%endif requires no params\n", filename.c_str(), adjustedLineIndex);
+            return false;
+        }
+
+        if(_currentDefine.empty())
+        {
+            fprintf(stderr, "Assembler::handleEndIfDefine() : '%s:%d' : syntax error, no valid define\n", filename.c_str(), adjustedLineIndex);
+            return false;
+        }
+
+        // If enabled was toggled by an else then reset it
+        std::string define = _currentDefine.top();
+        if(_defines[define]._toggle == true)
+        {
+            _defines[define]._enabled = !_defines[define]._enabled;
+            _defines[define]._toggle = false;
+        }
+
+        // Pop current define from stack
+        _currentDefine.pop();
+
+        return true;
+    }
+
+    bool handleElseDefine(const std::string& filename, const std::vector<std::string>& tokens, int adjustedLineIndex)
+    {
+        if(tokens.size() != 1)
+        {
+            fprintf(stderr, "Assembler::handleElseDefine() : '%s:%d' : %%else requires no params\n", filename.c_str(), adjustedLineIndex);
+            return false;
+        }
+
+        if(_currentDefine.empty())
+        {
+            fprintf(stderr, "Assembler::handleElseDefine() : '%s:%d' : syntax error, no valid define\n", filename.c_str(), adjustedLineIndex);
+            return false;
+        }
+
+        // Toggle current define
+        std::string define = _currentDefine.top();
+        _defines[define]._enabled = !_defines[define]._enabled;
+        _defines[define]._toggle = true;
+
+        return true;
+    }
+
+    bool isCurrentDefineDisabled(void)
+    {
+        // Check top of define stack
+        if(!_currentDefine.empty())
+        {
+            std::string define = _currentDefine.top();
+            if(_defines.find(define) != _defines.end()  &&  !_defines[define]._enabled)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    int16_t getRuntimeVersion(void)
+    {
+        int16_t runtimeVersion = 0;
+        if(_defines.find("RUNTIME_VERSION") != _defines.end())
+        {
+            runtimeVersion = _defines["RUNTIME_VERSION"]._value;
+        }
+
+        return runtimeVersion;
     }
 
     bool preProcess(const std::string& filename, std::vector<LineToken>& lineTokens, bool doMacros)
@@ -1725,8 +1900,15 @@ namespace Assembler
                 continue;
             }
 
-            bool includeFound = false;
+            bool eraseLine = false;
             int lineIndex = int(itLine - lineTokens.begin()) + 1;
+
+            // Strip comments
+            size_t commentPos = lineToken._text.find_first_of(";#");
+            if(commentPos != std::string::npos)
+            {
+                lineToken._text = lineToken._text.substr(0, commentPos);
+            }
 
             // Tokenise current line
             std::vector<std::string> tokens = Expression::tokeniseLine(lineToken._text);
@@ -1745,14 +1927,14 @@ namespace Assembler
 
                 // Include
                 if(tokens[0] == "%INCLUDE")
-                {  
+                {
                     std::vector<LineToken> includeLineTokens;
                     if(!handleInclude(tokens, lineToken._text, lineIndex, includeLineTokens)) return false;
 
                     // Recursively include everything in order
                     if(!preProcess(filename, includeLineTokens, false))
                     {
-                        fprintf(stderr, "Assembler::preProcess() : Bad include file : '%s'\n", tokens[1].c_str());
+                        fprintf(stderr, "Assembler::preProcess() : '%s:%d' : bad include file : '%s'\n", filename.c_str(), adjustedLineIndex, tokens[1].c_str());
                         return false;
                     }
 
@@ -1760,12 +1942,84 @@ namespace Assembler
                     itLine = lineTokens.erase(itLine);
                     itLine = lineTokens.insert(itLine, includeLineTokens.begin(), includeLineTokens.end());
                     ++adjustedLineIndex -= int(includeLineTokens.end() - includeLineTokens.begin());
-                    includeFound = true;
+                    eraseLine = true;
+                }
+                // Include path
+                else if(tokens[0] == "%INCLUDEPATH"  &&  tokens.size() > 1)
+                {
+                    if(Expression::isStringValid(tokens[1]))
+                    {
+                        // Strip quotes
+                        std::string includePath = tokens[1];
+                        includePath.erase(0, 1);
+                        includePath.erase(includePath.size()-1, 1);
+
+                        // Prepend current file path to relative paths
+                        if(includePath.find(":") == std::string::npos  &&  includePath[0] != '/')
+                        {
+                            std::string filepath = Loader::getFilePath();
+                            size_t slash = filepath.find_last_of("\\/");
+                            filepath = (slash != std::string::npos) ? filepath.substr(0, slash) : ".";
+                            includePath = filepath + "/" + includePath;
+                        }
+
+                        _includePath = includePath;
+                        itLine = lineTokens.erase(itLine);
+                        eraseLine = true;
+                    }
+                }
+                // Define
+                else if(tokens[0] == "%DEFINE")
+                {
+                    if(!createDefine(filename, tokens, 3)) return false;
+
+                    itLine = lineTokens.erase(itLine);
+                    eraseLine = true;
+                }
+                // If
+                else if(tokens[0] == "%IF")
+                {
+                    if(!handleIfDefine(filename, tokens, adjustedLineIndex)) return false;
+
+                    itLine = lineTokens.erase(itLine);
+                    eraseLine = true;
+                }
+                // EndIf
+                else if(tokens[0] == "%ENDIF")
+                {
+                    if(!handleEndIfDefine(filename, tokens, adjustedLineIndex)) return false;
+
+                    itLine = lineTokens.erase(itLine);
+                    eraseLine = true;
+                }
+                // Else
+                else if(tokens[0] == "%ELSE")
+                {
+                    if(!handleElseDefine(filename, tokens, adjustedLineIndex)) return false;
+
+                    itLine = lineTokens.erase(itLine);
+                    eraseLine = true;
+                }
+                // Check if there is a current define and delete code if define is disabled
+                else if(!_currentDefine.empty())
+                {
+                    std::string define = _currentDefine.top();
+                    if(_defines.find(define) == _defines.end())
+                    {
+                        fprintf(stderr, "Assembler::preProcess() : '%s:%d' : define '%s' does not exist\n", filename.c_str(), adjustedLineIndex, define.c_str());
+                        return false;
+                    }
+
+                    if(!_defines[define]._enabled)
+                    {                    
+                        itLine = lineTokens.erase(itLine);
+                        eraseLine = true;
+                    }
                 }
                 // Build macro
                 else if(doMacros)
                 {
-                    if(tokens[0] == "%MACRO")
+                    if(tokens[0] == "%MACRO"  &&  !buildingMacro)
                     {
                         if(!handleMacroStart(filename, lineToken, tokens, macro, adjustedLineIndex)) return false;
 
@@ -1776,18 +2030,25 @@ namespace Assembler
                         if(!handleMacroEnd(macros, macro)) return false;
                         buildingMacro = false;
                     }
-                    if(buildingMacro  &&  tokens[0] != "%MACRO")
+                    else if(buildingMacro)
                     {
                         macro._lines.push_back(lineToken._text);
                     }
                 }
             }
 
-            if(!includeFound)
+            if(!eraseLine)
             {
                 ++itLine;
                 ++adjustedLineIndex;
             }
+        }
+
+        // Check matching %if %endif
+        if(!_currentDefine.empty())
+        {
+            fprintf(stderr, "Assembler::preProcess() : '%s' : missing '%%endif'\n", filename.c_str());
+            return false;
         }
 
         // Handle complete macros
@@ -1821,7 +2082,7 @@ namespace Assembler
         std::ifstream infile(filename);
         if(!infile.is_open())
         {
-            fprintf(stderr, "Assembler::getAsmOpcodeSizeFile() : Failed to open file : '%s'\n", filename.c_str());
+            fprintf(stderr, "Assembler::getAsmOpcodeSizeFile() : failed to open file : '%s'\n", filename.c_str());
             return -1;
         }
 
@@ -1836,7 +2097,7 @@ namespace Assembler
 
             if(!infile.good() && !infile.eof())
             {
-                fprintf(stderr, "Assembler::getAsmOpcodeSizeFile() : Bad lineToken : '%s' : in '%s' : on line %d\n", lineToken._text.c_str(), filename.c_str(), numLines+1);
+                fprintf(stderr, "Assembler::getAsmOpcodeSizeFile() : '%s:%d' : bad lineToken '%s'\n", filename.c_str(), numLines+1, lineToken._text.c_str());
                 return -1;
             }
 
@@ -1862,11 +2123,18 @@ namespace Assembler
 
         return false;
     }
-#endif
 
-    bool parseGprintfFormat(const std::string& format, const std::vector<std::string>& variables, std::vector<Gprintf::Var>& vars, std::vector<std::string>& subs)
+    bool addGprintf(const Gprintf& gprintf, uint16_t address)
     {
-        const char* fmt = format.c_str();
+        if(_gprintfs.find(address) != _gprintfs.end()) return false;
+
+        _gprintfs[address] = gprintf;
+        return true;
+    }
+
+    bool parseGprintfFormat(const std::string& fmtstr, const std::vector<std::string>& variables, std::vector<Gprintf::Var>& vars, std::vector<std::string>& subs)
+    {
+        const char* fmt = fmtstr.c_str();
         std::string sub;
         char chr;
 
@@ -1880,7 +2148,7 @@ namespace Assembler
             if(chr == '%'  ||  foundToken)
             {
                 foundToken = true;
-                Gprintf::Type type = Gprintf::Int;
+                Gprintf::Format format = Gprintf::Int;
                 sub += chr;
 
                 switch(chr)
@@ -1892,13 +2160,13 @@ namespace Assembler
                     }
                     break;
 
-                    case 'c': type = Gprintf::Chr; break;
-                    case 'd': type = Gprintf::Int; break;
-                    case 'b': type = Gprintf::Bin; break;
+                    case 'c': format = Gprintf::Chr; break;
+                    case 'd': format = Gprintf::Int; break;
+                    case 'b': format = Gprintf::Bin; break;
                     case 'q':
-                    case 'o': type = Gprintf::Oct; break;
-                    case 'x': type = Gprintf::Hex; break;
-                    case 's': type = Gprintf::Str; break;
+                    case 'o': format = Gprintf::Oct; break;
+                    case 'x': format = Gprintf::Hex; break;
+                    case 's': format = Gprintf::Str; break;
 
                     default: break;
                 }
@@ -1906,7 +2174,7 @@ namespace Assembler
                 if(chr == 'c' || chr == 'd' || chr == 'b' || chr == 'q' || chr == 'o' || chr == 'x' || chr == 's')
                 {
                     foundToken = false;
-                    Gprintf::Var var = {false, type, width, 0x0000, variables[index++]};
+                    Gprintf::Var var = {0, format, width, 0x0000, variables[index++]};
                     vars.push_back(var);
                     subs.push_back(sub);
                     sub.clear();
@@ -1923,118 +2191,127 @@ namespace Assembler
         std::string input = lineToken;
         Expression::strToUpper(input);
 
-        if(input.find("GPRINTF") != std::string::npos)
+        // Handle non commented GPRINTF
+        size_t gprintfPos = input.find("GPRINTF");
+        if(gprintfPos != std::string::npos  &&  input.find_last_of(';', gprintfPos) == std::string::npos)
         {
-            size_t openBracket = lineToken.find_first_of("(");
-            size_t closeBracket = lineToken.find_first_of(")", openBracket+1);
-            bool brackets = (openBracket != std::string::npos  &&  closeBracket != std::string::npos  &&  (closeBracket - openBracket > 2));
-
-            if(brackets)
+            size_t lbra, rbra;
+            if(Expression::findMatchingBrackets(lineToken, 0, lbra, rbra))
             {
-                size_t quote1 = lineToken.find_first_of("\"", openBracket+1);
-                size_t quote2 = lineToken.find_first_of("\"", quote1+1);
+                size_t quote1 = lineToken.find_first_of("\"", lbra+1);
+                size_t quote2 = lineToken.find_last_of("\"", rbra-1);
                 bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos  &&  (quote2 - quote1 > 0));
-
                 if(quotes)
                 {
                     if(parse == MnemonicPass)
                     {
                         std::string formatText = lineToken.substr(quote1+1, quote2 - (quote1+1));
-                        std::string variableText = lineToken.substr(quote2+1, closeBracket - (quote2+1));
+                        std::string variableText = lineToken.substr(quote2+1, rbra - (quote2+1));
 
                         std::vector<Gprintf::Var> vars;
                         std::vector<std::string> subs;
                         std::vector<std::string> variables = Expression::tokenise(variableText, ',');
                         parseGprintfFormat(formatText, variables, vars, subs);
 
-                        Gprintf gprintf = {false, _currentAddress, lineNumber, lineToken, formatText, vars, subs};
-                        _gprintfs.push_back(gprintf);
+                        Gprintf gprintf = {_currentAddress, lineNumber, lineToken, formatText, vars, subs};
+                        if(_gprintfs.find(_currentAddress) != _gprintfs.end())
+                        {
+                            fprintf(stderr, "Assembler::handleGprintf() : '%s:%d' : gprintf at address 0x%0x4 already exists\n", lineToken.c_str(), lineNumber, _currentAddress);
+                            return false;
+                        }
+
+                        _gprintfs[_currentAddress] = gprintf;
                     }
 
                     return true;
                 }
             }
 
-            fprintf(stderr, "Assembler::handleGprintf() : Bad gprintf format : '%s' : on line %d\n", lineToken.c_str(), lineNumber);
+            fprintf(stderr, "Assembler::handleGprintf() : '%s:%d' : bad gprintf format\n", lineToken.c_str(), lineNumber);
             return false;
         }
 
         return false;
     }
 
+    bool parseGprintfVar(const std::string& param, uint16_t& data)
+    {
+        bool success = Expression::stringToU16(param, data);
+        if(!success)
+        {
+            std::vector<std::string> tokens;
+            tokens.push_back(param);
+
+            // Search equates
+            Equate equate;
+            Label label;
+            if((success = evaluateEquateOperand(tokens, 0, equate, false)) == true)
+            {
+                data = equate._operand;
+            }
+            // Search labels
+            else if((success = evaluateLabelOperand(tokens, 0, label, false)) == true)
+            {
+                data = label._address;
+            }
+            // Normal expression
+            else
+            {
+                if(Expression::isExpression(param) == Expression::HasOperators)
+                {
+                    Expression::Numeric value;
+                    if(Expression::parse(param, _lineNumber, value))
+                    {
+                        data = int16_t(std::lround(value._value));
+                        success = true;
+                    }
+                }
+            }
+        }
+
+        return success;
+    }
+
     bool parseGprintfs(void)
     {
-        for(int i = 0; i<int(_gprintfs.size()); i++)
+        for(auto it=_gprintfs.begin(); it!=_gprintfs.end(); it++ )
         {
-            for(int j = 0; j<int(_gprintfs[i]._vars.size()); j++)
+            Gprintf& gprintf = it->second;
+
+            for(int j=0; j<int(gprintf._vars.size()); j++)
             {
-                bool success = false;
-                uint16_t data = 0x0000;
-                std::string token = _gprintfs[i]._vars[j]._var;
+                uint16_t addr = 0x0000;
+                std::string token = gprintf._vars[j]._text;
         
                 // Strip white space
                 token.erase(remove_if(token.begin(), token.end(), isspace), token.end());
-                _gprintfs[i]._vars[j]._var = token;
+                gprintf._vars[j]._text = token;
 
                 // Check for indirection
                 size_t asterisk = token.find_first_of("*");
                 if(asterisk != std::string::npos)
                 {
-                    _gprintfs[i]._vars[j]._indirect = true;
-                    token = token.substr(asterisk+1);
+                    // Don't overwrites gtBASIC vars
+                    if(gprintf._vars[j]._indirection == 0) gprintf._vars[j]._indirection = 1;
+                    token = token.substr(asterisk + 1);
                 }
 
-                success = Expression::stringToU16(token, data);
-                if(!success)
+                if(!parseGprintfVar(token, addr))
                 {
-                    std::vector<std::string> tokens;
-                    tokens.push_back(token);
-
-                    // Search equates
-                    Equate equate;
-                    Label label;
-                    if((success = evaluateEquateOperand(tokens, 0, equate, false)) == true)
-                    {
-                        data = equate._operand;
-                    }
-                    // Search labels
-                    else if((success = evaluateLabelOperand(tokens, 0, label, false)) == true)
-                    {
-                        data = label._address;
-                    }
-                    // Normal expression
-                    else
-                    {
-                        if(Expression::isExpression(token) == Expression::HasOperators)
-                        {
-                            Expression::Numeric value;
-                            if(Expression::parse(token, _lineNumber, value))
-                            {
-                                data = int16_t(std::lround(value._value));
-                                success = true;
-                            }
-                        }
-                    }
-                }
-
-                if(!success)
-                {
-                    fprintf(stderr, "Assembler::parseGprintfs() : Error in gprintf(), missing label or equate : '%s' : in '%s' on line %d\n", token.c_str(), _gprintfs[i]._lineToken.c_str(), _gprintfs[i]._lineNumber);
-                    _gprintfs.erase(_gprintfs.begin() + i);
+                    fprintf(stderr, "Assembler::parseGprintfs() : '%s:%d' : error in gprintf(), missing label or equate '%s'\n", gprintf._lineToken.c_str(), gprintf._lineNumber, token.c_str());
+                    _gprintfs.erase(it);
                     return false;
                 }
 
-                _gprintfs[i]._vars[j]._data = data;
+                gprintf._vars[j]._data = addr;
             }
         }
 
         return true;
     }
 
-#ifndef STAND_ALONE
-    bool getGprintfString(int index, std::string& gstring)
+    bool getGprintfString(const Gprintf& gprintf, std::string& gstring)
     {
-        const Gprintf& gprintf = _gprintfs[index % _gprintfs.size()];
         gstring = gprintf._format;
    
         size_t subIndex = 0;
@@ -2043,14 +2320,14 @@ namespace Assembler
             char token[256];
 
             // Use indirection if required
-            uint16_t data = (gprintf._vars[i]._indirect) ? Cpu::getRAM(gprintf._vars[i]._data) | (Cpu::getRAM(gprintf._vars[i]._data+1) <<8) : gprintf._vars[i]._data;
-            
+            uint16_t data = (gprintf._vars[i]._indirection) ? Cpu::getRAM16(gprintf._vars[i]._data) : gprintf._vars[i]._data;
+
             // Maximum field width of 16 digits
             uint8_t width = gprintf._vars[i]._width % 17;
             std::string fieldWidth = "%";
             if(width) fieldWidth = std::string("%0" + std::to_string(width));
 
-            switch(gprintf._vars[i]._type)
+            switch(gprintf._vars[i]._format)
             {
                 case Gprintf::Chr: fieldWidth += "c"; sprintf(token, fieldWidth.c_str(), data); break;
                 case Gprintf::Int: fieldWidth += "d"; sprintf(token, fieldWidth.c_str(), data); break;
@@ -2060,9 +2337,12 @@ namespace Assembler
                 // Strings are always indirect and assume that length is first byte
                 case Gprintf::Str:
                 {
-                    data = gprintf._vars[i]._data;
-                    uint8_t length = Cpu::getRAM(data) & 0xFF; // maximum length of 255, (in reality 254, first byte is length, last byte is '0' trailing delimiter)
-                    for(uint16_t j=0; j<length; j++) token[j] = Cpu::getRAM(data + j + 1);
+                    // gtBASIC strings are dereferenced by 2 levels of indirection
+                    uint16_t addr = (gprintf._vars[i]._indirection == 2) ? Cpu::getRAM16(gprintf._vars[i]._data) : gprintf._vars[i]._data;
+
+                    // Maximum length of 254, first byte is length, last byte is '0' trailing delimiter
+                    uint8_t length = Cpu::getRAM(addr) % 254;
+                    for(uint16_t j=0; j<length; j++) token[j] = Cpu::getRAM(addr + j + 1);
                     token[length] = 0;
                 }
                 break;
@@ -2092,27 +2372,17 @@ namespace Assembler
         return true;
     }
 
-    void printGprintfStrings(void)
+    void handleGprintfs(void)
     {
         if(_gprintfs.size() == 0) return;
 
-        for(int i=0; i<int(_gprintfs.size()); i++)
+        if(_gprintfs.find(Cpu::getVPC()) != _gprintfs.end())
         {
-            if(Cpu::getVPC() == _gprintfs[i]._address)
-            {
-                // Emulator can cycle many times for one CPU cycle, so make sure gprintf is displayed only once
-                if(!_gprintfs[i]._displayed)
-                {
-                    std::string gstring;
-                    getGprintfString(i, gstring);
-                    fprintf(stderr, "gprintf() : address $%04X : '%s'\n", _gprintfs[i]._address, gstring.c_str());
-                    _gprintfs[i]._displayed = true;
-                }
-            }
-            else
-            {
-                _gprintfs[i]._displayed = false;
-            }
+            std::string gstring;
+            const Gprintf& gprintf = _gprintfs[Cpu::getVPC()];
+
+            getGprintfString(gprintf, gstring);
+            fprintf(stderr, "gprintf() : 0x%04X : %s\n", gprintf._address, gstring.c_str());
         }
     }
 #endif
@@ -2126,7 +2396,7 @@ namespace Assembler
 
         if((operand & 0x0001) || operand < 28 || operand > 284)
         {
-            fprintf(stderr, "Assembler::sysHelper() : SYS operand must be an even constant in [28, 284] : found 'SYS %d' : in '%s' : on line %d\n", operand, filename.c_str(), lineNumber);
+            fprintf(stderr, "Assembler::sysHelper() : '%s:%d' : SYS operand '%d' must be an even constant in [28, 284]\n", filename.c_str(), lineNumber, operand);
             return uint8_t(operand);
         }
 
@@ -2134,17 +2404,19 @@ namespace Assembler
     }
 
 
-    void clearAssembler(void)
+    void clearAssembler(bool dontClearGprintfs)
     {
         _byteCode.clear();
         _labels.clear();
         _equates.clear();
         _instructions.clear();
         _callTableEntries.clear();
-        _gprintfs.clear();
+        if(!dontClearGprintfs) _gprintfs.clear();
 
+        clearDefines();        
+
+        _vSpMin = 0x00;
         _callTablePtr = 0x0000;
-        _useOpcodeCALLI_ = false;
 
         Expression::setExprFunc(Expression::expression);
 
@@ -2153,20 +2425,16 @@ namespace Assembler
 #endif
     }
 
-    bool assemble(const std::string& filename, uint16_t startAddress)
+    bool assemble(const std::string& filename, uint16_t startAddress, bool dontClearGprintfs)
     {
         std::ifstream infile(filename);
         if(!infile.is_open())
         {
-            fprintf(stderr, "Assembler::assemble() : Failed to open file : '%s'\n", filename.c_str());
+            fprintf(stderr, "Assembler::assemble() : failed to open file '%s'\n", filename.c_str());
             return false;
         }
 
-        fprintf(stderr, "\n\n****************************************************************************************************\n");
-        fprintf(stderr, "* Assembling file '%s'\n", filename.c_str());
-        fprintf(stderr, "****************************************************************************************************\n");
-
-        clearAssembler();
+        clearAssembler(dontClearGprintfs);
 
         _startAddress = startAddress;
         _currentAddress = _startAddress;
@@ -2186,7 +2454,7 @@ namespace Assembler
 
             if(!infile.good() && !infile.eof())
             {
-                fprintf(stderr, "Assembler::assemble() : Bad lineToken : '%s' : in '%s' : on line %d\n", lineToken._text.c_str(), filename.c_str(), numLines+1);
+                fprintf(stderr, "Assembler::assemble() : '%s:%d' : bad lineToken '%s'\n", filename.c_str(), numLines+1, lineToken._text.c_str());
                 return false;
             }
 
@@ -2195,6 +2463,10 @@ namespace Assembler
 
         // Pre-processor
         if(!preProcess(filename, lineTokens, true)) return false;
+
+        fprintf(stderr, "\n*******************************************************\n");
+        fprintf(stderr, "* Assembling file : '%s'\n", filename.c_str());
+        fprintf(stderr, "*******************************************************\n");
 
         numLines = int(lineTokens.size());
 
@@ -2213,14 +2485,19 @@ namespace Assembler
 
                 // Tokenise current line
                 std::vector<std::string> tokens = Expression::tokeniseLine(lineToken._text);
+                if(tokens.size() == 0)
+                {
+                    fprintf(stderr, "Assembler::assemble() : '%s:%d' : unknown error '%s'\n", filename.c_str(), _lineNumber+1, lineToken._text.c_str());
+                    return false;
+                }
 
                 // Comments
                 if(tokens.size() > 0  &&  tokens[0].find_first_of(";#") != std::string::npos) continue;
 
+#ifndef STAND_ALONE
                 // Gprintf lines are skipped
                 if(handleGprintf(ParseType(parse), lineToken._text, _lineNumber+1)) continue;
 
-#ifndef STAND_ALONE
                 // _breakPoint_ lines are skipped
                 if(handleBreakPoints(ParseType(parse), lineToken._text, _lineNumber+1)) continue;
 #endif
@@ -2233,12 +2510,12 @@ namespace Assembler
                         EvaluateResult result = evaluateEquates(tokens, (ParseType)parse);
                         if(result == NotFound)
                         {
-                            fprintf(stderr, "Assembler::assemble() : Missing equate : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                            fprintf(stderr, "Assembler::assemble() : '%s:%d' : missing equate '%s'\n", filename.c_str(), _lineNumber+1, lineToken._text.c_str());
                             return false;
                         }
                         else if(result == Duplicate)
                         {
-                            fprintf(stderr, "Assembler::assemble() : Duplicate equate : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                            fprintf(stderr, "Assembler::assemble() : '%s:%d' : duplicate equate '%s'\n", filename.c_str(), _lineNumber+1, lineToken._text.c_str());
                             return false;
                         }
                         // Skip equate lines
@@ -2251,12 +2528,12 @@ namespace Assembler
                         result = EvaluateLabels(tokens, (ParseType)parse, tokenIndex);
                         if(result == Reserved)
                         {
-                            fprintf(stderr, "Assembler::assemble() : Can't use a reserved word in a label : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                            fprintf(stderr, "Assembler::assemble() : '%s:%d' : can't use a reserved word in label '%s'\n", filename.c_str(), _lineNumber+1, tokens[tokenIndex].c_str());
                             return false;
                         }
                         else if(result == Duplicate)
                         {
-                            fprintf(stderr, "Assembler::assemble() : Duplicate label : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                            fprintf(stderr, "Assembler::assemble() : '%s:%d' : duplicate label '%s'\n", filename.c_str(), _lineNumber+1, lineToken._text.c_str());
                             return false;
                         }
                     }
@@ -2267,17 +2544,18 @@ namespace Assembler
 
                 // Opcode
                 bool operandValid = false;
+                uint16_t defineOffset;
                 std::string opcodeStr = tokens[tokenIndex++];
-                InstructionType instructionType = getOpcode(opcodeStr);
-                uint8_t opcode = instructionType._opcode;
-                uint8_t branch = instructionType._branch;
+                InstructionType instructionType = getOpcode(opcodeStr, defineOffset);
+                uint8_t opcode0 = instructionType._opcode0;
+                uint8_t opcode1 = instructionType._opcode1;
                 int outputSize = instructionType._byteSize;
                 OpcodeType opcodeType = instructionType._opcodeType;
-                Instruction instruction = {false, false, ByteSize(outputSize), opcode, 0x00, 0x00, _currentAddress, opcodeType};
+                Instruction instruction = {false, false, ByteSize(outputSize), opcode0, 0x00, 0x00, _currentAddress, opcodeType};
 
                 if(outputSize == BadSize)
                 {
-                    fprintf(stderr, "Assembler::assemble() : Bad Opcode : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                    fprintf(stderr, "Assembler::assemble() : '%s:%d' : bad Opcode '%s'\n", filename.c_str(), _lineNumber+1, lineToken._text.c_str());
                     return false;
                 }
 
@@ -2291,9 +2569,9 @@ namespace Assembler
                         outputSize = OneByte; // first instruction has already been parsed
                         if(tokenIndex + 1 < int(tokens.size()))
                         {
-                            if(!handleDefineByte(tokens, tokenIndex, instruction, false, outputSize))
+                            if(!handleDefineByte(tokens, tokenIndex, instruction, false, defineOffset, outputSize))
                             {
-                                fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                                fprintf(stderr, "Assembler::assemble() : '%s:%d' : bad DB data '%s'\n", filename.c_str(), _lineNumber+1, lineToken._text.c_str());
                                 return false;
                             }
                         }
@@ -2307,9 +2585,9 @@ namespace Assembler
                         outputSize = TwoBytes; // first instruction has already been parsed
                         if(tokenIndex + 1 < int(tokens.size()))
                         {
-                            if(!handleDefineWord(tokens, tokenIndex, instruction, false, outputSize))
+                            if(!handleDefineWord(tokens, tokenIndex, instruction, false, defineOffset, outputSize))
                             {
-                                fprintf(stderr, "Assembler::assemble() : Bad DW data : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                                fprintf(stderr, "Assembler::assemble() : '%s:%d' : bad DW data '%s'\n", filename.c_str(), _lineNumber+1, lineToken._text.c_str());
                                 return false;
                             }
                         }
@@ -2319,14 +2597,14 @@ namespace Assembler
                 if(parse == CodePass)
                 {
                     // Native NOP
-                    if(opcodeType == Native  &&  opcode == 0x02)
+                    if(opcodeType == Native  &&  opcode0 == 0x02)
                     {
                         operandValid = true;
                     }
                     // Missing operand
                     else if((outputSize == TwoBytes  ||  outputSize == ThreeBytes)  &&  int(tokens.size()) <= tokenIndex)
                     {
-                        fprintf(stderr, "Assembler::assemble() : Missing operand/s : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                        fprintf(stderr, "Assembler::assemble() : '%s:%d' : missing operand/s '%s'\n", filename.c_str(), _lineNumber+1, lineToken._text.c_str());
                         return false;
                     }
 
@@ -2363,8 +2641,14 @@ namespace Assembler
                         {
                             uint8_t operand = 0x00;
 
+                            // HALT
+                            if(opcodeType == vCpu  &&  opcode0 == OPCODE_V_HALT  &&  opcode1 == OPERAND_V_HALT)
+                            {
+                                operand = opcode1;
+                                operandValid = true;
+                            }
                             // BRA
-                            if(opcodeType == vCpu  &&  opcode == 0x90)
+                            else if(opcodeType == vCpu  &&  opcode0 == OPCODE_V_BRA)
                             {
                                 // Search for branch label
                                 Label label;
@@ -2381,15 +2665,15 @@ namespace Assembler
                                 }
                                 else
                                 {
-                                    fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                                    fprintf(stderr, "Assembler::assemble() : '%s:%d' : label '%s' missing\n", filename.c_str(), _lineNumber+1, tokens[tokenIndex].c_str());
                                     return false;
                                 }
                             }
-                            // CALL
-                            else if(opcodeType == vCpu  &&  opcode == 0xCF)
+                            // CALL+
+                            else if(opcodeType == vCpu  &&  opcode0 == OPCODE_V_CALL)
                             {
                                 // Search for call label
-                                if(_callTablePtr  &&  operand != 0x18)
+                                if(_callTablePtr  &&  operand != GIGA_V_AC)
                                 {
                                     Label label;
                                     if(evaluateLabelOperand(tokens, tokenIndex, label, false))
@@ -2420,18 +2704,18 @@ namespace Assembler
                                             // Avoid ONE_CONST_ADDRESS
                                             if(_callTablePtr == ONE_CONST_ADDRESS)
                                             {
-                                                fprintf(stderr, "Assembler::assemble() : Warning, (safe to ignore), Calltable : 0x%02x : collided with : 0x%02x : on line %d\n", _callTablePtr, ONE_CONST_ADDRESS, _lineNumber+1);
+                                                fprintf(stderr, "Assembler::assemble() : warning, (safe to ignore), Calltable : 0x%02x : collided with : 0x%02x : on line %d\n", _callTablePtr, ONE_CONST_ADDRESS, _lineNumber+1);
                                                 _callTablePtr -= 0x0002;
                                             }
                                             else if(_callTablePtr+1 == ONE_CONST_ADDRESS)
                                             {
-                                                fprintf(stderr, "Assembler::assemble() : Warning, (safe to ignore), Calltable : 0x%02x : collided with : 0x%02x : on line %d\n", _callTablePtr+1, ONE_CONST_ADDRESS, _lineNumber+1);
+                                                fprintf(stderr, "Assembler::assemble() : warning, (safe to ignore), Calltable : 0x%02x : collided with : 0x%02x : on line %d\n", _callTablePtr+1, ONE_CONST_ADDRESS, _lineNumber+1);
                                                 _callTablePtr -= 0x0001;
                                             }
                                         }
                                     }
                                 }
-                                // CALL that doesn't use the call table, (usually to save zero page memory at the expense of code size and code speed).
+                                // CALL that doesn't use the call table, ('CALL GIGA_V_AC', usually to save zero page memory at the expense of code size and code speed).
                                 else
                                 {
                                     Equate equate;
@@ -2441,7 +2725,7 @@ namespace Assembler
                                     }
                                     else 
                                     {
-                                        fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                                        fprintf(stderr, "Assembler::assemble() : '%s:%d' : label '%s' missing\n", filename.c_str(), _lineNumber+1, tokens[tokenIndex].c_str());
                                         return false;
                                     }
                                 }
@@ -2454,8 +2738,8 @@ namespace Assembler
                                 Equate equate;
 
                                 // String
-                                size_t quote1 = tokens[tokenIndex].find_first_of("'\"");
-                                size_t quote2 = tokens[tokenIndex].find_first_of("'\"", quote1+1);
+                                size_t quote1 = tokens[tokenIndex].find_first_of("'");
+                                size_t quote2 = tokens[tokenIndex].find_last_of("'");
                                 bool quotes = (quote1 != std::string::npos  &&  quote2 != std::string::npos  &&  (quote2 - quote1 > 1));
                                 if(quotes)
                                 {
@@ -2486,7 +2770,7 @@ namespace Assembler
                                     operandValid = Expression::stringToU16(tokens[tokenIndex], operandU16);
                                     if(!operandValid)
                                     {
-                                        fprintf(stderr, "Assembler::assemble() : Label/Equate error : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                                        fprintf(stderr, "Assembler::assemble() : '%s:%d' : invalid label/Equate '%s'\n", filename.c_str(), _lineNumber+1, tokens[tokenIndex].c_str());
                                         return false;
                                     }
 
@@ -2499,15 +2783,15 @@ namespace Assembler
                             {
                                 if(!operandValid)
                                 {
-                                    if(!handleNativeInstruction(tokens, tokenIndex, opcode, operand))
+                                    if(!handleNativeInstruction(tokens, tokenIndex, opcode0, operand))
                                     {
-                                        fprintf(stderr, "Assembler::assemble() : Native instruction is malformed : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                                        fprintf(stderr, "Assembler::assemble() : '%s:%d' : native instruction '%s' is malformed\n", filename.c_str(), _lineNumber+1, lineToken._text.c_str());
                                         return false;
                                     }
                                 }
 
                                 instruction._isRomAddress = true;
-                                instruction._opcode = opcode;
+                                instruction._opcode = opcode0;
                                 instruction._operand0 = uint8_t(LO_BYTE(operand));
                                 _instructions.push_back(instruction);
                                 if(!checkInvalidAddress(ParseType(parse), _currentAddress, uint16_t(outputSize), instruction, lineToken, filename, _lineNumber)) return false;
@@ -2518,7 +2802,9 @@ namespace Assembler
                                 uint8_t ope = Cpu::getROM(add, 1);
                                 if(instruction._opcode != opc  ||  instruction._operand0 != ope)
                                 {
-                                    fprintf(stderr, "Assembler::assemble() : ROM Native instruction mismatch  : 0x%04X : ASM=0x%02X%02X : ROM=0x%02X%02X : on line %d\n", add, instruction._opcode, instruction._operand0, opc, ope, _lineNumber+1);
+                                    fprintf(stderr, "Assembler::assemble() : '%s:%d' : ROM Native instruction mismatch : 0x%04X : ASM=0x%02X%02X : ROM=0x%02X%02X\n", filename.c_str(), _lineNumber+1, add, 
+                                                                                                                                                                      instruction._opcode, instruction._operand0,
+                                                                                                                                                                      opc, ope);
 
                                     // Fix mismatched instruction?
                                     //instruction._opcode = opc;
@@ -2535,14 +2821,20 @@ namespace Assembler
                                 instruction._isRomAddress = (opcodeType == ReservedDBR) ? true : false;
                                 instruction._byteSize = ByteSize(outputSize);
                                 instruction._opcode = uint8_t(LO_BYTE(operand));
+                                if(defineOffset != 0)
+                                {
+                                    instruction._address = _currentAddress;
+                                    instruction._isCustomAddress = true;
+                                    _currentAddress += defineOffset;
+                                }
                                 _instructions.push_back(instruction);
     
                                 // Push any remaining operands
                                 if(tokenIndex + 1 < int(tokens.size()))
                                 {
-                                    if(!handleDefineByte(tokens, tokenIndex, instruction, true, outputSize))
+                                    if(!handleDefineByte(tokens, tokenIndex, instruction, true, defineOffset, outputSize))
                                     {
-                                        fprintf(stderr, "Assembler::assemble() : Bad DB data : '%s' : in '%s' on line %d\n", lineToken._text.c_str(), filename.c_str(), _lineNumber+1);
+                                        fprintf(stderr, "Assembler::assemble() : '%s:%d' : bad DB data '%s'\n", filename.c_str(), _lineNumber+1, lineToken._text.c_str());
                                         return false;
                                     }
                                 }
@@ -2562,7 +2854,7 @@ namespace Assembler
                         case ThreeBytes:
                         {
                             // BCC
-                            if(branch)
+                            if(opcode1)
                             {
                                 // Search for branch label
                                 Label label;
@@ -2573,11 +2865,11 @@ namespace Assembler
                                 }
                                 else
                                 {
-                                    fprintf(stderr, "Assembler::assemble() : Label missing : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                                    fprintf(stderr, "Assembler::assemble() : '%s:%d' : label '%s' missing\n", filename.c_str(), _lineNumber+1, tokens[tokenIndex].c_str());
                                     return false;
                                 }
 
-                                instruction._operand0 = branch;
+                                instruction._operand0 = opcode1;
                                 instruction._operand1 = LO_BYTE(operand);
                                 _instructions.push_back(instruction);
                                 if(!checkInvalidAddress(ParseType(parse), _currentAddress, uint16_t(outputSize), instruction, lineToken, filename, _lineNumber)) return false;
@@ -2613,7 +2905,7 @@ namespace Assembler
                                     operandValid = Expression::stringToU16(tokens[tokenIndex], operand);
                                     if(!operandValid)
                                     {
-                                        fprintf(stderr, "Assembler::assemble() : Label/Equate error : '%s' : in '%s' on line %d\n", tokens[tokenIndex].c_str(), filename.c_str(), _lineNumber+1);
+                                        fprintf(stderr, "Assembler::assemble() : '%s:%d' : invalid label/equate '%s'\n", filename.c_str(), _lineNumber+1, tokens[tokenIndex].c_str());
                                         return false;
                                     }
                                 }
@@ -2627,10 +2919,16 @@ namespace Assembler
                                     instruction._byteSize = ByteSize(outputSize);
                                     instruction._opcode   = uint8_t(LO_BYTE(operand));
                                     instruction._operand0 = uint8_t(HI_BYTE(operand));
+                                    if(defineOffset != 0)
+                                    {
+                                        instruction._address = _currentAddress;
+                                        instruction._isCustomAddress = true;
+                                        _currentAddress += defineOffset * 2;
+                                    }
                                     _instructions.push_back(instruction);
 
                                     // Push any remaining operands
-                                    if(tokenIndex + 1 < int(tokens.size())) handleDefineWord(tokens, tokenIndex, instruction, true, outputSize);
+                                    if(tokenIndex + 1 < int(tokens.size())) handleDefineWord(tokens, tokenIndex, instruction, true, defineOffset, outputSize);
                                     if(!checkInvalidAddress(ParseType(parse), _currentAddress, uint16_t(outputSize), instruction, lineToken, filename, _lineNumber)) return false;
                                 }
                                 // Normal instructions
@@ -2656,8 +2954,10 @@ namespace Assembler
         // Pack byte code buffer from instruction buffer
         packByteCodeBuffer();
 
+#ifndef STAND_ALONE
         // Parse gprintf labels, equates and expressions
         if(!parseGprintfs()) return false;
+#endif
 
         return true;
     }

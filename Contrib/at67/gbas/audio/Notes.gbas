@@ -1,0 +1,36 @@
+'a simple example that shows how to embed assembly code within BASIC
+'you can reference BASIC variables and labels within vASM by prepending an underscore
+
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
+sound off
+cls
+
+note = 0 : notes = note
+
+for index=0 &to 95
+    set SOUND_TIMER, 10
+    gosub getRomNote
+    sound on, 1, note
+    print index;" ";note
+next index
+
+end
+
+
+getRomNote:
+    asm
+        LDWI    0x0900
+        ADDW    _index
+        ADDW    _index
+        STW     _notes
+        LUP     0
+        ST      _note
+        LDW     _notes
+        LUP     1
+        ST      _note + 1
+    endasm
+return

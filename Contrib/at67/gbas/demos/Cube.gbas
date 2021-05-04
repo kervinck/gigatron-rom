@@ -1,0 +1,80 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv2
+
+'DRAW 3D CUBE WITH SOME
+'ROTATION AROUND X
+
+K=0:X=K:M=X:N=M:I=N:A=I:B=A:L=B:F=L
+DIM P(7)=0
+DIM Q(7)=0
+
+init time, noupdate
+set FGBG_COLOUR, &h3F00
+
+10 MODE 3:CLS:U=48:GOTO 100
+
+'ROTATION AND PROJECTION
+20 R=K+L+F
+25 pi=80+X/R : P(I)=pi
+30 qi=60+(M-N)/R : Q(I)=qi
+35 P(I+4)=160-pi
+40 Q(I+4)=qi
+45 INC I : RETURN
+
+50 LINE P(A), Q(A), P(B), Q(B) : tick time : RETURN
+
+'SETUP CAMERA
+' S=SIN C=COS F=FLEN
+100 S=45:C=45:F=U LSL 2
+    gosub 110
+
+timer=0
+for i=0 &to 100
+    gosub 254
+next i    
+timer = get("TIMER")
+print timer/60;" ";timer % 60;"/60"
+end
+
+'loop: gosub get("BUTTON_STATE")
+'      goto &loop
+
+'PROCESS CUBE CORNERS
+110 I=0:X=U*U
+120 K=S:M=U*C
+130 L=C:N=U*S:GOSUB 20
+140 L=-L:N=-N:GOSUB 20
+150 K=-K:M=-M:GOSUB 20
+160 L=-L:N=-N:GOSUB 20
+170 GOSUB 200:RETURN
+
+'DRAW CUBE
+200 A=0:B=1:GOSUB 50
+205 A=1:B=2:GOSUB 50
+210 A=2:B=3:GOSUB 50
+215 A=3:B=0:GOSUB 50
+220 A=4:B=5:GOSUB 50
+225 A=5:B=6:GOSUB 50
+230 A=6:B=7:GOSUB 50
+235 A=7:B=4:GOSUB 50
+240 A=4:B=0:GOSUB 50
+245 A=5:B=1:GOSUB 50
+250 A=6:B=2:GOSUB 50
+255 A=7:B=3:GOSUB 50
+    return
+
+254: set VIDEO_TOP, 238 'disable video output
+     set FG_COLOUR, &h00 : gosub 200 'erase cube
+     
+     set VIDEO_TOP, 0 'enable video output
+     S = S + 5 : if S &&>= 45 then S = -40
+     set FG_COLOUR, &h3F : gosub 110 'draw cube
+     return
+     
+253: set VIDEO_TOP, 238 'disable video output
+     set FG_COLOUR, &h00 : gosub 200 'erase cube
+     
+     set VIDEO_TOP, 0 'enable video output
+     S = S - 5 : if S &&<= -45 then S = 40
+     set FG_COLOUR, &h3F : gosub 110 'draw cube
+     return

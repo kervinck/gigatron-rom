@@ -1,0 +1,11 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+cls
+
+loop: 
+    set FG_COLOUR, rnd(0) AND &h3F
+    rect rnd(160), rnd(120), rnd(160), rnd(120)
+    goto &loop
+
+end

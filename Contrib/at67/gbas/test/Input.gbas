@@ -1,0 +1,65 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+dim arr(5)=0
+
+cls
+
+const cs$ = "const "
+
+t1$ = "yes "
+t2$ = "no "
+test$ = "cat dog furries " + t1$ + t2$ + "whoop " + "1 " + "2 " + cs$
+print test$;" ";len(test$)
+
+a = 1
+d = @a
+a.hi = 1 : a.lo = 0
+b = a.hi + 1
+c.hi = 1
+
+poke &h18E0, a.lo
+doke &h18E0, a.lo - b.hi * 3 + 1 - a
+
+const big$="aioujehfiadsuhgfaissuhfgdiughafpiusfghpdsiufghspi;udf"
+const ca=23
+dog=0
+cat$="cat"
+'hours = 0
+'minutes = 0
+'seconds = 0
+input "Testing INPUT:", cat$,"Cats Name ?"32;, hours,"H ?"2;, minutes,"M ?"2;, seconds,"S ?"2;
+print
+print cat$;" ";hours;" ";minutes;" ";seconds
+
+a = rnd(len(dog)) + len(dog) + len(cat$) + 27
+b = len(big$) + len(a) + len(chr$(65)) + len(hex$(255, 2)) + len(hex$(65000, 4))
+print
+print a.lo;" ";b.hi;" ";b
+e = @e + d + 1
+f = @big$
+print hex$(@b, 4);" ";hex$(@c, 4);" ";hex$(d, 4);" ";hex$(e, 4);" ";hex$(f, 4)
+print hex$(@arr, 4);" ";hex$(@cat$, 4);" ";hex$(@hours, 4);" ";hex$(@minutes, 4);" ";hex$(@seconds, 4)
+
+arr(0).lo = &h34
+arr(0).hi = &h12
+print hex$(arr(0), 4)
+
+arr(1).lo = f.lo
+arr(1).hi = f.hi
+print hex$(arr(1), 4)
+
+print hex$(arr(0).hi, 2);" ";hex$(arr(0).lo, 2);" ";hex$(arr(1).hi, 2);" ";hex$(arr(1).lo, 2)
+
+print arr(0);" ";arr(1);" ";hex$(arr(0), 4);" ";hex$(arr(1), 4)
+
+print rnd(0) AND 63;" ";len(big$);" ";peek(0);" ";deek(0);" ";@big$
+
+t = len("Testing")
+print len(big$);" ";len(cat$);" ";len("Testing");" ";t
+
+cs = cos(10)*1000
+db = 231.5333333333 * 2.32
+print sin(56.8333333)*1000;" ";cs;" ";db;" ";1.5333333333 * 2.32
+
+end

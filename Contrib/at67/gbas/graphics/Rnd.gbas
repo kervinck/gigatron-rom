@@ -1,0 +1,28 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+const RND_MAX = 127
+
+dim a%(RND_MAX)=0
+
+seed = 12345
+
+cls
+
+for i=0 to RND_MAX
+    poke (127 - a(i) LSL 8) + i, &h3F
+next i
+
+loop:
+    r = rnd(0) AND RND_MAX
+    'gosub rand : r = seed AND RND_MAX
+    poke (127 - a(r) LSL 8) + r, &h3F
+    a(r) = a(r) + 1 : if a(r) = 120 then a(r) = 119
+    goto &loop
+end
+
+rand:
+    seed = seed XOR (seed LSL 7)
+    seed = seed XOR (seed.hi LSR 1) 'seed = seed XOR (seed >>9)
+    seed = seed XOR (seed LSL 8)
+return

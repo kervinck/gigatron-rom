@@ -1,0 +1,128 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &hFFFF
+_codeRomType_ ROMv2
+
+'not using strings
+free STRINGWORKAREA
+
+const SAMPLES=128
+const OFFSCREEN0=&h09A0
+const OFFSCREEN1=&h78A0
+
+'alloc offscreen scrolling areas, (<address>, <optional width>, <optional height>, <optional offset>)
+alloc OFFSCREEN0, 96, 8, &h0100
+alloc OFFSCREEN1, 96, 8, &h0100
+
+'overwrite interlaced waveform 2 in audio memory
+def byte(&h0702, x, 0.0, 360.0, 64, 4) = sin(x)*31.0 + 32.0
+
+samplesAddr = &h0600
+def byte(&h0600, 0, 1, SAMPLES) = 0 'buffer A
+def byte(&h0680, 0, 1, SAMPLES) = 0 'buffer B
+
+load midi, ../../res/audio/midi/agony.gtmid,    0
+load midi, ../../res/audio/midi/bath.gtmid,     1
+load midi, ../../res/audio/midi/escape.gtmid,   2
+load midi, ../../res/audio/midi/f1.gtmid,       3
+load midi, ../../res/audio/midi/freedom.gtmid,  4
+load midi, ../../res/audio/midi/fzero.gtmid,    5
+load midi, ../../res/audio/midi/ik.gtmid,       6
+load midi, ../../res/audio/midi/ment.gtmid,     7
+load midi, ../../res/audio/midi/virus.gtmid,    8
+
+init midiv, noupdate
+
+scrollPos0 = 0 : scrollPos1 = scrollPos0 : track = 2 : idle = 1
+
+
+gosub initialise
+
+repeat
+    addrA = samplesAddr
+
+    'sample waveform    
+    asm
+loop:   LD      0x13
+        POKE    _addrA
+        INC     _addrA
+        LDW     _addrA
+        XORW    _addrB
+        ANDI    0x80
+        BNE     _loop
+    endasm
+
+    gosub textScroll
+    
+    'erase waveform buffer B
+    for i=0 &to SAMPLES-1
+        poke &h1610 + ((peek((samplesAddr XOR &h80) + i) AND &hFC) LSL 6) + i, &h10
+        tick midiv
+    next i
+
+    gosub textScroll
+
+    'draw waveform buffer A
+    for i=0 &to SAMPLES-1
+        poke &h1610 + ((peek(samplesAddr + i) AND &hFC) LSL 6) + i, &h1D
+        tick midiv
+    next i
+    
+    addrB = samplesAddr
+    samplesAddr = samplesAddr XOR &h80
+
+    gosub get("BUTTON_STATE")
+    set BUTTON_STATE, 255
+    if idle = 0
+        idle = 1
+        play mididv, track - 1
+        at 122, 1 : print track
+    endif
+forever
+
+
+49:  track = 1 : idle = 0 : return
+50:  track = 2 : idle = 0 : return
+51:  track = 3 : idle = 0 : return
+52:  track = 4 : idle = 0 : return
+53:  track = 5 : idle = 0 : return
+54:  track = 6 : idle = 0 : return
+55:  track = 7 : idle = 0 : return
+56:  track = 8 : idle = 0 : return
+57:  track = 9 : idle = 0 : return
+255:             idle = 1 : return
+
+
+textScroll:
+    'wait is needed to stop visual scrolling glitches
+    repeat
+        tick midiv
+    until (get("VIDEO_Y") AND 1) &&<>0
+    
+    poke &h0103, -scrollPos0
+    poke &h0113, scrollPos0 : inc scrollPos0
+    poke &h01E1, scrollPos1 : inc scrollPos1
+return
+
+
+initialise:
+    'audio fix for ROMv5a
+    poke &h21, peek(&h21) OR 3
+
+    mode 2
+    set FGBG_COLOUR, &h1030
+    cls
+    cls OFFSCREEN0, 96, 8
+    cls OFFSCREEN1, 96, 8
+    set FG_COLOUR, &h20
+    rectf 12, 11, 147, 109
+    set FG_COLOUR, &h10
+    rectf 16, 14, 143, 106
+    
+    scroll off
+    tclip off
+    set FG_COLOUR, &h2F
+    at 2, 1   : print "Playing MIDI track '";track;"'.."
+    at 2, 112 : print "Press '1 to 9' for different MIDI tracks.."
+    
+    play mididv, 1
+return

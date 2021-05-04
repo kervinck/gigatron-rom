@@ -1,0 +1,37 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &h7FFF
+_codeRomType_ ROMv3
+
+load font, ../../res/font/Bold/Bold.tga, 0, &h2A00
+load font, ../../res/font/Adv/Adv.tga, 1, &h0C00
+load font, ../../res/font/Scifi/Scifi.tga, 2, &h3C00
+load font, ../../res/font/Prac/Prac.tga, 3, &h0300
+load font, ../../res/font/Sinc/Sinc.tga, 4, &h0F00
+
+set FGBG_COLOUR, &h3F00
+cls
+
+for i=0 to 4
+    set FONT_ID, i
+    print "ABCDEFGHIJKLMNOPQRSTUVWXYZ !?. 0123456789"
+next i
+
+s$ = "External fonts can be usedin exactly the same way   as the internal font!"
+
+for i=0 to 10
+    set FONT_ID, i % 5
+    print s$
+    wait 60
+next i
+
+scroll off 'stop text scrolling
+cls init 'initialise video indirection table
+
+forever:
+    r = rnd(5)
+    set FONT_ID, r
+    x = rnd(160) : y = rnd(120)
+    at x, y : print "Text"
+goto forever
+
+end

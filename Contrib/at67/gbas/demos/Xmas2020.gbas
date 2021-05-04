@@ -1,0 +1,139 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &h7FFF
+_codeRomType_ ROMv3
+
+'defines the amount of contiguous RAM needed for sprite stripes, (in this case 15*6 + 1), also min address and search direction
+_spriteStripeChunks_ 15, &h3EA0, descending
+
+'not using strings
+free STRINGWORKAREA
+
+
+const numPixels = 32 'yxDelay, yxPixel and yxPos addresses need to be adjusted accordingly
+const yxDelay = &h0660 'need space for at least numPixels * sizeof(byte)
+const yxPixel = &h0680 'need space for at least numPixels * sizeof(word)
+const yxPos   = &h06C0 'need space for at least numPixels * sizeof(word)
+const yTop    = 23
+const yEnd    = 120
+const vTop    = 8
+
+def byte(yxDelay, 0, 1, numPixels) = 0
+def word(yxPixel, 0, 1, numPixels) = 0
+def word(yxPos, 0, 1, numPixels) = (rnd(75)+yTop+vTop)*256 + urnd(2, 157, numPixels, 2)
+
+module "../../res/audio/Xmas2020/Merry.m"
+    
+'santa-sleigh, loaded into 0,0 to 255, 23 : i.e. offscreen as well as onscreen memory
+'compiler allocates memory automatically for offscreen areas
+'santa-sleigh could also be a sprite, but as he is not animated and his movement is achieved by scrolling
+'we cheat and directly load him into offscreen memory, (256x24), thus saving memory and vCPU drawing cycles
+load image, ../../res/image/Xmas2020/SantaSleigh.tga, &h0800
+
+'background, loaded into 0, 24 to 159, 119 : i.e. the remaining onscreen area
+load image, ../../res/image/Xmas2020/XmasTree.tga, &h2000
+
+load sprite, ../../res/image/Xmas2020/Rudolph0.tga, 0
+load sprite, ../../res/image/Xmas2020/Rudolph1.tga, 1
+load sprite, ../../res/image/Xmas2020/Rudolph2.tga, 2
+load sprite, ../../res/image/Xmas2020/Rudolph3.tga, 3
+load sprite, ../../res/image/Xmas2020/Rudolph4.tga, 4
+load sprite, ../../res/image/Xmas2020/Rudolph5.tga, 5
+
+'scrolling has to happen immediately after vertical blank or glitches ensue, so attach scroll sub before midi player
+init scrollSanta, MIDI
+
+def frame, cont, yxd, anim0, anim1
+
+gosub initialise
+
+    
+loop:
+    flip = frame AND 1
+    
+    for i=0 &to (numPixels-1)*2 step 2
+        gosub delayPixel
+        if &(cont) then continue
+        
+        yx = deek(yxPos + i)
+        update = yx.hi AND &h80
+        yx = yx AND &h7FFF
+        yx.lo = (yx.lo AND &hFE) + ((yx.hi AND 4) LSR 2) 'jitter position
+        
+        poke yxPixel + i + flip, peek(yx)
+        if &(update)
+            f = flip XOR 1
+            gosub jitterPixel
+        endif
+        poke yx, &h3F
+        
+        inc yx.hi
+        update = &h8000
+        if yx.hi &&= yEnd + 8
+            f = flip
+            gosub jitterPixel
+            gosub resetPixel
+        endif
+
+        doke yxPos + i, yx OR update
+        
+continue:
+        tick MIDI
+    next i
+
+    wait
+    inc frame
+    
+    'animate the dodgey rudolph's
+    inc anim0
+    inc anim1
+    if anim0 &&= 12 then anim0 = 0
+    if anim1 &&= 12 then anim1 = 0
+    a0 = anim0 LSR 1
+    a1 = anim1 LSR 1
+    sprite noFlip, a0, 193, 0
+    tick MIDI
+    sprite noFlip, a1, 223, 0
+goto loop
+
+
+scrollSanta:
+    poke &h0101, -frame
+    poke &h012F, frame
+return
+
+resetPixel:
+    yx.hi = yTop + vTop
+    update = &h0000
+    poke yxd, rnd(0) AND &h1F
+return
+
+jitterPixel:
+    tick MIDI
+    jyx = yx - &h0100
+    jyx.lo = (jyx.lo AND &hFE) + ((jyx.hi AND 4) LSR 2)
+    poke jyx, peek(yxPixel + i + f)
+return
+
+delayPixel:
+    cont = 0
+    i2 = i LSR 1
+    yxd = yxDelay + i2
+    d = peek(yxd)
+    if &(d)
+        cont = 1
+        dec d
+        poke yxd, d
+    endif
+return
+
+initialise:
+    mode 2
+    
+    frame = 0 : cont = frame : yxd = cont : anim0 = yxd
+    anim1 = 6
+
+    'audio fix for ROMv5a
+    poke &h21, peek(&h21) OR 3
+    
+    play MIDI, &h20A0, 3
+return

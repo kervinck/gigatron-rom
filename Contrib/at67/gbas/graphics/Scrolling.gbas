@@ -1,0 +1,22 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &h06FF
+_codeRomType_ ROMv1
+
+
+x = 0
+
+loop:
+    wait 1
+    poke &h0101, x
+    p = &h0111
+    x2 = x + x
+    nx2 = -x2
+    
+    repeat
+        poke p, nx2
+        poke p + 16, x2
+        p = p + 32
+    until p &&>= &h01D1
+
+    inc x
+goto &loop

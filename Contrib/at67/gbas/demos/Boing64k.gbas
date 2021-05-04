@@ -1,0 +1,133 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &hFFFF
+_codeRomType_ ROMv3
+
+'move string work area for scrolling of text, (defaults to &h7FA0)
+_stringWorkArea_ &h69A0
+
+'defines the amount of contiguous RAM needed for sprite stripes, (in this case 15*6 + 1), min address and search direction
+_spriteStripeChunks_ 15, &h16A0, ascending 'allocates from &h16A0 to _runtimeStart_
+
+'alloc offscreen scrolling area, (<address>, <optional size>, <optional count>, <optional offset>), so that compiler does not try and use it
+alloc &h6AA0, 96, 22, &h0100
+
+'volume extinction function, (modelled in Desmos), used to control ADSR
+const V_LUT=&h13A0
+const V_SIZ=64
+def byte(V_LUT, y, 0.0, 0.5, V_SIZ) = 63.0 - exp(-0.5*y)*(1.0-exp(-3.0*y))*1.6125*63.0
+
+'frequency sweep
+const F_LUT=&h13E0
+const F_SIZ=16
+def word(F_LUT, y, 0.0, 360.0, F_SIZ) = sin(y)*200.0 + 1000.0
+
+module "BoingData64k.m"
+
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
+sound off
+
+mode 2
+set FGBG_COLOUR, &h3F15
+cls
+
+set FG_COLOUR, 0
+rectf 0, 97, 159 + 96, 119 'clear text scrolling onscreen and offscreen area
+
+'i and l = 6, m and w = 18, space = 6
+'static initialisation of the array produces no code, always attempt this first
+dim fontWidths(26) = 12, 12, 12, 12, 12, 12, 12, 12, 6, 12, 12, 6, 18, 12, 12, 12, 12, 12, 12, 12, 12, 12, 18, 12, 12, 12, 6
+
+const g = 4
+f = boingStart : y = &h0100 : text = 160 : fstep = 1 : xstep = 100
+x = 0 : ystep = x : scrl = ystep : char = scrl : stamp = char : width = stamp : quote = width : crash = quote : time = crash
+
+loop:
+    wait
+    set SOUND_TIMER, 2
+    
+    sprite noFlip, f, x.hi, y.hi
+    
+    'boing frame
+    f = f + fstep
+    if f &&> boingStart + 13 then f = boingStart
+    if f &&< boingStart then f = boingStart + 13
+  
+    'boing xpos
+    x = x + xstep
+    if x.hi &&> 111 'performs the following check if (x.hi > 111) or (x.hi < 0)
+        xstep = -xstep : x = xstep + x
+        fstep = -fstep
+        crash = 1
+        time = 0
+    endif
+    
+    'boing ypos
+    ystep = ystep + g
+    y = y + ystep
+    if y.hi &> 56
+        y.hi = 56
+        ystep = -ystep
+        crash = 1
+        time = 0
+    endif
+    
+    'collision sound
+    if crash &&= 1
+        gosub crashSound
+    endif
+
+    'print character one at a time offscreen
+    gosub printText
+    
+    'scrolling text
+    poke &h01C5, scrl
+    inc scrl
+goto loop
+
+
+printText:
+    if stamp &&= 0
+getChar:
+        c = peek(addr(quotes$(quote)) + 1 + char) '+1 to get past the length byte
+        inc char
+        
+        if c &&= 0
+            char = 0
+            inc quote
+            if quote &&= 21
+                quote = 0
+            endif
+            goto getChar
+        elseif c &&= 32
+            c = 26
+        else
+            c = c - 97
+        endif
+        
+        sprite noFlip, fontStart + c, text, 98
+        
+        width = fontWidths(c)
+        text = text + width
+    endif
+    
+    inc stamp
+    if stamp &&= width
+        stamp = 0
+    endif
+return
+
+crashSound:
+    volume = peek(V_LUT + (time AND (V_SIZ-1)))
+    freq = deek(F_LUT + ((time AND (F_SIZ-1)) LSL 1))
+    foffs = 0
+    for i=1 to 4
+        sound on, i, freq + foffs, volume, 0
+        foffs = foffs + 100
+    next i
+
+    inc time
+    if time &&= 64
+        time = 0 : crash = 0
+    endif
+return

@@ -1,0 +1,126 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv2
+
+const NOTELEN=20
+
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
+sound off
+
+set VIDEO_TOP, 238  'disable video
+mode 2 : cls
+set VIDEO_TOP, 0  'enable video
+
+n = 0 : c = n : kk = c : char = kk : posxy = char
+fg = get("FG_COLOUR") : bg = get("BG_COLOUR")
+ch = 252 : z = 2
+
+dim chan(4)=0
+dim note(4)=0
+
+set VIDEO_TOP, 238  'disable video
+gosub drawKeys
+gosub waveform
+set VIDEO_TOP, 0  'enable video
+    
+loop:
+    wait
+    set SOUND_TIMER, 2
+    k = get("SERIAL_RAW")
+    gosub channels
+    if k &&<> kk then gosub normalChar
+    gosub k
+    kk = k
+goto &loop
+    
+113:  n =  73 +  8*256 : char = 81 : posxy =  24 + 91*256 : gosub playNote : return : 'C
+50:   n =  11 +  9*256 : char = 50 : posxy =  30 + 22*256 : gosub playNote : return : 'C#
+119:  n =  80 +  9*256 : char = 87 : posxy =  36 + 91*256 : gosub playNote : return : 'D
+51:   n =  25 + 10*256 : char = 51 : posxy =  42 + 22*256 : gosub playNote : return : 'D#
+101:  n = 103 + 10*256 : char = 69 : posxy =  48 + 91*256 : gosub playNote : return : 'E
+114:  n =  57 + 11*256 : char = 82 : posxy =  60 + 91*256 : gosub playNote : return : 'F
+53:   n =  16 + 12*256 : char = 53 : posxy =  66 + 22*256 : gosub playNote : return : 'F#
+116:  n = 108 + 12*256 : char = 84 : posxy =  72 + 91*256 : gosub playNote : return : 'G
+54:   n =  78 + 13*256 : char = 54 : posxy =  78 + 22*256 : gosub playNote : return : 'G#
+121:  n =  53 + 14*256 : char = 89 : posxy =  84 + 91*256 : gosub playNote : return : 'A
+55:   n =  35 + 15*256 : char = 55 : posxy =  90 + 22*256 : gosub playNote : return : 'A#
+117:  n =  23 + 16*256 : char = 85 : posxy =  96 + 91*256 : gosub playNote : return : 'B
+105:  n =  19 + 17*256 : char = 73 : posxy = 108 + 91*256 : gosub playNote : return : 'C
+57:   n =  21 + 18*256 : char = 57 : posxy = 114 + 22*256 : gosub playNote : return : 'C#
+111:  n =  31 + 19*256 : char = 79 : posxy = 120 + 91*256 : gosub playNote : return : 'D
+48:   n =  50 + 20*256 : char = 48 : posxy = 126 + 22*256 : gosub playNote : return : 'D#
+112:  n =  77 + 21*256 : char = 80 : posxy = 132 + 91*256 : gosub playNote : return : 'E
+122:  if kk &&<> k then z = (z+1) AND 3 : gosub waveform : return
+      return
+
+channels:
+    for c=1 &to 4
+        if chan(c) &&> 0 then chan(c) = chan(c) - 1
+        if chan(c) &&= 0 then note(c) = 0 : n=0 : gosub audio
+    next c
+return
+
+audio:
+    ch.hi = c : doke ch,n
+return
+
+waveform:
+    at 48,103 : print "Z: ";
+    gosub 206+z
+    for c=1 to 4
+        ch.hi = c : poke ch-1,z
+    next c
+return
+
+playNote:
+    for c=1 &to 4
+        if note(c) &&= k then chan(c) = NOTELEN : goto &playExit
+        if chan(c) &&= 0 then chan(c) = NOTELEN : note(c) = k : gosub audio : goto &playExit
+    next c
+    
+playExit: 
+    gosub inverseChar
+return    
+
+inverseChar:
+    set FG_COLOUR, bg : set BG_COLOUR, fg
+    gosub printChar
+return
+         
+normalChar:
+    set FG_COLOUR, fg : set BG_COLOUR, bg
+    gosub printChar
+return
+         
+printChar:
+    at posxy.lo,posxy.hi
+    print chr$(char)
+return
+
+206: print "Metallic" : return
+207: print "Triangle" : return
+208: print "Pulse   " : return
+209: print "Sawtooth" : return
+
+drawKeys:
+    for i=0 &to 9
+        ofs = (i LSL 3) + (i LSL 2) + 20  ' i*12 + 20
+        set FG_COLOUR, &h00 : rect ofs,30, ofs+12,89
+        set FG_COLOUR, &hFF : rectf ofs+1,31, ofs+11,88
+    next i
+    for i=0 &to 8
+        ' two seperate BRA optimised IF's are smaller/faster than 'IF (i=2) OR (i=6)
+        if i &&= 2 then goto &cont
+        if i &&= 6 then goto &cont
+        ofs = (i LSL 3) + (i LSL 2) + 28  ' i*12 + 28
+        set FG_COLOUR, &h00 : rectf ofs,30, ofs+8,70
+cont:
+    next i
+    
+    'set FGBG_COLOUR, &h00FF
+    'at 24,75 : print "C D E F G A B C D E"
+    
+    set FGBG_COLOUR, &h0F20
+    at 24,22 : print " 2 3   5 6 7   9 0"
+    at 24,91 : print "Q W E R T Y U I O P"
+return

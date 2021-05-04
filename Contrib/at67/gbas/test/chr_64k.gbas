@@ -1,0 +1,1178 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &hFFFF
+_codeRomType_ ROMv1
+
+frog$ = hex$(&hb00b, 4)
+print frog$
+
+z = 33
+b = z * 2 + 1000
+
+bb = (b <= 1) - (b >= 1) - (b = 33) - (b <> 32)
+
+'if b > 1 then print b
+
+print b;" ";bb;" ";bb=1;" ";bb<>1000;" ";bb<=3;" ";bb>1;" ";bb>=2
+'END
+
+x=127
+w$ = chr$(&h31)
+x$ = hex$(x, 2)
+y$ = hex$(&hb00b, 4)
+
+dog = 39
+10  for i=z+1 to dog-1 step 2
+        for j = 1 to 0
+            for jj = 1 to 2 step 1
+                for ss = 1 to 5 step 1
+                    print i*3+1;" ";i/2;" ";j*3;" ";j+23;" ";i+55;" ";i+j;" ";i-j
+                next ss    
+            next jj
+        next j
+    next i
+
+    gosub   test
+    
+    print bb;" ";w$;" ";hex$(x, 4);" ";x$;" ";y$;" ";chr$(bb+60);" ";chr$(&h30);" ";hex$(get("ROM_TYPE") AND &hFC, 2);" ";
+    print hex$(80, 2);" ";hex$(&hdead, 4);" ";hex$(&hbeef, 4);
+
+    END
+    
+    for ii = 0 to 0 step 1
+        'cls
+        gosub Big
+    next ii
+    
+    END
+    
+test: print hex$(i+40, 2);" ";hex$(j+30, 2);" "
+      print hex$(i+30, 2);" ";hex$(j+40, 2);" "
+      print 20*3+1;" ";i;" ";j;" ";j+23;" ";i+55;" ";i+j;" ";i-j;" ";i-j+1;" ";i+j+j
+      return
+      
+      
+Big: a = get("ROM_TYPE") AND &hFC
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+     
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+     
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+     
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+     
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+     
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     print hex$(a, 2)
+     print hex$(&hFFFF OR &h1111, 4)
+     f = &h1111
+     g = &hAAAA
+     h = NOT g XOR f
+     print hex$(h, 4);" ";56
+     print hex$(&hdead, 4);" ";z;" ";-2*3*z;" ";-z/21;" ";z Mod 21
+     print hex$(&b0000111100001111 OR &b1000000010000000, 4)
+     
+     print "lalalalala23d455345634650";
+
+     return
+      

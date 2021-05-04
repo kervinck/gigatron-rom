@@ -1,0 +1,1024 @@
+_runtimePath_ "../../runtime"
+_runtimeStart_ &h7FFF
+_arraysStart_ &h7FFF
+_codeRomType_ ROMv3
+
+'size of your most complex expression, (temporary variables required)*2, defaults to 8
+_tempVarSize_ 6
+
+'free string work area, (better not use any of the string runtime!)
+free STRINGWORKAREA
+
+'free scanline 0, 1, 118 and 119 for code and data
+free &h0800, 160
+free &h0900, 160
+free &h7E00, 160
+free &h7F00, 160
+
+'use this after _runtimeStart_ to specify maximum number of sprites if you have more than 48
+_maxNumSprites_ 76
+
+'defines the amount of contiguous RAM needed for sprite stripes, (in this case 15*6 + 1), also min address and search direction
+_spriteStripeChunks_ 15, &h3BA0, descending
+
+'normally sprites must be horizontally divisible by 6, but by specifying an overlap value the last column
+'of a sprite can be pushed closer to the rest of the sprite, (works with flipped sprites as well)
+const SPRITE_OVERLAP = 3 '12x9 sprites displayed as 9x9
+
+const BlinkyUp = 0
+load sprite, ../../../res/image/PucMon/Blinky_u0.tga, BlinkyUp + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Blinky_u1.tga, BlinkyUp + 1, NoFlip, SPRITE_OVERLAP
+
+const BlinkyDn = 2
+load sprite, ../../../res/image/PucMon/Blinky_d0.tga, BlinkyDn + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Blinky_d1.tga, BlinkyDn + 1, NoFlip, SPRITE_OVERLAP
+
+const BlinkyLt = 4
+load sprite, ../../../res/image/PucMon/Blinky_l0.tga, BlinkyLt + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Blinky_l1.tga, BlinkyLt + 1, NoFlip, SPRITE_OVERLAP
+
+const BlinkyRt = 6 'instance and hardware flip, (native code), in the X direction to save memory
+load sprite, ../../../res/image/PucMon/Blinky_l0.tga, BlinkyRt + 0, FlipX, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Blinky_l1.tga, BlinkyRt + 1, FlipX, SPRITE_OVERLAP
+
+const PinkyUp = 8
+load sprite, ../../../res/image/PucMon/Pinky_u0.tga, PinkyUp + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Pinky_u1.tga, PinkyUp + 1, NoFlip, SPRITE_OVERLAP
+
+const PinkyDn = 10
+load sprite, ../../../res/image/PucMon/Pinky_d0.tga, PinkyDn + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Pinky_d1.tga, PinkyDn + 1, NoFlip, SPRITE_OVERLAP
+
+const PinkyLt = 12
+load sprite, ../../../res/image/PucMon/Pinky_l0.tga, PinkyLt + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Pinky_l1.tga, PinkyLt + 1, NoFlip, SPRITE_OVERLAP
+
+const PinkyRt = 14 'instance and hardware flip, (native code), in the X direction to save memory
+load sprite, ../../../res/image/PucMon/Pinky_l0.tga, PinkyRt + 0, FlipX, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Pinky_l1.tga, PinkyRt + 1, FlipX, SPRITE_OVERLAP
+
+const InkyUp = 16
+load sprite, ../../../res/image/PucMon/Inky_u0.tga, InkyUp + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Inky_u1.tga, InkyUp + 1, NoFlip, SPRITE_OVERLAP
+
+const InkyDn = 18
+load sprite, ../../../res/image/PucMon/Inky_d0.tga, InkyDn + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Inky_d1.tga, InkyDn + 1, NoFlip, SPRITE_OVERLAP
+
+const InkyLt = 20
+load sprite, ../../../res/image/PucMon/Inky_l0.tga, InkyLt + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Inky_l1.tga, InkyLt + 1, NoFlip, SPRITE_OVERLAP
+
+const InkyRt = 22 'instance and hardware flip, (native code), in the X direction to save memory
+load sprite, ../../../res/image/PucMon/Inky_l0.tga, InkyRt + 0, FlipX, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Inky_l1.tga, InkyRt + 1, FlipX, SPRITE_OVERLAP
+
+const ClydeUp = 24
+load sprite, ../../../res/image/PucMon/Clyde_u0.tga, ClydeUp + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Clyde_u1.tga, ClydeUp + 1, NoFlip, SPRITE_OVERLAP
+
+const ClydeDn = 26
+load sprite, ../../../res/image/PucMon/Clyde_d0.tga, ClydeDn + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Clyde_d1.tga, ClydeDn + 1, NoFlip, SPRITE_OVERLAP
+
+const ClydeLt = 28
+load sprite, ../../../res/image/PucMon/Clyde_l0.tga, ClydeLt + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Clyde_l1.tga, ClydeLt + 1, NoFlip, SPRITE_OVERLAP
+
+const ClydeRt = 30 'instance and hardware flip, (native code), in the X direction to save memory
+load sprite, ../../../res/image/PucMon/Clyde_l0.tga, ClydeRt + 0, FlipX, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Clyde_l1.tga, ClydeRt + 1, FlipX, SPRITE_OVERLAP
+
+const PucUp = 32
+load sprite, ../../../res/image/PucMon/Puc_u0.tga, PucUp + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Puc_u1.tga, PucUp + 1, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Puc_u2.tga, PucUp + 2, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Puc_u3.tga, PucUp + 3, NoFlip, SPRITE_OVERLAP
+
+const PucDn = 36 'instance and hardware flip, (native code), in the Y direction to save memory
+load sprite, ../../../res/image/PucMon/Puc_u0.tga, PucDn + 0, FlipY, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Puc_u1.tga, PucDn + 1, FlipY, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Puc_u2.tga, PucDn + 2, FlipY, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Puc_u3.tga, PucDn + 3, FlipY, SPRITE_OVERLAP
+
+const PucLt = 40
+load sprite, ../../../res/image/PucMon/Puc_l0.tga, PucLt + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Puc_l1.tga, PucLt + 1, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Puc_l2.tga, PucLt + 2, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Puc_l3.tga, PucLt + 3, NoFlip, SPRITE_OVERLAP
+
+const PucRt = 44 'instance and hardware flip, (native code), in the X direction to save memory
+load sprite, ../../../res/image/PucMon/Puc_l0.tga, PucRt + 0, FlipX, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Puc_l1.tga, PucRt + 1, FlipX, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Puc_l2.tga, PucRt + 2, FlipX, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Puc_l3.tga, PucRt + 3, FlipX, SPRITE_OVERLAP
+
+const ScaredUp = 48
+load sprite, ../../../res/image/PucMon/Scared_u0.tga, ScaredUp + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Scared_u1.tga, ScaredUp + 1, NoFlip, SPRITE_OVERLAP
+
+const ScaredDn = 50
+load sprite, ../../../res/image/PucMon/Scared_d0.tga, ScaredDn + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Scared_d1.tga, ScaredDn + 1, NoFlip, SPRITE_OVERLAP
+
+const ScaredLt = 52
+load sprite, ../../../res/image/PucMon/Scared_u0.tga, ScaredLt + 0, NoFlip, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Scared_u1.tga, ScaredLt + 1, NoFlip, SPRITE_OVERLAP
+
+const ScaredRt = 54
+load sprite, ../../../res/image/PucMon/Scared_u0.tga, ScaredRt + 0, FlipX, SPRITE_OVERLAP
+load sprite, ../../../res/image/PucMon/Scared_u1.tga, ScaredRt + 1, FlipX, SPRITE_OVERLAP
+
+const EyesUp = 56
+load sprite, ../../../res/image/PucMon/Eyes_d.tga, EyesUp, FlipY, 0
+
+const EyesDn = 57
+load sprite, ../../../res/image/PucMon/Eyes_d.tga, EyesDn, NoFlip, 0
+
+const EyesLt = 58
+load sprite, ../../../res/image/PucMon/Eyes_l.tga, EyesLt, NoFlip, 0
+
+const EyesRt = 59
+load sprite, ../../../res/image/PucMon/Eyes_l.tga, EyesRt, FlipX, 0
+
+const Tunnel = 60
+load sprite, ../../../res/image/PucMon/Black12x9.tga, Tunnel, NoFlip, 0
+
+const Pill = 61
+const Erase6x6 = Pill + 1
+load sprite, ../../../res/image/PucMon/Pill.tga,     Pill + 0, NoFlip, 0
+load sprite, ../../../res/image/PucMon/Black6x6.tga, Pill + 1, NoFlip, 0
+
+const Erase12x9 = 63
+load sprite, ../../../res/image/PucMon/Black12x9.tga, Erase12x9, NoFlip, SPRITE_OVERLAP
+
+const Life = 64
+load sprite, ../../../res/image/PucMon/Life.tga, Life, NoFlip, 0
+
+const Level = 65
+load sprite, ../../../res/image/PucMon/Level.tga, Level, NoFlip, 0
+
+const Digit = 66
+load sprite, ../../../res/image/PucMon/Zero.tga,  Digit + 0, NoFlip, 0
+load sprite, ../../../res/image/PucMon/One.tga,   Digit + 1, NoFlip, 0
+load sprite, ../../../res/image/PucMon/Two.tga,   Digit + 2, NoFlip, 0
+load sprite, ../../../res/image/PucMon/Three.tga, Digit + 3, NoFlip, 0
+load sprite, ../../../res/image/PucMon/Four.tga,  Digit + 4, NoFlip, 0
+load sprite, ../../../res/image/PucMon/Five.tga,  Digit + 5, NoFlip, 0
+load sprite, ../../../res/image/PucMon/Six.tga,   Digit + 6, NoFlip, 0
+load sprite, ../../../res/image/PucMon/Seven.tga, Digit + 7, NoFlip, 0
+load sprite, ../../../res/image/PucMon/Eight.tga, Digit + 8, NoFlip, 0
+load sprite, ../../../res/image/PucMon/Nine.tga,  Digit + 9, NoFlip, 0
+
+dim maze%(23, 27) = {&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,
+                     &hF0,&h01,&h01,&h01,&h01,&h01,&hD1,&h01,&h01,&h01,&h01,&h01,&h01,&hF0,&hF0,&h01,&h01,&h01,&h01,&h01,&h01,&hD1,&h01,&h01,&h01,&h01,&h01,&hF0,
+                     &hF0,&h02,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&h02,&hF0,
+                     &hF0,&h01,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,
+                     &hF0,&hD1,&h01,&h01,&h01,&h01,&hD1,&h01,&h01,&hD1,&h01,&h01,&hD1,&h01,&h01,&hD1,&h01,&h01,&hD1,&h01,&h01,&hD1,&h01,&h01,&h01,&h01,&hD1,&hF0,
+                     &hF0,&h01,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,
+                     &hF0,&h01,&h01,&h01,&h01,&h01,&hD1,&hF0,&hF0,&h01,&h01,&h01,&h01,&hF0,&hF0,&h01,&h01,&h01,&h01,&hF0,&hF0,&hD1,&h01,&h01,&h01,&h01,&h01,&hF0,
+                     &hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&h00,&hF0,&hF0,&h00,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,
+                     &hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h00,&h00,&h00,&hD0,&hB0,&h00,&hD0,&h00,&h00,&h00,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,
+                     &hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h00,&hF0,&hF0,&hF0,&hE0,&hE0,&hF0,&hF0,&hF0,&h00,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,
+                     &hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h00,&hF0,&h00,&h00,&hC0,&h00,&h00,&h00,&hF0,&h00,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,
+                     &hA0,&h90,&h90,&h90,&h90,&h00,&hD1,&h00,&h00,&hD0,&hF0,&h00,&h00,&h00,&h00,&h00,&h00,&hF0,&hD0,&h00,&h00,&hD1,&h00,&h90,&h90,&h90,&h90,&hA0,
+                     &hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h00,&hF0,&h00,&h00,&h00,&h00,&h00,&h00,&hF0,&h00,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,
+                     &hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h00,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h00,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,
+                     &hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&hD0,&h00,&h00,&h00,&h00,&h00,&h00,&h00,&h00,&hD0,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,
+                     &hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h00,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h00,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,
+                     &hF0,&h01,&h01,&h01,&h01,&h01,&hD1,&h01,&h01,&hD1,&h01,&h01,&h01,&hF0,&hF0,&h01,&h01,&h01,&hD1,&h01,&h01,&hD1,&h01,&h01,&h01,&h01,&h01,&hF0,
+                     &hF0,&h01,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,
+                     &hF0,&h02,&h01,&h01,&hF0,&hF0,&hD1,&h01,&h01,&hD1,&h01,&h01,&hD1,&h00,&h00,&hD1,&h01,&h01,&hD1,&h01,&h01,&hD1,&hF0,&hF0,&h01,&h01,&h02,&hF0,
+                     &hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h01,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h01,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,
+                     &hF0,&h01,&h01,&hD1,&h01,&h01,&h01,&hF0,&hF0,&h01,&h01,&h01,&h01,&hF0,&hF0,&h01,&h01,&h01,&h01,&hF0,&hF0,&h01,&h01,&h01,&hD1,&h01,&h01,&hF0,
+                     &hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,&hF0,&h01,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&h01,&hF0,
+                     &hF0,&h01,&h01,&h01,&h01,&h01,&h01,&h01,&h01,&h01,&h01,&h01,&hD1,&h01,&h01,&hD1,&h01,&h01,&h01,&h01,&h01,&h01,&h01,&h01,&h01,&h01,&h01,&hF0,
+                     &hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0,&hF0}
+
+const MUSIC_INTRO = &h31A0
+def byte(&h31a0) =  &h90, &h47, &h91, &h23, &h04, &h80, &h04, &h90, &h53, &h81, &h05, &h80, &h04, &h90, &h4e, &h04,
+def byte         =  &h80, &h04, &h90, &h4b, &h91, &h2f, &h05, &h80, &h04, &h90, &h53, &h91, &h23, &h04, &h90, &h4e,
+def byte         =  &h04, &h80, &h81, &h09, &h90, &h4b, &h08, &h91, &h2f, &h05, &h80, &h04, &h90, &h48, &h91, &h24,
+def byte         =  &h04, &h80, &h04, &h90, &h54, &h81, &h05, &h80, &h04, &h90, &h4f, &h04, &h80, &h04, &h90, &h4c,
+def byte         =  &h91, &h30, &h05, &h80, &h04, &h90, &h54, &h91, &h24, &h04, &h90, &h4f, &h04, &h80, &h81, &h09,
+def byte         =  &h90, &h4c, &h08, &h91, &h30, &h05, &h80, &h04, &h90, &h47, &h91, &h23, &h04, &hd0, &ha0, &h32,
+
+def byte(&h32a0) =  &h80, &h04, &h90, &h53, &h81, &h05, &h80, &h04, &h90, &h4e, &h04, &h80, &h04, &h90, &h4b, &h91,
+def byte         =  &h2f, &h05, &h80, &h04, &h90, &h53, &h91, &h23, &h04, &h90, &h4e, &h04, &h80, &h81, &h09, &h90,
+def byte         =  &h4b, &h08, &h91, &h2f, &h04, &h80, &h05, &h90, &h4b, &h91, &h2a, &h04, &h90, &h4c, &h04, &h90,
+def byte         =  &h4d, &h81, &h04, &h80, &h05, &h90, &h4d, &h91, &h2c, &h04, &h90, &h4e, &h04, &h90, &h4f, &h81,
+def byte         =  &h04, &h80, &h05, &h90, &h4f, &h91, &h2e, &h04, &h90, &h50, &h04, &h90, &h51, &h81, &h04, &h80,
+def byte         =  &h05, &h90, &h53, &h91, &h2f, &h08, &h80, &h81, &hd0, &h00, &h00,
+
+const ORIGIN_X = 2
+const ORIGIN_Y = 2
+const SCORE_X = 112
+const SCORE_Y = 65
+const LEVEL_X = 137
+const LEVEL_Y = 53
+const HIGH_X = 112
+const HIGH_Y = 40
+const LIFE_X = 137
+const LIFE_Y = 109
+
+const PILL_LT = @maze( 2,  1)
+const PILL_RT = @maze( 2, 26)
+const PILL_LB = @maze(18,  1)
+const PILL_RB = @maze(18, 26)
+
+const WALL   = &hF0
+const DOOR   = &hE0
+const JUNC   = &hD0
+const EXIT   = &hC0
+const ENTER  = &hB0
+const TUNNEL = &hA0
+const SLOW   = &h90
+const RPILL  = &h04
+const RDOT   = &h03
+const PILL   = &h02
+const DOT    = &h01
+
+
+dim MAZE_BORDER(6)   = 0, 115, 255
+dim MAZE_OUTER_T(14) = 25, 0, 0, -15, -25, 0, 0, -35, 65, 0, 0, 15, 2, 0, 255
+dim MAZE_OUTER_B(16) = -68, 0, 0, -20, 9, 0, -9, 0, 0, -20, 25, 0, 0, -15, -25, 0, 255
+dim MAZE_TJUNC_0(10) = 25, 0, 0, -10, 5, 0, 0, 10, 15, 0, 255
+dim MAZE_TJUNC_1(6)  = -2, 0, 0, -10, -15, 0, 255
+dim MAZE_CAGE(6)     = -10, 0, 0, 20, 17, 0, 255
+dim MAZE_VERT_0(8)   = 0, 15, -5, 0, 0, -15, 5, 0, 255
+dim MAZE_VERT_1(8)   = 5, 0, 0, 25, -5, 0, 0, -25, 255
+dim MAZE_CORNER(8)   = 10, 0, 0, 10, 5, 0, 0, -10, 255
+dim MAZE_HORIZ_0(8)  = 15, 0, 0, 5, -15, 0, 0, -5, 255
+dim MAZE_HORIZ_1(8)  = 20, 0, 0, 5, -20, 0, 0, -5, 255
+dim MAZE_LINE_0(2)   = 15, 0, 255
+dim MAZE_LINE_1(2)   = 20, 0, 255
+
+'LUT containing maze piece locations
+const NUM_MAZE_PIECES = 36
+dim MAZE_PIECES(NUM_MAZE_PIECES - 1) = 0+2*256, 1+2*256, 2+2*256, 157+2*256, 158+2*256, 159+2*256, ORIGIN_X+((50+ORIGIN_Y)*256), (135+ORIGIN_X)+((50+ORIGIN_Y)*256), (68+ORIGIN_X)+((115+ORIGIN_Y)*256), (67+ORIGIN_X)+((115+ORIGIN_Y)*256), (10+ORIGIN_X)+((105+ORIGIN_Y)*256), (125+ORIGIN_X)+((105+ORIGIN_Y)*256), (67+ORIGIN_X)+((105+ORIGIN_Y)*256), (68+ORIGIN_X)+((105+ORIGIN_Y)*256), (67+ORIGIN_X)+((85+ORIGIN_Y)*256), (68+ORIGIN_X)+((85+ORIGIN_Y)*256), (67+ORIGIN_X)+((35+ORIGIN_Y)*256), (68+ORIGIN_X)+((35+ORIGIN_Y)*256), (60+ORIGIN_X)+((45+ORIGIN_Y)*256), (75+ORIGIN_X)+((45+ORIGIN_Y)*256), (40+ORIGIN_X)+((60+ORIGIN_Y)*256), (95+ORIGIN_X)+((60+ORIGIN_Y)*256), (35+ORIGIN_X)+((25+ORIGIN_Y)*256), (100+ORIGIN_X)+((25+ORIGIN_Y)*256), (10+ORIGIN_X)+((85+ORIGIN_Y)*256), (125+ORIGIN_X)+((85+ORIGIN_Y)*256), (10+ORIGIN_X)+((10+ORIGIN_Y)*256), (125+ORIGIN_X)+((10+ORIGIN_Y)*256), (35+ORIGIN_X)+((10+ORIGIN_Y)*256), (100+ORIGIN_X)+((10+ORIGIN_Y)*256), (40+ORIGIN_X)+((35+ORIGIN_Y)*256), (95+ORIGIN_X)+((35+ORIGIN_Y)*256), (35+ORIGIN_X)+((85+ORIGIN_Y)*256), (100+ORIGIN_X)+((85+ORIGIN_Y)*256), (10+ORIGIN_X)+((25+ORIGIN_Y)*256), (125+ORIGIN_X)+((25+ORIGIN_Y)*256), 
+
+'LUT containing maze piece addresses
+dim MAZE_ADDRS(NUM_MAZE_PIECES - 1) = @MAZE_BORDER, @MAZE_BORDER, @MAZE_BORDER, @MAZE_BORDER, @MAZE_BORDER, @MAZE_BORDER, @MAZE_OUTER_T, @MAZE_OUTER_T, @MAZE_OUTER_B, @MAZE_OUTER_B, @MAZE_TJUNC_0, @MAZE_TJUNC_0, @MAZE_TJUNC_1, @MAZE_TJUNC_1, @MAZE_TJUNC_1, @MAZE_TJUNC_1, @MAZE_TJUNC_1, @MAZE_TJUNC_1, @MAZE_CAGE, @MAZE_CAGE, @MAZE_VERT_0, @MAZE_VERT_0, @MAZE_VERT_1, @MAZE_VERT_1, @MAZE_CORNER, @MAZE_CORNER, @MAZE_HORIZ_0, @MAZE_HORIZ_0, @MAZE_HORIZ_1, @MAZE_HORIZ_1, @MAZE_LINE_0, @MAZE_LINE_0, @MAZE_LINE_1, @MAZE_LINE_1, @MAZE_LINE_0, @MAZE_LINE_0,
+
+'LUT containing ghost directions
+dim GHOST_DIRS(7) = 1, 0, 0, 1, -1, 0, 0, -1
+
+const NUM_GHOSTS   = 4
+const CHASE_MODE   = 0
+const SCARED_MODE  = 1
+const SCATTER_MODE = 2
+
+'LUT containing ghost sprite frames
+dim gframes%(NUM_GHOSTS*4 - 1) = BlinkyRt, BlinkyLt, BlinkyDn, BlinkyUp, PinkyRt, PinkyLt, PinkyDn, PinkyUp, InkyRt, InkyLt, InkyDn, InkyUp, ClydeRt, ClydeLt, ClydeDn, ClydeUp
+
+dim ghostsXr(NUM_GHOSTS)    = (64+ORIGIN_X), (52+ORIGIN_X), (52+ORIGIN_X), (76+ORIGIN_X), (76+ORIGIN_X)
+dim ghostsYr(NUM_GHOSTS)    = (36+ORIGIN_Y), (46+ORIGIN_Y), (56+ORIGIN_Y), (46+ORIGIN_Y), (56+ORIGIN_Y)
+dim ghostsX(NUM_GHOSTS - 1) = (64+ORIGIN_X), (52+ORIGIN_X), (52+ORIGIN_X), (76+ORIGIN_X)
+dim ghostsY(NUM_GHOSTS - 1) = (36+ORIGIN_Y), (46+ORIGIN_Y), (56+ORIGIN_Y), (46+ORIGIN_Y)
+dim ghostsXd(NUM_GHOSTS - 1) = -1, -1, -1, -1
+dim ghostsYd(NUM_GHOSTS - 1) = 0, 0, 0, 0
+dim ghostsFlags%(NUM_GHOSTS - 1) = 0, 0, 0, 0
+
+const SCORE_LEN = 7
+dim highBCD%(SCORE_LEN - 1) = 0
+dim scoreBCD%(SCORE_LEN - 1) = 0
+dim pointsBCD%(SCORE_LEN - 1) = 0
+
+const LEVEL_LEN = 2
+dim levelBCD%(LEVEL_LEN - 1) = 0
+
+'livesDots <8:lives><8:dots>
+'levelPain <8:level><8:pain>
+'timeTicks <8:time><8:ticks>
+'flags <8:puc flags><8:ghost flags>, puc flags XXXXXXXD, ghost flags XXXXXXSD : where S = slowed, D = dead
+
+'define vars without intitialisation, (initialised in initVars)
+def livesDots, levelPain, timeTicks, flags, gmode, gx, gy, gxd, gyd, mz, pyd, oxd, oyd, puci, pucj, ti, tj, px, py, pxd, bonus
+
+gosub initSystem
+'gosub drawGrid
+'gosub drawCells
+gosub drawMaze
+    
+reset:
+    gosub resetLevel
+    
+start:
+    gosub startLevel
+    
+init:
+    call initVars
+
+repeat
+    wait
+
+    'change sprite priority based on who is agressor
+    if gmode &&= SCARED_MODE
+        gosub drawGhosts
+        gosub drawPucMon
+    else
+        gosub drawPucMon
+        gosub drawGhosts
+    endif
+
+    'level complete
+    if livesDots.lo &&= 0
+        if levelPain.lo &&= 99 then poke &h0101, &h40  'level100 easter egg, good luck once you get to level 100!
+        inc levelPain.lo
+        inc levelPain.hi
+        goto start
+    endif
+
+    'puc died
+    if flags.hi &&= 1
+        flags.hi = 0
+        livesDots.hi = livesDots.hi - 1
+        call drawDots, 0 'refresh
+        gosub drawDeath
+        if livesDots.hi &&= 0
+            goto reset
+        endif
+        goto init
+    endif
+
+    'tunnels
+    sprite NoFlip, Tunnel, (1+ORIGIN_X),   (51+ORIGIN_Y)
+    sprite NoFlip, Tunnel, (123+ORIGIN_X), (51+ORIGIN_Y)
+    
+    gosub drawPills
+    
+    gosub setGhostsMode
+    gosub moveGhosts
+
+    gosub handleInput
+    gosub movePucMon
+    
+    inc timeTicks.lo
+forever
+
+'fast modulus by 5 for mx and my, only works for the domain 0<->20734
+'this sub need to be fast, so place it early in the source file so that it will most likely
+'be placed in a large RAM page and thus not require page jumps and allow us to use full BRA optimisations
+'there is no contiguous memory left on a 32K system for 160byte and 120byte LUTs
+mod5:
+    mx = mx.hi + mx.lo : mx = (mx LSR 4) + (mx AND &h000F)
+    if mx &&> 14
+        mx = mx - 15
+    elseif mx &&> 9
+        mx = mx - 10
+    elseif mx &&> 4
+        mx = mx - 5
+    endif
+    
+    my = my.hi + my.lo : my = (my LSR 4) + (my AND &h000F)
+    if my &&> 14
+        my = my - 15
+    elseif my &&> 9
+        my = my - 10
+    elseif my &&> 4
+        my = my - 5 
+    endif
+return
+
+'fast divide by 5 for ci and cj, only works for the domain 0<->319
+'this sub need to be fast, so place it early in the source file so that it will most likely
+'be placed in a large RAM page and thus not require page jumps
+'there is no contiguous memory left on a 32K system for 160byte and 120byte LUTs
+proc div5
+    local i, j
+    
+    ci = ci - (ci LSR 6)                             'error term
+    i  = ci LSL 4 : ci = (i LSL 1) + i + (ci LSL 2)  'multiply by 52
+    ci = ci.hi                                       'divide by 256
+
+    cj = cj - (cj LSR 6)                             'error term
+    j  = cj LSL 4 : cj = (j LSL 1) + j + (cj LSL 2)  'multiply by 52
+    cj = cj.hi                                       'divide by 256
+endproc
+
+drawPucMon:
+    if mz &= WALL
+        sprite NoFlip, PucLt + 2, px, py
+        return
+    endif
+    
+    xf = (px LSR 1) AND 3
+    yf = (py LSR 1) AND 3
+    if pxd &&= 1
+        sprite FlipX, PucRt + xf, px, py
+    elseif pxd &&= -1
+        sprite NoFlip, PucLt + xf, px, py
+    elseif pyd &&= 1
+        sprite FlipY, PucDn + yf, px, py
+    else
+        sprite NoFlip, PucUp + yf, px, py
+    endif
+    px = px + pxd
+    py = py + pyd
+return
+
+drawGhosts:
+    for gidx=0 to NUM_GHOSTS-1
+        gosub getGhostVars
+
+        'if puc died or level is complete, then erase ghost
+        if &((flags.hi) OR (livesDots.lo = 0))
+            sprite NoFlip, Erase12x9, gx, gy
+            goto drawNextGhost
+        endif
+
+        xf = (gx LSR 2) AND 1
+        yf = (gy LSR 2) AND 1
+        
+        'ghost dead, scared or normal
+        if &(flags.lo AND 1)
+            gosub drawDeadGhost
+        elseif gmode &&= SCARED_MODE
+            if timeTicks.hi &&< (8-levelPain.hi)
+                gosub drawScaredGhost
+            else
+                if &((timeTicks.lo LSR 3) AND 1)
+                    gosub drawNormalGhost
+                else
+                    gosub drawScaredGhost
+                endif
+            endif
+        else
+            gosub drawNormalGhost
+        endif
+        
+drawNextGhost:        
+    next gidx
+return
+
+drawNormalGhost:
+    i = gidx LSL 2
+    if gxd &= 1
+        sprite FlipX,  peek(@gframes + 0 + i) + xf, gx, gy
+    elseif gxd &= -1
+        sprite NoFlip, peek(@gframes + 1 + i) + xf, gx, gy
+    elseif gyd &= 1
+        sprite NoFlip, peek(@gframes + 2 + i) + yf, gx, gy
+    else
+        sprite NoFlip, peek(@gframes + 3 + i) + yf, gx, gy
+    endif
+return
+
+drawScaredGhost:
+    if gxd &= 1
+        sprite FlipX,  ScaredRt + xf, gx, gy
+    elseif gxd &= -1
+        sprite NoFlip, ScaredLt + xf, gx, gy
+    elseif gyd &&= 1
+        sprite NoFlip, ScaredDn + yf, gx, gy
+    else
+        sprite NoFlip, ScaredUp + yf, gx, gy
+    endif
+return
+
+drawDeadGhost:
+    if gxd &&= 1
+        sprite FlipX,  EyesRt, gx+2, gy+3
+    elseif gxd &&= -1
+        sprite NoFlip, EyesLt, gx+2, gy+3
+    elseif gyd &&= 1
+        sprite NoFlip, EyesDn, gx+2, gy+3
+    else
+        sprite FlipY,  EyesUp, gx+2, gy+3
+    endif
+return
+
+drawPills:
+    i = timeTicks.lo AND 7
+    if i &= 0
+        i = (timeTicks.lo LSR 3) AND 1
+        if peek(PILL_LT) &= PILL then sprite NoFlip, Pill + i, (1*5)  + (ORIGIN_X-2), (2*5)  + (ORIGIN_Y - 3)
+        if peek(PILL_RT) &= PILL then sprite NoFlip, Pill + i, (26*5) + (ORIGIN_X-2), (2*5)  + (ORIGIN_Y - 3)
+        if peek(PILL_LB) &= PILL then sprite NoFlip, Pill + i, (1*5)  + (ORIGIN_X-2), (18*5) + (ORIGIN_Y - 3)
+        if peek(PILL_RB) &= PILL then sprite NoFlip, Pill + i, (26*5) + (ORIGIN_X-2), (18*5) + (ORIGIN_Y - 3)
+    endif
+return
+
+movePucMon:
+    gosub coordsPucMon
+    puci = ci - pxd
+    pucj = cj - pyd
+        
+    'dots, pills, doors and tunnels
+    mz = maze(cj, ci)
+    if (mz AND &h0F) &= DOT
+        maze(cj, ci) = (mz AND &hF0) OR RDOT
+        bcdint @pointsBCD, 10
+        call drawScore
+        livesDots.lo = livesDots.lo - 1
+    elseif mz &= PILL
+        maze(cj, ci) = (mz AND &hF0) OR RPILL
+        gmode = SCARED_MODE
+        timeTicks = 0
+        bcdint @pointsBCD, 50
+        call drawScore
+        livesDots.lo = livesDots.lo - 1
+    elseif mz &>= DOOR
+        pxd = oxd : pyd = oyd
+        gosub coordsPucMon
+        mz = maze(cj, ci) 
+    elseif mz &= TUNNEL
+        px = (129+ORIGIN_X) - px
+    endif
+return
+
+moveGhosts:
+    for gidx=0 to NUM_GHOSTS-1
+        gosub getGhostVars
+
+        'ghost slowed
+        slowed = 0
+        if (gmode = SCARED_MODE) OR (flags.lo AND 2)
+            if timeTicks.lo XOR 255 AND 1  'if timeTicks.lo AND 1 = 0
+                if flags.lo XOR 255 AND 1  'if flags.lo     AND 1 = 0
+                    slowed = 1
+                    gxd = 0 : gyd = gxd
+                endif
+            endif
+        endif
+        
+        'ghost position
+        gx = gx + gxd
+        gy = gy + gyd
+        
+        'ghost colliding with puc
+        if flags.lo XOR 255 AND 1  'if flags.lo AND 1 = 0
+            if abs(gx - px) &<= 3
+                if abs(gy - py) &<= 3
+                    sprite NoFlip, Erase12x9, gx, gy
+                    if gmode &= SCARED_MODE
+                        flags.lo = flags.lo OR 1 : ghostsFlags(gidx) = flags.lo
+                        bcdint @pointsBCD, bonus : bonus = bonus + bonus
+                        call drawScore
+                    else
+                        flags.hi = 1
+                    endif
+                endif
+            endif
+        endif
+
+        'ghost reverses direction
+        if gmode &= SCARED_MODE
+            if timeTicks.hi &= 0
+                if timeTicks.lo &= 1
+                    gxd = -gxd : gyd = -gyd
+                endif
+            endif
+        endif
+
+        'skip ghost AI if not centered on a tile
+        mx = gx : my = gy : gosub mod5
+        if mx &<> 3 then goto moveNextGhost
+        if my &<> 3 then goto moveNextGhost
+
+        'ghost look ahead indices
+        ci = gx + gxd + gxd + gxd + -(ORIGIN_X-6)
+        cj = gy + gyd + gyd + gyd +  (ORIGIN_Y+2)
+        call div5
+
+        'ghost dot indices
+        di = ci - gxd - gxd
+        dj = cj - gyd - gyd
+
+        'ghost indices
+        gi = ci - gxd
+        gj = cj - gyd
+
+        'ghost replaces dot
+        mz = maze(dj, di)
+        if slowed &= 0 then gosub replaceDot
+
+        'ghost leaves home
+        if maze(gj, gi) &= EXIT
+            if &(flags.lo XOR 255 AND 1)  'if flags.lo AND 1 = 0
+                if gmode &<> SCARED_MODE
+                    gxd = 0 : gyd = -1
+                endif
+            endif
+        endif
+
+        'ghost's next target
+        on gidx gosub getBlinkyTarget, getPinkyTarget, getInkyTarget, getClydeTarget
+
+        'ghost home
+        if gi &= 13
+            if gj &= 10
+                flags.lo = flags.lo AND &hFE : ghostsFlags(gidx) = flags.lo
+            endif
+        endif
+
+        'ghost died, so head home
+        if &(flags.lo AND 1)
+            ti = 12 : tj = 11
+        endif
+
+        'ghost walls, tunnel and junctions
+        mz = maze(cj, ci)
+        if mz &= WALL
+            gosub getWallDir
+            gosub getGhostDir
+        elseif mz &= TUNNEL
+            gx = (129+ORIGIN_X) - gx
+        elseif mz &= SLOW
+            flags.lo = flags.lo OR 2 : ghostsFlags(gidx) = flags.lo
+        else
+            'reset slow flag
+            if flags.lo AND 2
+                flags.lo = flags.lo AND &hFD : ghostsFlags(gidx) = flags.lo
+            endif
+
+            'junctions and entering cage whilst dead
+            mz = maze(gj, gi) AND &hF0
+            if &((mz = JUNC) OR (((mz = DOOR) OR (mz = ENTER)) AND (flags.lo AND 1)))
+                gosub getJuncDir
+                gosub getGhostDir
+            endif
+        endif
+
+moveNextGhost:
+        'ghost vars update when not slowed
+        if slowed &= 0
+            gosub setGhostVars
+        endif
+    next gidx
+return
+
+getGhostVars:
+    gx = ghostsX(gidx).lo : gy = ghostsY(gidx).lo
+    gxd = ghostsXd(gidx)  : gyd = ghostsYd(gidx)
+    flags.lo = ghostsFlags(gidx)
+return
+
+setGhostVars:
+    ghostsX(gidx) = gx : ghostsY(gidx) = gy
+    ghostsXd(gidx) = gxd : ghostsYd(gidx) = gyd
+return
+
+getGhostDir:
+    i = i LSL 2
+    gxd = deek(@GHOST_DIRS + i + 0)
+    gyd = deek(@GHOST_DIRS + i + 2)
+return
+
+setGhostsMode:
+    if (timeTicks.lo AND &h1F) then return
+
+    'roughly every second when running at ~30fps, (mode 2)
+    inc timeTicks.hi
+    
+    'ghost scared mode lasts approx 10 seconds
+    if gmode &= SCARED_MODE
+        if timeTicks.hi &> (10 - levelPain.hi)
+            timeTicks.hi = 0
+            bonus = 200
+            gmode = CHASE_MODE
+        endif
+        return
+    endif
+    
+    'ghosts return to chase mode
+    if timeTicks.hi &> 30
+        timeTicks.hi = 0
+        gmode = CHASE_MODE
+        return
+    endif
+    
+    'ghosts scatter for 10 seconds out of every 30 seconds    
+    if timeTicks.hi &> (20 + levelPain.hi)
+        gmode = SCATTER_MODE
+    endif
+return
+
+'Blinkys target is Puc
+getBlinkyTarget:
+    'save Blinkys indices for inky's targeting
+    bi = gi : bj = gj
+
+    if gmode &= CHASE_MODE    
+        ti = puci : tj = pucj
+        return
+    endif
+    
+    'scatter target
+    ti = 27 : tj = 0
+return
+
+'Pinkys target is 4 tiles ahead of Pucs current direction
+getPinkyTarget:
+    if gmode &= CHASE_MODE
+        ti = puci + pxd + pxd + pxd + pxd
+        tj = pucj + pyd + pyd + pyd + pyd
+        return
+    endif
+    
+    'scatter target
+    ti = 0 : tj = 0
+return
+
+'Inkys target is (vector from Blinky to (Puc + 2)) * 2
+getInkyTarget:
+    if gmode &= CHASE_MODE
+        ti = puci + pxd + pxd
+        tj = pucj + pyd + pyd
+        bi = ti - bi : bj = tj - bj 'vector from Blinky to (Puc + 2)
+        ti = ti + bi
+        tj = tj + bj
+        return
+    endif
+    
+    'scatter target
+    ti = 27 : tj = 23
+return
+
+'Clyde acts like Blinky until he gets within 8 tiles, then he scatters
+getClydeTarget:
+    if gmode &= CHASE_MODE
+        if abs(puci - gi) + abs(pucj - gj) &> 8 'taxi-cab distance
+            ti = puci : tj = pucj
+            return
+        endif
+    endif
+    
+    'scatter target
+    ti = 0 : tj = 23
+return
+
+getJuncDir:
+    if (gxd)
+        if (abs(tj - gj))
+            if maze(gj - 1, gi) &<> WALL
+                i = 3 : if tj &< gj then return
+            endif
+            if maze(gj + 1, gi) &<> WALL
+                i = 1 : if tj &> gj then return
+            endif
+        endif
+    else
+        if (abs(ti - gi))
+            if maze(gj, gi - 1) &<> WALL
+                i = 2 : if ti &< gi then return
+            endif
+            if maze(gj, gi + 1) &<> WALL
+                i = 0 : if ti &> gi then return
+            endif
+        endif
+    endif
+
+    if gxd &= 1
+        i = 0
+    elseif gxd &= -1
+        i = 2
+    elseif gyd &= 1
+        i = 1
+    else
+        i = 3
+    endif
+return
+
+getWallDir:
+    if (gxd)
+        if maze(gj - 1, gi) &<> WALL
+            i = 3 : if tj &< gj then return
+        endif
+        if maze(gj + 1, gi) &<> WALL then i = 1
+    else
+        if maze(gj, gi - 1) &<> WALL
+            i = 2 : if ti &< gi then return
+        endif
+        if maze(gj, gi + 1) &<> WALL then i = 0
+    endif
+return
+
+replaceDot:
+    if (mz AND &h0F) &= DOT
+        di = (di LSL 2) + di + ORIGIN_X   'di = di*5 + 12
+        dj = (dj LSL 2) + dj + ORIGIN_Y   'dj = dj*5 + 2
+        poke ((dj + 8) LSL 8) + di, &h2B  'convert dj, di to vram address
+    endif
+return
+
+coordsPucMon:
+    ci = px + pxd + pxd + pxd + -(ORIGIN_X-6)
+    cj = py + pyd + pyd + pyd +  (ORIGIN_Y+2)
+    call div5
+return
+
+handleInput:
+    oxd = pxd : oyd = pyd
+    mx = px : my = py : gosub mod5
+    gosub get("BUTTON_STATE")
+return
+
+253: if my &= 3 then pyd = 0 : pxd = pyd-1
+     return
+
+254: if my &= 3 then pyd = 0 : pxd = pyd+1
+     return
+
+247: if mx &= 3 then pxd = 0 : pyd = pxd-1
+     return
+
+251: if mx &= 3 then pxd = 0 : pyd = pxd+1
+     return
+
+proc drawScore
+    local char
+    
+    bcdadd @pointsBCD, @scoreBCD, SCORE_LEN
+    char = SCORE_X+ORIGIN_X
+    for i=0 to SCORE_LEN-1
+        sprite NoFlip, Digit + peek(@scoreBCD + SCORE_LEN-1 - i), char, SCORE_Y+ORIGIN_Y
+        char = char + 6
+    next i
+    'bcdcmp requires bcd addrs to point to msd
+    if bcdcmp(@scoreBCD+(SCORE_LEN-1), @highBCD+(SCORE_LEN-1), SCORE_LEN) &= 1
+        bcdcpy @scoreBCD, @highBCD, SCORE_LEN
+        call drawHigh
+    endif
+endproc
+
+proc drawHigh
+    local char
+    
+    char = HIGH_X+ORIGIN_X
+    for i=0 to SCORE_LEN-1
+        sprite NoFlip, Digit + peek(@highBCD + SCORE_LEN-1 - i), char, HIGH_Y+ORIGIN_Y
+        char = char + 6
+    next i
+endproc
+
+proc drawLevel
+    local char
+    
+    sprite NoFlip, Level, LEVEL_X+ORIGIN_X, LEVEL_Y+ORIGIN_Y
+    char = LEVEL_X+ORIGIN_X + 6
+    for i=0 to LEVEL_LEN-1
+        sprite NoFlip, Digit + peek(@levelBCD + LEVEL_LEN-1 - i), char, LEVEL_Y+ORIGIN_Y
+        char = char + 6
+    next i
+endproc
+
+proc drawLives
+    local puc
+    
+    puc = LIFE_X+ORIGIN_X
+    i = 1
+    while i &<= livesDots.hi
+        sprite NoFlip, Life, puc, LIFE_Y+ORIGIN_Y
+        puc = puc + 6
+        inc i
+    wend
+    while i &<= 3
+        sprite NoFlip, Erase6x6, puc, LIFE_Y+ORIGIN_Y
+        puc = puc + 6
+        inc i
+    wend
+endproc
+
+drawDeath:
+    call drawLives
+    for i=1 to 6
+        sprite NoFlip, PucLt + 2, px, py
+        wait 10
+        sprite NoFlip, Erase12x9, px, py
+        wait 10
+    next i
+return
+
+drawMaze:
+    set FG_COLOUR, &h30
+    for i=0 to (NUM_MAZE_PIECES*2 - 2) step 4
+        set CURSOR_XY, deek(@MAZE_PIECES + i)     : polyR deek(@MAZE_ADDRS + i)
+        set CURSOR_XY, deek(@MAZE_PIECES + i + 2) : polyR deek(@MAZE_ADDRS + i + 2), FLIPX
+    next i
+    
+    set FG_COLOUR, 0 '&h2B
+return
+
+'redraw=0 is refresh, redraw=1 is redraw
+proc drawDots, redraw
+    set FG_COLOUR, &h2B
+    for cj=0 to 23
+        for ci=0 to 27
+            mz = maze(cj, ci)
+            if redraw &= 1
+                if (mz AND &h0F) &= RDOT       'reset dots
+                    mz = (mz AND &hF0) OR DOT
+                elseif (mz AND &h0F) &= RPILL  'reset pills
+                    mz = (mz AND &hF0) OR PILL
+                endif
+                maze(cj, ci) = mz
+            endif
+            if (mz AND &h0F) &= DOT
+                pset (ci LSL 2) + ci + ORIGIN_X, (cj LSL 2) + cj + ORIGIN_Y
+            endif
+        next ci
+    next cj
+endproc
+
+proc initVars
+    local corner
+    
+    'initialises all variables, (to zero), starting at @timeTicks
+    init vars @timeTicks
+    
+    px = (63+ORIGIN_X)
+    py = (86+ORIGIN_Y)
+    pxd = -1
+    bonus = 200
+    
+    'reset ghost vars
+    corner = (rnd(0) AND 3)
+    for gidx=0 to (NUM_GHOSTS - 1)
+        if gidx &= 0
+            i = gidx LSL 1                          'blinky is always reset to the same position
+        else
+            i = (((corner + gidx) AND 3) + 1) LSL 1 'pinky, inky and clyde are reset to 1 of 4 random cage corners
+        endif
+        gx = deek(@ghostsXr + i)
+        gy = deek(@ghostsYr + i)
+        gxd = -1                                    'ghosts initially move left
+        gosub setGhostVars
+    next gidx
+endproc
+
+startLevel:
+    sprite NoFlip, Erase12x9, px, py
+    livesDots.lo = 212
+    bcdint @pointsBCD, 0
+    bcdint @levelBCD, levelPain.lo
+    if levelPain.hi &> 7 then levelPain.hi = 7
+    
+    call drawDots, 1 'redraw
+    call drawScore
+    call drawHigh
+    call drawLives
+    call drawLevel
+    
+    if levelPain.lo &= 0
+        play music, MUSIC_INTRO, 2
+    else
+        wait 120
+    endif
+return
+
+resetLevel:
+    levelPain = 0+0*256
+    livesDots = 3*256
+    bcdint @scoreBCD, 0
+    poke &h0101, 0
+    
+    'audio fix for ROMv5a
+    poke &h21, peek(&h21) OR 3
+return
+
+initSystem:
+    px = (63+ORIGIN_X) : py = (86+ORIGIN_Y)
+    
+    'scanline 0 and 1 are replaced with scanline 2, (hide scanlines 0 and 1)
+    poke &h0100, &h0A
+    poke &h0102, &h0A
+    
+    'scanline 118 and 119 are replaced with scanline 117, (hide scanlines 118 and 119)
+    poke &h01EC, &h7D
+    poke &h01EE, &h7D
+    
+    'don't use cls as we are using hidden parts of VRAM for code and data
+    mode 2
+    set FGBG_COLOUR, 0
+    cls &h0A00, 160, 116
+    'rectf 0, 2, 159, 117
+    'set FG_COLOUR, &h30
+    'rectf 135+ORIGIN_X, 2,            154+ORIGIN_X, HIGH_Y-3
+    'rectf 135+ORIGIN_X, 15+HIGH_Y-3,  154+ORIGIN_X, SCORE_Y-3
+    'rectf 135+ORIGIN_X, 15+SCORE_Y-3, 154+ORIGIN_X, 117
+    'set FG_COLOUR, 0
+    'rectf 136+ORIGIN_X, 3,            154+ORIGIN_X, HIGH_Y-4
+    'rectf 136+ORIGIN_X, 16+HIGH_Y-3,  154+ORIGIN_X, SCORE_Y-4
+    'rectf 136+ORIGIN_X, 16+SCORE_Y-3, 154+ORIGIN_X, 116
+return
+
+'drawGrid:
+'    set FG_COLOUR, &h15
+'    for i=ORIGIN_X to 140+ORIGIN_X step 5
+'        line i, 0, i, 119
+'    next i
+'    for i=ORIGIN_Y to 115+ORIGIN_Y step 5
+'        line 0, i, 159, i
+'    next i
+'return
+
+'drawCells:
+'    set FG_COLOUR, &h15
+'    for i=10 to 150 step 5
+'        line i, 0, i, 119
+'    next i
+'    for i=0 to 115 step 5
+'        line 0, i, 159, i
+'    next i
+'return

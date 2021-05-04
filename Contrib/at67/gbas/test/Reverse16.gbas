@@ -1,0 +1,34 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+const START = &h0600
+const SIZE = 256
+
+def byte(START, x, 0, SIZE, SIZE) = REV8(x)
+
+'gosub createlut
+
+cls
+    
+loop:
+    out16 = 0
+    input in16
+
+    out16.hi = peek(START + in16.lo)
+    out16.lo = peek(START + in16.hi)
+
+    print hex$(out16, 4)
+    goto loop
+end
+
+'createlut:
+'    for i=0 to 255
+'        o = 0
+'        b = i
+'        for j=0 &to 7
+'            o = o LSL 1 : o = o OR (b AND 1)
+'            b = b LSR 1
+'        next j
+'        poke START + i, o
+'    next i
+'return

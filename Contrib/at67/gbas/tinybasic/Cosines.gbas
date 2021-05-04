@@ -1,0 +1,12 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+'Plot cosine
+10 set FGBG_COLOUR, &h15 : cls
+20 p=45 'input p:if p<1 goto 20
+30 u=50*100:v=0:c=0
+40 for x=0 to 159
+50 y=(68-u/100) LSL 8 : y.lo=0 : poke y+x,c
+60 u=u+v:v=v-u/p
+70 next x
+80 c=c+23:goto 40

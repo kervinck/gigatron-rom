@@ -22,7 +22,7 @@ namespace Memory
     int getFreeGtbRAM(int numLines)
     {
         int free = ((0x80 - HI_BYTE(GTB_LINE0_ADDRESS))*NUM_GTB_LINES_PER_ROW - numLines)*MAX_GTB_LINE_SIZE - MAX_GTB_LINE_SIZE;
-        if(_sizeRAM == RAM_SIZE_HI) free += RAM_EXPANSION_SIZE;
+        if(_sizeRAM == RAM_SIZE_HI) free += RAM_UPPER_SIZE;
         return free;
     }
 
@@ -43,17 +43,23 @@ namespace Memory
         // 0x0500 <-> 0x0600
         _freeRam.push_back({RAM_PAGE_START_3, RAM_PAGE_SIZE_3*2});
 
-        // 0x08A0 <-> 0c7FA0
+        // 0x08A0 <-> 0x7FA0
         for(uint16_t i=RAM_SEGMENTS_START; i<=RAM_SEGMENTS_END; i+=RAM_SEGMENTS_OFS) _freeRam.push_back({i, RAM_SEGMENTS_SIZE});
 
         // 0x8000 <-> 0xFF00
-        if(_sizeRAM == RAM_SIZE_HI) _freeRam.push_back({RAM_EXPANSION_START, RAM_EXPANSION_SIZE});
+        if(_sizeRAM == RAM_SIZE_HI) _freeRam.push_back({RAM_UPPER_START, RAM_UPPER_SIZE});
 
-        // VRAM 0x0800 <-> 0c7F00
-        for(uint16_t i=RAM_VIDEO_START; i<=RAM_VIDEO_END; i+=RAM_VIDEO_OFS) _videoRam.push_back({i, RAM_VIDEO_SIZE});
+        // VRAM 0x0800 <-> 0x7F00, 160x120 pixels, offscreen areas start at 0xXXA0 and end at 0xXXFF, (can be used for horizontal scrolling or code/data storage)
+        for(uint16_t i=RAM_VIDEO_START; i<=RAM_VIDEO_END; i+=RAM_VIDEO_OFS) _videoRam.push_back({i, RAM_SCANLINE_SIZE});
 
         _baseFreeRAM = _sizeRAM - RAM_USED_DEFAULT;
         _sizeFreeRAM = _baseFreeRAM;
+    }
+
+    void invertFreeRAM(void)
+    {
+        _freeRam.clear();
+        _freeRam = _videoRam;
     }
 
     void updateFreeRAM(void)
@@ -157,13 +163,8 @@ namespace Memory
     {
         for(int i=0; i<int(_videoRam.size()); i++)
         {
-            // Video RAM segment
-            if(address == _videoRam[i]._address)
-            {
-                return true;
-            }
-            // Video RAM within segment
-            else if(address > _videoRam[i]._address  &&  (address <= _videoRam[i]._address + _videoRam[i]._size))
+            // Address within Video RAM segment
+            if(address >= _videoRam[i]._address  &&  (address < _videoRam[i]._address + _videoRam[i]._size))
             {
                 return true;
             }
@@ -286,7 +287,28 @@ namespace Memory
         return false;
     }
 
-    bool getFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address, bool withinPage)
+    bool getFreeRAMLargest(uint16_t& address, int& size)
+    {
+        // Sort entries from highest size to lowest size
+        std::sort(_freeRam.begin(), _freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
+        {
+            int sizeA = ramEntryA._size;
+            int sizeB = ramEntryB._size;
+            return (sizeA > sizeB);
+        });
+
+        if(_freeRam.size() == 0) return false;
+
+        address = _freeRam[0]._address;
+        size = _freeRam[0]._size;
+
+        updateFreeRAM();
+
+        return true;
+    }
+
+    // Attempts to returns RAM request of a given size : withinPage specifiec no page boundary crossings : oddeven specifies type of address returned, 0=don't care, 1=even, 2=odd
+    bool getFreeRAM(FitType fitType, int size, uint16_t min, uint16_t max, uint16_t& address, bool withinPage, ParityType oddEven)
     {
         switch(fitType)
         {
@@ -302,7 +324,13 @@ namespace Memory
                         if(addr >= min  &&  addr + size-1 <= max  &&  size <= left)
                         {
                             // Skip if request must be within a page and it isn't
-                            if(withinPage  &&  HI_BYTE(addr) != HI_BYTE(addr + size - 1)) continue;
+                            if(withinPage  &&  HI_BYTE(addr) != HI_BYTE(addr + size-1)) continue;
+
+                            // Skip if address doesn't meet odd/even requirements
+                            if(oddEven)
+                            {
+                                if((addr & 1) != oddEven - ParityEven) continue;
+                            }
 
                             address = addr;
                             return takeFreeRAM(addr, size);
@@ -321,10 +349,16 @@ namespace Memory
                         uint16_t left = uint16_t(_freeRam[j]._size - i);
                         uint16_t addr = uint16_t(_freeRam[j]._address + i);
 
-                        if(addr >= min  &&  addr + size - 1 <= max  &&  size <= left)
+                        if(addr >= min  &&  addr + size-1 <= max  &&  size <= left)
                         {
                             // Skip if request must be within a page and it isn't
-                            if(withinPage  &&  HI_BYTE(addr) != HI_BYTE(addr + size - 1)) continue;
+                            if(withinPage  &&  HI_BYTE(addr) != HI_BYTE(addr + size-1)) continue;
+
+                            // Skip if address doesn't meet odd/even requirements
+                            if(oddEven)
+                            {
+                                if((addr & 1) != oddEven - ParityEven) continue;
+                            }
 
                             address = addr;
                             return takeFreeRAM(addr, size);
@@ -338,6 +372,56 @@ namespace Memory
         }
         
         fprintf(stderr, "Memory::getFreeRAM() : No free RAM found of size %d bytes\n", size);
+        return false;
+    }
+
+    // Return free RAM chunks in order of request : withinPage specifiec no page boundary crossings
+    bool getFreeRAM(FitType fitType, uint16_t addrMin, uint16_t addrMax, uint16_t sizeMin, uint16_t& address, uint16_t inSize, uint16_t& outSize, bool withinPage)
+    {
+        switch(fitType)
+        {
+            case FitAscending:
+            {
+                for(int i=0; i<int(_freeRam.size()); i++)
+                {
+                    outSize = uint16_t(_freeRam[i]._size);
+                    address = uint16_t(_freeRam[i]._address);
+
+                    // Skip if size is too small or request crosses a page boundary
+                    if((outSize < sizeMin)  ||  (withinPage  &&  HI_BYTE(address) != HI_BYTE(address + outSize-1))) continue;
+
+                    if(address >= addrMin  &&  address + outSize-1 <= addrMax)
+                    {
+                        if(inSize < outSize) outSize = inSize;
+                        return takeFreeRAM(address, outSize);
+                    }
+                }
+            }
+            break;
+
+            case FitDescending:
+            {
+                for(int i=int(_freeRam.size())-1; i>=0; i--)
+                {
+                    outSize = uint16_t(_freeRam[i]._size);
+                    address = uint16_t(_freeRam[i]._address);
+
+                    // Skip if size is too small or request crosses a page boundary
+                    if((outSize < sizeMin)  ||  (withinPage  &&  HI_BYTE(address) != HI_BYTE(address + outSize-1))) continue;
+
+                    if(address >= addrMin  &&  address + outSize-1 <= addrMax)
+                    {
+                        if(inSize < outSize) outSize = inSize;
+                        return takeFreeRAM(address, outSize);
+                    }
+                }
+            }
+            break;
+
+            default: break;
+        }
+        
+        fprintf(stderr, "Memory::getFreeRAM() : No free RAM found within 0x%04x and 0x%04x\n", addrMin, addrMax);
         return false;
     }
 
@@ -372,7 +456,7 @@ namespace Memory
             }
             break;
 
-            // Sort entries from lowest address to highest address
+            // Sort entries from lowest size to highest size
             case SizeAscending:
             {
                 std::sort(freeRam.begin(), freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)
@@ -384,7 +468,7 @@ namespace Memory
             }
             break;
 
-            // Sort entries from highest address to lowest address
+            // Sort entries from highest size to lowest size
             case SizeDescending:
             {
                 std::sort(freeRam.begin(), freeRam.end(), [](const RamEntry& ramEntryA, const RamEntry& ramEntryB)

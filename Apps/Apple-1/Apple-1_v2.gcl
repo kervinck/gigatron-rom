@@ -1,0 +1,1636 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|                                                                       |
+|       Apple-1 simulator for Gigatron TTL microcomputer                |
+|                                                                       |
+|                                                                       |
++-----------------------------------------------------------------------}
+gcl0x
+
+{
+  References:
+
+  Apple-1 Operation Manual:
+        http://apple1.chez.com/Apple1project/Docs/pdf/AppleI_Manual.pdf
+
+  Apple BASIC Users Manual -- October 1976:
+        https://archive.org/details/apple1_basic_manual
+
+  A Number Game for the 6502 -- September 1976:
+        https://www.applefritter.com/files/Apple1WozDrDobbsMastermind.pdf
+
+  Using The Woz Monitor:
+        https://www.sbprojects.net/projects/apple1/wozmon.php
+
+  Original MOS6502 source code for WozMon:
+        https://github.com/jefftranter/6502/tree/master/asm/wozmon
+        https://www.sbprojects.com/projects/apple1/wozmon.txt
+
+  Eric Smit's disassembly of A1 BASIC:
+        http://www.brouhaha.com/~eric/retrocomputing/apple/apple1/basic/
+
+  Online Apple 1 Emulator (Hit [RESET] to enter WozMon):
+        https://www.scullinsteel.com/apple1/
+
+  Jeff Jetton's 15-puzzle for the Apple-1
+        https://www.applefritter.com/content/my-first-apple-i-program-15-puzzle
+
+
+  Zero page usage:
+        $00-$2f         (Gigatron)
+        $30-$33         vIRQ (system)
+        $34-$3b         WozMon, Mini-assembler
+        $3c-$3f         vIRQ (application)
+        $40-$4c         Mini-assembler, Integer BASIC
+        $4d-$79         Integer BASIC
+        $7a-$7f         _i _j _p for PIA emulation
+        $80             (Gigatron)
+        $81-$e9         Integer BASIC
+        $e0-$ff         Stack
+
+  Memory map, with reduced (and split) screen memory:
+        +--------------------------+
+        |0000-00FF   ZEROPAGE+STACK|
+        |0100-01FF   VIDEO+SYSTEM  |
+        |0200-0FFF   RAM           |
+        |0200-027F   KEYBD BUFFER  |
+        |0C8A-0FDD   MINI-ASSEMBLER|
+        |1060-5DFF   SCREEN        | 78 scanlines = 11*7+1
+        |5E00-5FFF   PIA EMULATION |
+        |E000-EFFF   A1 BASIC      | alias 6000-6FFF -> A1 BASIC
+        |F060-FEFF   SCREEN        | alias 7060-7EFF -> 15 scanlines = 2*7+1
+        |FF00-FFFF   APPLE-1 ROM   |
+        |                          |
+        |300R      MASTERMIND      |
+        |400R      15-PUZZLE       |
+        |EEER      MINI-ASSEMBLER  |
+        |C100R     MENU            |
+        |E000R     INTEGER BASIC   |
+        |E2B3R     BASIC WARM START|
+        +--------------------------+
+}
+
+_p=$7a          {2 bytes}
+_i=$7c          {2 bytes}
+_j=$7e          {2 bytes}
+
+_cursorTimer=$3c
+_tmpChar=$3c
+_lastKey=$3d
+_vCpuState=$3e
+_PIA=$30        {Overlap with (otherwise useless) vIRQ-saved vPC}
+
+{-----------------------------------------------------------------------+
+|       ROM type check                                                  |
++-----------------------------------------------------------------------}
+
+*=$200
+
+\romType, \romTypeValue_ROMv5-  {Version check >= ROMv5, see Docs/GT1-files.txt}
+[if<0 do _frameCount _vPCH:     {https://forum.gigatron.io/viewtopic.php?f=4&t=130}
+      loop]
+
+{-----------------------------------------------------------------------+
+|       Initialize                                                      |
++-----------------------------------------------------------------------}
+
+{ This code runs once and is then reused as the input buffer for wozmon }
+
+$00a0 _sysArgs0=                {Clear last pixel row}
+$7e60 _sysArgs2=
+\SYS_SetMemory_v2_54 _sysFn= 54!!
+
+$1ee _p= {videoTable+119*2}     {Pointer, later used as Pos}
+[do
+  $7e _p.                       {Shared empty pixel line at $7e60}
+  <_p, 2- <_p. if>=0loop]
+$101 {videoTable+1} _p= $60 _p. {Use offsets 96..255 for pixel data, not 0..159}
+                                {The reason is that it makes important}
+                                { addresses available: $c100, $d010..$d013}
+$10ff _p=                       {Put cursor on right side. This causes an automatic
+                                 newline at the first invokation of _CharOut}
+
+&_vIRQ_v5 _i=
+&_vIRQ_ENTER _i:                {Set vIRQ vector}
+
+254 \frameCount.                {First interrupt after at least one full frame}
+
+&_Apple1 _vLR=                  {Prepare transfer to main loop}
+&_PRE_RESET                     {Start address for 6502 program}
+[ret]                           {Jump to Main (the brackets avoid the
+                                 automatic vLR patch by compilegcl.py)}
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Mastermind                                                      |
+|                                                                       |
++-----------------------------------------------------------------------}
+*=$300
+
+{
+        WRITTEN BY STEVE WOZNIAK
+        PUBLISHED IN DOCTOR DOBBS JOURNAL SEPT 1976
+
+        """MASTERMIND is a number guessing game. In this version the computer
+        generates a 5-digit, random number where the digits are limited to
+        0 through 7. The user attemtps to guess the number in the fewest
+        possible tries. After each guess the computer informs the user as
+        to how many digits were correct (contained in the random number)
+        and in the correct position by printing `+' signs, and how many
+        digits are correct and in the wrong position with `-' signs. The
+        user is not informed as to exactly which digit positions the `+'
+        and the `-' signs correspond. A skilled player can usually win in
+        6 or 7 tries."""
+
+        https://www.applefritter.com/files/Apple1WozDrDobbsMastermind.pdf
+}
+
+
+_TRIES=$E2      {[Gigatron] Was: $F2}
+_RNDL=$E3       {[Gigatron] Was: $F3}
+_RNDH=$E4       {[Gigatron] Was: $F4}
+_RND2L=$E5      {[Gigatron] Was: $F5}
+_N=$E6          {[Gigatron] Was: $F6}
+_N_minus1=$E5
+_N_plus5=$EB
+_GUESS=$EB      {[Gigatron] Was: $FB}
+_GUESS_plus4=$EF
+_GUESS_plus5=$F0
+
+_MSTMIND=*      #_LDXIM_        #$24            {[Gigatron] Include help}
+_MSGLP=*        #_LDAAX_        ##_MSG_minus1
+                #_JSR_          ##_ECHO         {PRINT 'READY?'}
+                #_DEX_
+                #_BNE_          #@_MSGLP
+                #_STXZ_         #_TRIES         {SET TRIES TO ZERO.}
+_RNDLP=*        #_INCZ_         #_RNDL
+                #_BNE_          #@_RND2         {FORM 2-BYTE RANDOM NUMBER}
+                #_INCZ_         #_RNDH          {UNTIL KET DOWN.}
+_RND2=*         #_LDA_          ##_KBDCR
+                #_BPL_          #@_RNDLP
+                #_JSR_          ##_CHARIN       {CLEAR STROBE.}
+_NXTRY=*      { #_SEC_                        }
+              { #_SED_                        }
+              { #_TXA_                        }
+              { #_ADCZ_         #_TRIES       } {ADD 1 TO TRIES IN DECIMAL MODE}
+              { #_STAZ_         #_TRIES       }
+              { #_CLD_                        }
+              { vvvvvvvvvvvvvvvvvvvvvvvvvvvvv BCD increment without SED by Michael T. Barry }
+                #_INCZ_         #_TRIES
+                #_LDAZ_         #_TRIES
+                #_ANDIM_        #$F
+                #_CMPIM_        #10
+                #_BCS_          #@_NXTRY
+              { ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ }
+_NXTLIN=*       #_JSR_          ##_CRLF
+                #_LDAZ_         #_TRIES         {OUTPUT CRLF AND TRIES (IN BCD)}
+                #_JSR_          ##_PRBYTE
+                #_LDAIM_        #$A0            {OUTPUT BLANK.}
+                #_TAY_
+                #_JSR_          ##_ECHO
+                #_LDAZ_         #_RNDL
+                #_STAZ_         #_RND2L
+                #_LDAZ_         #_RNDH
+                #_LDXIM_        #$5             {SET ARRAY N TO 5 DIGITS OF}
+_DIGEN=*        #_STYZX_        #_N_minus1      {RANDOM NUMBER.  DIGITS ARE}
+                #_LDYIM_        #$3             {0 THROUGH 7.}
+_BITGEN=*       #_LSRA_
+                #_ROLZ_         #_RND2L
+                #_ROLZX_        #_N_minus1
+                #_DEY_
+                #_BNE_          #@_BITGEN
+                #_DEX_
+                #_BNE_          #@_DIGEN
+_RDKEY=*        #_JSR_          ##_CHARIN
+                #_JSR_          ##_ECHO
+                #_EORIM_        #$B0            {CONVERTS DIGITS TO TRUE VALUE.}
+                #_CMPIM_        #$8             {IF NOT 0 TO 7 THEN REPEAT LINE}
+                #_BCS_          #@_NXTLIN       {WITH SAME TRIES VALUE.}
+                #_STAZX_        #_GUESS_plus4   {SAVE USER DIGIT.}
+                #_DEX_
+                #_CPXIM_        #$FB            {DONE 5 DIGITS?}
+                #_BNE_          #@_RDKEY
+                #_LDYIM_        #$FB            {WIN COUNT (FOR 5 MATCHES).}
+                #_LDAIM_        #$A0            {PRINT BLANK.}
+_PLUS1=*        #_JSR_          ##_ECHO
+_PLUS2=*        #_LDAZX_        #_GUESS_plus5   {DOES GUESS MATCH RANDOM NUMBER}
+                #_CMPZX_        #_N_plus5       {FOR THIS DIGIT POSITION?}
+                #_BNE_          #@_PLUS3        {NO, TRY NEXT POSITION}
+                #_STYZX_        #_N_plus5       {SET DIG OF RAND NUMBER TO $FB}
+                #_LDAIM_        #$AB            {-$FF SO NO 'MINUS' MATCH.}
+                #_STAZX_        #_GUESS_plus5   {SET DIG OF GUESS TO $AB SO}
+                #_INY_                          {*  NO 'MINUS' MATCH.}
+                #_BNE_          #@_PLUS1        {INCR. WIN COUNTER AND LOOP.}
+                #_LDXIM_        #$2D            {IF WIN, OUTPUT WIN MESSAGE [Gigatron] Include help}
+                #_BNE_          #@_MSGLP        {*  AND BEGIN NEW GAME.}
+_PLUS3=*        #_INX_                          {*  NEXT DIGIT OF 'PLUS' SCAN.}
+                #_BNE_          #@_PLUS2
+                #_LDYIM_        #$FB
+_MINUS1=*       #_LDXZY_        #_GUESS_plus5   {GET DIGIT OF USER GUESS.}
+                #_TXA_
+                #_LDXIM_        #$FB
+_MINUS2=*       #_CMPZX_        #_N_plus5       {COMP TO DIGIT OF RAND NUMBER.}
+                #_BNE_          #@_MINUS3       {NO MATCH.}
+                #_STYZX_        #_N_plus5       {SET RAND DIGIT TO $FB-$FF}
+                #_LDAIM_        #$AD            {SUBSTITUTE $AD FOR GUESS DIGIT}
+                #_JSR_          ##_ECHO
+_MINUS3=*       #_INX_                          {* NEXT RANDOM DIGIT.}
+                #_BNE_          #@_MINUS2       {*    LOOP.}
+                #_INY_                          {* NEXT USER DIGIT.}
+                #_BNE_          #@_MINUS1       {     LOOP.}
+                #_BEQ_
+_MSG_minus1=*
+                                #@_NXTRY        {UPDATE TRIES FOR NEXT LINE.}
+_MSG=*          #$BF                            {'?'}
+                #$D9                            {'Y'}
+                #$C4                            {'D'}
+                #$C1                            {'A'}
+                #$C5                            {'E'}
+                #$D2                            {'R'}
+                #$8D                            {CR.}
+                #$8D                            {CR.}
+                #$B7 #$AD #$B0 #$A0 #$CD #$CF   {'GUESS FIVE DIGITS FROM 0-7'}
+                #$D2 #$C6 #$A0 #$D3 #$D4 #$C9
+                #$C7 #$C9 #$C4 #$A0 #$C5 #$D6
+                #$C9 #$C6 #$A0 #$D3 #$D3 #$C5
+                #$D5 #$C7
+                #$8D                            {CR.}
+                #$8D                            {CR.}
+                #$CE                            {'N'}
+                #$C9                            {'I'}
+                #$D7                            {'W'}
+                #$A0                            {BLANK}
+                #$D5                            {'U'}
+                #$CF                            {'O'}
+                #$D9                            {'Y'}
+                #$A0                            {BLANK}
+                #$AB                            {'+'}
+_CRLF=*         #_LDAIM_        #$8D
+                #_JMP_          ##_ECHO
+_CHARIN=*       #_LDA_          ##_KBDCR        {WAIT FOR STROBE}
+                #_BPL_          #@_CHARIN
+                #_LDA_          ##_KBD          {READ KEY AND CLEAR STROBE.}
+                #_RTS_
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       15-Puzzle by Jeff Jetton                                        |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+{ v v v v v v v v v v v v   Insert 15-PUZZLE image here   v v v v v v v v v v v v }
+{ Generated by: cd 15puz && ./make.sh }
+
+
+*=$400
+ #$d8 #$a2 #$ff #$9a #$a9 #$2a #$85 #$5a #$20 #$55 #$05 #$a9 #$8b #$85 #$58 #$a9
+ #$06 #$85 #$59 #$20 #$ad #$04 #$20 #$cb #$04 #$d0 #$0e #$a9 #$be #$85 #$58 #$a9
+ #$06 #$85 #$59 #$20 #$ad #$04 #$20 #$e8 #$04 #$20 #$1f #$06 #$20 #$6a #$05 #$20
+ #$e8 #$04 #$20 #$a8 #$04 #$20 #$09 #$05 #$20 #$27 #$05 #$20 #$bb #$04 #$c9 #$51
+ #$d0 #$03 #$4c #$9a #$04 #$20 #$9e #$05 #$a5 #$51 #$c9 #$10 #$d0 #$0a #$c6 #$5d
+ #$f0 #$b6 #$20 #$38 #$05 #$4c #$3b #$04 #$20 #$e8 #$04 #$20 #$a8 #$04 #$20 #$0c
+ #$06 #$f0 #$03 #$4c #$35 #$04 #$20 #$43 #$05 #$a9 #$8e #$85 #$58 #$a9 #$07 #$85
+ #$59 #$20 #$ad #$04 #$a5 #$55 #$20 #$ef #$ff #$a9 #$a3 #$85 #$58 #$a9 #$07 #$85
+ #$59 #$20 #$ad #$04 #$20 #$27 #$05 #$a9 #$bb #$85 #$58 #$a9 #$07 #$85 #$59 #$20
+ #$ad #$04 #$20 #$cb #$04 #$d0 #$03 #$4c #$29 #$04 #$a9 #$d0 #$85 #$58 #$a9 #$07
+ #$85 #$59 #$20 #$ad #$04 #$4c #$00 #$c1 #$a9 #$0d #$4c #$ef #$ff #$a0 #$00 #$b1
+ #$58 #$f0 #$07 #$20 #$ef #$ff #$c8 #$4c #$af #$04 #$60 #$20 #$de #$04 #$ad #$11
+ #$d0 #$10 #$f8 #$ad #$10 #$d0 #$29 #$7f #$4c #$ef #$ff #$20 #$bb #$04 #$c9 #$4e
+ #$f0 #$0a #$c9 #$59 #$f0 #$07 #$20 #$38 #$05 #$4c #$cb #$04 #$ba #$60 #$a5 #$5a
+ #$0a #$90 #$02 #$49 #$a9 #$85 #$5a #$60 #$20 #$a8 #$04 #$20 #$a8 #$04 #$a2 #$00
+ #$a0 #$04 #$b5 #$40 #$20 #$ef #$ff #$88 #$d0 #$05 #$a0 #$04 #$20 #$a8 #$04 #$e8
+
+*=$500
+ #$e0 #$10 #$d0 #$ee #$a9 #$08 #$85 #$5d #$60 #$e6 #$56 #$a5 #$56 #$29 #$0f #$c9
+ #$0a #$b0 #$f6 #$a5 #$56 #$38 #$e9 #$a0 #$90 #$0c #$85 #$56 #$e6 #$57 #$a5 #$57
+ #$29 #$0f #$c9 #$0a #$b0 #$f6 #$60 #$a5 #$57 #$f0 #$03 #$20 #$dc #$ff #$a5 #$56
+ #$20 #$dc #$ff #$a9 #$20 #$4c #$ef #$ff #$a9 #$7a #$85 #$58 #$a9 #$07 #$85 #$59
+ #$4c #$ad #$04 #$a5 #$5a #$29 #$38 #$aa #$bd #$49 #$06 #$f0 #$07 #$20 #$ef #$ff
+ #$e8 #$4c #$48 #$05 #$60 #$a9 #$20 #$85 #$4f #$a9 #$0f #$85 #$52 #$a2 #$0f #$a0
+ #$4f #$98 #$9d #$3f #$00 #$88 #$ca #$d0 #$f8 #$60 #$a9 #$00 #$85 #$56 #$85 #$57
+ #$85 #$5c #$a6 #$55 #$bd #$13 #$06 #$85 #$5b #$20 #$de #$04 #$a5 #$5a #$29 #$0f
+ #$18 #$69 #$41 #$c5 #$5c #$f0 #$f2 #$20 #$9e #$05 #$a5 #$51 #$c9 #$10 #$f0 #$e9
+ #$a5 #$50 #$85 #$5c #$c6 #$5b #$d0 #$e1 #$20 #$0c #$06 #$f0 #$cd #$60 #$85 #$50
+ #$c9 #$20 #$f0 #$3c #$a2 #$00 #$b5 #$40 #$c5 #$50 #$f0 #$08 #$e8 #$e0 #$10 #$d0
+ #$f5 #$4c #$e0 #$05 #$86 #$51 #$8a #$29 #$0c #$85 #$53 #$a5 #$52 #$29 #$0c #$c5
+ #$53 #$d0 #$10 #$8a #$38 #$e5 #$52 #$10 #$05 #$a9 #$ff #$4c #$f2 #$05 #$a9 #$01
+ #$4c #$f2 #$05 #$8a #$29 #$03 #$85 #$53 #$a5 #$52 #$29 #$03 #$c5 #$53 #$f0 #$05
+ #$a2 #$10 #$86 #$51 #$60 #$8a #$38 #$e5 #$52 #$10 #$05 #$a9 #$fc #$4c #$f2 #$05
+ #$a9 #$04 #$85 #$54 #$a5 #$52 #$aa #$18 #$65 #$54 #$a8 #$b9 #$40 #$00 #$95 #$40
+
+*=$600
+ #$a9 #$20 #$99 #$40 #$00 #$84 #$52 #$c4 #$51 #$d0 #$e9 #$60 #$a2 #$0f #$a9 #$4f
+ #$85 #$53 #$bd #$3f #$00 #$c5 #$53 #$d0 #$05 #$c6 #$53 #$ca #$d0 #$f4 #$60 #$a9
+ #$60 #$85 #$58 #$a9 #$07 #$85 #$59 #$20 #$ad #$04 #$20 #$bb #$04 #$85 #$55 #$c9
+ #$31 #$10 #$03 #$4c #$3e #$06 #$a9 #$35 #$38 #$e5 #$55 #$30 #$01 #$60 #$20 #$38
+ #$05 #$4c #$2a #$06 #$03 #$09 #$13 #$23 #$ff #$48 #$4f #$4f #$52 #$41 #$59 #$21
+ #$00 #$48 #$55 #$5a #$5a #$41 #$48 #$21 #$00 #$57 #$4f #$4f #$48 #$4f #$4f #$21
+ #$00 #$59 #$49 #$50 #$50 #$49 #$45 #$21 #$00 #$53 #$57 #$45 #$45 #$54 #$21 #$00
+ #$00 #$43 #$4f #$4f #$4c #$21 #$00 #$00 #$00 #$4e #$49 #$43 #$45 #$21 #$00 #$00
+ #$00 #$47 #$41 #$44 #$5a #$4f #$4f #$4b #$53 #$21 #$00 #$0d #$0d #$31 #$35 #$20
+ #$50 #$55 #$5a #$5a #$4c #$45 #$20 #$2d #$20 #$42 #$59 #$20 #$4a #$45 #$46 #$46
+ #$20 #$4a #$45 #$54 #$54 #$4f #$4e #$0d #$0d #$49 #$4e #$53 #$54 #$52 #$55 #$43
+ #$54 #$49 #$4f #$4e #$53 #$20 #$28 #$59 #$2f #$4e #$29 #$3f #$20 #$00 #$0d #$0d
+ #$54 #$59 #$50 #$45 #$20 #$41 #$20 #$4c #$45 #$54 #$54 #$45 #$52 #$20 #$4f #$4e
+ #$20 #$54 #$48 #$45 #$20 #$53 #$41 #$4d #$45 #$0d #$52 #$4f #$57 #$20 #$4f #$52
+ #$20 #$43 #$4f #$4c #$55 #$4d #$4e #$20 #$41 #$53 #$20 #$54 #$48 #$45 #$20 #$45
+ #$4d #$50 #$54 #$59 #$0d #$53 #$50 #$41 #$43 #$45 #$20 #$54 #$4f #$20 #$53 #$4c
+
+*=$700
+ #$49 #$44 #$45 #$20 #$54 #$48 #$41 #$54 #$20 #$4c #$45 #$54 #$54 #$45 #$52 #$0d
+ #$28 #$41 #$4e #$44 #$20 #$41 #$4e #$59 #$20 #$42 #$45 #$54 #$57 #$45 #$45 #$4e
+ #$29 #$20 #$54 #$4f #$57 #$41 #$52 #$44 #$53 #$0d #$54 #$48 #$45 #$20 #$53 #$50
+ #$41 #$43 #$45 #$2e #$20 #$54 #$59 #$50 #$45 #$20 #$51 #$20 #$54 #$4f #$20 #$51
+ #$55 #$49 #$54 #$2e #$0d #$54 #$48 #$49 #$53 #$20 #$49 #$53 #$20 #$54 #$48 #$45
+ #$20 #$53 #$4f #$4c #$56 #$45 #$44 #$20 #$50 #$55 #$5a #$5a #$4c #$45 #$3a #$00
+ #$0d #$44 #$49 #$46 #$46 #$49 #$43 #$55 #$4c #$54 #$59 #$20 #$4c #$45 #$56 #$45
+ #$4c #$20 #$28 #$31 #$2d #$35 #$29 #$3f #$20 #$00 #$0d #$53 #$4f #$52 #$52 #$59
+ #$2e #$20 #$54 #$52 #$59 #$20 #$41 #$47 #$41 #$49 #$4e #$3a #$20 #$00 #$20 #$59
+ #$4f #$55 #$20 #$53 #$4f #$4c #$56 #$45 #$44 #$0d #$41 #$20 #$4c #$45 #$56 #$45
+ #$4c #$20 #$00 #$20 #$50 #$55 #$5a #$5a #$4c #$45 #$21 #$0d #$0d #$54 #$4f #$54
+ #$41 #$4c #$20 #$4d #$4f #$56 #$45 #$53 #$3a #$20 #$00 #$0d #$0d #$50 #$4c #$41
+ #$59 #$20 #$41 #$47 #$41 #$49 #$4e #$20 #$28 #$59 #$2f #$4e #$29 #$3f #$20 #$00
+ #$0d #$0d #$42 #$59 #$45 #$21 #$0d #$00
+{ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^   Insert 15-PUZZLE image here   ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ }
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Mini-assembler (and disassembler)                               |
+|                                                                       |
++-----------------------------------------------------------------------}
+*=$be5
+
+_USAGE1=*       #_JSR_          ##_ECHO
+                #_INX_
+_USAGE=*        #_LDAAX_        ##_USAGE2       { WozMon has X=0 on G }
+                #_BNE_          #@_USAGE1
+{$0BEE}         #_JMP_          ##_CMDLINE      { BEER. Courtesy Jac Goudsmit }
+
+_USAGE2=*                                  #$0D
+                `USAGE:                    #$0D
+                ``!800:P
+*=$c00                 `HA````ASSEMBLE`1ST  #$0D
+                ``!`LDA`#1````ASSEMBLE`NEXT #$0D
+                ``!800L```````DISASSEMBLE   #$0D
+                ``!L``````````NEXT`SCREEN   #$0D
+                ``!(RETURN)```EXIT          #$0D
+                ``BEER````````SKIP`USAGE    #0
+
+{
+        WRITTEN BY STEVE WOZNIAK & ALLEN BAUM
+        AND PUBLISHED IN DOCTOR DOBBS JOURNAL
+        SEPT 1976
+
+        ;======================================
+        ;    ** ENHANCED WOZMON EXTENSION **
+        ;    MINI-ASSEMBLER AND DISASSEMBLER
+        ;       FOR THE APPLE 1 COMPUTER
+        ;  BASED ON THE CODE OF STEVE WOZNIAK
+        ;       AND ALLEN BAUM, 1976/1977
+        ; MANUALLY AND LOVINGLY ADAPTED BY THE
+        ;    HAND OF MICHAEL T. BARRY, 2020
+        ;    MODIFICATIONS MADE IN 2020 ARE
+        ;     FREE TO USE WITH ATTRIBUTION
+        ;        <<< 6502 FOREVER!! >>>
+        ;======================================
+
+        Merged and transcribed both sources to the
+        Apple-1 emulator for Gigatron v6502 by
+        Marcel van Kervinck 2019/2020
+}
+
+                *=$c8a
+
+_FORMAT=$40
+_LENGTH=$41
+_LMNEM=$42
+_RMNEM=$43
+_PCL=$44
+_PCH=$45
+_A1L=$46
+_A1H=$47
+_A2L=$48
+_A2H=$49
+_A4L=$4a
+_A4H=$4b
+_FMT=$4c
+
+_LIST=*         #_LDAIM_        #12 {was 20}    {DISASSEM 20 INSTR}
+_LIST1=*        #_PHA_                          {STACK LOOP COUNTER}
+                #_JSR_          ##_INSTDSP      {DISASSEM ONE INSTR}
+                #_JSR_          ##_PCADJ        {UPDATE VIRTUAL PC}
+                #_STAZ_         #_PCL
+                #_STYZ_         #_PCH
+                #_PLA_                          {UPDATE LOOP COUNTER}
+                #_SEC_
+                #_SBCIM_        #1
+                #_BNE_          #@_LIST1        {LOOP FOR 20 INSTRS}
+
+_CMDLINE=*      #_JSR_          ##_GETLNZ       {INPUT A FRESH LINE}
+                #_TXA_                          {NULL INPUT?}
+                #_BNE_          #@_CMDLIN2
+                #_JMP_          ##_GETLINE      {YES: BACK TO WOZMON}
+_CMDLIN2=*      #_LDYIM_        #0              {START AT 1ST CHAR}
+                #_JSR_          ##_GETNUM       {PARSE OPTIONAL ADDR}
+                #_PHA_
+                #_TXA_                          {EMPTY ADDR FIELD?}
+                #_BEQ_          #@_CMDLIN3      {YES: USE DEFAULT PC}
+_A1PCLP=*       #_LDAZX_        #_A1L           {ASSUMES X=1}
+                #_STAZX_        #_PCL           {COPY FROM A1 TO PC}
+                #_DEX_
+                #_BPL_          #@_A1PCLP
+_CMDLIN3=*      #_PLA_
+                #_CMPIM_        #$05            {'L' COMMAND?}
+                #_BEQ_          #@_LIST         {YES: DISASSEMBLE}
+                #_CMPIM_        #$99            {' ' COMMAND?}
+                #_BEQ_          #@_ASSEM        {YES: ASM AT CURR PC}
+                #_CMPIM_        #$93            {':' COMMAND?}
+                #_BNE_          #@_FORM8A       {NO: ERROR}
+_ASSEM=*        #_LDAIM_        #3              {# OF CHARS IN MNEM}
+                #_STAZ_         #_A1H
+_NXTMN=*        #_JSR_          ##_GETNSP       {GET A MNEM CHAR}
+_NXTM=*         #_ASLA_
+                #_SBCIM_        #$BE            {SUBTRACT OFFSET}
+                #_CMPZ_         #$C2            {LEGAL CHAR?}
+                #_BCC_          #@_FORM8A       {NO}
+                #_ASLA_                         {COMPRESS/LT-JUSTIFY}
+                #_ASLA_
+                #_LDXIM_        #4
+_NXTM2=*        #_ASLA_                         {DO 5 24-BIT SHIFTS}
+                #_ROLZ_         #_A4L
+                #_ROLZ_         #_A4H
+                #_DEX_
+                #_BPL_          #@_NXTM2
+                #_DECZ_         #_A1H           {DONE WITH 3 CHARS?}
+                #_BEQ_          #@_NXTM2        {YES: ONE LAST SHIFT}
+                #_BPL_          #@_NXTMN        {NO}
+_FORM1=*        #_LDXIM_        #5              {5 CHARS IN ADR MODE}
+_FORM2=*        #_JSR_          ##_GETNSP       {GET 1ST CHR OF ADDR}
+                #_STYZ_         #_YSAV
+                #_CMPAX_        ##_CHAR1        {1ST CHR MATCH PATT?}
+                #_BNE_          #@_FORM3        {NO}
+                #_JSR_          ##_GETNSP       {YES: GET 2ND CHAR}
+                #_CMPAX_        ##_CHAR2        {MATCHES 2ND HALF?}
+                #_BEQ_          #@_FORM5        {YES}
+                #_LDAAX_        ##_CHAR2        {NO: IS 2ND HALF 0?}
+                #_BEQ_          #@_FORM4        {YES}
+                #_CMPIM_        #$A4            {NO: 2ND HALF OPT?}
+                #_BEQ_          #@_FORM4        {YES}
+*=$d00
+                #_LDYZ_         #_YSAV
+_FORM3=*        #_CLC_                          {CLEAR BIT-NO MATCH}
+_FORM4=*        #_DEY_                          {BACK UP 1 CHAR}
+_FORM5=*        #_ROLZ_         #_FMT           {FORM FORMAT BYTE}
+                #_CPXIM_        #3              {TIME TO CHECK ADDR?}
+                #_BNE_          #@_FORM7        {NO}
+                #_JSR_          ##_GETNUM       {YES: PARSE IT}
+                #_LDAZ_         #_A2H
+                #_BEQ_          #@_FORM6        {HIGH-ORDER BYTE 0?}
+                #_INX_                          {NO: INCR FOR 2-BYTE}
+_FORM6=*        #_STXZ_         #_L             {STORE LENGTH}
+                #_LDXIM_        #3              {RELOAD FMT INDEX}
+                #_DEY_                          {BACK UP 1 CHAR}
+_FORM7=*        #_STXZ_         #_A1H           {SAVE INDEX}
+                #_DEX_                          {DONE W/FMT CHECK?}
+                #_BPL_          #@_FORM2        {NO}
+                #_LDAZ_         #_FMT           {YES: PUT LENGTH}
+                #_ASLA_                         {IN LOW BITS}
+                #_ASLA_
+                #_ORAZ_         #_L
+                #_CMPIM_        #$20
+                #_BCS_          #@_FORM8
+                #_LDXZ_         #_L
+                #_BEQ_          #@_FORM8
+                #_ORAIM_        #$80
+_FORM8=*        #_STAZ_         #_FMT
+                #_STYZ_         #_YSAV
+                #_LDAAY_        ##_IN           {GET NEXT NONBLANK}
+                #_CMPIM_        #$BB {";"}      {START OF COMMENT?}
+                #_BEQ_          #@_TRYNEXT      {YES}
+                #_CMPIM_        #$8D            {CR?}
+_FORM8A=*       #_BNE_          #@_ERR2         {NO: ERROR}
+_TRYNEXT=*      #_LDAZ_         #_A1H           {GET TRIAL OPCODE}
+                #_JSR_          ##_INSDS2       {GET FMT+LEN FOR IT}
+                #_TAX_
+                #_LDAAX_        ##_MNEMR        {GET LOWER MNEM BYTE}
+                #_CMPZ_         #_A4L           {MATCH?}
+                #_BNE_          #@_NEXTOP       {NO: TRY NEXT OPCODE}
+                #_LDAAX_        ##_MNEML        {GET UPPER MNEM BYTE}
+                #_CMPZ_         #_A4H           {MATCH?}
+                #_BNE_          #@_NEXTOP       {NO: TRY NEXT OPCODE}
+                #_LDAZ_         #_FMT
+                #_LDYZ_         #_FORMAT        {GET TRIAL FORMAT}
+                #_CPYIM_        #$9D            {IS IT RELATIVE?}
+                #_BEQ_          #@_REL          {YES}
+                #_CMPZ_         #_FORMAT        {SAME FORMAT?}
+                #_BEQ_          #@_FINDOP       {YES}
+_NEXTOP=*       #_DECZ_         #_A1H           {NO: TRY NEXT OPCODE}
+                #_BNE_          #@_TRYNEXT
+                #_INCZ_         #_FMT           {NO MORE: TRY LEN=2}
+                #_DECZ_         #_L             {WAS L=2 ALREADY?}
+                #_BEQ_          #@_TRYNEXT      {NO: KEEP TRYING}
+_ERR1=*         #_LDYZ_         #_YSAV          {YES: UNREC. INST}
+_ERR2=*         #_TYA_
+                #_TAX_
+                #_JSR_          ##_CROUT
+                #_JSR_          ##_PRBL2        {PRINT '^' BELOW THE}
+                #_LDAIM_        #$DE {"^"}      {  LAST PARSED CHAR}
+                #_JSR_          ##_ECHO         {  TO SHOW ERR POSN}
+                #_JMP_          ##_CMDLINE      {NEXT COMMAND LINE}
+
+_REL=*          #_SBCIM_        #$81            {YES: IS FMT COMPAT}
+                #_LSRA_                         {  W/RELATIVE MODE?}
+                #_BNE_          #@_ERR1         {NO: ERROR OUT}
+                #_LDYZ_         #_A2H
+                #_LDXZ_         #_A2L           {DOUBLE DECREMENT}
+                #_BNE_          #@_REL2
+                #_DEY_
+_REL2=*         #_DEX_
+                #_TXA_
+                #_CLC_
+                #_SBCZ_         #_PCL           {CALC ADDR-PC-2}
+                #_STAZ_         #_A2L
+                #_BPL_          #@_REL3
+                #_INY_
+_REL3=*         #_TYA_
+                #_SBCZ_         #_PCH
+                #_BNE_          #@_ERR          {ERROR IF TOO FAR}
+_FINDOP=*       #_LDYZ_         #_LENGTH
+_FNDOP2=*       #_LDAAY_        ##_A1H          {MOVE INST TO (PC)}
+                #_STAIY_        #_PCL
+                #_DEY_
+                #_BPL_          #@_FNDOP2
+                #_LDAIM_        #1              {DISASSEMBLE RESULT}
+                #_JMP_          ##_LIST1        {BACK TO CMD LINE}
+
+_INSDS1=*       #_LDXZ_         #_PCL           {PRINT PCL,H}
+                #_LDYZ_         #_PCH
+                #_JSR_          ##_CROUT
+                #_JSR_          ##_PRNTYX
+                #_LDYIM_        #0
+                #_LDAIM_        #$AD {"-"}      {PRINT '-'}
+                #_JSR_          ##_ECHO
+                #_JSR_          ##_PRBLNK       {PRINT 3 BLANKS}
+                #_LDAIX_        #_PCL           {GET OPCODE}
+_INSDS2=*       #_TAY_
+                #_LSRA_                         {EVEN/ODD TEST}
+                #_BCC_          #@_IEVEN
+                #_LSRA_                         {* TEST BIT 1}
+                #_BCS_          #@_ERR          {*  XXXXXX11 INSTR. INVALID.}
+                #_CMPIM_        #$22
+                #_BEQ_          #@_ERR          {*  10001001 INSTR. INVALID.}
+                #_ANDIM_        #$7             {MASK 3 BITS FOR ADDRESS MODE &}
+                #_ORAIM_        #$80            {*  ADD INDEXING OFFSET.}
+_IEVEN=*        #_LSRA_                         {* LSB INTO CARRY FOR}
+                #_TAX_                          {* LEFT/RIGHT TEST BELOW.}
+                #_LDAAX_        ##_MODE1        {INDEX INTO ADDRESS MODE TABLE.}
+                #_BCS_          #@_RTMODE       {IF CARRY SET USE LSD FOR}
+                #_LSRA_                         {* PRINT FORMAT INDEX}
+                #_LSRA_
+                #_LSRA_                         {* IF CARRY CLEAR USE MSD.}
+                #_LSRA_
+_RTMODE=*       #_ANDIM_        #$F             {MASK FOR 4-BIT INDEX.}
+                #_BNE_          #@_GETFMT       {$0 FOR INVALID OP CODES.}
+_ERR=*          #_LDYIM_        #$80            {SUBSTITUTE $80 FOR INVALID OP,}
+                #_LDAIM_        #$0             {SET PRINT FORMAT INDEX TO 0}
+_GETFMT=*       #_TAX_
+                #_LDAAX_        ##_MODE2        {INDEX INTO PRINT FORMAT TABLE.}
+                #_STAZ_         #_FORMAT        {SAVE FOR ADDRESS FIELD FORMAT.}
+                #_ANDIM_        #$3             {MASK 2-BIT LENGTH. 0=1-BYTE}
+                #_STAZ_         #_LENGTH        {*  1=2-BYTE, 2=3-BYTE.}
+                #_TYA_                          {* OP CODE.}
+                #_ANDIM_        #$8F            {MASK IT FOR 1XXX1010 TEST.}
+                #_TAX_                          {SAVE IT.}
+                #_TYA_                          {* OP CODE TO 'A' AGAIN.}
+                #_LDYIM_        #$3
+                #_CPXIM_        #$8A
+                #_BEQ_          #@_MNNDX3
+_MNNDX1=*       #_LSRA_
+                #_BCC_          #@_MNNDX3       {FORM INDEX INTO MNEMONIC TABLE.}
+                #_LSRA_
+_MNNDX2=*       #_LSRA_                         {* 1XXX1010 -> 00101XXX}
+                #_ORAIM_        #$20            {* XXXYYY01 -> 00111XXX}
+                #_DEY_                          {* XXXYYY10 -> 00110XXX}
+                #_BNE_          #@_MNNDX2       {* XXXYY100 -> 00100XXX}
+                #_INY_                          {* XXXXX000 -> 000XXXXX}
+_MNNDX3=*       #_DEY_
+                #_BNE_          #@_MNNDX1
+                #_RTS_
+
+_INSTDSP=*      #_JSR_          ##_INSDS1       {GEN FMT, LEN BYTES}
+*=$e00
+                #_PHA_                          {* SAVE MNEMONIC TABLE INDEX.}
+_PROP=*         #_LDAIY_        #_PCL
+                #_JSR_          ##_PRBYTE
+                #_LDXIM_        #$1
+_PROPBL=*       #_JSR_          ##_PRBL2
+                #_CPYZ_         #_LENGTH        {PRINT INSTR (1 TO 3 BYTES)}
+                #_INY_                          {IN A 12 CHARACTYER FIELD.}
+                #_BCC_          #@_PROP
+                #_LDXIM_        #$3             {CHAR COUNT FOR MNEMONIC PRINT.}
+                #_CPYIM_        #$3
+                #_BCC_          #@_PROPBL
+                #_PLA_                          {RECOVER MNEMONIC INDEX.}
+                #_TAY_
+                #_LDAAY_        ##_MNEML
+                #_STAZ_         #_LMNEM         {FETCH 3-CHAR MNEMONIC}
+                #_LDAAY_        ##_MNEMR        {*  (PACKED IN TWO BYTES)}
+                #_STAZ_         #_RMNEM
+_PRMN1=*        #_LDAIM_        #$0
+                #_LDYIM_        #$5
+_PRMN2=*        #_ASLZ_         #_RMNEM
+                #_ROLZ_         #_LMNEM         {SHIFT 5 BITS OF CHAR INTO 'A'.}
+                #_ROLA_                         {* (CLEAR CARRY)}
+                #_DEY_
+                #_BNE_          #@_PRMN2
+                #_ADCIM_        #$BF            {ADD '?' OFFSET.}
+                #_JSR_          ##_ECHO         {OUTPUT A CHAR OR MNEMONIC}
+                #_DEX_
+                #_BNE_          #@_PRMN1
+                #_JSR_          ##_PRBLNK       {OUTPUT 3 BLANKS.}
+                #_LDXIM_        #$6             {COUNT FOR 6 PRINT FORMAT BITS.}
+_PRADR1=*       #_CPXIM_        #$3
+                #_BNE_          #@_PRADR3       {IF X=3 THEN PRINT ADDRESS VAL.}
+                #_LDYZ_         #_LENGTH
+                #_BEQ_          #@_PRADR3       {NO PRINT IF LENGTH=0.}
+_PRADR2=*       #_LDAZ_         #_FORMAT
+                #_CMPIM_        #$E8            {HANDLE REL ADDRESSING MODE}
+                #_LDAIY_        #_PCL           {SPECIAL (PRINT TARGET ADDR)}
+                #_BCS_          #@_RELADR       {* (NOT DISPLACEMENT)}
+                #_JSR_          ##_PRBYTE       {OUTPUT 1- OR 2- BYTE ADDRESS.}
+                #_DEY_                          {MORE SIGNIFICANT BYTE FIRST.}
+                #_BNE_          #@_PRADR2
+_PRADR3=*       #_ASLZ_         #_FORMAT        {TEST NEXT PRINT FORMAT BIT.}
+                #_BCC_          #@_PRADR4       {IF 0, DONT PRINT}
+                #_LDAAX_        ##_CHAR1_minus1 {CORRESPONDING CHAR.}
+                #_JSR_          ##_ECHO         {OUTPUT 1 OR 2 CHARS.}
+                #_LDAAX_        ##_CHAR2_minus1 {*   (IF CHAR FROM CHAR2 IS 0,}
+                #_BEQ_          #@_PRADR4       {*     DON'T FRINT IT)}
+                #_JSR_          ##_ECHO
+_PRADR4=*       #_DEX_
+                #_BNE_          #@_PRADR1
+                #_RTS_                          {*RETURN IF DONE 6 FORMAT BITS.}
+_RELADR=*       #_JSR_          ##_PCADJ3       {PCL,H + DISPL + 1 TO 'A','Y'.}
+                #_TAX_
+                #_INX_
+                #_BNE_          #@_PRNTYX       {*    +1 TO 'X','Y'.}
+                #_INY_
+_PRNTYX=*       #_TYA_
+                #_JSR_          ##_PRBYTE       {PRINT TARGET ADDRESS OF BRANCH}
+_PRNTX=*        #_TXA_                          {AND RETURN}
+                #_JMP_          ##_PRBYTE
+
+_PRBLNK=*       #_LDXIM_        #$1             {BLANK COUNT [Gigatron] Was: #$3}
+_PRBL2=*        #_LDAIM_        #$A0
+_PRBL3=*        #_JSR_          ##_ECHO         {OUTPUT A BLANK}
+                #_DEX_
+                #_BNE_          #@_PRBL2        {LOOP UNTIL COUNT =0}
+                #_RTS_
+
+_NOTACR=*       #_CMPIM_        #$9B            {ESC?}
+                #_BEQ_          #@_CANCEL       {YES: START OVER}
+                #_JSR_          ##_ECHO         {PRINT CHAR}
+                #_CMPIM_        #$DF {"_"}
+                #_BEQ_          #@_BCKSPC
+                #_INX_
+                #_BPL_          #@_NXTCHAR      {128 CHARS MAX}
+_CANCEL=*       #_LDAIM_        #$DC {"\"}
+                #_JSR_          ##_ECHO
+_GETLNZ=*       #_JSR_          ##_CROUT        {FRESH LINE}
+                #_LDAIM_        #$A1 {"!"}      {PROMPT CHAR}
+                #_JSR_          ##_ECHO
+                #_LDXIM_        #1
+_BCKSPC=*       #_DEX_
+                #_BMI_          #@_GETLNZ
+_NXTCHAR=*      #_BIT_          ##_KBDCR        {WAIT FOR KEY PRESS}
+                #_BPL_          #@_NXTCHAR      {NO KEY YET}
+                #_LDA_          ##_KBD          {LOAD CHAR}
+                #_STAAX_        ##_IN           {STORE IN BUFFER}
+                #_CMPIM_        #$8D            {CR?}
+                #_BNE_          #@_NOTACR       {NO: KEEP GOING}
+                #_RTS_                          {YES: X=BUFLEN}
+
+_GETNSP=*       #_LDAAY_        ##_IN
+                #_INY_
+                #_CMPIM_        #$A0 {" "}      {SKIP OVER SPACES}
+                #_BEQ_          #@_GETNSP
+                #_RTS_
+
+_CROUT=*        #_LDAIM_        #$8D
+                #_JMP_          ##_ECHO
+
+_GETNUM=*       #_LDXIM_        #0              {CLEAR VALID # FLAG}
+                #_STXZ_         #_A2L           {CLEAR A2}
+                #_STXZ_         #_A2H
+                #_BEQ_          #@_NXTCHR
+_XDIG=*         #_LDXIM_        #3
+                #_ASLA_                         {GOT HEX DIGIT,}
+                #_ASLA_                         {  SHIFT INTO A2}
+                #_ASLA_
+                #_ASLA_
+_NXTBIT=*       #_ASLA_
+                #_ROLZ_         #_A2L
+                #_ROLZ_         #_A2H
+                #_DEX_                          {LEAVE X=$FF IF DIG}
+                #_BPL_          #@_NXTBIT
+_NXTBAS=*       #_LDAZX_        #_A2H
+                #_STAZX_        #_A1H
+_NXTBS2=*       #_INX_
+                #_BEQ_          #@_NXTBAS
+_NXTCHR=*       #_LDAAY_        ##_IN           {GET CHAR}
+                #_INY_                          {ADVANCE INDEX}
+                #_EORIM_        #$B0
+                #_CMPIM_        #10             {DECIMAL DIGIT?}
+                #_BCC_          #@_XDIG         {YES: ACCUMULATE}
+                #_ADCIM_        #$88
+                #_CMPIM_        #$FA            {'A'-'F'}
+                #_BCS_          #@_XDIG         {YES: ACCUMULATE}
+                #_RTS_                          {NO: RETURN WITH}
+                                                {  X=0: NO NUMBER}
+                                                {  X=1: NUMBER}
+
+_XMON=* {$0EEE} #_JMP_          ##_USAGE        {[Gigatron] Easy to remember entry point}
+
+_PCADJ=*        #_LDAZ_         #_LENGTH        {0=1-BYTE, 1=2-BYTE, 2=3-BYTE.}
+                #_SEC_
+_PCADJ3=*       #_LDYZ_         #_PCH
+                #_TAX_                          {* TEST DISPL SIGN (FOR REL}
+                #_BPL_          #@_PCADJ4       {*   BRANCH). EXTEND NEG}
+                #_DEY_                          {*   BY DECREMENTING PCH.}
+_PCADJ4=*       #_ADCZ_         #_PCL
+                #_BCC_          #@_RTS1         {PCL+LENGTH (OR DISPL) +1 TO A.}
+                #_INY_                          {*  CARRY INTO Y (PCH)}
+_RTS1=*         #_RTS_
+
+*=$f00
+_MODE1=*        #$40 #$2  #$45 #$3
+                #$D0 #$8  #$40 #$9
+                #$30                            {XXXXXXZ0 INSTRS..}
+                #$22
+                #$45                            {*  Z=0, LEFT HALF-BYTE}
+                #$33                            {*  Z=1, RIGHT HALF-BYTE}
+                #$D0 #$8  #$40 #$9
+                #$40 #$2  #$45 #$33
+                #$D0 #$8  #$40 #$9
+                #$40 #$2  #$45 #$B3
+                #$D0 #$8  #$40 #$9
+                #$0  #$22 #$44 #$33
+                #$D0 #$8C #$44 #$0
+                #$11 #$22 #$44 #$33
+                #$D0 #$8C #$44 #$9A
+                #$10 #$22 #$44 #$33
+                #$D0 #$8  #$40 #$9
+                #$10 #$22 #$44 #$33
+                #$D0 #$8  #$40 #$9
+                #$62
+                #$13                            {YYXXXZ01 INSTRS.}
+                #$78
+                #$A9
+
+_MODE2=*        #$0                             {ERR}
+                #$21                            {IMM}
+                #$81                            {Z-PAG}
+                #$82                            {ABS}
+                #$0                             {IMPL}
+                #$0                             {ACC}
+                #$59                            {(Z-PAG,X)}
+                #$4D                            {(Z-PAG),Y}
+                #$91                            {Z-PAG,X}
+                #$92                            {ABS,X}
+                #$86                            {ABS,Y}
+                #$4A                            {(ABS)}
+                #$85                            {Z-PAG,Y}
+_CHAR1_minus1=* #$9D                            {REL}
+
+_CHAR1=*        #$AC                            {','}
+                #$A9                            {')'}
+                #$AC                            {','}
+                #$A3                            {'#'}
+                #$A8                            {'('}
+_CHAR2_minus1=* #$A4                            {'$'}
+
+_CHAR2=*        #$D9                            {'Y'}
+                #$0
+                #$D8                            {'X'}
+                #$A4                            {'$'}
+                #$A4                            {'$'}
+                #$0
+
+_MNEML=*        #$1C #$8A #$1C #$23             {XXXXX000 INSTRS.}
+                #$5D #$8B #$1B #$A1
+                #$9D #$8A #$1D #$23
+                #$9D #$8B #$1D #$A1
+                #$0  #$29 #$19 #$AE
+                #$69 #$A8 #$19 #$23
+                #$24 #$53 #$1B #$23
+                #$24 #$53 #$19 #$A1
+                #$0  #$1A #$5B #$5B             {XXXYY100 INSTRS.}
+                #$A5 #$69 #$24 #$24
+                #$AE #$AE #$A8 #$AD             {1XXX1010 INSTRS.}
+                #$29 #$0  #$7C #$0
+                #$15 #$9C #$6D #$9C             {XXXYYY10 INSTRS.}
+                #$A5 #$69 #$29 #$53
+                #$84 #$13 #$34 #$11             {XXXYYY01 INSTRS.}
+                #$A5 #$69 #$23 #$A0
+
+_MNEMR=*        #$D8 #$62 #$5A #$48             {XXXXX000 INSTRS}
+                #$26 #$62 #$94 #$88
+                #$54 #$44 #$C8 #$54
+                #$68 #$44 #$E8 #$94
+                #$0  #$B4 #$8  #$84
+                #$74 #$B4 #$28 #$6E
+                #$74 #$F4 #$CC #$4A
+                #$72 #$F2 #$A4 #$8A
+                #$0  #$AA #$A2 #$A2             {XXXYY100 INSTRS}
+                #$74 #$74 #$74 #$72
+                #$44 #$68 #$B2 #$32             {1XXX1010 INSTRS.}
+                #$B2 #$0  #$22 #$26
+                #$1A #$1A #$26 #$26             {XXXYYY10 INSTRS.}
+                #$72 #$72 #$88 #$C8
+                #$C4 #$CA #$26 #$48             {XXXYYY01 INSTRS.}
+                #$44 #$44 #$A2 #$C8
+
+{-----------------------------------------------------------------------+
+|       vIRQ_ENTER                                                      |
++-----------------------------------------------------------------------}
+*=$5e00
+
+_vIRQ_ENTER=*
+[
+  {-- Enter interrupt --}
+  push                          {Non-leaf function}
+  _vCpuState=                   {Save extra vIRQ state information}
+                                { needed if switching back to v6502}
+
+  {-- Handle KBD --}
+  &_lastKey, _serialRaw^ 255&   {First trigger on key changes}
+  [if<>0
+    &_KBD _PIA=                 {Pointer to PIA register $D010}
+    &_serialRaw, &_lastKey.     {"serialLast" isn't useful for this}
+    255^ [if<>0 255^            {But ignore key releases}
+      $60- [if>=0 $20-] $60+    {Map to upper case, delete becomes rubout}
+      10^ [if=0 7] 10^          {Map 10 CR to 13 LF}
+      26^ [if=0 %0=] 26^        {Attempt BRK on Ctrl-Z; May need retries}
+      127& 128-                 {Set bits 7..15}
+      _PIA:                     {Update KBD and KBDCR in one go}
+    ]]
+
+  {-- Handle DSP --}
+  &_DSP _PIA= peek              {Pointer to PIA register $D012 and fetch}
+  [if<>0                        {Test DSP for non-zero value (instead of bit 7)}
+    <_tmpChar.                  {Keep copy for below}
+    128| &_CharOut!             {Emit the character, ensure bit 7 is set}
+    \vSP, 2+ deek 66+ [if=0     {HACK! If the return address is $ffbe, then eat}
+      _p 2- _p=]                { 2 pixels and let wozmon fit on a small screen}
+    0 _PIA.                     {Clear DSP}
+    &_KBD _PIA= peek            {If last key press compares equal to the char}
+    [if<>0 _tmpChar^ 127&]      { that was just emitted (or 0, for wozmon),}
+    [if=0 _PIA:]                { then also clear KBDCR. This is NOT how the}
+                                { true PIA works, but it fools most programs...}
+    31 <_cursorTimer.]          {Restart the cursor cycle. This prevents it}
+                                { from getting drawn within the next 10 frames.}
+
+  {-- Handle cursor --}
+  {
+    Flashing rate and duty cycle are given by the 555 bistable circuit.
+    From the the schematic:
+        R1  =  10K
+        R2  =  10K
+        C   =  25 uF
+    Giving:
+        f   =  1.44  / ((R1 + 2*R2) * C)  =  1.92 Hz  =  31.2 frames
+        T1  =  0.693 * ((R1 + R2)   * C)  =   346 ms  =  20.8 frames
+        T2  =  0.693 * ( R2         * C)  =   173 ms  =  10.4 frames
+
+    Video taken from the Apple-1 on display at LCM+L:
+        https://www.youtube.com/watch?v=FtOCumsDtlE
+        (11 frames on, 5 frames off, taken at 30 fps)
+  }
+  <_cursorTimer, 1-
+  [if<0
+    $a0 &_CharOut!              {` '}
+    _p 6- _p=                   {Go back}
+    30]                         {31 frames at 60 Hz}
+  <_cursorTimer.
+  20^ [if=0                     {67% duty cycle}
+    $c0 &_CharOut!              {`@'}
+    _p 6- _p=]                  {Go back}
+
+  {-- Return from interrupt --}
+
+  &_Break_minus2 _PIA=          {Restore the vPC damage we did above}
+  pop
+  255 \frameCount.              {New interrupt in next frame. Note: "255"}
+                                { *may* cause a race condition and crash!}
+  \vIRQ_Return &_vCpuState??    {vIRQ return sequence with extra state}
+]
+
+{-----------------------------------------------------------------------+
+|       Startup message                                                 |
++-----------------------------------------------------------------------}
+
+_PRE_RESET=*
+                {Set visible pixel lines in video table}
+                #_CLC_
+                #_LDXIM_ #0
+                #_LDYIM_ #12
+_L1=*           #_LDAAY_ ##_ROWS
+                #_STYZ_  #_YSAV
+                #_LDYIM_ #7
+_L2=*           #_STAAX_ ##\videoTable
+                #_ADCIM_ #1
+                #_INX_
+                #_INX_
+                #_DEY_
+                #_BNE_   #@_L2
+                #_INX_
+                #_INX_
+                #_INX_
+                #_INX_
+                #_LDYZ_  #_YSAV
+                #_DEY_
+                #_BPL_   #@_L1
+
+                {Initialize terminal through "ACI"}
+                #_JMP_   ##_MENU
+
+_ROWS=*         { Page of each row's first pixel line, backwards }
+                #$77 #$70 #$56 #$4f #$48 #$41 #$3a #$33 #$2c #$25 #$1e #$17 #$10
+
+_BREAK=*        #_CLD_
+                #_CLI_
+                #_LDXIM_ #$F7
+                #_TXS_
+                #_JMP_   ##_ESCAPE
+
+{-----------------------------------------------------------------------+
+|       Main vCPU loop                                                  |
++-----------------------------------------------------------------------}
+*=$5f00
+
+_Apple1=*
+
+{
+  Main loop from the perspective of the Gigatron I/O system.
+  It is practically doing nothing, just starting v6502 sequences
+  through the designated SYS call, to transfer control from vCPU
+  to v6502.  When the SYS call returns to vCPU mode (due to a
+  BRK instruction), fetch the 6502 IRQ vector and start again.
+
+  The only other vCPU code is the vertical blank interrupt that
+  emulates the PIA registers.
+}
+
+[do
+  _v6502_PC=                    {Reset v6502 PC}
+  \SYS_Run6502_v4_80 _sysFn=
+
+_Break_minus2=*                 {To help our overly thrifty vIRQ handler}
+  80!!                          {Run 6502 code until BRK}
+
+{_Break=*}                      {After v6502 BRK instruction, resume here}
+  $fffe deek                    {Fake 6502 IRQ}
+  loop]
+
+{-----------------------------------------------------------------------+
+|       Character output with automatic scrolling                       |
++-----------------------------------------------------------------------}
+
+_CharOut=*
+[
+  {Minimalistic terminal output, with bit 7 set}
+
+  _i=                           {Temp park argument here}
+
+  6--                           {Preserve v6502 state}
+  _sysArgs0 %0=                 {v6502_ADL v6502_ADH}
+  _sysArgs2 %2=                 {v6502_IR  v6502_P}
+  _sysArgs4 %4=                 {v6502_Qz  v6502_Qn}
+
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS calls}
+  $3f00 _sysArgs0=              {White pen color and clear bitmask}
+  \sysArgs2.                    {Clear bitmask}
+
+  _i \sysArgs3.                 {Keep copy of character in sysArgs3}
+  $8d^ [if<>0                   {Test for CR...}
+    <_p, 251- if>0 0]           {...or line wrap}
+  [if=0
+
+    {-------------------------------------------------------------------+
+    |       Newline                                                     |
+    +-------------------------------------------------------------------}
+
+    { Clear cursor symbol }
+    _p _sysArgs4=               {Set drawing position}
+    255& 251- [if<=0 -5]        {Clear 5 or 1 slices depending on margin}
+    [do
+      134!! <_sysArgs4++        {Whipes out any `@'}
+      1+ if<0loop]
+
+    { Find the top text row }
+    $61 <_p.                    {Go to start of line, nicely indent by 1 pixel}
+    $9f+ _i=                    {i==$100: start of the video table}
+    peek >_p.                   {Go to what is now still the top text row}
+
+    { Clear the text row }
+    _p 2- _sysArgs4=            {Set drawing position for clearing}
+    [do
+      $700 _sysArgs4+ peek      {Preserve pixel on 8th line because of overlap}
+      1& \sysArgs2.             { in 7 line text mode. Assume bit 0 differs.}
+
+      134!!                     {SYS call to draw 8 pixels vertically}
+      <_sysArgs4++              {Step 1 pixel right}
+      \sysArgs4, if<>0loop]     {Loop until end of pixel line}
+
+    { Scroll everything up by modifying the video indirection table }
+    [do
+      _i 18+ _j=                {j looks 9 entries ahead of i}
+      peek \sysArgs2.           {Swap scanlines}
+      _i, _j.
+      \sysArgs2, _i.
+      <_i++ <_i++               {Advance to next entry in video table}
+      <_i, 216^ if<>0loop]      {Until all done}
+
+    { The cleared text row has now bubbled down to the bottom }
+  ]
+
+  \sysArgs3, $a0-               {WozMon sends ASCII with bit 7 set}
+  [if>=0                        {If printable}
+
+    {-------------------------------------------------------------------+
+    |       DrawChar                                                    |
+    +-------------------------------------------------------------------}
+
+    { Draw ASCII character (32..127) on screen in 5x8 pixels }
+    { and advance cursor position }
+
+    64- [if>=0 32-] 14+         {Map ASCII 96..127 to 64..95}
+    [if<0 50+ _i= \font32up     {ASCII 32..81}
+     else     _i= \font82up]    {ASCII 82..127}
+    _j= _i 2<< _i+              {Multiply char code by 5}
+    _j+ _j=                     {Add to page address to reach bitmap data}
+
+    _p _sysArgs4=               {Screen position for character}
+    6+ _p=                      {Advance by 6 pixels}
+
+    5 [do _i=                   {Draw character as 5 vertical bit slices}
+      _j 0??                    {Get bit slice as byte from ROM table}
+      $fe& \sysArgs2.           {Clear bottom pixel}
+      $700 _sysArgs4+ peek      {Preserve pixel on 8th line because of overlap}
+      [if<>0 <\sysArgs2++]      { in 7 line text mode. Assumes background is 0.}
+      134!!                     {SYS call to draw 8 pixels vertically}
+      <_j++ <_sysArgs4++        {Advance to next byte}
+      _i 1- if>0loop]           {Looping}
+  ]
+
+  %0 _sysArgs0=
+  %2 _sysArgs2=
+  %4 _sysArgs4=
+  6++ ret
+]
+
+{-----------------------------------------------------------------------+
+|       Apple-1 Cassette Interface                                      |
++-----------------------------------------------------------------------}
+
+*=$c100
+                #_LDAIM_ #$aa           {`*' for authenticity}
+                #_JSR_   ##_ECHO
+_MENU=*
+                #_LDX_   ##_MSG1        {Print welcome message part 1}
+_L3=*           #_LDAAX_ ##_MSG1
+                #_JSR_   ##_ECHO
+                #_DEX_
+                #_BNE_   #@_L3
+
+                #_LDX_   ##_MSG2        {Print welcome message part 2}
+_L4=*           #_LDAAX_ ##_MSG2
+                #_JSR_   ##_ECHO
+                #_DEX_
+                #_BNE_   #@_L4
+
+_L5=*           #_BIT_   ##_DSP         {Wait for processing of last char}
+                #_BMI_   #@_L5
+                #_JMP_   ##_RESET
+
+_MSG2=*         #@_MSG2_END
+
+                { 'CTL-Z WOZMON' }
+                #$8d #$ce #$cf #$cd #$da #$cf #$d7 #$a0
+                #$da #$ad #$cc #$d4 #$c3
+
+                { 'E2B3R BASIC WARM START\r' }
+                #$8d #$d4 #$d2 #$c1 #$d4 #$d3 #$a0 #$cd
+                #$d2 #$c1 #$d7 #$a0 #$c3 #$c9 #$d3 #$c1
+                #$c2 #$a0 #$d2 #$b3 #$c2 #$b2 #$c5
+
+                {       'INTEGER BASIC\r' }
+                #$8d #$c3 #$c9 #$d3 #$c1 #$c2 #$a0 #$d2
+                #$c5 #$c7 #$c5 #$d4 #$ce #$c9
+_MSG2_END=*
+
+*=$c200
+_MSG1=*         #@_MSG1_END
+
+                { 'E000R ' }
+                #$a0 #$d2 #$b0 #$b0 #$b0 #$c5
+
+                { 'C100R MENU\r' }
+                #$8d #$d5 #$ce #$c5 #$cd #$a0 #$d2 #$b0
+                #$b0 #$b1 #$c3
+
+                { 'EEER  MINI-ASSEMBLER\r' }
+                #$8d #$d2 #$c5 #$cc #$c2 #$cd #$c5 #$d3
+                #$d3 #$c1 #$ad #$c9 #$ce #$c9 #$cd #$a0
+                #$a0 #$d2 #$c5 #$c5 #$c5
+
+                { '400R  15-PUZZLE\r' }
+                #$8d #$c5 #$cc #$da #$da #$d5 #$d0 #$ad
+                #$b5 #$b1 #$a0 #$a0 #$d2 #$b0 #$b0 #$b4
+
+                { '300R  MASTERMIND\r'}
+                #$8d #$c4 #$ce #$c9 #$cd #$d2 #$c5 #$d4
+                #$d3 #$c1 #$cd #$a0 #$a0 #$d2 #$b0 #$b0
+                #$b3
+
+                { 'APPLE-1 ON TTL\r\r' }
+                #$8d #$8d #$cc #$d4 #$d4 #$a0 #$ce #$cf
+                #$a0 #$b1 #$ad #$c5 #$cc #$d0 #$d0 #$c1
+
+                { '\r' ... }
+                #$8d #$8d #$8d
+_MSG1_END=*
+
+                {
+                  Create message bytes in Python with:
+                  s = 'Message text'
+                  ' '.join('#$%02x'%(ord(c)+128) for c in reversed(s))
+                }
+
+{-----------------------------------------------------------------------+
+|       PIA init                                                        |
++-----------------------------------------------------------------------}
+
+*=$d010         #0      {KBD}
+                #0      {KBDCR}
+                #0      {DSP}
+                #0      {DSPCR}
+
+{-----------------------------------------------------------------------+
+|       A1 BASIC                                                        |
++-----------------------------------------------------------------------}
+
+{ v v v v v v v v v v v v   Insert BASIC image here   v v v v v v v v v v v v }
+{ Generated by: cd a1basic && ./make.sh }
+
+
+*=$e000
+ #$4c #$b0 #$e2 #$ad #$11 #$d0 #$10 #$fb #$ad #$10 #$d0 #$60 #$8a #$29 #$20 #$f0
+ #$23 #$a9 #$a0 #$85 #$44 #$4c #$c9 #$e3 #$a9 #$20 #$c5 #$81 #$b0 #$0c #$a9 #$8d
+ #$a0 #$07 #$20 #$c9 #$e3 #$a9 #$a0 #$88 #$d0 #$f8 #$a0 #$00 #$b1 #$42 #$e6 #$42
+ #$d0 #$02 #$e6 #$43 #$60 #$20 #$15 #$e7 #$20 #$76 #$e5 #$a5 #$42 #$c5 #$46 #$a5
+ #$43 #$e5 #$47 #$b0 #$ef #$20 #$6d #$e0 #$4c #$3b #$e0 #$a5 #$ca #$85 #$42 #$a5
+ #$cb #$85 #$43 #$a5 #$4c #$85 #$46 #$a5 #$4d #$85 #$47 #$d0 #$de #$20 #$15 #$e7
+ #$20 #$6d #$e5 #$a5 #$44 #$85 #$42 #$a5 #$45 #$85 #$43 #$b0 #$c7 #$86 #$d8 #$a9
+ #$a0 #$85 #$82 #$20 #$2a #$e0 #$98 #$85 #$44 #$20 #$2a #$e0 #$aa #$20 #$2a #$e0
+ #$20 #$1b #$e5 #$20 #$18 #$e0 #$84 #$82 #$aa #$10 #$18 #$0a #$10 #$e9 #$a5 #$44
+ #$d0 #$03 #$20 #$11 #$e0 #$8a #$20 #$c9 #$e3 #$a9 #$25 #$20 #$1a #$e0 #$aa #$30
+ #$f5 #$85 #$44 #$c9 #$01 #$d0 #$05 #$a6 #$d8 #$4c #$cd #$e3 #$48 #$84 #$ce #$a2
+ #$ed #$86 #$cf #$c9 #$51 #$90 #$04 #$c6 #$cf #$e9 #$50 #$48 #$b1 #$ce #$aa #$88
+ #$b1 #$ce #$10 #$fa #$e0 #$c0 #$b0 #$04 #$e0 #$00 #$30 #$f2 #$aa #$68 #$e9 #$01
+ #$d0 #$e9 #$24 #$44 #$30 #$03 #$20 #$f8 #$ef #$b1 #$ce #$10 #$10 #$aa #$29 #$3f
+ #$85 #$44 #$18 #$69 #$a0 #$20 #$c9 #$e3 #$88 #$e0 #$c0 #$90 #$ec #$20 #$0c #$e0
+ #$68 #$c9 #$5d #$f0 #$a4 #$c9 #$28 #$d0 #$8a #$f0 #$9e #$20 #$18 #$e1 #$95 #$50
+
+*=$e100
+ #$d5 #$88 #$90 #$11 #$a0 #$2b #$4c #$e0 #$e3 #$20 #$34 #$ee #$d5 #$50 #$90 #$f4
+ #$20 #$e4 #$ef #$95 #$88 #$4c #$23 #$e8 #$20 #$34 #$ee #$f0 #$e7 #$38 #$e9 #$01
+ #$60 #$20 #$18 #$e1 #$95 #$50 #$18 #$f5 #$88 #$4c #$02 #$e1 #$a0 #$14 #$d0 #$d6
+ #$20 #$18 #$e1 #$e8 #$b5 #$50 #$85 #$da #$65 #$ce #$48 #$a8 #$b5 #$88 #$85 #$db
+ #$65 #$cf #$48 #$c4 #$ca #$e5 #$cb #$b0 #$e3 #$a5 #$da #$69 #$fe #$85 #$da #$a9
+ #$ff #$a8 #$65 #$db #$85 #$db #$c8 #$b1 #$da #$d9 #$cc #$00 #$d0 #$0f #$98 #$f0
+ #$f5 #$68 #$91 #$da #$99 #$cc #$00 #$88 #$10 #$f7 #$e8 #$60 #$ea #$a0 #$80 #$d0
+ #$95 #$a9 #$00 #$20 #$0a #$e7 #$a0 #$02 #$94 #$88 #$20 #$0a #$e7 #$a9 #$bf #$20
+ #$c9 #$e3 #$a0 #$00 #$20 #$9e #$e2 #$94 #$88 #$ea #$ea #$ea #$b5 #$51 #$85 #$ce
+ #$b5 #$89 #$85 #$cf #$e8 #$e8 #$20 #$bc #$e1 #$b5 #$4e #$d5 #$86 #$b0 #$15 #$f6
+ #$4e #$a8 #$b1 #$ce #$b4 #$50 #$c4 #$44 #$90 #$04 #$a0 #$83 #$d0 #$c1 #$91 #$da
+ #$f6 #$50 #$90 #$e5 #$b4 #$50 #$8a #$91 #$da #$e8 #$e8 #$60 #$b5 #$51 #$85 #$da
+ #$38 #$e9 #$02 #$85 #$44 #$b5 #$89 #$85 #$db #$e9 #$00 #$85 #$45 #$a0 #$00 #$b1
+ #$44 #$18 #$e5 #$da #$85 #$44 #$60 #$b5 #$53 #$85 #$ce #$b5 #$8b #$85 #$cf #$b5
+ #$51 #$85 #$da #$b5 #$89 #$85 #$db #$e8 #$e8 #$e8 #$a0 #$00 #$94 #$88 #$94 #$a8
+ #$c8 #$94 #$50 #$b5 #$4d #$d5 #$85 #$08 #$48 #$b5 #$4f #$d5 #$87 #$90 #$07 #$68
+
+*=$e200
+ #$28 #$b0 #$02 #$56 #$50 #$60 #$a8 #$b1 #$ce #$85 #$44 #$68 #$a8 #$28 #$b0 #$f3
+ #$b1 #$da #$c5 #$44 #$d0 #$ed #$f6 #$4f #$f6 #$4d #$b0 #$d7 #$20 #$d7 #$e1 #$4c
+ #$36 #$e7 #$20 #$54 #$e2 #$06 #$ce #$26 #$cf #$90 #$0d #$18 #$a5 #$46 #$65 #$da
+ #$85 #$46 #$a5 #$47 #$65 #$db #$85 #$47 #$88 #$f0 #$09 #$06 #$46 #$26 #$47 #$10
+ #$e4 #$4c #$7e #$e7 #$a5 #$46 #$20 #$08 #$e7 #$a5 #$47 #$95 #$a8 #$06 #$45 #$90
+ #$28 #$4c #$6f #$e7 #$a9 #$55 #$85 #$45 #$20 #$5b #$e2 #$a5 #$ce #$85 #$da #$a5
+ #$cf #$85 #$db #$20 #$15 #$e7 #$84 #$46 #$84 #$47 #$a5 #$cf #$10 #$09 #$ca #$06
+ #$45 #$20 #$6f #$e7 #$20 #$15 #$e7 #$a0 #$10 #$60 #$20 #$6c #$ee #$f0 #$c5 #$ff
+ #$c9 #$84 #$d0 #$02 #$46 #$78 #$c9 #$df #$f0 #$11 #$c9 #$9b #$f0 #$06 #$99 #$00
+ #$02 #$c8 #$10 #$0a #$a0 #$8b #$20 #$c4 #$e3 #$a0 #$01 #$88 #$30 #$f6 #$20 #$03
+ #$e0 #$ea #$ea #$20 #$c9 #$e3 #$c9 #$8d #$d0 #$d6 #$a9 #$df #$99 #$00 #$02 #$60
+ #$20 #$d3 #$ef #$20 #$cd #$e3 #$46 #$d9 #$a9 #$be #$20 #$c9 #$e3 #$a0 #$00 #$84
+ #$82 #$24 #$78 #$10 #$0c #$a6 #$76 #$a5 #$77 #$20 #$1b #$e5 #$a9 #$a0 #$20 #$c9
+ #$e3 #$a2 #$ff #$9a #$20 #$9e #$e2 #$84 #$e9 #$8a #$85 #$c8 #$a2 #$18 #$20 #$91
+ #$e4 #$a5 #$c8 #$69 #$00 #$85 #$de #$a9 #$00 #$aa #$69 #$02 #$85 #$df #$a1 #$de
+ #$29 #$f0 #$c9 #$b0 #$f0 #$03 #$4c #$83 #$e8 #$a0 #$02 #$b1 #$de #$99 #$cd #$00
+
+*=$e300
+ #$88 #$d0 #$f8 #$20 #$8a #$e3 #$a5 #$e9 #$e5 #$c8 #$c9 #$04 #$f0 #$a8 #$91 #$de
+ #$a5 #$ca #$f1 #$de #$85 #$44 #$a5 #$cb #$e9 #$00 #$85 #$45 #$a5 #$44 #$c5 #$cc
+ #$a5 #$45 #$e5 #$cd #$90 #$45 #$a5 #$ca #$f1 #$de #$85 #$46 #$a5 #$cb #$e9 #$00
+ #$85 #$47 #$b1 #$ca #$91 #$46 #$e6 #$ca #$d0 #$02 #$e6 #$cb #$a5 #$42 #$c5 #$ca
+ #$a5 #$43 #$e5 #$cb #$b0 #$e0 #$b5 #$44 #$95 #$ca #$ca #$10 #$f9 #$b1 #$de #$a8
+ #$88 #$b1 #$de #$91 #$46 #$98 #$d0 #$f8 #$24 #$78 #$10 #$09 #$b5 #$77 #$75 #$75
+ #$95 #$77 #$e8 #$f0 #$f7 #$10 #$7e #$00 #$00 #$00 #$00 #$a0 #$14 #$d0 #$71 #$20
+ #$15 #$e7 #$a5 #$42 #$85 #$46 #$a5 #$43 #$85 #$47 #$20 #$75 #$e5 #$a5 #$42 #$85
+ #$44 #$a5 #$43 #$85 #$45 #$d0 #$0e #$20 #$15 #$e7 #$20 #$6d #$e5 #$a5 #$46 #$85
+ #$42 #$a5 #$47 #$85 #$43 #$a0 #$00 #$a5 #$ca #$c5 #$44 #$a5 #$cb #$e5 #$45 #$b0
+ #$16 #$a5 #$44 #$d0 #$02 #$c6 #$45 #$c6 #$44 #$a5 #$46 #$d0 #$02 #$c6 #$47 #$c6
+ #$46 #$b1 #$44 #$91 #$46 #$90 #$e0 #$a5 #$46 #$85 #$ca #$a5 #$47 #$85 #$cb #$60
+ #$20 #$c9 #$e3 #$c8 #$b9 #$00 #$eb #$30 #$f7 #$c9 #$8d #$d0 #$06 #$a9 #$00 #$85
+ #$81 #$a9 #$8d #$e6 #$81 #$4c #$ef #$ff #$ea #$ea #$ea #$ea #$ea #$ea #$a0 #$06
+ #$20 #$d3 #$ee #$24 #$d9 #$30 #$03 #$4c #$b6 #$e2 #$4c #$9a #$eb #$2a #$69 #$a0
+ #$dd #$00 #$02 #$d0 #$53 #$b1 #$86 #$0a #$30 #$06 #$88 #$b1 #$86 #$30 #$29 #$c8
+
+*=$e400
+ #$86 #$c8 #$98 #$48 #$a2 #$00 #$a1 #$86 #$aa #$4a #$49 #$48 #$11 #$86 #$c9 #$c0
+ #$90 #$01 #$e8 #$c8 #$d0 #$f3 #$68 #$a8 #$8a #$4c #$c0 #$e4 #$e6 #$e9 #$a6 #$e9
+ #$f0 #$bc #$9d #$00 #$02 #$60 #$a6 #$c8 #$a9 #$a0 #$e8 #$dd #$00 #$02 #$b0 #$fa
+ #$b1 #$86 #$29 #$3f #$4a #$d0 #$b6 #$bd #$00 #$02 #$b0 #$06 #$69 #$3f #$c9 #$1a
+ #$90 #$6f #$69 #$4f #$c9 #$0a #$90 #$69 #$a6 #$85 #$c8 #$b1 #$86 #$29 #$e0 #$c9
+ #$20 #$f0 #$7a #$b5 #$b0 #$85 #$c8 #$b5 #$d1 #$85 #$e9 #$88 #$b1 #$86 #$0a #$10
+ #$fa #$88 #$b0 #$38 #$0a #$30 #$35 #$b4 #$58 #$84 #$87 #$b4 #$90 #$e8 #$10 #$da
+ #$f0 #$b3 #$c9 #$7e #$b0 #$22 #$ca #$10 #$04 #$a0 #$06 #$10 #$29 #$94 #$90 #$a4
+ #$87 #$94 #$58 #$a4 #$c8 #$94 #$b0 #$a4 #$e9 #$94 #$d1 #$29 #$1f #$a8 #$b9 #$20
+ #$ec #$0a #$a8 #$a9 #$76 #$2a #$85 #$87 #$d0 #$01 #$c8 #$c8 #$86 #$85 #$b1 #$86
+ #$30 #$84 #$d0 #$05 #$a0 #$0e #$4c #$e0 #$e3 #$c9 #$03 #$b0 #$c3 #$4a #$a6 #$c8
+ #$e8 #$bd #$00 #$02 #$90 #$04 #$c9 #$a2 #$f0 #$0a #$c9 #$df #$f0 #$06 #$86 #$c8
+ #$20 #$1c #$e4 #$c8 #$88 #$a6 #$85 #$b1 #$86 #$88 #$0a #$10 #$cf #$b4 #$58 #$84
+ #$87 #$b4 #$90 #$e8 #$b1 #$86 #$29 #$9f #$d0 #$ed #$85 #$72 #$85 #$73 #$98 #$48
+ #$86 #$85 #$b4 #$d0 #$84 #$c9 #$18 #$a9 #$0a #$85 #$79 #$a2 #$00 #$c8 #$b9 #$00
+ #$02 #$29 #$0f #$65 #$72 #$48 #$8a #$65 #$73 #$30 #$1c #$aa #$68 #$c6 #$79 #$d0
+
+*=$e500
+ #$f2 #$85 #$72 #$86 #$73 #$c4 #$e9 #$d0 #$de #$a4 #$c9 #$c8 #$84 #$e9 #$20 #$1c
+ #$e4 #$68 #$a8 #$a5 #$73 #$b0 #$a9 #$a0 #$00 #$10 #$8b #$85 #$73 #$86 #$72 #$a2
+ #$04 #$86 #$c9 #$a9 #$b0 #$85 #$79 #$a5 #$72 #$dd #$63 #$e5 #$a5 #$73 #$fd #$68
+ #$e5 #$90 #$0d #$85 #$73 #$a5 #$72 #$fd #$63 #$e5 #$85 #$72 #$e6 #$79 #$d0 #$e7
+ #$a5 #$79 #$e8 #$ca #$f0 #$0e #$c9 #$b0 #$f0 #$02 #$85 #$c9 #$24 #$c9 #$30 #$04
+ #$a5 #$82 #$f0 #$0b #$20 #$c9 #$e3 #$24 #$78 #$10 #$04 #$99 #$00 #$02 #$c8 #$ca
+ #$10 #$c1 #$60 #$01 #$0a #$64 #$e8 #$10 #$00 #$00 #$00 #$03 #$27 #$a5 #$ca #$85
+ #$46 #$a5 #$cb #$85 #$47 #$e8 #$a5 #$47 #$85 #$45 #$a5 #$46 #$85 #$44 #$c5 #$4c
+ #$a5 #$45 #$e5 #$4d #$b0 #$26 #$a0 #$01 #$b1 #$44 #$e5 #$ce #$c8 #$b1 #$44 #$e5
+ #$cf #$b0 #$19 #$a0 #$00 #$a5 #$46 #$71 #$44 #$85 #$46 #$90 #$03 #$e6 #$47 #$18
+ #$c8 #$a5 #$ce #$f1 #$44 #$c8 #$a5 #$cf #$f1 #$44 #$b0 #$ca #$60 #$46 #$78 #$a5
+ #$4c #$85 #$ca #$a5 #$4d #$85 #$cb #$a5 #$4a #$85 #$cc #$a5 #$4b #$85 #$cd #$a9
+ #$00 #$85 #$83 #$85 #$84 #$85 #$86 #$a9 #$00 #$85 #$1d #$60 #$a5 #$d0 #$69 #$05
+ #$85 #$d2 #$a5 #$d1 #$69 #$00 #$85 #$d3 #$a5 #$d2 #$c5 #$ca #$a5 #$d3 #$e5 #$cb
+ #$90 #$03 #$4c #$6b #$e3 #$a5 #$ce #$91 #$d0 #$a5 #$cf #$c8 #$91 #$d0 #$a5 #$d2
+ #$c8 #$91 #$d0 #$a5 #$d3 #$c8 #$91 #$d0 #$a9 #$00 #$c8 #$91 #$d0 #$c8 #$91 #$d0
+
+*=$e600
+ #$a5 #$d2 #$85 #$cc #$a5 #$d3 #$85 #$cd #$a5 #$d0 #$90 #$43 #$85 #$ce #$84 #$cf
+ #$20 #$ff #$e6 #$30 #$0e #$c9 #$40 #$f0 #$0a #$4c #$28 #$e6 #$06 #$c9 #$49 #$d0
+ #$07 #$a9 #$49 #$85 #$cf #$20 #$ff #$e6 #$a5 #$4b #$85 #$d1 #$a5 #$4a #$85 #$d0
+ #$c5 #$cc #$a5 #$d1 #$e5 #$cd #$b0 #$94 #$b1 #$d0 #$c8 #$c5 #$ce #$d0 #$06 #$b1
+ #$d0 #$c5 #$cf #$f0 #$0e #$c8 #$b1 #$d0 #$48 #$c8 #$b1 #$d0 #$85 #$d1 #$68 #$a0
+ #$00 #$f0 #$db #$a5 #$d0 #$69 #$03 #$20 #$0a #$e7 #$a5 #$d1 #$69 #$00 #$95 #$88
+ #$a5 #$cf #$c9 #$40 #$d0 #$1c #$88 #$98 #$20 #$0a #$e7 #$88 #$94 #$88 #$a0 #$03
+ #$f6 #$88 #$c8 #$b1 #$d0 #$30 #$f9 #$10 #$09 #$a9 #$00 #$85 #$d4 #$85 #$d5 #$a2
+ #$18 #$48 #$a0 #$00 #$b1 #$de #$10 #$18 #$0a #$30 #$81 #$20 #$ff #$e6 #$20 #$08
+ #$e7 #$20 #$ff #$e6 #$95 #$a8 #$24 #$d4 #$10 #$01 #$ca #$20 #$ff #$e6 #$b0 #$e6
+ #$c9 #$28 #$d0 #$1f #$a5 #$de #$20 #$0a #$e7 #$a5 #$df #$95 #$88 #$24 #$d4 #$30
+ #$0b #$a9 #$01 #$20 #$0a #$e7 #$a9 #$00 #$95 #$88 #$f6 #$88 #$20 #$ff #$e6 #$30
+ #$f9 #$b0 #$d3 #$24 #$d4 #$10 #$06 #$c9 #$04 #$b0 #$d0 #$46 #$d4 #$a8 #$85 #$d6
+ #$b9 #$98 #$e9 #$29 #$55 #$0a #$85 #$d7 #$68 #$a8 #$b9 #$98 #$e9 #$29 #$aa #$c5
+ #$d7 #$b0 #$09 #$98 #$48 #$20 #$ff #$e6 #$a5 #$d6 #$90 #$95 #$b9 #$10 #$ea #$85
+ #$ce #$b9 #$88 #$ea #$85 #$cf #$20 #$fc #$e6 #$4c #$d8 #$e6 #$6c #$ce #$00 #$e6
+
+*=$e700
+ #$de #$d0 #$02 #$e6 #$df #$b1 #$de #$60 #$94 #$87 #$ca #$30 #$03 #$95 #$50 #$60
+ #$a0 #$66 #$4c #$e0 #$e3 #$a0 #$00 #$b5 #$50 #$85 #$ce #$b5 #$a8 #$85 #$cf #$b5
+ #$88 #$f0 #$0e #$85 #$cf #$b1 #$ce #$48 #$c8 #$b1 #$ce #$85 #$cf #$68 #$85 #$ce
+ #$88 #$e8 #$60 #$20 #$4a #$e7 #$20 #$15 #$e7 #$98 #$20 #$08 #$e7 #$95 #$a8 #$c5
+ #$ce #$d0 #$06 #$c5 #$cf #$d0 #$02 #$f6 #$50 #$60 #$20 #$82 #$e7 #$20 #$59 #$e7
+ #$20 #$15 #$e7 #$24 #$cf #$30 #$1b #$ca #$60 #$20 #$15 #$e7 #$a5 #$cf #$d0 #$04
+ #$a5 #$ce #$f0 #$f3 #$a9 #$ff #$20 #$08 #$e7 #$95 #$a8 #$24 #$cf #$30 #$e9 #$20
+ #$15 #$e7 #$98 #$38 #$e5 #$ce #$20 #$08 #$e7 #$98 #$e5 #$cf #$50 #$23 #$a0 #$00
+ #$10 #$90 #$20 #$6f #$e7 #$20 #$15 #$e7 #$a5 #$ce #$85 #$da #$a5 #$cf #$85 #$db
+ #$20 #$15 #$e7 #$18 #$a5 #$ce #$65 #$da #$20 #$08 #$e7 #$a5 #$cf #$65 #$db #$70
+ #$dd #$95 #$a8 #$60 #$20 #$15 #$e7 #$a4 #$ce #$f0 #$05 #$88 #$a5 #$cf #$f0 #$0c
+ #$60 #$a5 #$81 #$09 #$07 #$a8 #$c8 #$a9 #$a0 #$20 #$c9 #$e3 #$c4 #$81 #$b0 #$f7
+ #$60 #$20 #$b1 #$e7 #$20 #$15 #$e7 #$a5 #$cf #$10 #$0a #$a9 #$ad #$20 #$c9 #$e3
+ #$20 #$72 #$e7 #$50 #$ef #$88 #$84 #$d5 #$86 #$cf #$a6 #$ce #$20 #$1b #$e5 #$a6
+ #$cf #$60 #$20 #$15 #$e7 #$a5 #$ce #$85 #$76 #$a5 #$cf #$85 #$77 #$88 #$84 #$78
+ #$c8 #$a9 #$0a #$85 #$74 #$84 #$75 #$60 #$20 #$15 #$e7 #$a5 #$ce #$a4 #$cf #$10
+
+*=$e800
+ #$f2 #$20 #$15 #$e7 #$b5 #$50 #$85 #$da #$b5 #$88 #$85 #$db #$a5 #$ce #$91 #$da
+ #$c8 #$a5 #$cf #$91 #$da #$e8 #$60 #$68 #$68 #$24 #$d5 #$10 #$05 #$20 #$cd #$e3
+ #$46 #$d5 #$60 #$a0 #$ff #$84 #$d7 #$60 #$20 #$cd #$ef #$f0 #$07 #$a9 #$25 #$85
+ #$d6 #$88 #$84 #$d4 #$e8 #$60 #$a5 #$ca #$a4 #$cb #$d0 #$5a #$a0 #$41 #$a5 #$84
+ #$c9 #$08 #$b0 #$5e #$a8 #$e6 #$84 #$a5 #$de #$99 #$00 #$11 #$a5 #$df #$99 #$08
+ #$11 #$a5 #$dc #$99 #$10 #$11 #$a5 #$dd #$99 #$18 #$11 #$20 #$15 #$e7 #$20 #$6d
+ #$e5 #$90 #$04 #$a0 #$37 #$d0 #$3b #$a5 #$44 #$a4 #$45 #$85 #$dc #$84 #$dd #$2c
+ #$11 #$d0 #$30 #$4f #$18 #$69 #$03 #$90 #$01 #$c8 #$a2 #$ff #$86 #$d9 #$9a #$85
+ #$de #$84 #$df #$20 #$79 #$e6 #$24 #$d9 #$10 #$49 #$18 #$a0 #$00 #$a5 #$dc #$71
+ #$dc #$a4 #$dd #$90 #$01 #$c8 #$c5 #$4c #$d0 #$d1 #$c4 #$4d #$d0 #$cd #$a0 #$34
+ #$46 #$d9 #$4c #$e0 #$e3 #$a0 #$4a #$a5 #$84 #$f0 #$f7 #$c6 #$84 #$a8 #$b9 #$0f
+ #$11 #$85 #$dc #$b9 #$17 #$11 #$85 #$dd #$be #$87 #$00 #$b9 #$07 #$11 #$a8 #$8a
+ #$4c #$7a #$e8 #$a0 #$63 #$20 #$c4 #$e3 #$a0 #$01 #$b1 #$dc #$aa #$c8 #$b1 #$dc
+ #$20 #$1b #$e5 #$4c #$b3 #$e2 #$c6 #$83 #$a0 #$5b #$a5 #$83 #$f0 #$c4 #$a8 #$b5
+ #$50 #$d9 #$ff #$11 #$d0 #$f0 #$b5 #$88 #$d9 #$07 #$12 #$d0 #$e9 #$b9 #$0f #$12
+ #$85 #$da #$b9 #$17 #$12 #$85 #$db #$20 #$15 #$e7 #$ca #$20 #$93 #$e7 #$20 #$01
+
+*=$e900
+ #$e8 #$ca #$a4 #$83 #$b9 #$47 #$12 #$95 #$a7 #$b9 #$3f #$12 #$a0 #$00 #$20 #$08
+ #$e7 #$20 #$82 #$e7 #$20 #$59 #$e7 #$20 #$15 #$e7 #$a4 #$83 #$a5 #$ce #$f0 #$05
+ #$59 #$17 #$12 #$10 #$12 #$b9 #$1f #$12 #$85 #$dc #$b9 #$27 #$12 #$85 #$dd #$be
+ #$2f #$12 #$b9 #$37 #$12 #$d0 #$87 #$c6 #$83 #$60 #$a0 #$54 #$a5 #$83 #$c9 #$08
+ #$f0 #$9a #$e6 #$83 #$a8 #$b5 #$50 #$99 #$00 #$12 #$b5 #$88 #$99 #$08 #$12 #$60
+ #$20 #$15 #$e7 #$a4 #$83 #$a5 #$ce #$99 #$3f #$12 #$a5 #$cf #$99 #$47 #$12 #$a9
+ #$01 #$99 #$0f #$12 #$a9 #$00 #$99 #$17 #$12 #$a5 #$dc #$99 #$1f #$12 #$a5 #$dd
+ #$99 #$27 #$12 #$a5 #$de #$99 #$2f #$12 #$a5 #$df #$99 #$37 #$12 #$60 #$20 #$15
+ #$e7 #$a4 #$83 #$a5 #$ce #$99 #$0f #$12 #$a5 #$cf #$4c #$66 #$e9 #$00 #$00 #$00
+ #$00 #$00 #$00 #$00 #$00 #$00 #$00 #$00 #$00 #$00 #$00 #$ab #$03 #$03 #$03 #$03
+ #$03 #$03 #$03 #$03 #$03 #$03 #$03 #$03 #$03 #$03 #$3f #$3f #$c0 #$c0 #$3c #$3c
+ #$3c #$3c #$3c #$3c #$3c #$30 #$0f #$c0 #$cc #$ff #$55 #$00 #$ab #$ab #$03 #$03
+ #$ff #$ff #$55 #$ff #$ff #$55 #$cf #$cf #$cf #$cf #$cf #$ff #$55 #$c3 #$c3 #$c3
+ #$55 #$f0 #$f0 #$cf #$56 #$56 #$56 #$55 #$ff #$ff #$55 #$03 #$03 #$03 #$03 #$03
+ #$03 #$03 #$ff #$ff #$ff #$03 #$03 #$03 #$03 #$03 #$03 #$03 #$03 #$03 #$03 #$03
+ #$03 #$03 #$03 #$03 #$03 #$00 #$ab #$03 #$57 #$03 #$03 #$03 #$03 #$07 #$03 #$03
+
+*=$ea00
+ #$03 #$03 #$03 #$03 #$03 #$03 #$03 #$03 #$03 #$03 #$aa #$ff #$ff #$ff #$ff #$ff
+ #$17 #$ff #$ff #$19 #$5d #$35 #$4b #$f2 #$ec #$87 #$6f #$ad #$b7 #$e2 #$f8 #$54
+ #$80 #$96 #$85 #$82 #$22 #$10 #$33 #$4a #$13 #$06 #$0b #$4a #$01 #$40 #$47 #$7a
+ #$00 #$ff #$23 #$09 #$5b #$16 #$b6 #$cb #$ff #$ff #$fb #$ff #$ff #$24 #$f6 #$4e
+ #$59 #$50 #$00 #$ff #$23 #$a3 #$6f #$36 #$23 #$d7 #$1c #$22 #$c2 #$ae #$ba #$23
+ #$ff #$ff #$21 #$30 #$1e #$03 #$c4 #$20 #$00 #$c1 #$ff #$ff #$ff #$a0 #$30 #$1e
+ #$a4 #$d3 #$b6 #$bc #$aa #$3a #$01 #$50 #$7e #$d8 #$d8 #$a5 #$3c #$ff #$16 #$5b
+ #$28 #$03 #$c4 #$1d #$00 #$0c #$4e #$00 #$3e #$00 #$a6 #$b0 #$00 #$bc #$c6 #$57
+ #$8c #$01 #$27 #$ff #$ff #$ff #$ff #$ff #$e8 #$ff #$ff #$e8 #$e0 #$e0 #$e0 #$ef
+ #$ef #$e3 #$e3 #$e5 #$e5 #$e7 #$e7 #$ee #$ef #$ef #$e7 #$e7 #$e2 #$ef #$e7 #$e7
+ #$ec #$ec #$ec #$e7 #$ec #$ec #$ec #$e2 #$00 #$ff #$e8 #$e1 #$e8 #$e8 #$ef #$eb
+ #$ff #$ff #$e0 #$ff #$ff #$ef #$ee #$ef #$e7 #$e7 #$00 #$ff #$e8 #$e7 #$e7 #$e7
+ #$e8 #$e1 #$e2 #$ee #$ee #$ee #$ee #$e8 #$ff #$ff #$e1 #$e1 #$ef #$ee #$e7 #$e8
+ #$ee #$e7 #$ff #$ff #$ff #$ee #$e1 #$ef #$e7 #$e8 #$ef #$ef #$eb #$e9 #$e8 #$e9
+ #$e9 #$e8 #$e8 #$e8 #$e8 #$ff #$e8 #$e8 #$e8 #$ee #$e7 #$e8 #$ef #$ef #$ee #$ef
+ #$ee #$ef #$ee #$ee #$ef #$ee #$ee #$ee #$e1 #$e8 #$e8 #$ff #$ff #$ff #$ff #$ff
+
+*=$eb00
+ #$be #$b3 #$b2 #$b7 #$b6 #$37 #$d4 #$cf #$cf #$a0 #$cc #$cf #$ce #$47 #$d3 #$d9
+ #$ce #$d4 #$c1 #$58 #$cd #$c5 #$cd #$a0 #$c6 #$d5 #$cc #$4c #$d4 #$cf #$cf #$a0
+ #$cd #$c1 #$ce #$d9 #$a0 #$d0 #$c1 #$d2 #$c5 #$ce #$53 #$d3 #$d4 #$d2 #$c9 #$ce
+ #$47 #$ce #$cf #$a0 #$c5 #$ce #$44 #$c2 #$c1 #$c4 #$a0 #$c2 #$d2 #$c1 #$ce #$c3
+ #$48 #$be #$b8 #$a0 #$c7 #$cf #$d3 #$d5 #$c2 #$53 #$c2 #$c1 #$c4 #$a0 #$d2 #$c5
+ #$d4 #$d5 #$d2 #$4e #$be #$b8 #$a0 #$c6 #$cf #$d2 #$53 #$c2 #$c1 #$c4 #$a0 #$ce
+ #$c5 #$d8 #$54 #$d3 #$d4 #$cf #$d0 #$d0 #$c5 #$c4 #$a0 #$c1 #$d4 #$20 #$aa #$aa
+ #$aa #$20 #$a0 #$c5 #$d2 #$d2 #$0d #$be #$b2 #$b5 #$35 #$d2 #$c1 #$ce #$c7 #$45
+ #$c4 #$c9 #$4d #$d3 #$d4 #$d2 #$a0 #$cf #$d6 #$c6 #$4c #$dc #$0d #$d2 #$c5 #$d4
+ #$d9 #$d0 #$c5 #$a0 #$cc #$c9 #$ce #$c5 #$8d #$3f #$46 #$d9 #$90 #$03 #$4c #$c3
+ #$e8 #$a6 #$cf #$9a #$a6 #$ce #$a0 #$8d #$d0 #$02 #$a0 #$99 #$20 #$c4 #$e3 #$86
+ #$ce #$ba #$86 #$cf #$a0 #$fe #$84 #$d9 #$c8 #$84 #$c8 #$20 #$99 #$e2 #$84 #$e9
+ #$a2 #$18 #$a9 #$30 #$20 #$91 #$e4 #$e6 #$d9 #$a6 #$ce #$a4 #$c8 #$0a #$85 #$ce
+ #$c8 #$b9 #$00 #$02 #$c9 #$74 #$f0 #$d2 #$49 #$b0 #$c9 #$0a #$b0 #$f0 #$c8 #$c8
+ #$84 #$c8 #$b9 #$00 #$02 #$48 #$b9 #$ff #$01 #$a0 #$00 #$20 #$08 #$e7 #$68 #$95
+ #$a8 #$a5 #$ce #$c9 #$c7 #$d0 #$03 #$20 #$6f #$e7 #$4c #$01 #$e8 #$ff #$ff #$ff
+
+*=$ec00
+ #$50 #$20 #$13 #$ec #$d0 #$15 #$20 #$0b #$ec #$d0 #$10 #$20 #$82 #$e7 #$20 #$6f
+ #$e7 #$50 #$03 #$20 #$82 #$e7 #$20 #$59 #$e7 #$56 #$50 #$4c #$36 #$e7 #$ff #$ff
+ #$c1 #$ff #$7f #$d1 #$cc #$c7 #$cf #$ce #$c5 #$9a #$98 #$8b #$96 #$95 #$93 #$bf
+ #$b2 #$32 #$2d #$2b #$bc #$b0 #$ac #$be #$35 #$8e #$61 #$ff #$ff #$ff #$dd #$fb
+ #$20 #$c9 #$ef #$15 #$4f #$10 #$05 #$20 #$c9 #$ef #$35 #$4f #$95 #$50 #$10 #$cb
+ #$4c #$c9 #$ef #$40 #$60 #$8d #$60 #$8b #$00 #$7e #$8c #$33 #$00 #$00 #$60 #$03
+ #$bf #$12 #$00 #$40 #$89 #$c9 #$47 #$9d #$17 #$68 #$9d #$0a #$00 #$40 #$60 #$8d
+ #$60 #$8b #$00 #$7e #$8c #$3c #$00 #$00 #$60 #$03 #$bf #$1b #$4b #$67 #$b4 #$a1
+ #$07 #$8c #$07 #$ae #$a9 #$ac #$a8 #$67 #$8c #$07 #$b4 #$af #$ac #$b0 #$67 #$9d
+ #$b2 #$af #$ac #$af #$a3 #$67 #$8c #$07 #$a5 #$ab #$af #$b0 #$f4 #$ae #$a9 #$b2
+ #$b0 #$7f #$0e #$27 #$b4 #$ae #$a9 #$b2 #$b0 #$7f #$0e #$28 #$b4 #$ae #$a9 #$b2
+ #$b0 #$64 #$07 #$a6 #$a9 #$67 #$af #$b4 #$af #$a7 #$78 #$b4 #$a5 #$ac #$78 #$7f
+ #$02 #$ad #$a5 #$b2 #$67 #$a2 #$b5 #$b3 #$af #$a7 #$ee #$b2 #$b5 #$b4 #$a5 #$b2
+ #$7e #$8c #$39 #$b4 #$b8 #$a5 #$ae #$67 #$b0 #$a5 #$b4 #$b3 #$27 #$af #$b4 #$07
+ #$9d #$19 #$b2 #$af #$a6 #$7f #$05 #$37 #$b4 #$b5 #$b0 #$ae #$a9 #$7f #$05 #$28
+ #$b4 #$b5 #$b0 #$ae #$a9 #$7f #$05 #$2a #$b4 #$b5 #$b0 #$ae #$a9 #$e4 #$ae #$a5
+
+*=$ed00
+ #$00 #$ff #$ff #$47 #$a2 #$a1 #$b4 #$7f #$0d #$30 #$ad #$a9 #$a4 #$7f #$0d #$23
+ #$ad #$a9 #$a4 #$67 #$ac #$ac #$a1 #$a3 #$00 #$40 #$80 #$c0 #$c1 #$80 #$00 #$47
+ #$8c #$68 #$8c #$db #$67 #$9b #$68 #$9b #$50 #$8c #$63 #$8c #$7f #$01 #$51 #$07
+ #$88 #$29 #$84 #$80 #$c4 #$80 #$57 #$71 #$07 #$88 #$14 #$ed #$a5 #$ad #$af #$ac
+ #$ed #$a5 #$ad #$a9 #$a8 #$f2 #$af #$ac #$af #$a3 #$71 #$08 #$88 #$ae #$a5 #$ac
+ #$68 #$83 #$08 #$68 #$9d #$08 #$71 #$07 #$88 #$60 #$76 #$b4 #$af #$ae #$76 #$8d
+ #$76 #$8b #$51 #$07 #$88 #$19 #$b8 #$a4 #$ae #$b2 #$f2 #$b3 #$b5 #$f3 #$a2 #$a1
+ #$ee #$a7 #$b3 #$e4 #$ae #$b2 #$eb #$a5 #$a5 #$b0 #$51 #$07 #$88 #$39 #$81 #$c1
+ #$4f #$7f #$0f #$2f #$00 #$51 #$06 #$88 #$29 #$c2 #$0c #$82 #$57 #$8c #$6a #$8c
+ #$42 #$ae #$a5 #$a8 #$b4 #$60 #$ae #$a5 #$a8 #$b4 #$4f #$7e #$1e #$35 #$8c #$27
+ #$51 #$07 #$88 #$09 #$8b #$fe #$e4 #$af #$ad #$f2 #$af #$e4 #$ae #$a1 #$dc #$de
+ #$9c #$dd #$9c #$de #$dd #$9e #$c3 #$dd #$cf #$ca #$cd #$cb #$00 #$47 #$9d #$ad
+ #$a5 #$ad #$af #$ac #$76 #$9d #$ad #$a5 #$ad #$a9 #$a8 #$e6 #$a6 #$af #$60 #$8c
+ #$20 #$af #$b4 #$b5 #$a1 #$f2 #$ac #$a3 #$f2 #$a3 #$b3 #$60 #$8c #$20 #$ac #$a5
+ #$a4 #$ee #$b5 #$b2 #$60 #$ae #$b5 #$b2 #$f4 #$b3 #$a9 #$ac #$60 #$8c #$20 #$b4
+ #$b3 #$a9 #$ac #$7a #$7e #$9a #$22 #$20 #$00 #$60 #$03 #$bf #$60 #$03 #$bf #$1f
+
+*=$ee00
+ #$20 #$b1 #$e7 #$e8 #$e8 #$b5 #$4f #$85 #$da #$b5 #$87 #$85 #$db #$b4 #$4e #$98
+ #$d5 #$86 #$b0 #$09 #$b1 #$da #$20 #$c9 #$e3 #$c8 #$4c #$0f #$ee #$a9 #$ff #$85
+ #$d5 #$60 #$e8 #$a9 #$00 #$95 #$88 #$95 #$a8 #$b5 #$87 #$38 #$f5 #$4f #$95 #$50
+ #$4c #$23 #$e8 #$ff #$20 #$15 #$e7 #$a5 #$cf #$d0 #$28 #$a5 #$ce #$60 #$20 #$34
+ #$ee #$a4 #$c8 #$c9 #$30 #$b0 #$21 #$c0 #$28 #$b0 #$1d #$60 #$ea #$ea #$20 #$34
+ #$ee #$60 #$ea #$8a #$a2 #$01 #$b4 #$ce #$94 #$4c #$b4 #$48 #$94 #$ca #$ca #$f0
+ #$f5 #$aa #$60 #$a0 #$77 #$4c #$e0 #$e3 #$a0 #$7b #$d0 #$f9 #$20 #$54 #$e2 #$a5
+ #$da #$d0 #$07 #$a5 #$db #$d0 #$03 #$4c #$7e #$e7 #$06 #$ce #$26 #$cf #$26 #$46
+ #$26 #$47 #$a5 #$46 #$c5 #$da #$a5 #$47 #$e5 #$db #$90 #$0a #$85 #$47 #$a5 #$46
+ #$e5 #$da #$85 #$46 #$e6 #$ce #$88 #$d0 #$e1 #$60 #$ff #$ff #$ff #$ff #$ff #$ff
+ #$20 #$15 #$e7 #$6c #$ce #$00 #$a5 #$4c #$d0 #$02 #$c6 #$4d #$c6 #$4c #$a5 #$48
+ #$d0 #$02 #$c6 #$49 #$c6 #$48 #$a0 #$00 #$b1 #$4c #$91 #$48 #$a5 #$ca #$c5 #$4c
+ #$a5 #$cb #$e5 #$4d #$90 #$e0 #$4c #$53 #$ee #$c9 #$28 #$b0 #$9b #$a8 #$a5 #$c8
+ #$60 #$ea #$ea #$98 #$aa #$a0 #$6e #$20 #$c4 #$e3 #$8a #$a8 #$20 #$c4 #$e3 #$a0
+ #$72 #$4c #$c4 #$e3 #$20 #$15 #$e7 #$06 #$ce #$26 #$cf #$30 #$fa #$b0 #$dc #$d0
+ #$04 #$c5 #$ce #$b0 #$d6 #$60 #$20 #$15 #$e7 #$b1 #$ce #$94 #$a7 #$4c #$08 #$e7
+
+*=$ef00
+ #$20 #$34 #$ee #$a5 #$ce #$48 #$20 #$15 #$e7 #$68 #$91 #$ce #$60 #$ff #$ff #$ff
+ #$20 #$6c #$ee #$a5 #$ce #$85 #$46 #$a5 #$cf #$85 #$47 #$4c #$44 #$e2 #$20 #$e4
+ #$ee #$4c #$34 #$e1 #$20 #$e4 #$ee #$b4 #$88 #$b5 #$50 #$69 #$fe #$b0 #$01 #$88
+ #$85 #$da #$84 #$db #$18 #$65 #$ce #$95 #$50 #$98 #$65 #$cf #$95 #$88 #$a0 #$00
+ #$b5 #$50 #$d1 #$da #$c8 #$b5 #$88 #$f1 #$da #$b0 #$80 #$4c #$23 #$e8 #$20 #$15
+ #$e7 #$a5 #$4e #$20 #$08 #$e7 #$a5 #$4f #$d0 #$04 #$c5 #$4e #$69 #$00 #$29 #$7f
+ #$85 #$4f #$95 #$a8 #$a0 #$11 #$a5 #$4f #$0a #$18 #$69 #$40 #$0a #$26 #$4e #$26
+ #$4f #$88 #$d0 #$f2 #$a5 #$ce #$20 #$08 #$e7 #$a5 #$cf #$95 #$a8 #$4c #$7a #$e2
+ #$20 #$15 #$e7 #$a4 #$ce #$c4 #$4c #$a5 #$cf #$e5 #$4d #$90 #$1f #$84 #$48 #$a5
+ #$cf #$85 #$49 #$4c #$b6 #$ee #$20 #$15 #$e7 #$a4 #$ce #$c4 #$ca #$a5 #$cf #$e5
+ #$cb #$b0 #$09 #$84 #$4a #$a5 #$cf #$85 #$4b #$4c #$b7 #$e5 #$4c #$cb #$ee #$ea
+ #$ea #$ea #$ea #$20 #$c9 #$ef #$20 #$71 #$e1 #$4c #$bf #$ef #$20 #$03 #$ee #$a9
+ #$ff #$85 #$c8 #$a9 #$74 #$8d #$00 #$02 #$60 #$20 #$36 #$e7 #$e8 #$20 #$36 #$e7
+ #$b5 #$50 #$60 #$a9 #$00 #$85 #$4a #$85 #$4c #$a9 #$08 #$85 #$4b #$a9 #$10 #$85
+ #$4d #$4c #$ad #$e5 #$d5 #$88 #$d0 #$01 #$18 #$4c #$02 #$e1 #$20 #$b7 #$e5 #$4c
+ #$36 #$e8 #$20 #$b7 #$e5 #$4c #$5b #$e8 #$e0 #$80 #$d0 #$01 #$88 #$4c #$0c #$e0
+{ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^   Insert BASIC image here   ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ }
+
+{-----------------------------------------------------------------------+
+|       WozMon                                                          |
++-----------------------------------------------------------------------}
+
+*=$ff00
+
+        { Original ZP usage is 24.2B, but that's taken by Gigatron }
+
+   _XAML=$34        _XAML_minus1=$33
+   _XAMH=$35
+    _STL=$36         _STL_minus1=$35
+    _STH=$37
+      _L=$38           _L_minus1=$37
+      _H=$39
+   _YSAV=$3A
+   _MODE=$3B
+
+       { Patches with respect to original are marked [Gigatron] }
+
+     _IN=$200
+
+       _KBD=$D010
+     _KBDCR=$D011
+       _DSP=$D012
+     _DSPCR=$D013
+
+_RESET=*        #_CLD_                  {Clear decimal arithmetic mode.          }
+                #_CLI_
+                #_LDYIM_ #$7F           {Mask for DSP data direction register.   }
+                #_STY_   ##_DSP
+                #_LDAIM_ #$A7           {KBD and DSP control register mask.      }
+                #_STA_   ##_KBDCR
+                #_STA_   ##_DSPCR
+_NOTCR=*        #_CMPIM_ #$DF           {"<-"?                                   }
+                #_BEQ_   #@_BACKSPACE   {Yes.                                    }
+                #_CMPIM_ #$9B           {ESC?                                    }
+                #_BEQ_   #@_ESCAPE      {Yes.                                    }
+                #_INY_                  {Advance text index.                     }
+                #_BPL_   #@_NEXTCHAR    {Auto ESC if > 127.                      }
+_ESCAPE=*       #_LDAIM_ #$DC           {"\".                                    }
+                #_JSR_   ##_ECHO        {Output it.                              }
+_GETLINE=*      #_LDAIM_ #$8D           {CR.                                     }
+                #_JSR_   ##_ECHO        {Output it.                              }
+                #_LDYIM_ #$01           {Initiallize text index.                 }
+_BACKSPACE=*    #_DEY_                  {Back up text index.                     }
+                #_BMI_   #@_GETLINE     {Beyond start of line, reinitialize.     }
+_NEXTCHAR=*     #_LDA_   ##_KBDCR       {Key ready?                              }
+                #_BPL_   #@_NEXTCHAR    {Loop until ready.                       }
+                #_LDA_   ##_KBD         {Load character. B7 should be '1'.       }
+                #_STAAY_ ##_IN          {Add to text buffer.                     }
+                #_JSR_   ##_ECHO        {Display character.                      }
+                #_CMPIM_ #$8D           {CR?                                     }
+                #_BNE_   #@_NOTCR       {No.                                     }
+                #_LDYIM_ #$FF           {Reset text index.                       }
+                #_LDAIM_ #$00           {For XAM mode.                           }
+                #_TAX_                  {0->X.                                   }
+_SETSTOR=*      #_ASLA_                 {Leaves $7B if setting STOR mode.        }
+_SETMODE=*      #_STAZ_  #_MODE         {$00 = XAM, $7B= STOR,$AE= BLOK XAM      }
+_BLSKIP=*       #_INY_                  {Advance text index.                     }
+_NEXTITEM=*     #_LDAAY_ ##_IN          {Get character.                          }
+                #_CMPIM_ #$8D           {CR?                                     }
+                #_BEQ_   #@_GETLINE     {Yes, done this line.                    }
+                #_CMPIM_ #$AE           {"."?                                    }
+                #_BCC_   #@_BLSKIP      {Skip delimiter.                         }
+                #_BEQ_   #@_SETMODE     {Yes, BLOCK XAM mode.                    }
+                #_CMPIM_ #$BA           {":"?                                    }
+                #_BEQ_   #@_SETSTOR     {Yes, set STOR mode.                     }
+                #_CMPIM_ #$D2           {"R"?                                    }
+                #_BEQ_   #@_RUN         {Yes, run user program.                  }
+                #_STXZ_  #_L            {$00->L.                                 }
+                #_STXZ_  #_H            { and H.                                 }
+                #_STYZ_  #_YSAV         {Save Y for comparison.                  }
+_NEXTHEX=*      #_LDAAY_ ##_IN          {Get character for hex test.             }
+                #_EORIM_ #$B0           {Map digits to $0-9.                     }
+                #_CMPIM_ #$0A           {Digit?                                  }
+                #_BCC_   #@_DIG         {Yes.                                    }
+                #_ADCIM_ #$88           {Map letter "A"-"F" to $FA-FF.           }
+                #_CMPIM_ #$FA           {Hex letter?                             }
+                #_BCC_   #@_NOTHEX      {No, character not hex.                  }
+_DIG=*          #_ASLA_                 {                                        }
+                #_ASLA_                 {Hex digit to MSD of A.                  }
+                #_ASLA_                 {                                        }
+                #_ASLA_                 {                                        }
+                #_LDXIM_ #$04           {Shift count.                            }
+_HEXSHIFT=*     #_ASLA_                 {Hex digit left, MSB to carry.           }
+                #_ROLZ_  #_L            {Rotate into LSD.                        }
+                #_ROLZ_  #_H            {Rotate into MSD's.                      }
+                #_DEX_                  {Done 4 shifts?                          }
+                #_BNE_   #@_HEXSHIFT    {No, loop.                               }
+                #_INY_                  {Advance text index.                     }
+                #_BNE_   #@_NEXTHEX     {Always taken. Check next character for hex.}
+_NOTHEX=*       #_CPYZ_  #_YSAV         {Check if L, H empty (no hex digits).    }
+                #_BEQ_   #@_ESCAPE      {Yes, generate  ESC sequence.            }
+                #_BITZ_  #_MODE         {Test MODE byte.                         }
+                #_BVC_   #@_NOTSTOR     {B6 = 0 for STOR, 1 for XAM and BLOCK XAM}
+                #_LDAZ_  #_L            {LSD's of hex data.                      }
+                #_STAIX_ #_STL          {Store at current 'store index'.         }
+                #_INCZ_  #_STL          {Increment store index.                  }
+                #_BNE_   #@_NEXTITEM    {Get next item. (no carry).              }
+                #_INCZ_  #_STH          {Add carry to 'store index' high order.  }
+_TONEXTITEM=*   #_JMP_   ##_NEXTITEM    {Get next command item.                  }
+_RUN=*          #_JMI_   ##_XAML        {Run at current XAM index.               }
+_NOTSTOR=*      #_BMI_   #@_XAMNEXT     {B7 = 0 for XAM, 1 for BLOCK XAM.        }
+                #_LDXIM_ #$02           {Byte count.                             }
+_SETADR=*       #_LDAZX_ #_L_minus1     {Copy hex data to                        }
+                #_STAZX_ #_STL_minus1   {  'store index'.                        }
+                #_STAZX_ #_XAML_minus1  {And to 'XAM index'.                     }
+                #_DEX_                  {Next of 2 bytes.                        }
+                #_BNE_   #@_SETADR      {Loop unless X = 0.                      }
+_NXTPRNT=*      #_BNE_   #@_PRDATA      {NE means no address to print.           }
+                #_LDAIM_ #$8D           {CR.                                     }
+                #_JSR_   ##_ECHO        {Output it.                              }
+                #_LDAZ_  #_XAMH         {'Examine index' high-order byte.        }
+                #_JSR_   ##_PRBYTE      {Output it in hex format.                }
+                #_LDAZ_  #_XAML         {Low-order 'examine index' byte.         }
+                #_JSR_   ##_PRBYTE      {Output it in hex format.                }
+                #_LDAIM_ #$BA           {":".                                    }
+                #_JSR_   ##_ECHO        {Output it.                              }
+_PRDATA=*       #_LDAIM_ #$A0           {Blank.                                  }
+                #_JSR_   ##_ECHO        {Output it.                              }
+                #_LDAIX_ #_XAML         {Get data byte at 'examine index'.       }
+                #_JSR_   ##_PRBYTE      {Output it in hex format.                }
+_XAMNEXT=*      #_STXZ_  #_MODE         {0->MODE (XAM mode).                     }
+                #_LDAZ_  #_XAML         {                                        }
+                #_CMPZ_  #_L            {Compare 'examine index' to hex data.    }
+                #_LDAZ_  #_XAMH         {                                        }
+                #_SBCZ_  #_H            {                                        }
+                #_BCS_   #@_TONEXTITEM  {Not less, so no more data to output.    }
+                #_INCZ_  #_XAML         {                                        }
+                #_BNE_   #@_MOD8CHK     {Increment 'examine index'.              }
+                #_INCZ_  #_XAMH         {                                        }
+_MOD8CHK=*      #_LDAZ_  #_XAML         {Check low-order 'examine index' byte    }
+                #_ANDIM_ #$07           {  For MOD 8= 0                          }
+                #_BPL_   #@_NXTPRNT     {Always taken.                           }
+_PRBYTE=*       #_PHA_                  {Save A for LSD.                         }
+                #_LSRA_                 {                                        }
+                #_LSRA_                 {                                        }
+                #_LSRA_                 {MSD to LSD position.                    }
+                #_LSRA_                 {                                        }
+                #_JSR_   ##_PRHEX       {Output hex digit.                       }
+                #_PLA_                  {Restore A.                              }
+_PRHEX=*        #_ANDIM_ #$0F           {Mask LSD for hex print.                 }
+                #_ORAIM_ #$B0           {Add "0".                                }
+                #_CMPIM_ #$BA           {Digit?                                  }
+                #_BCC_   #@_ECHO        {Yes, output it.                         }
+                #_ADCIM_ #$06           {Add offset for letter.                  }
+                                        {[Gigatron] Order reversed for fake PIA: }
+_ECHO=*         #_STA_   ##_DSP         {Output character.  Sets DA.             }
+_WAITECHO=*     #_BIT_   ##_DSP         {DA bit (B7) cleared yet?                }
+                #_BNE_   #@_WAITECHO    {No, wait for display.                   }
+                #_RTS_                  {Return.                                 }
+                #$00 #$00               {(unused)                                }
+{FFFA}          ##$0000                 {(NMI)                                   }
+{FFFC}          ##_RESET                {(RESET)                                 }
+{FFFE}          ##_BREAK                {(IRQ/BRK)                               }
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
+

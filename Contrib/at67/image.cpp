@@ -9,7 +9,10 @@
 #include "image.h"
 
 #ifndef STAND_ALONE
+#include "editor.h"
 #include "graphics.h"
+#include "menu.h"
+#include "terminal.h"
 #endif
 
 
@@ -60,6 +63,11 @@ namespace Image
 
     void initialise(void)
     {
+#ifndef STAND_ALONE
+        std::vector<std::string> items = {"IMAGE ", "Load  ", "Save  ", "Select", "Delete", "Erase "};
+        Menu::createMenu("Image", items, 6, 6);
+#endif
+
         if(Cpu::getHostEndianness() == Cpu::BigEndian) _hostIsBigEndian = true;
     }
 
@@ -128,7 +136,7 @@ namespace Image
         // Quick sanity check on total size, (maximum RAM is 64K)
         if(totalSize >= 0x10000)
         {
-            fprintf(stderr, "Image::loadGtRgbFile() : image is bigger than 64K bytes : width=%d : height=%d : format=%04x : in '%s'\n", header._width, header._height, header._format, filename.c_str());
+            fprintf(stderr, "Image::loadGtRgbFile() : image is larger than 64K bytes : width=%d : height=%d : format=%04x : in '%s'\n", header._width, header._height, header._format, filename.c_str());
             return false;
         }
 
@@ -192,7 +200,7 @@ namespace Image
         // Quick sanity check on total size, (maximum RAM is 64K)
         if(totalSize >= 0x10000)
         {
-            fprintf(stderr, "Image::saveGtRgbFile() : image is bigger than 64K bytes : width=%d : height=%d : format=%04x : in '%s'\n", gtRgbFile._header._width, gtRgbFile._header._height, gtRgbFile._header._format, filename.c_str());
+            fprintf(stderr, "Image::saveGtRgbFile() : image is larger than 64K bytes : width=%d : height=%d : format=%04x : in '%s'\n", gtRgbFile._header._width, gtRgbFile._header._height, gtRgbFile._header._format, filename.c_str());
             return false;
         }
 
@@ -353,7 +361,7 @@ namespace Image
         // Quick sanity check on total size, (maximum RAM is 64K)
         if(totalSize >= 0x10000 * (header._bitsPerPixel / 8))
         {
-            fprintf(stderr, "Image::loadTgaFile() : image is bigger than %d bytes : width=%d : height=%d : in '%s'\n", 0x10000 * (header._bitsPerPixel / 8), header._width, header._height, filename.c_str());
+            fprintf(stderr, "Image::loadTgaFile() : image is larger than %d bytes : width=%d : height=%d : in '%s'\n", 0x10000 * (header._bitsPerPixel / 8), header._width, header._height, filename.c_str());
             return false;
         }
 
@@ -405,7 +413,6 @@ namespace Image
         int startX = 0, endX = width, stepX = 1;
         int startY = 0, endY = height, stepY = 1;
 
-        imageOrigin = 2;
         switch(imageOrigin)
         {
             case 0: startX = 0, endX = width, stepX = 1;     startY = height-1, endY = -1, stepY = -1; break;
@@ -482,7 +489,6 @@ namespace Image
         int startX = 0, endX = width, stepX = 1;
         int startY = 0, endY = height, stepY = 1;
 
-        imageOrigin = 2;
         switch(imageOrigin)
         {
             case 0: startX = 0, endX = width, stepX = 1;     startY = height-1, endY = -1, stepY = -1; break;
@@ -643,14 +649,254 @@ namespace Image
     }
 
 
+//**********************************************************************************************************************
+//* Editor
+//**********************************************************************************************************************
 #ifndef STAND_ALONE
-    void handleImageInput(void)
+    enum MenuItem {MenuLoad=0, MenuSave, MenuSel, MenuDel, MenuErase};
+
+    const std::vector<std::string> _suffixes = {".gtrgb", "tga"};
+
+    bool _firstTimeRender = true;
+    bool _refreshScreen = false;
+
+
+    void refreshScreen(void)
     {
+        _firstTimeRender = false;
+        _refreshScreen = false;
+
+        Graphics::clearScreen(0x22222222);
+        Graphics::drawText("TODO: Finish this some day", 28*FONT_WIDTH, 30*FONT_HEIGHT, 0xFFFFFFFF, false, 0);
+
+        Editor::browseDirectory(_suffixes);
+    }
+
+    void handleGuiEvents(SDL_Event& event)
+    {
+        switch(event.type)
+        {
+            case SDL_WINDOWEVENT:
+            {
+                switch(event.window.event)
+                {
+                    case SDL_WINDOWEVENT_RESIZED:
+                    case SDL_WINDOWEVENT_SIZE_CHANGED:
+                    {
+                        Graphics::setWidthHeight(event.window.data1, event.window.data2);
+                    }
+                    break;
+
+                    default: break;
+                }
+            }
+            break;
+
+            case SDL_QUIT: 
+            {
+                Cpu::shutdown();
+                exit(0);
+            }
+
+            default: break;
+        }
+    }
+
+    void handleMouseLeftButtonDown(int mouseX, int mouseY)
+    {
+        // Normalised mouse position
+        float mx = float(mouseX) / float(Graphics::getWidth());
+        float my = float(mouseY) / float(Graphics::getHeight());
+        int pixelX = int(mx * float(SCREEN_WIDTH));
+        int pixelY = int(my * float(SCREEN_HEIGHT));
+        fprintf(stderr, "%d %d %f %f %d %d\n", mouseX, mouseY, mx, my, pixelX, pixelY);
+    }
+
+    void handleMouseRightButtonDown(int mouseX, int mouseY)
+    {
+        Menu::captureItem("Image", mouseX, mouseY);
+        Menu::renderMenu("Image");
+    }
+
+    void handleMouseButtonDown(const SDL_Event& event, const Editor::MouseState& mouseState)
+    {
+        UNREFERENCED_PARAM(event);
+#if 0
+        if(mouseState._state == SDL_BUTTON_LEFT)
+#endif
+        if(mouseState._state == SDL_BUTTON_X1)
+        {
+            Menu::captureMenu("Image", mouseState._x, mouseState._y);
+        }
+    }
+
+    void handleMouseButtonUp(const SDL_Event& event, const Editor::MouseState& mouseState)
+    {
+        UNREFERENCED_PARAM(event);
+        UNREFERENCED_PARAM(mouseState);
+
+        int menuItemIndex;
+        Menu::getMenuItemIndex("Image", menuItemIndex);
+
+        switch(menuItemIndex)
+        {
+            // Load image
+            case MenuLoad:
+            {
+                fprintf(stderr, "Image::Load()\n");
+            }
+            break;
+
+            // Save image
+            case MenuSave:
+            {
+                fprintf(stderr, "Image::Save()\n");
+            }
+            break;
+
+            // Select mode
+            case MenuSel:
+            {
+                fprintf(stderr, "Image::Select()\n");
+            }
+            break;
+
+            // Delete selection
+            case MenuDel:
+            {
+                fprintf(stderr, "Image::Delete()\n");
+            }
+            break;
+
+            // Erase screen
+            case MenuErase:
+            {
+                fprintf(stderr, "Image::Erase()\n");
+            }
+            break;
+
+            default: break;
+        }
+
+        _refreshScreen = true;
+    }
+
+    void handleMouseWheel(const SDL_Event& event)
+    {
+        if(event.wheel.y > 0) return;
+        if(event.wheel.y < 0) return;
+    }
+
+    void handleKey(const SDL_Event& event)
+    {
+        char keyCode = event.text.text[0];
+        fprintf(stderr, "%c", keyCode);
+    }
+
+    void handleKeyDown(SDL_Keycode keyCode, Uint16 keyMod)
+    {
+        // Leave image editor
+        if(keyCode == Editor::getEmulatorScanCode("ImageEditor")  &&  keyMod == Editor::getEmulatorKeyMod("ImageEditor"))
+        {
+            _firstTimeRender = true;
+            Editor::setEditorToPrevMode();
+        }        
+        // Quit
+        else if(keyCode == Editor::getEmulatorScanCode("Quit")  &&  keyMod == Editor::getEmulatorKeyMod("Quit"))
+        {
+            Cpu::shutdown();
+            exit(0);
+        }
+        // Image editor
+        else if(keyCode == Editor::getEmulatorScanCode("AudioEditor")  &&  keyMod == Editor::getEmulatorKeyMod("AudioEditor"))
+        {
+            _firstTimeRender = true;
+            Editor::setEditorMode(Editor::Audio);
+        }
+        // Terminal mode
+        else if(keyCode == Editor::getEmulatorScanCode("Terminal")  &&  keyMod == Editor::getEmulatorKeyMod("Terminal"))
+        {
+            _firstTimeRender = true;
+            Terminal::switchToTerminal();
+        }
+    }
+
+    void handleKeyUp(SDL_Keycode keyCode, Uint16 keyMod)
+    {
+        // Help screen
+        if(keyCode == Editor::getEmulatorScanCode("Help")  &&  keyMod == Editor::getEmulatorKeyMod("Help"))
+        {
+            static bool helpScreen = false;
+            helpScreen = !helpScreen;
+            Graphics::setDisplayHelpScreen(helpScreen);
+        }
+        // Disassembler
+        else if(keyCode == Editor::getEmulatorScanCode("Disassembler")  &&  keyMod == Editor::getEmulatorKeyMod("Disassembler"))
+        {
+            _firstTimeRender = true;
+            Editor::setEditorMode(Editor::Dasm);
+        }
+        // Browser
+        else if(keyCode == Editor::getEmulatorScanCode("Browse")  &&  keyMod == Editor::getEmulatorKeyMod("Browse"))
+        {
+            _firstTimeRender = true;
+            Editor::setEditorMode(Editor::Load);
+            Editor::browseDirectory();
+        }
+        // Hex monitor
+        else if(keyCode == Editor::getEmulatorScanCode("HexMonitor")  &&  keyMod == Editor::getEmulatorKeyMod("HexMonitor"))
+        {
+            _firstTimeRender = true;
+            Editor::setEditorMode(Editor::Hex);
+        }
+    }
+
+    void handleInput(void)
+    {
+        // Mouse button state
+        Editor::MouseState mouseState;
+        mouseState._state = SDL_GetMouseState(&mouseState._x, &mouseState._y);
+
+        SDL_Event event;
+        while(SDL_PollEvent(&event))
+        {
+            SDL_Keycode keyCode = event.key.keysym.sym;
+            Uint16 keyMod = event.key.keysym.mod & (KMOD_LCTRL | KMOD_LALT | KMOD_LSHIFT);
+
+            mouseState._state = SDL_GetMouseState(&mouseState._x, &mouseState._y);
+
+            handleGuiEvents(event);
+
+            switch(event.type)
+            {
+                case SDL_MOUSEBUTTONDOWN: handleMouseButtonDown(event, mouseState); break;
+                case SDL_MOUSEBUTTONUP:   handleMouseButtonUp(event, mouseState);   break;
+                case SDL_MOUSEWHEEL:      handleMouseWheel(event);                  break;
+                case SDL_TEXTINPUT:       handleKey(event);                         break;
+                case SDL_KEYDOWN:         handleKeyDown(keyCode, keyMod);           break;
+                case SDL_KEYUP:           handleKeyUp(keyCode, keyMod);             break;
+
+                default: break;
+            }
+        }
+
+        switch(mouseState._state)
+        {
+            case SDL_BUTTON_LEFT: handleMouseLeftButtonDown(mouseState._x, mouseState._y);  break;
+            case SDL_BUTTON_X1:   handleMouseRightButtonDown(mouseState._x, mouseState._y); break;
+
+            default: break;
+        }
     }
 
     void process(void)
     {
-        handleImageInput();
+        if(_firstTimeRender  ||  _refreshScreen)
+        {
+            refreshScreen();
+        }
+
+        handleInput();
         Graphics::render(true);
     }
 #endif

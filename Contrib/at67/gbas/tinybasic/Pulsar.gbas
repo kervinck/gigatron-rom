@@ -1,0 +1,15 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+'Simulate pulsar signal
+'in Joy Division style
+10 set FGBG_COLOUR,&h3F00:cls:w=0:z=0
+20 at 0,112:print
+30 v=rnd(30)-80:p=5:q=128
+40 y=2000+rnd(700)
+50 for x=0 to 30
+60 w=5+y/q:if w &&> 0 then w=0
+65 if get("RAND0") &&< 128 then w=w+1
+70 line 5,w-z:z=w
+80 y=y+p*v:v=v-y/q
+90 next x:goto 20

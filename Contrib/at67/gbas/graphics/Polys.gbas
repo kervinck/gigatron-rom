@@ -1,0 +1,30 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+cls
+
+const POLYSIZE = 10
+dim poly%(POLYSIZE) = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255
+
+loop: 
+    set FG_COLOUR, rnd(0) AND &h3F
+
+    ox = rnd(160) : oy = rnd(120)
+    at ox, oy
+    
+    for i=0 &to POLYSIZE - 4 step 2
+        poke @poly + 0 + i, rnd(160)
+        poke @poly + 1 + i, rnd(120)
+    next i
+    poke @poly + 8, ox
+    poke @poly + 9, oy
+    
+    poly @poly
+    
+'key:    
+'    k = get("BUTTON_STATE") : if k = 255 then goto key
+'    set BUTTON_STATE, 255
+    
+    goto &loop
+
+end

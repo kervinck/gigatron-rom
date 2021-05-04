@@ -47,7 +47,7 @@ $1f8 CtrlBits=
     _sysArgs0=                  {Copy result in sysArgs}
     255^ q.                     {Invert memory value again}
     _sysArgs0^                  {Compare with inverted copy}
-    [if<>0                      {If different there we have an A16 and 128K}
+    [if<>0                      {If different then we have an A16 and 128K}
       $31 Char= PrintChar!      {'1'}
       112 i=]                   {28*4 to give '28' below}
     $807c 40!!                  {Set MOSI high, bank 1}

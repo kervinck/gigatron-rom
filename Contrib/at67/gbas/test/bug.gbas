@@ -1,0 +1,115 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &hFFFF
+_arraysStart_ &hFFFF
+
+dim wordArray(5000) = 0
+dim byteArray%(5000)
+dim threeDimArray(5, 5, 5)
+dim strArray$(2) = "dog", "cat123", "test"
+
+cls
+
+const dim arr$(2) = "'One'", "\"Two\"", "\"'Three'\""
+print arr$(0);" ";arr$(1);" ";arr$(2)
+
+print "''ADOGZ!@#'$\"";" ";"adogz!@#$"
+print lower$("'ADOG'\"'Z!@#$'\"'");" ";upper$("\"adogz''\"'!@#$\"'\"")
+
+a = 0
+c$ = "2112111'\""
+const d$ = "2112112"
+a = strcmp(left$(c$, len(c$)), left$(d$, len(d$)))
+print a;" ";strcmp(left$(c$, len(c$)), left$(d$, len(d$)));" ";c$ > d$;" ";
+
+a$ = "catdog"
+b$ = "dogcat"
+
+a = strcmp(mid$(a$, 0, 3), mid$(b$, 3, 3))
+print a;" ";left$(a$, 4);" ";
+print strcmp(c$, left$(d$, len(d$)))
+
+dim s$(1) = "dog", "cat"
+dim test%(1, 2) = min(1, 2), max(123, -1), clamp(77, 1, 33), &hff, &h7f, &h3f
+def byte(&h0600, y, 0.0, 32.0, 32) = y MOD 16
+
+print s$(0);" ";s$(1);" ";
+a = 0
+test(a, 1) = -2
+s$(a) = "rat"
+s$(max(a, 1)) = "mat"
+print s$(0);" ";s$(1)
+
+b$ = "bird"
+print b$;" ";left$(left$(b$, 1), 1)
+
+b = -1
+c = 1 : d = 2
+a = c = d
+a = c$ <= d$
+if c$ <= d$ then b = 2
+c = c$ < d$ : d = c$ = d$ : e = c$ >= d$
+s$(0) = d$
+print c$;" ";d$
+print a;" ";b;"  ";c;" ";d;" ";e;"  ";c$ = s$(0);" ";c$ = d$;" ";c$ > d$;"  ";c = d
+print c$ + "1234"
+e$ = c$ + "5678" + "9999\"" + c$ + " " + "123456789" + " " + d$ + "ds;fjohadsfjihadsfjhadsfjhsdafkjhhdsafk;ljdhnsfa;kadsjfhadslkfjhasdfkljhdsafkljkljdshfdsaklfjh"
+print e$;" ";len(e$)
+
+input f$
+
+print s$(a) + " " + chr$(45) + " " + chr$(41) + " " + c$ + " " + chr$(35) + " arrays! " + str$(999)
+print lower$("\"ADOGZ!@#$'\"");" ";upper$("\"adogz!@#$'\"")
+d1$ = "ADOGZ!!1234$" : d2$ = "adogz!!1234$"
+print lower$(d1$);" ";upper$(d2$)
+print d1$;" ";d2$
+d1$ = LOWER$(d1$) : d2$ = UPPER$(d2$)
+print d1$;" ";d2$
+print
+e$ = upper$(e$) : print e$
+
+input f$
+
+dim sss$(3)
+for i=0 to 3
+    read sss$(i)
+next i
+data "cat", "dog", "bird", "Yup"
+for i=0 to 3
+    print upper$(sss$(i));" ";
+next i
+print
+
+dim xxx(3)
+for i=0 to 3
+    read xxx(i)
+next i
+data 6, 7, 8, 9
+for i=0 to 3
+    print xxx(i);" ";
+next i
+print
+
+a = 0
+aa = -200
+
+print s$(a)
+print left$(left$(b$, 1), 1)
+print left$(s$(max(a + 1, -100)), 2)
+print min(min(min(a, 1), max(-20, aa)), -3)
+print test(0, 1);" ";hex$(test(0, 1), 2)
+print hex$(min(test(0, 0), 2), 2)
+
+input f$
+
+const tttt1$ = "cat "
+tttt0$ = "dog " : stst$ = strcat$("test ", tttt0$, tttt1$, tttt0$)
+print stst$
+
+a = 1
+print hex$(@wordArray, 4);" ";#wordArray;" ";len(wordArray)
+print hex$(@byteArray, 4);" ";#byteArray;" ";len(byteArray)
+print hex$(@threeDimArray, 4);" ";#threeDimArray
+print hex$(addr(threeDimArray(0, 0, 0)), 4);" ";len(threeDimArray)
+print hex$(@strArray$, 4);" ";#strArray$
+print hex$(addr(strArray$(0)), 4);" ";hex$(addr(strArray$(1)), 4);" ";hex$(addr(strArray$(2)), 4)
+print len(strArray$(0));" ";len(strArray$(a + 1));" ";len(strArray$(1))

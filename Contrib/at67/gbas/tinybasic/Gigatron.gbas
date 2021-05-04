@@ -1,0 +1,26 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+rem original
+' 1' Prints "Gigatron!"
+' 2' in random colors
+' 3' across the screen
+' 10 x=160-6*9+1:y=120-8+1
+' 19 rem Background:
+' 20 poke 162,rnd(64)
+' 29 rem Pen Color:
+' 30 poke 163,rnd(64)
+' 40 at rnd(x),rnd(y)
+' 50 print "Gigatron!";
+' 60 goto 20
+
+rem optimised
+1' Prints "Gigatron!"
+2' in random colors
+3' across the screen
+10 x=160-6*9+1:y=120-8+1
+20 set BG_COLOUR, rnd(0) AND 63
+30 set FG_COLOUR, rnd(0) AND 63
+40 at (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h07) + (rnd(0) AND &h07), (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h0F) + (rnd(0) AND &h03)
+50 print "Gigatron!";
+60 goto &20

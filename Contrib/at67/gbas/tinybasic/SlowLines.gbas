@@ -1,0 +1,30 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+rem original
+' 1 cls:rem Lines demo
+' 2 a=rnd(160):b=rnd(120)+8
+' 3 c=rnd(160):d=rnd(120)+8
+' 4 x=c-a:y=d-b:q=rnd(64)
+' 5 u=1  :if x<0 then x=-x:u=-u
+' 6 v=256:if y<0 then y=-y:v=-v
+' 7 p=a+256*b:if y< x then goto 9
+' 8 t=x:x=y:y=t:t=u:u=v:v=t
+' 9 d=-x:x=x+x:y=y+y
+' 10 for t=d to 0:poke p,q
+' 11 d=d+y:if d>0 then d=d-x:p=p+v
+' 12 p=p+u:next t:goto 2
+
+'rem optimised
+1 cls : rem Lines demo
+2 a=(rnd(0) AND &h7F) + (rnd(0) AND &h1F) : b=(rnd(0) AND &h3F) + (rnd(0) AND &h3F) OR 8
+3 c=(rnd(0) AND &h7F) + (rnd(0) AND &h1F) : d=(rnd(0) AND &h3F) + (rnd(0) AND &h3F) OR 8
+4 x=c-a : y=d-b : q=rnd(0) AND 63
+5 u=1 : if x &&< 0 then x=-x : u=-u
+6 v=256 : if y &&< 0 then y=-y : v=-v
+7 p=a + (b LSL 8) : if y &< x then goto 9
+8 t=x : x=y : y=t : t=u : u=v : v=t
+9 d=-x : x=x+x : y=y+y
+10 for t=d &to 0 : poke p,q
+11 d=d+y : if d &&> 0 then d=d-x : p=p+v
+12 p=p+u : next t : goto 2

@@ -1,0 +1,504 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &h7FFF
+_codeRomType_ ROMv3
+
+const colourBits = &h06F8
+def byte(colourBits) = &h01, &h02, &h04, &h08, &h10, &h20, &h40, &h3F
+
+const fgBgColour = &h0008
+set FGBG_COLOUR, fgBgColour
+mode 2
+
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
+cls
+
+sound off
+load font, ../../res/font/sc3000/sc3000.tga, 0, fgBgColour
+
+print " ________________________"
+print
+print "   SEGA SC-3000H BASIC"
+print "    Level 3.0 ver 1.0"
+print "   Export Version With"
+print "        Diereses"
+print "   Copyright 1983 (C)"
+print "        by MITEC"
+print " ________________________"
+print
+print "  26620 Bytes free"
+print " Ready"
+
+done = 0
+
+duration = 8 : gosub beep
+    
+loop:
+    at 8,96 : print chr$(127)
+    gosub waitKey
+    if done = 1 then goto ohNoes
+
+    at 8,96 : print " "
+    gosub waitKey
+    if done = 1 then goto ohNoes
+goto loop
+
+waitKey:
+    for i=1 to 15
+        wait
+        k = get("SERIAL_RAW")
+        if k <> 255
+            done = 1
+            goto break
+        endif    
+    next i
+    
+break:    
+return
+
+ohNoes:
+    duration = 3 : gosub beep
+
+    const hello0$ = "10 PRINT \"Hello World!\""
+    const hello1$ = "20 GOTO 10"
+    const hello2$ = "RUN"
+    dim a(2) = @hello0$, @hello1$, @hello2$
+    dim l(2) = len(hello0$), len(hello1$), len(hello2$)
+    
+    at 8,96
+    for i=0 to 2
+        for j=1 to l(i) 'skip past length byte
+            print chr$(peek(a(i) + j)); : gosub printCursor
+            duration = 3 : gosub beep
+            wait (rnd(0) AND 15) + 2
+        next j
+        print " "
+        at 8
+    next i
+    print
+    
+    init midiv
+    play midiv, &h08A0, 3
+    
+    for i=1 to 20
+        at 8
+        print "Gotcha!"
+    next i
+    
+    'initialise video table without clearing the screen
+    cls INIT
+
+    colour = rnd(0) AND 63
+    stepX = 1 : stepY = stepX
+    posX = rnd(89) + 10
+    posY = rnd(101) + 10
+
+forever:
+    wait
+    at posX, posY
+    print "RickRolled";
+    if posX AND 1 == 1
+        colour = colour XOR peek(colourBits + (rnd(0) AND 7))
+        set FG_COLOUR, colour
+    endif
+    rect posX-1, posY-1, posX+60, posY+8
+
+    posX = posX + stepX
+    if (posX > 98) OR (posX < 2)
+        stepX = -stepX
+        'stepY = ((rnd(0) AND 1) LSL 1) - 1
+        posX = posX + stepX
+    endif
+
+    posY = posY + stepY
+    if (posY > 110) OR (posY < 2)
+        stepY = -stepY
+        'stepX = ((rnd(0) AND 1) LSL 1) - 1
+        posY = posY + stepY
+    endif
+goto forever
+
+printCursor:
+    cursor = get("CURSOR_XY")
+    print chr$(127);
+    set CURSOR_XY, cursor
+return
+
+beep:
+    sound on, 1, 8200, 63, 1
+    set SOUND_TIMER, duration
+    wait duration
+    sound off
+return
+
+
+def byte(&h08a0) =  &h90, &h47, &h48, &h01, &h80, &h06, &h90, &h46, &h49, &h02, &h80, &h0e, &h90, &h45,
+def byte         =  &h48, &h01, &h80, &h06, &h90, &h44, &h4a, &h02, &h80, &h06, &h90, &h43, &h4a, &h01, &h80, &h07,
+def byte         =  &h90, &h42, &h49, &h01, &h80, &h06, &h90, &h41, &h48, &h01, &h80, &h07, &h90, &h40, &h4a, &h01,
+def byte         =  &h80, &h06, &h90, &h3f, &h49, &h02, &h80, &h06, &h90, &h1b, &h4a, &h91, &h3d, &h54, &h92, &h3a,
+def byte         =  &h51, &h93, &h41, &h51, &h07, &h80, &h08, &h90, &h1b, &h4a, &h07, &h80, &h01, &h90, &h1b, &h4a,
+def byte         =  &h07, &h80, &h08, &h90, &h24, &h4a, &h81, &h82, &h83, &h07, &h80, &h01, &hd0, &ha0, &h09,
+
+def byte(&h09a0) =  &h90, &h22, &h49, &h91, &h38, &h52, &h92, &h3f, &h51, &h93, &h3c, &h54, &h07, &h80, &h08, &h90,
+def byte         =  &h20, &h49, &h07, &h80, &h08, &h90, &h20, &h48, &h07, &h80, &h09, &h90, &h44, &h4e, &h16, &h91,
+def byte         =  &h20, &h4a, &h82, &h83, &h06, &h80, &h01, &h81, &h01, &h90, &h1d, &h4a, &h91, &h3c, &h53, &h92,
+def byte         =  &h38, &h51, &h93, &h3f, &h53, &h07, &h80, &h08, &h90, &h1d, &h49, &h07, &h80, &h01, &h90, &h1d,
+def byte         =  &h48, &h07, &h80, &h08, &h90, &h24, &h4a, &h81, &h82, &h83, &h07, &h80, &h01, &h90, &h22, &h48,
+def byte         =  &h91, &h3d, &h51, &h92, &h41, &h52, &h93, &h3a, &h53, &h07, &h80, &h17, &hd0, &ha0, &h0a,
+
+def byte(&h0aa0) =  &h90, &h22, &h4a, &h07, &h80, &h01, &h90, &h22, &h4a, &h07, &h80, &h01, &h90, &h22, &h4a, &h07,
+def byte         =  &h80, &h01, &h90, &h24, &h48, &h06, &h80, &h01, &h90, &h4d, &h4f, &h07, &h80, &h01, &h90, &h22,
+def byte         =  &h49, &h91, &h49, &h4e, &h82, &h83, &h06, &h80, &h01, &h90, &h1b, &h4a, &h92, &h3d, &h52, &h93,
+def byte         =  &h3a, &h51, &h07, &h80, &h08, &h90, &h1b, &h48, &h07, &h80, &h01, &h90, &h1b, &h48, &h07, &h80,
+def byte         =  &h08, &h90, &h24, &h48, &h82, &h83, &h04, &h81, &h03, &h80, &h01, &h90, &h22, &h48, &h91, &h38,
+def byte         =  &h53, &h92, &h3f, &h51, &h93, &h3c, &h54, &h07, &h80, &h08, &h90, &h20, &h49, &hd0, &ha0, &h0b,
+
+def byte(&h0ba0) =  &h07, &h80, &h08, &h90, &h20, &h48, &h07, &h80, &h09, &h90, &h44, &h4f, &h17, &h91, &h20, &h48,
+def byte         =  &h82, &h83, &h06, &h81, &h01, &h91, &h1d, &h49, &h92, &h38, &h52, &h93, &h3c, &h52, &h07, &h81,
+def byte         =  &h08, &h91, &h1d, &h49, &h07, &h81, &h01, &h91, &h1d, &h48, &h07, &h81, &h08, &h91, &h24, &h48,
+def byte         =  &h82, &h83, &h07, &h81, &h01, &h91, &h22, &h48, &h92, &h3a, &h54, &h93, &h3d, &h54, &h07, &h81,
+def byte         =  &h14, &h80, &h03, &h90, &h20, &h48, &h07, &h80, &h09, &h90, &h20, &h4a, &h92, &h3a, &h50, &h91,
+def byte         =  &h46, &h47, &h05, &h81, &h82, &h02, &h80, &h01, &h90, &h20, &h4a, &hd0, &ha0, &h0c,
+
+def byte(&h0ca0) =  &h93, &h3d, &h53, &h91, &h49, &h47, &h92, &h4e, &h4f, &h04, &h81, &h83, &h02, &h80, &h82, &h01,
+def byte         =  &h90, &h3a, &h53, &h91, &h46, &h45, &h92, &h4d, &h50, &h05, &h80, &h81, &h02, &h82, &h01, &h90,
+def byte         =  &h25, &h48, &h91, &h3d, &h52, &h92, &h49, &h44, &h92, &h49, &h4e, &h05, &h81, &h82, &h02, &h80,
+def byte         =  &h01, &h90, &h1b, &h4a, &h91, &h3d, &h53, &h92, &h3a, &h51, &h93, &h41, &h52, &h06, &h80, &h08,
+def byte         =  &h90, &h1b, &h4a, &h07, &h80, &h01, &h90, &h1b, &h48, &h07, &h80, &h01, &h81, &h82, &h83, &h07,
+def byte         =  &h90, &h24, &h48, &h07, &h80, &h01, &h90, &h22, &h48, &h91, &h38, &h51, &hd0, &ha0, &h0d,
+
+def byte(&h0da0) =  &h92, &h3f, &h54, &h93, &h3c, &h51, &h07, &h80, &h08, &h90, &h20, &h4a, &h07, &h80, &h08, &h90,
+def byte         =  &h20, &h4a, &h07, &h80, &h09, &h90, &h44, &h4e, &h06, &h80, &h01, &h90, &h42, &h58, &h07, &h80,
+def byte         =  &h01, &h90, &h1d, &h49, &h07, &h80, &h01, &h90, &h20, &h48, &h91, &h3f, &h57, &h82, &h83, &h07,
+def byte         =  &h80, &h81, &h01, &h90, &h1d, &h48, &h91, &h38, &h53, &h92, &h3c, &h54, &h93, &h3f, &h51, &h06,
+def byte         =  &h80, &h08, &h90, &h1d, &h49, &h07, &h80, &h01, &h90, &h1d, &h48, &h07, &h80, &h01, &h81, &h82,
+def byte         =  &h83, &h07, &h90, &h24, &h4a, &h07, &h80, &h01, &h90, &h22, &h48, &hd0, &ha0, &h0e,
+
+def byte(&h0ea0) =  &h91, &h3d, &h52, &h92, &h3a, &h53, &h93, &h41, &h52, &h07, &h80, &h17, &h90, &h22, &h49, &h07,
+def byte         =  &h80, &h01, &h90, &h22, &h4a, &h06, &h83, &h01, &h80, &h01, &h90, &h22, &h49, &h93, &h50, &h4e,
+def byte         =  &h07, &h80, &h83, &h01, &h90, &h24, &h4a, &h93, &h4e, &h50, &h06, &h80, &h83, &h01, &h90, &h4d,
+def byte         =  &h4f, &h07, &h80, &h01, &h90, &h22, &h48, &h91, &h49, &h50, &h82, &h07, &h80, &h01, &h90, &h1b,
+def byte         =  &h49, &h92, &h3d, &h53, &h93, &h3a, &h54, &h06, &h80, &h08, &h90, &h1b, &h49, &h07, &h80, &h01,
+def byte         =  &h90, &h1b, &h48, &h07, &h80, &h01, &h82, &h83, &h07, &h90, &h24, &h4a, &h04, &hd0, &ha0, &h0f,
+
+def byte(&h0fa0) =  &h81, &h03, &h80, &h01, &h90, &h22, &h49, &h91, &h38, &h52, &h92, &h3c, &h52, &h93, &h3f, &h52,
+def byte         =  &h07, &h80, &h08, &h90, &h20, &h4a, &h07, &h80, &h08, &h90, &h20, &h49, &h07, &h80, &h09, &h90,
+def byte         =  &h44, &h4e, &h17, &h91, &h20, &h48, &h82, &h83, &h07, &h81, &h01, &h91, &h1d, &h48, &h06, &h81,
+def byte         =  &h08, &h91, &h1d, &h49, &h92, &h3a, &h53, &h93, &h3d, &h52, &h07, &h81, &h01, &h91, &h1d, &h49,
+def byte         =  &h82, &h83, &h07, &h81, &h01, &h91, &h3a, &h51, &h92, &h3d, &h53, &h93, &h41, &h54, &h41, &h80,
+def byte         =  &h03, &h90, &h20, &h4a, &h07, &h80, &h09, &h90, &h25, &h48, &h91, &h49, &h54, &hd0, &ha0, &h10,
+
+def byte(&h10a0) =  &h92, &h55, &h4b, &h83, &h05, &h81, &h82, &h02, &h80, &h01, &h90, &h22, &h48, &h91, &h3a, &h52,
+def byte         =  &h92, &h41, &h51, &h93, &h3d, &h53, &h06, &h80, &h09, &h90, &h22, &h4a, &h93, &h3d, &h42, &h07,
+def byte         =  &h80, &h83, &h01, &h90, &h22, &h4a, &h06, &h80, &h01, &h90, &h3d, &h42, &h07, &h93, &h25, &h4a,
+def byte         =  &h07, &h80, &h01, &h83, &h01, &h90, &h24, &h4a, &h91, &h3a, &h42, &h06, &h80, &h07, &h81, &h01,
+def byte         =  &h90, &h20, &h48, &h91, &h3d, &h43, &h0e, &h81, &h02, &h90, &h22, &h48, &h91, &h3f, &h43, &h06,
+def byte         =  &h80, &h0f, &h81, &h09, &h90, &h1d, &h49, &h82, &h07, &h80, &h01, &hd0, &ha0, &h11,
+
+def byte(&h11a0) =  &h90, &h20, &h49, &h07, &h80, &h01, &h90, &h22, &h4a, &h91, &h3c, &h52, &h92, &h3f, &h52, &h93,
+def byte         =  &h38, &h53, &h06, &h80, &h09, &h90, &h20, &h49, &h91, &h3c, &h41, &h07, &h80, &h01, &h90, &h22,
+def byte         =  &h4a, &h06, &h81, &h01, &h80, &h01, &h90, &h3a, &h43, &h07, &h91, &h25, &h4a, &h06, &h80, &h01,
+def byte         =  &h81, &h01, &h90, &h24, &h49, &h91, &h3c, &h43, &h06, &h80, &h0e, &h81, &h02, &h90, &h3a, &h44,
+def byte         =  &h07, &h80, &h01, &h93, &h38, &h42, &h15, &h83, &h09, &h90, &h1d, &h4a, &h82, &h07, &h80, &h01,
+def byte         =  &h90, &h20, &h48, &h07, &h80, &h01, &h90, &h22, &h49, &h91, &h41, &h52, &hd0, &ha0, &h12,
+
+def byte(&h12a0) =  &h92, &h36, &h51, &h93, &h3a, &h51, &h06, &h80, &h09, &h90, &h22, &h49, &h93, &h3a, &h43, &h07,
+def byte         =  &h80, &h83, &h01, &h90, &h22, &h48, &h06, &h80, &h01, &h90, &h3a, &h42, &h07, &h93, &h25, &h4a,
+def byte         =  &h07, &h80, &h01, &h83, &h01, &h90, &h24, &h4a, &h93, &h3c, &h41, &h06, &h80, &h07, &h83, &h01,
+def byte         =  &h90, &h20, &h48, &h93, &h3d, &h44, &h0e, &h83, &h02, &h90, &h22, &h49, &h93, &h3a, &h42, &h07,
+def byte         =  &h80, &h07, &h83, &h10, &h90, &h22, &h4a, &h91, &h38, &h42, &h82, &h07, &h80, &h01, &h90, &h22,
+def byte         =  &h48, &h06, &h81, &h01, &h80, &h01, &h90, &h1b, &h48, &h91, &h3d, &h54, &hd0, &ha0, &h13,
+
+def byte(&h13a0) =  &h92, &h44, &h54, &h93, &h41, &h54, &h92, &h44, &h43, &h06, &h80, &h09, &h90, &h1b, &h4a, &h05,
+def byte         =  &h82, &h02, &h80, &h01, &h90, &h1b, &h49, &h06, &h80, &h01, &h90, &h44, &h42, &h07, &h90, &h1b,
+def byte         =  &h49, &h81, &h83, &h07, &h80, &h01, &h90, &h20, &h48, &h91, &h38, &h53, &h92, &h3f, &h53, &h93,
+def byte         =  &h3c, &h52, &h92, &h3f, &h43, &h07, &h80, &h18, &h90, &h20, &h4a, &h07, &h80, &h01, &h90, &h20,
+def byte         =  &h4a, &h04, &h82, &h02, &h80, &h01, &h90, &h20, &h49, &h07, &h80, &h08, &h90, &h1d, &h4a, &h81,
+def byte         =  &h83, &h07, &h80, &h01, &h90, &h20, &h48, &h07, &h80, &h01, &h90, &h22, &h48, &hd0, &ha0, &h14,
+
+def byte(&h14a0) =  &h91, &h3a, &h54, &h92, &h36, &h53, &h93, &h41, &h53, &h06, &h80, &h09, &h90, &h22, &h48, &h91,
+def byte         =  &h3a, &h42, &h07, &h80, &h81, &h01, &h90, &h22, &h4a, &h06, &h80, &h01, &h90, &h3a, &h42, &h08,
+def byte         =  &h91, &h25, &h48, &h06, &h80, &h01, &h81, &h01, &h90, &h24, &h48, &h91, &h3c, &h44, &h06, &h80,
+def byte         =  &h07, &h81, &h01, &h90, &h20, &h49, &h91, &h3d, &h44, &h0e, &h81, &h02, &h90, &h22, &h49, &h91,
+def byte         =  &h3a, &h41, &h07, &h80, &h07, &h81, &h01, &h90, &h3d, &h41, &h0e, &h80, &h01, &h90, &h1d, &h48,
+def byte         =  &h91, &h3f, &h43, &h82, &h83, &h07, &h80, &h01, &h90, &h20, &h49, &h06, &hd0, &ha0, &h15,
+
+def byte(&h15a0) =  &h81, &h01, &h80, &h01, &h90, &h22, &h4a, &h91, &h38, &h54, &h92, &h3f, &h54, &h93, &h3c, &h52,
+def byte         =  &h06, &h80, &h09, &h90, &h20, &h4a, &h93, &h3c, &h44, &h07, &h80, &h01, &h90, &h22, &h48, &h06,
+def byte         =  &h83, &h01, &h80, &h01, &h90, &h3a, &h44, &h07, &h93, &h25, &h48, &h06, &h80, &h01, &h83, &h01,
+def byte         =  &h90, &h24, &h49, &h93, &h3c, &h42, &h06, &h80, &h0e, &h83, &h02, &h90, &h3a, &h42, &h07, &h80,
+def byte         =  &h01, &h91, &h38, &h42, &h15, &h81, &h09, &h90, &h1d, &h49, &h82, &h07, &h80, &h01, &h90, &h20,
+def byte         =  &h49, &h07, &h80, &h01, &h90, &h22, &h49, &h91, &h36, &h53, &h92, &h3a, &h51, &hd0, &ha0, &h16,
+
+def byte(&h16a0) =  &h93, &h41, &h54, &h06, &h80, &h09, &h90, &h22, &h49, &h92, &h3a, &h43, &h07, &h80, &h82, &h01,
+def byte         =  &h90, &h22, &h48, &h06, &h80, &h01, &h90, &h3a, &h41, &h08, &h92, &h25, &h4a, &h06, &h80, &h01,
+def byte         =  &h82, &h01, &h90, &h24, &h48, &h92, &h3c, &h43, &h06, &h80, &h07, &h82, &h01, &h90, &h20, &h49,
+def byte         =  &h92, &h3d, &h42, &h0e, &h82, &h02, &h90, &h22, &h48, &h92, &h3a, &h41, &h07, &h80, &h07, &h82,
+def byte         =  &h01, &h90, &h38, &h43, &h0e, &h80, &h01, &h90, &h22, &h49, &h07, &h80, &h01, &h90, &h22, &h48,
+def byte         =  &h81, &h83, &h07, &h80, &h01, &h90, &h1b, &h48, &h91, &h36, &h52, &hd0, &ha0, &h17,
+
+def byte(&h17a0) =  &h92, &h3a, &h53, &h93, &h41, &h51, &h06, &h80, &h09, &h90, &h1b, &h4a, &h93, &h41, &h5b, &h07,
+def byte         =  &h80, &h01, &h90, &h1b, &h48, &h06, &h80, &h01, &h90, &h3f, &h42, &h83, &h08, &h91, &h1b, &h49,
+def byte         =  &h82, &h06, &h80, &h01, &h81, &h01, &h90, &h20, &h4a, &h91, &h38, &h54, &h92, &h3c, &h51, &h93,
+def byte         =  &h3f, &h53, &h93, &h3f, &h5c, &h06, &h80, &h09, &h90, &h3f, &h44, &h83, &h0f, &h93, &h20, &h4a,
+def byte         =  &h07, &h83, &h01, &h93, &h20, &h4a, &h06, &h83, &h01, &h93, &h20, &h49, &h07, &h83, &h08, &h93,
+def byte         =  &h1d, &h4a, &h05, &h80, &h02, &h83, &h01, &h90, &h20, &h48, &h81, &h82, &h07, &hd0, &ha0, &h18,
+
+def byte(&h18a0) =  &h80, &h01, &h90, &h22, &h48, &h91, &h46, &h51, &h92, &h3f, &h51, &h93, &h3d, &h53, &h91, &h46,
+def byte         =  &h54, &h92, &h3f, &h56, &h93, &h3d, &h55, &h93, &h3d, &h42, &h06, &h80, &h09, &h90, &h22, &h48,
+def byte         =  &h07, &h80, &h01, &h90, &h22, &h48, &h06, &h80, &h09, &h90, &h25, &h4a, &h07, &h80, &h01, &h90,
+def byte         =  &h24, &h49, &h06, &h80, &h08, &h90, &h20, &h49, &h0d, &h83, &h03, &h90, &h22, &h49, &h92, &h3f,
+def byte         =  &h44, &h07, &h80, &h07, &h82, &h01, &h90, &h41, &h42, &h0e, &h80, &h01, &h90, &h1d, &h4a, &h91,
+def byte         =  &h3d, &h44, &h07, &h80, &h01, &h90, &h20, &h48, &h81, &h07, &h80, &h01, &hd0, &ha0, &h19,
+
+def byte(&h19a0) =  &h90, &h22, &h48, &h91, &h44, &h52, &h92, &h3f, &h54, &h93, &h41, &h51, &h91, &h44, &h54, &h92,
+def byte         =  &h3f, &h55, &h93, &h41, &h54, &h92, &h3f, &h44, &h07, &h80, &h82, &h08, &h90, &h20, &h4a, &h92,
+def byte         =  &h3f, &h44, &h07, &h80, &h82, &h01, &h90, &h22, &h4a, &h06, &h80, &h01, &h90, &h3f, &h42, &h08,
+def byte         =  &h92, &h25, &h49, &h06, &h80, &h01, &h82, &h01, &h90, &h24, &h48, &h93, &h41, &h43, &h06, &h80,
+def byte         =  &h07, &h83, &h02, &h90, &h3f, &h44, &h0e, &h80, &h01, &h90, &h38, &h43, &h0e, &h80, &h01, &h90,
+def byte         =  &h38, &h42, &h0f, &h92, &h1d, &h49, &h07, &h82, &h01, &h91, &h20, &h48, &h05, &hd0, &ha0, &h1a,
+
+def byte(&h1aa0) =  &h80, &h02, &h81, &h01, &h90, &h22, &h48, &h91, &h46, &h54, &h92, &h3d, &h54, &h93, &h3f, &h54,
+def byte         =  &h91, &h46, &h56, &h92, &h3d, &h54, &h93, &h3f, &h54, &h07, &h80, &h08, &h90, &h22, &h49, &h07,
+def byte         =  &h80, &h01, &h90, &h22, &h49, &h06, &h80, &h09, &h90, &h25, &h4a, &h07, &h80, &h01, &h90, &h24,
+def byte         =  &h4a, &h06, &h80, &h09, &h90, &h20, &h48, &h07, &h80, &h08, &h90, &h22, &h49, &h07, &h80, &h08,
+def byte         =  &h92, &h3d, &h42, &h0e, &h82, &h01, &h90, &h1d, &h48, &h92, &h3a, &h41, &h07, &h80, &h01, &h90,
+def byte         =  &h20, &h49, &h81, &h83, &h06, &h82, &h01, &h80, &h01, &h90, &h22, &h4a, &hd0, &ha0, &h1b,
+
+def byte(&h1ba0) =  &h91, &h46, &h53, &h92, &h3f, &h52, &h93, &h3d, &h52, &h91, &h46, &h54, &h92, &h3f, &h55, &h93,
+def byte         =  &h3d, &h55, &h07, &h80, &h08, &h90, &h20, &h48, &h91, &h3f, &h44, &h82, &h83, &h07, &h80, &h01,
+def byte         =  &h90, &h22, &h4a, &h92, &h46, &h54, &h91, &h3f, &h53, &h93, &h3d, &h51, &h92, &h46, &h56, &h91,
+def byte         =  &h3f, &h56, &h93, &h3d, &h54, &h06, &h81, &h01, &h80, &h01, &h90, &h41, &h44, &h82, &h83, &h07,
+def byte         =  &h91, &h25, &h4a, &h06, &h80, &h01, &h81, &h01, &h90, &h24, &h4a, &h91, &h3f, &h52, &h92, &h44,
+def byte         =  &h51, &h93, &h48, &h52, &h91, &h3f, &h56, &h92, &h44, &h54, &h93, &h48, &h55, &hd0, &ha0, &h1c,
+
+def byte(&h1ca0) =  &h91, &h3f, &h43, &h06, &h80, &h18, &h92, &h44, &h57, &h90, &h50, &h4a, &h05, &h80, &h81, &h82,
+def byte         =  &h02, &h90, &h38, &h56, &h91, &h44, &h49, &h92, &h50, &h47, &h06, &h80, &h81, &h82, &h02, &h90,
+def byte         =  &h38, &h43, &h07, &h80, &h01, &h90, &h3a, &h44, &h07, &h80, &h01, &h90, &h1d, &h48, &h91, &h3d,
+def byte         =  &h43, &h06, &h80, &h81, &h01, &h90, &h20, &h48, &h91, &h3a, &h42, &h83, &h07, &h80, &h81, &h01,
+def byte         =  &h90, &h1b, &h4a, &h91, &h3d, &h51, &h92, &h3a, &h52, &h93, &h41, &h53, &h93, &h41, &h54, &h93,
+def byte         =  &h41, &h43, &h07, &h80, &h08, &h90, &h1b, &h4a, &h06, &h83, &h01, &h80, &h01, &hd0, &ha0, &h1d,
+
+def byte(&h1da0) =  &h90, &h1b, &h49, &h07, &h80, &h01, &h90, &h41, &h54, &h93, &h49, &h54, &h90, &h41, &h43, &h07,
+def byte         =  &h90, &h24, &h48, &h81, &h82, &h07, &h80, &h83, &h01, &h90, &h22, &h49, &h91, &h3c, &h51, &h92,
+def byte         =  &h38, &h52, &h93, &h3f, &h51, &h93, &h3f, &h56, &h93, &h3f, &h43, &h06, &h80, &h08, &h83, &h01,
+def byte         =  &h90, &h20, &h49, &h07, &h80, &h08, &h90, &h20, &h49, &h07, &h80, &h08, &h90, &h50, &h4f, &h92,
+def byte         =  &h38, &h41, &h07, &h82, &h01, &h92, &h3a, &h43, &h07, &h82, &h01, &h92, &h1d, &h4a, &h93, &h3d,
+def byte         =  &h43, &h06, &h82, &h83, &h01, &h91, &h20, &h49, &h92, &h3a, &h41, &h05, &hd0, &ha0, &h1e,
+
+def byte(&h1ea0) =  &h80, &h02, &h81, &h82, &h01, &h90, &h1d, &h48, &h91, &h35, &h53, &h92, &h38, &h54, &h93, &h3c,
+def byte         =  &h52, &h07, &h80, &h08, &h90, &h1d, &h49, &h07, &h80, &h01, &h90, &h1d, &h49, &h06, &h80, &h01,
+def byte         =  &h90, &h3f, &h56, &h91, &h48, &h54, &h92, &h44, &h54, &h90, &h3f, &h44, &h83, &h08, &h93, &h24,
+def byte         =  &h49, &h06, &h80, &h01, &h81, &h82, &h83, &h01, &h90, &h22, &h49, &h91, &h3a, &h51, &h92, &h3d,
+def byte         =  &h51, &h93, &h41, &h52, &h92, &h3d, &h55, &h93, &h41, &h53, &h92, &h3d, &h43, &h06, &h80, &h08,
+def byte         =  &h82, &h83, &h08, &h90, &h3c, &h43, &h07, &h80, &h01, &h90, &h22, &h4a, &hd0, &ha0, &h1f,
+
+def byte(&h1fa0) =  &h91, &h3a, &h43, &h07, &h80, &h01, &h90, &h22, &h49, &h06, &h81, &h01, &h80, &h01, &h90, &h22,
+def byte         =  &h4a, &h91, &h5c, &h4f, &h92, &h38, &h43, &h06, &h80, &h81, &h82, &h01, &h90, &h24, &h49, &h91,
+def byte         =  &h5a, &h4e, &h92, &h3a, &h42, &h07, &h80, &h81, &h82, &h01, &h90, &h59, &h4f, &h91, &h3d, &h42,
+def byte         =  &h06, &h80, &h81, &h01, &h90, &h22, &h49, &h91, &h55, &h4f, &h92, &h3a, &h42, &h07, &h80, &h82,
+def byte         =  &h01, &h90, &h1b, &h49, &h92, &h3d, &h52, &h93, &h3a, &h52, &h92, &h3d, &h44, &h07, &h80, &h08,
+def byte         =  &h90, &h1b, &h48, &h07, &h80, &h01, &h90, &h1b, &h49, &h05, &h82, &h02, &hd0, &ha0, &h20,
+
+def byte(&h20a0) =  &h80, &h01, &h90, &h3f, &h44, &h07, &h92, &h24, &h4a, &h83, &h04, &h81, &h02, &h80, &h01, &h82,
+def byte         =  &h01, &h90, &h22, &h4a, &h91, &h38, &h51, &h92, &h3f, &h51, &h93, &h3c, &h51, &h93, &h3c, &h43,
+def byte         =  &h06, &h80, &h09, &h90, &h20, &h4a, &h05, &h83, &h02, &h80, &h01, &h90, &h3a, &h44, &h06, &h80,
+def byte         =  &h01, &h90, &h20, &h4a, &h91, &h38, &h43, &h07, &h80, &h07, &h81, &h01, &h90, &h50, &h4e, &h91,
+def byte         =  &h38, &h43, &h0e, &h81, &h01, &h91, &h20, &h48, &h92, &h3f, &h42, &h07, &h81, &h01, &h91, &h20,
+def byte         =  &h4a, &h07, &h81, &h01, &h91, &h1d, &h49, &h93, &h3c, &h52, &h92, &h3f, &h53, &hd0, &ha0, &h21,
+
+def byte(&h21a0) =  &h07, &h81, &h08, &h91, &h1d, &h4a, &h07, &h81, &h82, &h01, &h91, &h1d, &h48, &h07, &h81, &h01,
+def byte         =  &h91, &h41, &h54, &h92, &h46, &h56, &h93, &h49, &h56, &h0e, &h91, &h41, &h51, &h1b, &h80, &h04,
+def byte         =  &h90, &h20, &h4a, &h07, &h80, &h01, &h90, &h44, &h57, &h05, &h80, &h02, &h90, &h20, &h48, &h07,
+def byte         =  &h80, &h81, &h82, &h83, &h01, &h90, &h20, &h48, &h91, &h5a, &h50, &h92, &h3a, &h41, &h07, &h80,
+def byte         =  &h81, &h82, &h01, &h90, &h59, &h4e, &h91, &h3d, &h41, &h06, &h80, &h81, &h01, &h90, &h25, &h48,
+def byte         =  &h91, &h55, &h4e, &h92, &h3a, &h42, &h07, &h80, &h82, &h01, &h90, &h1b, &h48, &hd0, &ha0, &h22,
+
+def byte(&h22a0) =  &h92, &h3a, &h54, &h93, &h3d, &h53, &h07, &h80, &h08, &h90, &h1b, &h4a, &h07, &h80, &h01, &h90,
+def byte         =  &h1b, &h48, &h07, &h80, &h01, &h90, &h3f, &h53, &h07, &h92, &h24, &h4a, &h83, &h04, &h81, &h03,
+def byte         =  &h80, &h82, &h01, &h90, &h22, &h48, &h91, &h38, &h53, &h92, &h3f, &h54, &h93, &h3c, &h53, &h92,
+def byte         =  &h3f, &h55, &h92, &h3f, &h43, &h06, &h80, &h09, &h90, &h20, &h49, &h07, &h80, &h08, &h90, &h20,
+def byte         =  &h4a, &h07, &h80, &h06, &h82, &h02, &h90, &h50, &h4e, &h91, &h38, &h43, &h07, &h81, &h01, &h91,
+def byte         =  &h3a, &h42, &h07, &h81, &h01, &h91, &h1d, &h49, &h92, &h3d, &h41, &h06, &hd0, &ha0, &h23,
+
+def byte(&h23a0) =  &h81, &h82, &h01, &h91, &h20, &h48, &h92, &h3a, &h43, &h83, &h05, &h80, &h02, &h81, &h82, &h01,
+def byte         =  &h90, &h1d, &h49, &h91, &h35, &h52, &h92, &h38, &h51, &h93, &h3c, &h54, &h07, &h80, &h08, &h90,
+def byte         =  &h1d, &h49, &h07, &h80, &h01, &h90, &h1d, &h49, &h07, &h80, &h01, &h90, &h44, &h54, &h91, &h4b,
+def byte         =  &h55, &h92, &h48, &h54, &h93, &h3c, &h42, &h0d, &h83, &h01, &h80, &h81, &h82, &h01, &h90, &h22,
+def byte         =  &h48, &h91, &h3d, &h52, &h92, &h3a, &h51, &h93, &h41, &h53, &h93, &h41, &h54, &h91, &h3d, &h42,
+def byte         =  &h07, &h80, &h0d, &h81, &h02, &h83, &h01, &h90, &h3f, &h55, &h91, &h48, &h54, &hd0, &ha0, &h24,
+
+def byte(&h24a0) =  &h93, &h44, &h56, &h06, &h80, &h81, &h83, &h01, &h90, &h22, &h48, &h91, &h3d, &h55, &h93, &h46,
+def byte         =  &h56, &h92, &h3a, &h43, &h07, &h80, &h01, &h90, &h22, &h48, &h06, &h82, &h01, &h80, &h81, &h83,
+def byte         =  &h01, &h90, &h22, &h48, &h91, &h5c, &h4e, &h92, &h38, &h42, &h06, &h80, &h81, &h82, &h01, &h90,
+def byte         =  &h24, &h4a, &h91, &h5a, &h4f, &h92, &h3a, &h42, &h07, &h80, &h81, &h82, &h01, &h90, &h59, &h4e,
+def byte         =  &h91, &h3d, &h44, &h07, &h80, &h81, &h01, &h90, &h22, &h49, &h91, &h55, &h4e, &h92, &h3a, &h43,
+def byte         =  &h06, &h80, &h82, &h01, &h90, &h1b, &h48, &h92, &h3a, &h53, &h93, &h3d, &h52, &hd0, &ha0, &h25,
+
+def byte(&h25a0) =  &h93, &h3d, &h43, &h07, &h80, &h08, &h90, &h1b, &h4a, &h07, &h80, &h01, &h90, &h1b, &h48, &h05,
+def byte         =  &h83, &h02, &h80, &h01, &h90, &h3f, &h44, &h07, &h92, &h24, &h49, &h04, &h81, &h02, &h80, &h01,
+def byte         =  &h82, &h01, &h90, &h22, &h49, &h91, &h3f, &h51, &h92, &h38, &h54, &h93, &h3c, &h51, &h93, &h3c,
+def byte         =  &h43, &h07, &h80, &h08, &h90, &h20, &h48, &h06, &h83, &h01, &h80, &h01, &h90, &h3a, &h42, &h06,
+def byte         =  &h80, &h01, &h90, &h20, &h4a, &h92, &h38, &h44, &h07, &h80, &h08, &h90, &h50, &h4e, &h06, &h82,
+def byte         =  &h0a, &h92, &h20, &h49, &h93, &h38, &h43, &h07, &h82, &h01, &h91, &h20, &h48, &hd0, &ha0, &h26,
+
+def byte(&h26a0) =  &h83, &h06, &h81, &h01, &h91, &h1d, &h4a, &h92, &h38, &h51, &h93, &h3c, &h52, &h07, &h81, &h01,
+def byte         =  &h82, &h83, &h07, &h91, &h1d, &h48, &h07, &h81, &h01, &h91, &h1d, &h48, &h07, &h81, &h01, &h91,
+def byte         =  &h3a, &h54, &h92, &h3d, &h52, &h93, &h41, &h52, &h93, &h41, &h54, &h92, &h3d, &h42, &h3c, &h83,
+def byte         =  &h01, &h93, &h20, &h4a, &h03, &h80, &h01, &h82, &h02, &h83, &h01, &h90, &h20, &h4a, &h92, &h49,
+def byte         =  &h55, &h93, &h55, &h47, &h05, &h82, &h83, &h02, &h80, &h08, &h90, &h25, &h4a, &h91, &h49, &h55,
+def byte         =  &h92, &h55, &h49, &h05, &h81, &h82, &h02, &h80, &h01, &h90, &h22, &h49, &hd0, &ha0, &h27,
+
+def byte(&h27a0) =  &h91, &h3a, &h54, &h92, &h41, &h51, &h93, &h3d, &h53, &h07, &h80, &h08, &h90, &h22, &h4a, &h07,
+def byte         =  &h80, &h01, &h90, &h22, &h48, &h07, &h80, &h01, &h91, &h3a, &h43, &h07, &h90, &h25, &h49, &h06,
+def byte         =  &h81, &h01, &h80, &h01, &h90, &h24, &h48, &h91, &h3c, &h44, &h07, &h80, &h07, &h81, &h01, &h90,
+def byte         =  &h20, &h49, &h93, &h3d, &h44, &h07, &h83, &h08, &h90, &h22, &h4a, &h91, &h3d, &h42, &h07, &h80,
+def byte         =  &h07, &h81, &h01, &h90, &h3f, &h43, &h0e, &h80, &h02, &h90, &h1d, &h48, &h91, &h3c, &h44, &h82,
+def byte         =  &h07, &h80, &h01, &h90, &h20, &h48, &h06, &h80, &h01, &h90, &h22, &h49, &hd0, &ha0, &h28,
+
+def byte(&h28a0) =  &h91, &h3c, &h51, &h92, &h3f, &h52, &h93, &h38, &h52, &h06, &h81, &h01, &h80, &h01, &h90, &h3a,
+def byte         =  &h44, &h07, &h80, &h01, &h90, &h20, &h48, &h93, &h38, &h42, &h06, &h80, &h01, &h90, &h22, &h4a,
+def byte         =  &h07, &h80, &h08, &h90, &h25, &h49, &h07, &h80, &h01, &h90, &h24, &h49, &h07, &h80, &h36, &h90,
+def byte         =  &h1d, &h4a, &h82, &h83, &h07, &h80, &h01, &h90, &h20, &h4a, &h06, &h80, &h01, &h90, &h22, &h49,
+def byte         =  &h91, &h41, &h52, &h92, &h36, &h51, &h93, &h3a, &h52, &h07, &h80, &h08, &h90, &h22, &h4a, &h93,
+def byte         =  &h3a, &h42, &h07, &h80, &h83, &h01, &h90, &h22, &h4a, &h07, &h80, &h01, &hd0, &ha0, &h29,
+
+def byte(&h29a0) =  &h90, &h3a, &h43, &h07, &h93, &h25, &h48, &h06, &h80, &h01, &h83, &h01, &h90, &h24, &h48, &h93,
+def byte         =  &h3c, &h44, &h07, &h80, &h07, &h83, &h01, &h90, &h20, &h48, &h93, &h3d, &h43, &h0e, &h83, &h01,
+def byte         =  &h90, &h22, &h48, &h93, &h3a, &h42, &h07, &h80, &h07, &h83, &h11, &h90, &h22, &h48, &h91, &h38,
+def byte         =  &h42, &h82, &h07, &h80, &h01, &h90, &h22, &h48, &h06, &h81, &h01, &h80, &h01, &h90, &h1b, &h49,
+def byte         =  &h91, &h3d, &h54, &h92, &h44, &h52, &h93, &h41, &h54, &h92, &h44, &h41, &h06, &h80, &h08, &h90,
+def byte         =  &h1b, &h4a, &h06, &h82, &h01, &h80, &h01, &h90, &h1b, &h4a, &h07, &h80, &h01, &hd0, &ha0, &h2a,
+
+def byte(&h2aa0) =  &h90, &h44, &h43, &h07, &h90, &h1b, &h4a, &h81, &h83, &h07, &h80, &h01, &h90, &h20, &h48, &h91,
+def byte         =  &h38, &h54, &h92, &h3f, &h51, &h93, &h3c, &h53, &h92, &h3f, &h42, &h07, &h80, &h15, &h82, &h02,
+def byte         =  &h90, &h20, &h48, &h92, &h41, &h44, &h07, &h80, &h01, &h90, &h20, &h4a, &h06, &h82, &h01, &h80,
+def byte         =  &h01, &h90, &h20, &h4a, &h92, &h3f, &h43, &h06, &h80, &h07, &h82, &h02, &h90, &h1d, &h49, &h91,
+def byte         =  &h3d, &h44, &h83, &h07, &h80, &h01, &h90, &h20, &h4a, &h06, &h81, &h01, &h80, &h01, &h90, &h22,
+def byte         =  &h48, &h91, &h3a, &h54, &h92, &h36, &h51, &h93, &h41, &h51, &h06, &h80, &h08, &hd0, &ha0, &h2b,
+
+def byte(&h2ba0) =  &h90, &h22, &h48, &h91, &h3a, &h42, &h07, &h80, &h81, &h01, &h90, &h22, &h4a, &h07, &h80, &h01,
+def byte         =  &h90, &h3a, &h42, &h07, &h91, &h25, &h49, &h06, &h80, &h01, &h81, &h01, &h90, &h24, &h4a, &h91,
+def byte         =  &h3c, &h44, &h07, &h80, &h07, &h81, &h01, &h90, &h20, &h48, &h91, &h3d, &h43, &h0e, &h81, &h01,
+def byte         =  &h90, &h22, &h49, &h91, &h3a, &h44, &h07, &h80, &h07, &h81, &h01, &h90, &h3d, &h44, &h0e, &h80,
+def byte         =  &h02, &h90, &h1d, &h48, &h91, &h3f, &h44, &h82, &h83, &h07, &h80, &h01, &h90, &h20, &h49, &h06,
+def byte         =  &h81, &h01, &h80, &h01, &h90, &h22, &h48, &h91, &h38, &h53, &h92, &h3f, &h53, &hd0, &ha0, &h2c,
+
+def byte(&h2ca0) =  &h93, &h3c, &h54, &h06, &h80, &h08, &h90, &h20, &h48, &h93, &h3c, &h43, &h07, &h80, &h01, &h90,
+def byte         =  &h22, &h4a, &h06, &h83, &h01, &h80, &h01, &h90, &h3a, &h43, &h07, &h93, &h25, &h49, &h06, &h80,
+def byte         =  &h01, &h83, &h01, &h90, &h24, &h49, &h93, &h3c, &h44, &h07, &h80, &h10, &h90, &h3a, &h42, &h05,
+def byte         =  &h83, &h02, &h80, &h01, &h91, &h38, &h42, &h1e, &h90, &h1d, &h49, &h81, &h82, &h07, &h80, &h01,
+def byte         =  &h90, &h20, &h4a, &h06, &h80, &h01, &h90, &h22, &h48, &h91, &h36, &h51, &h92, &h3a, &h52, &h93,
+def byte         =  &h41, &h53, &h07, &h80, &h08, &h90, &h22, &h49, &h92, &h3a, &h43, &h07, &hd0, &ha0, &h2d,
+
+def byte(&h2da0) =  &h80, &h82, &h01, &h90, &h22, &h4a, &h07, &h80, &h01, &h90, &h3a, &h41, &h07, &h92, &h25, &h49,
+def byte         =  &h07, &h80, &h01, &h82, &h01, &h90, &h24, &h48, &h92, &h3c, &h43, &h06, &h80, &h07, &h82, &h01,
+def byte         =  &h90, &h20, &h49, &h92, &h3d, &h43, &h0e, &h82, &h01, &h90, &h22, &h4a, &h92, &h3a, &h41, &h07,
+def byte         =  &h80, &h07, &h82, &h02, &h90, &h38, &h44, &h0e, &h80, &h01, &h90, &h22, &h49, &h07, &h80, &h01,
+def byte         =  &h90, &h22, &h49, &h81, &h83, &h06, &h80, &h01, &h90, &h1b, &h49, &h91, &h36, &h54, &h92, &h3a,
+def byte         =  &h54, &h93, &h41, &h51, &h07, &h80, &h08, &h90, &h1b, &h49, &h93, &h41, &h5b, &hd0, &ha0, &h2e,
+
+def byte(&h2ea0) =  &h07, &h80, &h01, &h90, &h1b, &h48, &h07, &h80, &h01, &h90, &h3f, &h41, &h83, &h07, &h91, &h1b,
+def byte         =  &h4a, &h82, &h07, &h80, &h01, &h81, &h01, &h90, &h20, &h48, &h91, &h38, &h52, &h92, &h3c, &h54,
+def byte         =  &h93, &h3f, &h53, &h93, &h3f, &h5b, &h06, &h80, &h08, &h90, &h3f, &h44, &h83, &h0f, &h93, &h20,
+def byte         =  &h48, &h07, &h83, &h01, &h93, &h20, &h48, &h07, &h83, &h01, &h93, &h20, &h49, &h07, &h83, &h08,
+def byte         =  &h93, &h1d, &h48, &h05, &h80, &h02, &h83, &h01, &h90, &h20, &h49, &h81, &h82, &h06, &h80, &h01,
+def byte         =  &h90, &h22, &h48, &h91, &h46, &h52, &h92, &h3f, &h54, &h93, &h3d, &h52, &hd0, &ha0, &h2f,
+
+def byte(&h2fa0) =  &h91, &h46, &h54, &h92, &h3f, &h54, &h93, &h3d, &h54, &h93, &h3d, &h42, &h07, &h80, &h08, &h90,
+def byte         =  &h22, &h49, &h07, &h80, &h01, &h90, &h22, &h49, &h07, &h80, &h08, &h90, &h25, &h49, &h07, &h80,
+def byte         =  &h01, &h90, &h24, &h4a, &h07, &h80, &h08, &h90, &h20, &h48, &h0d, &h83, &h02, &h90, &h22, &h49,
+def byte         =  &h92, &h3f, &h42, &h07, &h80, &h07, &h82, &h02, &h90, &h41, &h42, &h0e, &h80, &h01, &h90, &h1d,
+def byte         =  &h49, &h91, &h3d, &h44, &h07, &h80, &h01, &h90, &h20, &h48, &h81, &h06, &h80, &h01, &h90, &h22,
+def byte         =  &h49, &h91, &h44, &h52, &h92, &h3f, &h52, &h93, &h41, &h52, &h91, &h44, &h56, &hd0, &ha0, &h30,
+
+def byte(&h30a0) =  &h92, &h3f, &h55, &h93, &h41, &h54, &h92, &h3f, &h43, &h07, &h80, &h82, &h08, &h90, &h20, &h48,
+def byte         =  &h92, &h3f, &h42, &h07, &h80, &h82, &h01, &h90, &h22, &h49, &h07, &h80, &h01, &h90, &h3f, &h42,
+def byte         =  &h07, &h92, &h25, &h48, &h07, &h80, &h01, &h82, &h01, &h90, &h24, &h49, &h93, &h41, &h42, &h06,
+def byte         =  &h80, &h07, &h83, &h01, &h90, &h3f, &h43, &h0e, &h80, &h01, &h90, &h38, &h44, &h0e, &h80, &h02,
+def byte         =  &h90, &h38, &h43, &h0f, &h92, &h1d, &h49, &h07, &h82, &h01, &h91, &h20, &h4a, &h05, &h80, &h02,
+def byte         =  &h81, &h01, &h90, &h22, &h4a, &h91, &h46, &h51, &h92, &h3d, &h51, &hd0, &ha0, &h31,
+
+def byte(&h31a0) =  &h93, &h3f, &h54, &h91, &h46, &h55, &h92, &h3d, &h56, &h93, &h3f, &h54, &h06, &h80, &h08, &h90,
+def byte         =  &h22, &h4a, &h07, &h80, &h01, &h90, &h22, &h4a, &h07, &h80, &h08, &h90, &h25, &h4a, &h07, &h80,
+def byte         =  &h01, &h90, &h24, &h49, &h07, &h80, &h08, &h90, &h20, &h49, &h07, &h80, &h08, &h90, &h22, &h49,
+def byte         =  &h07, &h80, &h09, &h92, &h3d, &h43, &h0e, &h82, &h01, &h90, &h1d, &h48, &h92, &h3a, &h43, &h07,
+def byte         =  &h80, &h01, &h90, &h20, &h48, &h81, &h83, &h06, &h82, &h01, &h80, &h01, &h90, &h22, &h49, &h91,
+def byte         =  &h46, &h52, &h92, &h3f, &h53, &h93, &h3d, &h51, &h91, &h46, &h54, &hd0, &ha0, &h32,
+
+def byte(&h32a0) =  &h92, &h3f, &h55, &h93, &h3d, &h55, &h06, &h80, &h08, &h90, &h20, &h48, &h91, &h3f, &h42, &h82,
+def byte         =  &h83, &h07, &h80, &h01, &h90, &h22, &h4a, &h92, &h46, &h53, &h91, &h3f, &h51, &h93, &h3d, &h54,
+def byte         =  &h92, &h46, &h56, &h91, &h3f, &h55, &h93, &h3d, &h54, &h06, &h81, &h01, &h80, &h01, &h90, &h41,
+def byte         =  &h42, &h82, &h83, &h07, &h91, &h25, &h49, &h07, &h80, &h01, &h81, &h01, &h90, &h24, &h48, &h91,
+def byte         =  &h3f, &h52, &h92, &h44, &h53, &h93, &h48, &h54, &h91, &h3f, &h55, &h92, &h44, &h55, &h93, &h48,
+def byte         =  &h54, &h91, &h3f, &h41, &h06, &h80, &h17, &h92, &h44, &h56, &h90, &h50, &h4a, &hd0, &ha0, &h33,
+
+def byte(&h33a0) =  &h06, &h80, &h81, &h82, &h02, &h90, &h38, &h55, &h91, &h44, &h48, &h92, &h50, &h49, &h05, &h80,
+def byte         =  &h81, &h82, &h03, &h90, &h38, &h41, &h07, &h80, &h01, &h90, &h3a, &h42, &h06, &h80, &h01, &h90,
+def byte         =  &h1d, &h48, &h91, &h3d, &h44, &h07, &h80, &h81, &h01, &h90, &h20, &h4a, &h91, &h3a, &h42, &h83,
+def byte         =  &h07, &h80, &h81, &h01, &h90, &h1b, &h49, &h91, &h3d, &h53, &h92, &h41, &h52, &h93, &h3a, &h52,
+def byte         =  &h92, &h41, &h53, &h92, &h41, &h42, &h06, &h80, &h08, &h90, &h1b, &h48, &h06, &h82, &h01, &h80,
+def byte         =  &h01, &h90, &h1b, &h4a, &h07, &h80, &h01, &h90, &h41, &h56, &h92, &h49, &h53, &hd0, &ha0, &h34,
+
+def byte(&h34a0) =  &h90, &h41, &h43, &h07, &h90, &h24, &h48, &h81, &h83, &h07, &h80, &h82, &h01, &h90, &h22, &h49,
+def byte         =  &h91, &h3f, &h51, &h92, &h3c, &h52, &h93, &h38, &h52, &h91, &h3f, &h55, &h91, &h3f, &h44, &h07,
+def byte         =  &h80, &h08, &h81, &h01, &h90, &h20, &h49, &h06, &h80, &h08, &h90, &h20, &h4a, &h07, &h80, &h09,
+def byte         =  &h90, &h50, &h4e, &h93, &h38, &h43, &h07, &h83, &h01, &h91, &h3a, &h41, &h06, &h81, &h01, &h91,
+def byte         =  &h1d, &h49, &h93, &h3d, &h44, &h07, &h81, &h83, &h01, &h91, &h20, &h49, &h92, &h3a, &h42, &h05,
+def byte         =  &h80, &h02, &h81, &h82, &h01, &h90, &h1d, &h48, &h91, &h38, &h54, &hd0, &ha0, &h35,
+
+def byte(&h35a0) =  &h92, &h3c, &h53, &h93, &h35, &h51, &h06, &h80, &h08, &h90, &h1d, &h4a, &h07, &h80, &h01, &h90,
+def byte         =  &h1d, &h4a, &h07, &h80, &h01, &h90, &h3f, &h53, &h90, &h3f, &h42, &h07, &h91, &h24, &h4a, &h82,
+def byte         =  &h83, &h07, &h80, &h01, &h81, &h01, &h90, &h22, &h49, &h91, &h3d, &h52, &h92, &h41, &h52, &h93,
+def byte         =  &h3a, &h54, &h91, &h3d, &h53, &h92, &h41, &h54, &h91, &h3d, &h41, &h06, &h80, &h08, &h81, &h82,
+def byte         =  &h08, &h90, &h3c, &h44, &h07, &h80, &h01, &h90, &h22, &h49, &h93, &h3a, &h42, &h07, &h80, &h01,
+def byte         =  &h90, &h22, &h4a, &h05, &h83, &h01, &h80, &h01, &h90, &h22, &h49, &hd0, &ha0, &h36,
+
+def byte(&h36a0) =  &h91, &h5c, &h50, &h92, &h38, &h42, &h07, &h80, &h81, &h82, &h01, &h90, &h24, &h49, &h91, &h5a,
+def byte         =  &h4e, &h92, &h3a, &h42, &h06, &h80, &h81, &h82, &h01, &h90, &h59, &h4e, &h91, &h3d, &h44, &h07,
+def byte         =  &h80, &h81, &h01, &h90, &h22, &h48, &h91, &h55, &h4f, &h92, &h3a, &h42, &h07, &h80, &h82, &h01,
+def byte         =  &h90, &h1b, &h48, &h92, &h3d, &h53, &h93, &h41, &h53, &h92, &h3d, &h41, &h06, &h80, &h09, &h90,
+def byte         =  &h1b, &h4a, &h07, &h80, &h01, &h90, &h1b, &h4a, &h04, &h82, &h02, &h80, &h01, &h90, &h3f, &h44,
+def byte         =  &h07, &h92, &h24, &h4a, &h83, &h04, &h81, &h03, &h80, &h01, &h82, &h01, &hd0, &ha0, &h37,
+
+def byte(&h37a0) =  &h90, &h22, &h49, &h91, &h3f, &h51, &h92, &h3c, &h51, &h93, &h38, &h53, &h92, &h3c, &h41, &h06,
+def byte         =  &h80, &h08, &h90, &h20, &h49, &h06, &h82, &h01, &h80, &h01, &h90, &h3a, &h43, &h07, &h80, &h01,
+def byte         =  &h90, &h20, &h49, &h93, &h38, &h43, &h07, &h80, &h07, &h83, &h01, &h90, &h50, &h4e, &h92, &h38,
+def byte         =  &h41, &h0e, &h82, &h01, &h92, &h20, &h48, &h91, &h3f, &h43, &h07, &h82, &h01, &h91, &h20, &h49,
+def byte         =  &h07, &h81, &h01, &h91, &h1d, &h49, &h92, &h38, &h51, &h93, &h3c, &h52, &h06, &h81, &h09, &h91,
+def byte         =  &h1d, &h4a, &h07, &h81, &h01, &h91, &h1d, &h48, &h06, &h81, &h01, &hd0, &ha0, &h38,
+
+def byte(&h38a0) =  &h91, &h41, &h56, &h07, &h92, &h24, &h49, &h83, &h07, &h82, &h01, &h92, &h22, &h48, &h93, &h3d,
+def byte         =  &h51, &h91, &h41, &h54, &h07, &h82, &h14, &h80, &h04, &h90, &h20, &h4a, &h92, &h44, &h56, &h05,
+def byte         =  &h82, &h02, &h80, &h01, &h90, &h44, &h57, &h92, &h50, &h49, &h04, &h80, &h82, &h83, &h03, &h90,
+def byte         =  &h20, &h4a, &h92, &h5c, &h4f, &h93, &h38, &h42, &h07, &h80, &h81, &h82, &h83, &h01, &h90, &h20,
+def byte         =  &h48, &h91, &h5a, &h50, &h92, &h3a, &h43, &h06, &h80, &h81, &h82, &h01, &h90, &h59, &h4f, &h91,
+def byte         =  &h3d, &h42, &h07, &h80, &h81, &h01, &h90, &h25, &h4a, &h91, &h55, &h4f, &hd0, &ha0, &h39,
+
+def byte(&h39a0) =  &h92, &h3a, &h43, &h07, &h80, &h82, &h01, &h90, &h1b, &h4a, &h92, &h3d, &h54, &h93, &h41, &h52,
+def byte         =  &h93, &h41, &h43, &h06, &h80, &h09, &h90, &h1b, &h4a, &h05, &h83, &h02, &h80, &h01, &h90, &h1b,
+def byte         =  &h48, &h06, &h80, &h01, &h90, &h3f, &h53, &h93, &h49, &h56, &h07, &h92, &h24, &h49, &h04, &h81,
+def byte         =  &h03, &h80, &h82, &h83, &h01, &h90, &h22, &h4a, &h91, &h38, &h54, &h92, &h3f, &h51, &h93, &h3c,
+def byte         =  &h53, &h92, &h3f, &h55, &h92, &h3f, &h42, &h07, &h80, &h08, &h90, &h20, &h4a, &h07, &h80, &h09,
+def byte         =  &h90, &h20, &h49, &h07, &h80, &h05, &h82, &h03, &h90, &h50, &h50, &hd0, &ha0, &h3a,
+
+def byte(&h3aa0) =  &h91, &h38, &h42, &h07, &h81, &h01, &h91, &h3a, &h44, &h06, &h81, &h01, &h91, &h1d, &h4a, &h92,
+def byte         =  &h3d, &h43, &h07, &h81, &h82, &h01, &h91, &h20, &h4a, &h92, &h3a, &h43, &h83, &h05, &h80, &h02,
+def byte         =  &h81, &h82, &h01, &h90, &h1d, &h4a, &h91, &h38, &h54, &h92, &h3c, &h54, &h93, &h35, &h54, &h06,
+def byte         =  &h80, &h09, &h90, &h1d, &h4a, &h07, &h80, &h01, &h90, &h1d, &h48, &h06, &h80, &h01, &h90, &h44,
+def byte         =  &h55, &h92, &h3c, &h43, &h07, &h91, &h24, &h4a, &h82, &h83, &h07, &h80, &h81, &h01, &h90, &h22,
+def byte         =  &h48, &h91, &h3d, &h52, &h92, &h41, &h51, &h93, &h3a, &h54, &h92, &h41, &h55, &hd0, &ha0, &h3b,
+
+def byte(&h3ba0) =  &h91, &h3d, &h42, &h07, &h80, &h0e, &h81, &h01, &h82, &h01, &h90, &h3f, &h55, &h91, &h48, &h55,
+def byte         =  &h92, &h44, &h54, &h07, &h80, &h81, &h82, &h01, &h90, &h22, &h4a, &h91, &h3d, &h55, &h92, &h46,
+def byte         =  &h56, &h93, &h3a, &h42, &h07, &h80, &h01, &h90, &h22, &h4a, &h06, &h83, &h01, &h80, &h81, &h82,
+def byte         =  &h01, &h90, &h22, &h4a, &h91, &h5c, &h4e, &h92, &h38, &h44, &h06, &h80, &h81, &h82, &h01, &h90,
+def byte         =  &h24, &h48, &h91, &h5a, &h4f, &h92, &h3a, &h42, &h06, &h80, &h81, &h82, &h01, &h90, &h59, &h4e,
+def byte         =  &h91, &h3d, &h43, &h07, &h80, &h81, &h01, &h90, &h22, &h4a, &h91, &h55, &h50, &hd0, &ha0, &h3c,
+
+def byte(&h3ca0) =  &h92, &h3a, &h42, &h07, &h80, &h82, &h01, &h90, &h1b, &h49, &h92, &h3d, &h52, &h93, &h41, &h52,
+def byte         =  &h92, &h3d, &h42, &h06, &h80, &h09, &h90, &h1b, &h4a, &h07, &h80, &h01, &h90, &h1b, &h4a, &h04,
+def byte         =  &h82, &h02, &h80, &h01, &h90, &h3f, &h42, &h08, &h92, &h24, &h49, &h83, &h03, &h81, &h03, &h80,
+def byte         =  &h01, &h82, &h01, &h90, &h22, &h49, &h91, &h3f, &h54, &h92, &h3c, &h54, &h93, &h38, &h52, &h92,
+def byte         =  &h3c, &h42, &h06, &h80, &h08, &h90, &h20, &h49, &h06, &h82, &h01, &h80, &h01, &h90, &h3a, &h41,
+def byte         =  &h07, &h80, &h01, &h90, &h20, &h48, &h93, &h38, &h43, &h07, &h80, &h08, &hd0, &ha0, &h08,

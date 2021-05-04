@@ -8,8 +8,8 @@
 #include "../../expression.h"
 
 
-#define GTASM_MAJOR_VERSION "0.1"
-#define GTASM_MINOR_VERSION "5"
+#define GTASM_MAJOR_VERSION "1.0"
+#define GTASM_MINOR_VERSION "6R"
 #define GTASM_VERSION_STR "gtasm v" GTASM_MAJOR_VERSION "." GTASM_MINOR_VERSION
 
 
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     Assembler::initialise();
 
     // Optional include path
-    uint16_t address = DEFAULT_START_ADDRESS;
+    uint16_t address = DEFAULT_EXEC_ADDRESS;
     std::string includepath = (argc == 3) ? std::string(argv[2]) : ".";
     Assembler::setIncludePath(includepath);
 
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
     std::string gt1FileName;
     if(!hasRomCode  &&  !saveGt1File(filename, gt1File, gt1FileName)) return 1;
 
-    Loader::printGt1Stats(gt1FileName, gt1File);
+    Loader::printGt1Stats(gt1FileName, gt1File, false);
 
     return 0;
 }

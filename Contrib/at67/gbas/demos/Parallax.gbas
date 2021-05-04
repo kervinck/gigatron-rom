@@ -1,0 +1,35 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &h06FF
+_arraysStart_ &h06FF
+_codeRomType_ ROMv1
+
+free STRINGWORKAREA
+
+load image, ../../res/image/Parallax.tga, &h0800
+
+x0 = 0 : x1 = x0 : x2 = x1 : x3 = x2 : x4 = x3 : x5 = x4
+
+speed1 = 128
+    
+loop:
+    wait
+    speed2 = speed1 LSL 1 : speed4 = speed2 LSL 1 : speed8 = speed4 LSL 1
+    poke &h0101, x0.hi : x0 = x0 + speed8
+    poke &h0131, x1.hi : x1 = x1 - speed4
+    poke &h015B, x2.hi : x2 = x2 - speed2
+    poke &h0179, x3.hi : x3 = x3 - speed1
+    poke &h0183, x4.hi : x4 = x4 + speed1
+    poke &h0193, x5.hi : x5 = x5 + speed2
+    poke &h01A3, x5.hi
+    poke &h01BB, x5.hi
+    poke &h01D3, x5.hi
+    
+    gosub get("BUTTON_STATE")
+goto loop
+
+254: speed1 = speed1 + 2 : if speed1 &&> 256 then speed1 = 256
+     return
+253: speed1 = speed1 - 2 : if speed1 &&< 64 then speed1 = 64
+     return
+191: speed1 = 128 : return
+127: speed1 = 128 : return

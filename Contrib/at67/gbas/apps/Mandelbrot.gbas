@@ -1,0 +1,43 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv2
+
+mode 2
+cls
+
+const colours = &h0600
+def byte(colours) = &h01, &h02, &h03, &h07, &h0b, &h0f, &h0e, &h0d, &h0c, &h3c, &h38, &h34, &h30, &h20, &h10, &h00
+
+const xmin = -90
+const xmax =  70
+const ymin = -60
+const ymax =  60
+const dx = (xmax-xmin)/160
+const dy = (ymax-ymin)/120
+const fracbits = 5
+
+cy = ymin 
+
+'vram starting address embedded into py
+for py=8 to 67
+    cx = xmin
+    for px=0 to 159
+        x=0 : y=x : x2=y : y2=x2
+        
+        'c=15 when Mandelbrot equation tends to infinity
+        for c=0 &to 14
+            x2 = (x*x) LSR fracbits
+            y2 = (y*y) LSR fracbits
+            if x2+y2 &&> (2**fracbits * 4) then goto &break
+            
+            ' x*y may be -ve, so use arithmetic shift right, (ASR)
+            y = ((x*y) ASR (fracbits-1)) + cy
+            x = x2 - y2 + cx
+        next c
+break:
+        'use symmetry around y to cheat 2 pixels at a time
+        poke (py LSL 8) + px, peek(colours + c)
+        poke ((135 - py) LSL 8) + px, peek(colours + c)
+        cx = cx + dx
+    next px
+    cy = cy + dy
+next py

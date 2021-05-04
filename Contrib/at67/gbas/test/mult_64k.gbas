@@ -1,0 +1,33 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &hFFFF
+_codeRomType_ ROMv1
+
+const START=&h8000
+const SIZE=10
+
+cls
+
+def word(START + SIZE*0, 0, SIZE, SIZE) = rand(360) - 180
+def word(START + SIZE*2, 0, SIZE, SIZE) = rand(360) - 180
+def word(START + SIZE*4, 0, SIZE, SIZE) = 0
+
+init time
+
+result=0
+for i=0 to SIZE-1
+    gosub math
+next i    
+timer = get("TIMER")
+
+for i=0 to SIZE-1
+    print deek(START + SIZE*4 + (i LSL 1));" ";
+next i
+
+print : print timer/60;" ";timer % 60;"/60"
+end
+
+math:
+    a = deek(START + SIZE*0 + (i LSL 1))
+    b = deek(START + SIZE*2 + (i LSL 1))
+    doke START + SIZE*4 + (i LSL 1), a * b
+return

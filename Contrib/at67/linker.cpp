@@ -19,16 +19,39 @@
 namespace Linker
 {
     std::map<std::string, std::vector<std::string>> _subIncludeFiles;
+    std::map<int, uint16_t> _internalSubMap;
 
+    // TODO: use std::map
     std::vector<Compiler::InternalSub> _internalSubs =
     {
-        {0x0000, 0x0000, "realTimeProc"     , "", true,  false},
-        {0x0000, 0x0000, "convertEqOp"      , "", true,  false},
-        {0x0000, 0x0000, "convertNeOp"      , "", true,  false},
-        {0x0000, 0x0000, "convertLeOp"      , "", true,  false},
-        {0x0000, 0x0000, "convertGeOp"      , "", true,  false},
-        {0x0000, 0x0000, "convertLtOp"      , "", true,  false},
-        {0x0000, 0x0000, "convertGtOp"      , "", true,  false},
+        {0x0000, 0x0000, "romCheck"         , "", false, false},
+        {0x0000, 0x0000, "romExec"          , "", false, false},
+        {0x0000, 0x0000, "romRead"          , "", false, false},
+        {0x0000, 0x0000, "realTimeStub"     , "", false, false},
+        {0x0000, 0x0000, "convertEqOp"      , "", false, false},
+        {0x0000, 0x0000, "convertNeOp"      , "", false, false},
+        {0x0000, 0x0000, "convertLeOp"      , "", false, false},
+        {0x0000, 0x0000, "convertGeOp"      , "", false, false},
+        {0x0000, 0x0000, "convertLtOp"      , "", false, false},
+        {0x0000, 0x0000, "convertGtOp"      , "", false, false},
+        {0x0000, 0x0000, "convert8Arr2d"    , "", false, false},
+        {0x0000, 0x0000, "convert8Arr3d"    , "", false, false},
+        {0x0000, 0x0000, "convert16Arr2d"   , "", false, false},
+        {0x0000, 0x0000, "convert16Arr3d"   , "", false, false},
+        {0x0000, 0x0000, "setRealTimeProc0" , "", false, false},
+        {0x0000, 0x0000, "setRealTimeProc1" , "", false, false},
+        {0x0000, 0x0000, "setRealTimeProc2" , "", false, false},
+        {0x0000, 0x0000, "loadRegs"         , "", false, false},
+        {0x0000, 0x0000, "saveRegs"         , "", false, false},
+        {0x0000, 0x0000, "copyBytes"        , "", false, false},
+        {0x0000, 0x0000, "copyWords"        , "", false, false},
+        {0x0000, 0x0000, "copyLoaderImages" , "", false, false},
+        {0x0000, 0x0000, "resetVars"        , "", false, false},
+        {0x0000, 0x0000, "absolute"         , "", false, false},
+        {0x0000, 0x0000, "sign"             , "", false, false},
+        {0x0000, 0x0000, "integerMin"       , "", false, false},
+        {0x0000, 0x0000, "integerMax"       , "", false, false},
+        {0x0000, 0x0000, "integerClamp"     , "", false, false},
         {0x0000, 0x0000, "power16bit"       , "", false, false},
         {0x0000, 0x0000, "power16bitExt"    , "", false, false},
         {0x0000, 0x0000, "multiply16bit"    , "", false, false},
@@ -63,23 +86,33 @@ namespace Linker
         {0x0000, 0x0000, "setArrayInt16Low" , "", false, false},
         {0x0000, 0x0000, "getArrayInt16High", "", false, false},
         {0x0000, 0x0000, "setArrayInt16High", "", false, false},
+        {0x0000, 0x0000, "readIntVar"       , "", false, false},
+        {0x0000, 0x0000, "readStrVar"       , "", false, false},
         {0x0000, 0x0000, "gotoNumericLabel" , "", false, false},
         {0x0000, 0x0000, "gosubNumericLabel", "", false, false},
         {0x0000, 0x0000, "scanlineMode"     , "", false, false},
-        {0x0000, 0x0000, "waitVBlanks"      , "", false, false},
         {0x0000, 0x0000, "waitVBlank"       , "", false, false},
+        {0x0000, 0x0000, "waitVBlanks"      , "", false, false},
+        {0x0000, 0x0000, "resetVideoFlags"  , "", false, false},
         {0x0000, 0x0000, "resetVideoTable"  , "", false, false},
         {0x0000, 0x0000, "initClearFuncs"   , "", false, false},
         {0x0000, 0x0000, "clearScreen"      , "", false, false},
+        {0x0000, 0x0000, "clearRect"        , "", false, false},
+        {0x0000, 0x0000, "clearLine"        , "", false, false},
         {0x0000, 0x0000, "clearVertBlinds"  , "", false, false},
-        {0x0000, 0x0000, "clearRVertBlinds" , "", false, false},
         {0x0000, 0x0000, "clearCursorRow"   , "", false, false},
+        {0x0000, 0x0000, "readPixel"        , "", false, false},
+        {0x0000, 0x0000, "drawPixel"        , "", false, false},
         {0x0000, 0x0000, "drawHLine"        , "", false, false},
         {0x0000, 0x0000, "drawVLine"        , "", false, false},
         {0x0000, 0x0000, "drawLine"         , "", false, false},
         {0x0000, 0x0000, "drawLineExt"      , "", false, false},
         {0x0000, 0x0000, "drawLineLoop"     , "", false, false},
         {0x0000, 0x0000, "drawLineLoadXY"   , "", false, false},
+        {0x0000, 0x0000, "drawLineSlow"     , "", false, false},
+        {0x0000, 0x0000, "drawLineSlowExt"  , "", false, false},
+        {0x0000, 0x0000, "drawLineSlowLoop" , "", false, false},
+        {0x0000, 0x0000, "drawLineSlowSwap" , "", false, false},
         {0x0000, 0x0000, "drawVTLine"       , "", false, false},
         {0x0000, 0x0000, "drawVTLineExt"    , "", false, false},
         {0x0000, 0x0000, "drawVTLineLoop"   , "", false, false},
@@ -91,10 +124,31 @@ namespace Linker
         {0x0000, 0x0000, "drawRect"         , "", false, false},
         {0x0000, 0x0000, "drawRectF"        , "", false, false},
         {0x0000, 0x0000, "drawPoly"         , "", false, false},
+        {0x0000, 0x0000, "drawPolyRel"      , "", false, false},
+        {0x0000, 0x0000, "setPolyRelFlipX"  , "", false, false},
+        {0x0000, 0x0000, "setPolyRelFlipY"  , "", false, false},
         {0x0000, 0x0000, "atLineCursor"     , "", false, false},
-        {0x0000, 0x0000, "resetAudio"       , "", false, false},
+        {0x0000, 0x0000, "drawSprite_"      , "", false, false},
+        {0x0000, 0x0000, "drawSprite"       , "", false, false},
+        {0x0000, 0x0000, "drawSpriteX"      , "", false, false},
+        {0x0000, 0x0000, "drawSpriteY"      , "", false, false},
+        {0x0000, 0x0000, "drawSpriteXY"     , "", false, false},
+        {0x0000, 0x0000, "getSpriteLUT"     , "", false, false},
+        {0x0000, 0x0000, "setMidiStream"    , "", false, false},
+        {0x0000, 0x0000, "resetMidi"        , "", false, false},
         {0x0000, 0x0000, "playMidi"         , "", false, false},
+        {0x0000, 0x0000, "playMidiVol"      , "", false, false},
         {0x0000, 0x0000, "midiStartNote"    , "", false, false},
+        {0x0000, 0x0000, "midiGetNote"      , "", false, false},
+        {0x0000, 0x0000, "resetMusic"       , "", false, false},
+        {0x0000, 0x0000, "playMusic"        , "", false, false},
+        {0x0000, 0x0000, "musicGetNote"     , "", false, false},
+        {0x0000, 0x0000, "musicPlayNote"    , "", false, false},
+        {0x0000, 0x0000, "soundAllOff"      , "", false, false},
+        {0x0000, 0x0000, "soundOff"         , "", false, false},
+        {0x0000, 0x0000, "soundOn"          , "", false, false},
+        {0x0000, 0x0000, "soundOnV"         , "", false, false},
+        {0x0000, 0x0000, "soundMod"         , "", false, false},
         {0x0000, 0x0000, "input"            , "", false, false},
         {0x0000, 0x0000, "inputExt1"        , "", false, false},
         {0x0000, 0x0000, "inputExt2"        , "", false, false},
@@ -111,27 +165,46 @@ namespace Linker
         {0x0000, 0x0000, "printLeft"        , "", false, false},
         {0x0000, 0x0000, "printRight"       , "", false, false},
         {0x0000, 0x0000, "printMid"         , "", false, false},
+        {0x0000, 0x0000, "printLower"       , "", false, false},
+        {0x0000, 0x0000, "printUpper"       , "", false, false},
         {0x0000, 0x0000, "printDigit"       , "", false, false},
         {0x0000, 0x0000, "printInt16"       , "", false, false},
         {0x0000, 0x0000, "printChr"         , "", false, false},
         {0x0000, 0x0000, "printChar"        , "", false, false},
-        {0x0000, 0x0000, "printHexByte"     , "", false, false},
-        {0x0000, 0x0000, "printHexWord"     , "", false, false},
+        {0x0000, 0x0000, "printClip"        , "", false, false},
+        {0x0000, 0x0000, "printHex"         , "", false, false},
+        {0x0000, 0x0000, "printSpc"         , "", false, false},
         {0x0000, 0x0000, "atTextCursor"     , "", false, false},
         {0x0000, 0x0000, "newLineScroll"    , "", false, false},
+        {0x0000, 0x0000, "integerStr"       , "", false, false},
         {0x0000, 0x0000, "stringChr"        , "", false, false},
+        {0x0000, 0x0000, "stringSpc"        , "", false, false},
         {0x0000, 0x0000, "stringHex"        , "", false, false},
-        {0x0000, 0x0000, "stringHexw"       , "", false, false},
-        {0x0000, 0x0000, "createHex"        , "", false, false},
         {0x0000, 0x0000, "stringCopy"       , "", false, false},
+        {0x0000, 0x0000, "stringCmp"        , "", false, false},
         {0x0000, 0x0000, "stringAdd"        , "", false, false},
         {0x0000, 0x0000, "stringConcat"     , "", false, false},
-        {0x0000, 0x0000, "stringMid"        , "", false, false},
+        {0x0000, 0x0000, "stringConcatLut"  , "", false, false},
         {0x0000, 0x0000, "stringLeft"       , "", false, false},
         {0x0000, 0x0000, "stringRight"      , "", false, false},
-        {0x0000, 0x0000, "integerStr"       , "", false, false},
+        {0x0000, 0x0000, "stringMid"        , "", false, false},
+        {0x0000, 0x0000, "stringLower"      , "", false, false},
+        {0x0000, 0x0000, "stringUpper"      , "", false, false},
+        {0x0000, 0x0000, "stringDigit"      , "", false, false},
+        {0x0000, 0x0000, "stringInt"        , "", false, false},
+        {0x0000, 0x0000, "tickTime"         , "", false, false},
+        {0x0000, 0x0000, "handleTime"       , "", false, false},
+        {0x0000, 0x0000, "timeDigits"       , "", false, false},
+        {0x0000, 0x0000, "timeString"       , "", false, false},
+        {0x0000, 0x0000, "bcdAdd"           , "", false, false},
+        {0x0000, 0x0000, "bcdSub"           , "", false, false},
+        {0x0000, 0x0000, "bcdInt"           , "", false, false},
+        {0x0000, 0x0000, "bcdDigits"        , "", false, false},
+        {0x0000, 0x0000, "bcdCmp"           , "", false, false},
+        {0x0000, 0x0000, "bcdCmpExt"        , "", false, false},
+        {0x0000, 0x0000, "bcdCpy"           , "", false, false},
     };
-    const std::vector<std::string> _subIncludes = 
+    std::vector<std::string> _subIncludesROMv1 =
     {
         "math.i"        ,
         "memory.i"      ,
@@ -144,28 +217,189 @@ namespace Linker
         "print_text.i"  ,
         "string.i"      ,
         "numeric.i"     ,
+        "time.i"        ,
     };
-    const std::vector<std::string> _subIncludesCALLI = 
+    std::vector<std::string> _subIncludesROMv2 = 
     {
-        "math_CALLI.i"        ,
-        "memory_CALLI.i"      ,
-        "flow_control_CALLI.i",
-        "clear_screen_CALLI.i",
-        "conv_conds_CALLI.i"  ,
-        "graphics_CALLI.i"    ,
-        "audio_CALLI.i"       ,
-        "input_CALLI.i"       ,
-        "print_text_CALLI.i"  ,
-        "string_CALLI.i"      ,
-        "numeric_CALLI.i"     ,
+        "math.i"              ,
+        "memory.i"            ,
+        "flow_control.i"      ,
+        "clear_screen_ROMv2.i",
+        "conv_conds.i"        ,
+        "graphics_ROMv2.i"    ,
+        "audio.i"             ,
+        "input.i"             ,
+        "print_text_ROMv2.i"  ,
+        "string.i"            ,
+        "numeric.i"           ,
+        "time.i"              ,
+    };
+    std::vector<std::string> _subIncludesROMv3 =
+    {
+        "math.i"              ,
+        "memory.i"            ,
+        "flow_control.i"      ,
+        "clear_screen_ROMv2.i",
+        "conv_conds.i"        ,
+        "graphics_ROMv2.i"    ,
+        "sprite_ROMv3.i"      ,
+        "audio.i"             ,
+        "input.i"             ,
+        "print_text_ROMv3.i"  ,
+        "string.i"            ,
+        "numeric.i"           ,
+        "time.i"              ,
+    };
+    std::vector<std::string> _subIncludesROMv4 =
+    {
+        "math.i"              ,
+        "memory.i"            ,
+        "flow_control.i"      ,
+        "clear_screen_ROMv2.i",
+        "conv_conds.i"        ,
+        "graphics_ROMv2.i"    ,
+        "sprite_ROMv3.i"      ,
+        "audio.i"             ,
+        "input.i"             ,
+        "print_text_ROMv3.i"  ,
+        "numeric.i"           ,
+        "time.i"              ,
+    };
+    std::vector<std::string> _subIncludesROMv5a =
+    {
+        "math_ROMv5a.i"        ,
+        "memory_ROMv5a.i"      ,
+        "flow_control_ROMv5a.i",
+        "clear_screen_ROMv5a.i",
+        "conv_conds_ROMv5a.i"  ,
+        "graphics_ROMv5a.i"    ,
+        "sprite_ROMv5a.i"      ,
+        "audio_ROMv5a.i"       ,
+        "input_ROMv5a.i"       ,
+        "print_text_ROMv5a.i"  ,
+        "string_ROMv5a.i"      ,
+        "numeric_ROMv5a.i"     ,
+        "time_ROMv5a.i"        ,
     };
 
+
+    bool getInternalSub(const std::string& name, Compiler::InternalSub& internalSub)
+    {
+        for(int i=0; i<int(_internalSubs.size()); i++)
+        {
+            if(_internalSubs[i]._name == name)
+            {
+                internalSub = _internalSubs[i];
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool setInternalSub(const std::string& name, const Compiler::InternalSub& internalSub)
+    {
+        for(int i=0; i<int(_internalSubs.size()); i++)
+        {
+            if(_internalSubs[i]._name == name)
+            {
+                _internalSubs[i] = internalSub;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool setInternalSubToLoad(const std::string& name)
+    {
+        for(int i=0; i<int(_internalSubs.size()); i++)
+        {
+            if(_internalSubs[i]._name == name)
+            {
+                _internalSubs[i]._inUse = true;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+    void resetIncludeFiles(void)
+    {
+        _subIncludeFiles.clear();
+    }
+
+    void reset(void)
+    {
+        resetIncludeFiles();
+
+        _internalSubMap.clear();
+
+        for(int i=0; i<int(_internalSubs.size()); i++)
+        {
+            _internalSubs[i]._size = 0;
+            _internalSubs[i]._address = 0;
+            _internalSubs[i]._includeName = "";
+            _internalSubs[i]._loaded = false;
+            _internalSubs[i]._inUse = false;
+        }
+    }
 
     bool initialise(void)
     {
         return true;
     }
 
+
+    bool enableFontLinking(void)
+    {
+        resetIncludeFiles();
+
+        for(int i=0; i<int(_subIncludesROMv3.size()); i++)
+        {
+            size_t textPos = _subIncludesROMv3[i].find("text");
+            if(textPos != std::string::npos)
+            {
+                _subIncludesROMv3[i].replace(textPos, 4, "font");
+            }
+        }
+
+        for(int i=0; i<int(_subIncludesROMv5a.size()); i++)
+        {
+            size_t textPos = _subIncludesROMv5a[i].find("text");
+            if(textPos != std::string::npos)
+            {
+                _subIncludesROMv5a[i].replace(textPos, 4, "font");
+            }
+        }
+
+        return parseIncludes();
+    }
+
+    bool disableFontLinking(void)
+    {
+        for(int i=0; i<int(_subIncludesROMv3.size()); i++)
+        {
+            size_t textPos = _subIncludesROMv3[i].find("font");
+            if(textPos != std::string::npos)
+            {
+                _subIncludesROMv3[i].replace(textPos, 4, "text");
+            }
+        }
+
+        for(int i=0; i<int(_subIncludesROMv5a.size()); i++)
+        {
+            size_t textPos = _subIncludesROMv5a[i].find("font");
+            if(textPos != std::string::npos)
+            {
+                _subIncludesROMv5a[i].replace(textPos, 4, "text");
+            }
+        }
+
+        return true;
+    }
 
     bool findSub(const std::vector<std::string>& tokens, const std::string& subName)
     {
@@ -206,10 +440,9 @@ namespace Linker
             {
                 for(int j=0; j<int(tokens.size()); j++)
                 {
-                    std::string token = tokens[j];
                     if(tokens[j].find_first_of(";#") != std::string::npos) break;
-                    int size = Assembler::getAsmOpcodeSize(token);
-                    vasmSize += (size == 0) ? Compiler::getMacroSize(token) : size;
+                    int size = Assembler::getAsmOpcodeSize(tokens[j]);
+                    vasmSize += (size == 0) ? Compiler::getMacroSize(tokens[j]) : size;
                 }
             }
 
@@ -306,27 +539,15 @@ namespace Linker
         return false;
     }
 
+    // Marks internal sub to be loaded later
     bool loadInternalSub(int subIndex, bool overwrite=false)
     {
         if(!overwrite  &&  _internalSubs[subIndex]._address) return false;
+        _internalSubMap[subIndex] = _internalSubs[subIndex]._size;
 
-        uint16_t address;
-        if(Memory::getNextCodeAddress(Memory::FitDescending, Compiler::getRuntimeStart(),  _internalSubs[subIndex]._size, address))
-        {
-            Memory::takeFreeRAM(address, _internalSubs[subIndex]._size, true);
-
-            // Save end of runtime/strings
-            if(address < Compiler::getRuntimeEnd()) Compiler::setRuntimeEnd(address);
-
-            fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes\n", _internalSubs[subIndex]._name.c_str(), address, _internalSubs[subIndex]._size);
-
-            _internalSubs[subIndex]._address = address;
-            _internalSubs[subIndex]._inUse = true;
-            return true;
-        }
-
-        fprintf(stderr, "Linker::loadInternalSub() : Not enough RAM for %s of size %d\n", _internalSubs[subIndex]._name.c_str(), _internalSubs[subIndex]._size);
-        return false;
+        _internalSubs[subIndex]._address = 0xFFFF;
+        _internalSubs[subIndex]._inUse = true;
+        return true;
     }
 
     bool loadInclude(const std::string& filename)
@@ -334,8 +555,7 @@ namespace Linker
         // Include file already loaded
         if(_subIncludeFiles.find(filename) != _subIncludeFiles.end()) return true;
 
-        std::string path = Assembler::getIncludePath() + "/include/";
-        std::ifstream infile(path + filename);
+        std::ifstream infile(Assembler::getIncludePath() + "/" + filename);
         if(!infile.is_open())
         {
             fprintf(stderr, "Linker::loadInclude() : Failed to open file : '%s'\n", filename.c_str());
@@ -367,33 +587,78 @@ namespace Linker
     bool parseIncludes(void)
     {
         // Load include files into memory
-        for(int i=0; i<int(_subIncludes.size()); i++)
+        if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
         {
-            if(!Assembler::getUseOpcodeCALLI())
+            for(int i=0; i<int(_subIncludesROMv5a.size()); i++)
             {
-                if(!loadInclude(_subIncludes[i])) return false;
+                if(!loadInclude(_subIncludesROMv5a[i])) return false;
             }
-            else
+        }
+        else if(Compiler::getCodeRomType() >= Cpu::ROMv4)
+        {
+            for(int i=0; i<int(_subIncludesROMv4.size()); i++)
             {
-                if(!loadInclude(_subIncludesCALLI[i])) return false;
+                if(!loadInclude(_subIncludesROMv4[i])) return false;
+            }
+        }
+        else if(Compiler::getCodeRomType() >= Cpu::ROMv3)
+        {
+            for(int i=0; i<int(_subIncludesROMv3.size()); i++)
+            {
+                if(!loadInclude(_subIncludesROMv3[i])) return false;
+            }
+        }
+        else if(Compiler::getCodeRomType() >= Cpu::ROMv2)
+        {
+            for(int i=0; i<int(_subIncludesROMv2.size()); i++)
+            {
+                if(!loadInclude(_subIncludesROMv2[i])) return false;
+            }
+        }
+        else
+        {
+            for(int i=0; i<int(_subIncludesROMv1.size()); i++)
+            {
+                if(!loadInclude(_subIncludesROMv1[i])) return false;
             }
         }
 
         // Parse loaded includes
         for(int i=0; i<int(_internalSubs.size()); i++)
         {
-            if(!Assembler::getUseOpcodeCALLI())
+            if(Compiler::getCodeRomType() >= Cpu::ROMv5a)
             {
-                for(int j=0; j<int(_subIncludes.size()); j++)
+                for(int j=0; j<int(_subIncludesROMv5a.size()); j++)
                 {
-                    if(getIncludeSubSize(_subIncludes[j], i)) break;
+                    if(getIncludeSubSize(_subIncludesROMv5a[j], i)) break;
                 }
             }
-            else
+            else if(Compiler::getCodeRomType() >= Cpu::ROMv4)
             {
-                for(int j=0; j<int(_subIncludesCALLI.size()); j++)
+                for(int j=0; j<int(_subIncludesROMv4.size()); j++)
                 {
-                    if(getIncludeSubSize(_subIncludesCALLI[j], i)) break;
+                    if(getIncludeSubSize(_subIncludesROMv4[j], i)) break;
+                }
+            }
+            else if(Compiler::getCodeRomType() >= Cpu::ROMv3)
+            {
+                for(int j=0; j<int(_subIncludesROMv3.size()); j++)
+                {
+                    if(getIncludeSubSize(_subIncludesROMv3[j], i)) break;
+                }
+            }
+            else if(Compiler::getCodeRomType() >= Cpu::ROMv2)
+            {
+                for(int j=0; j<int(_subIncludesROMv2.size()); j++)
+                {
+                    if(getIncludeSubSize(_subIncludesROMv2[j], i)) break;
+                }
+            }
+            else if(Compiler::getCodeRomType() >= Cpu::ROMv1)
+            {
+                for(int j=0; j<int(_subIncludesROMv1.size()); j++)
+                {
+                    if(getIncludeSubSize(_subIncludesROMv1[j], i)) break;
                 }
             }
         }
@@ -403,12 +668,14 @@ namespace Linker
 
     bool linkInternalSubs(void)
     {
-        fprintf(stderr, "\n**********************************************\n");
-        fprintf(stderr, "*                   Linking                   \n");
-        fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "*        Name          : Address :    Size    \n");
-        fprintf(stderr, "**********************************************\n");
-        
+        fprintf(stderr, "\n*******************************************************\n");
+        fprintf(stderr, "*                      Linking                         \n");
+        fprintf(stderr, "*******************************************************\n");
+        fprintf(stderr, "*        Name          : Address :    Size             \n");
+        fprintf(stderr, "*******************************************************\n");
+
+        Assembler::clearDefines();
+
         for(int i=0; i<int(Compiler::getCodeLines().size()); i++)
         {
             // Valid BASIC code
@@ -420,15 +687,46 @@ namespace Linker
                     std::vector<std::string> tokens = Expression::tokenise(Compiler::getCodeLines()[i]._vasm[j]._code, ' ');
                     for(int k=0; k<int(tokens.size()); k++) Expression::stripWhitespace(tokens[k]);
 
+                    // Handle %define, %if, %else and %endif
+                    if(tokens.size())
+                    {
+                        std::string token = Expression::strUpper(tokens[0]);
+                        if(token == "%DEFINE")
+                        {
+                            // Create define
+                            if(!Assembler::createDefine(Compiler::getCodeLines()[i]._text, tokens, i)) return false;
+                            continue;
+                        }
+                        else if(token == "%IF")
+                        {
+                            if(!Assembler::handleIfDefine(Compiler::getCodeLines()[i]._text, tokens, i)) return false;
+                            continue;
+                        }
+                        else if(token == "%ENDIF")
+                        {
+                            if(!Assembler::handleEndIfDefine(Compiler::getCodeLines()[i]._text, tokens, i)) return false;
+                            continue;
+                        }
+                        else if(token == "%ELSE")
+                        {
+                            if(!Assembler::handleElseDefine(Compiler::getCodeLines()[i]._text, tokens, i)) return false;
+                            continue;
+                        }
+                    }
+
+                    // If current define exists and is disabled, then skip current line
+                    if(Assembler::isCurrentDefineDisabled()) continue;
+
+                    // Check for internal subs in code and macros
                     for(int k=0; k<int(_internalSubs.size()); k++)
                     {
-                        // Check for internal subs in code
+                        // Code
                         if(findSub(tokens, _internalSubs[k]._name))
                         {
                             loadInternalSub(k);
                         }
 
-                        // Check for internal subs in macros, (even nested)
+                        // Macros, (even nested)
                         std::string opcode = Compiler::getCodeLines()[i]._vasm[j]._opcode;
                         if(opcode.size()  &&  opcode[0] == '%')
                         {
@@ -458,7 +756,8 @@ RESTART_COLLECTION:
                 Compiler::getRuntime().push_back("\n");
                 std::vector<std::string> code;
 
-                if(getInternalSubCode(_internalSubs[i]._includeName, includeVarsDone, code, i)) goto RESTART_COLLECTION; // this is a BASIC compiler, it can't possibly work without at least one GOTO
+                // This is a BASIC compiler, it can't possibly work without at least one GOTO
+                if(getInternalSubCode(_internalSubs[i]._includeName, includeVarsDone, code, i)) goto RESTART_COLLECTION;
 
                 includeVarsDone.push_back(_internalSubs[i]._includeName);
 
@@ -486,13 +785,41 @@ RESTART_COLLECTION:
             if(_internalSubs[i]._inUse  &&  _internalSubs[i]._loaded  &&  _internalSubs[i]._address) runtimeSize += _internalSubs[i]._size;
         }
 
-        fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "*                 Re-Linking                  \n");
-        fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "*    Start     :    End       :       Size    \n");
-        fprintf(stderr, "**********************************************\n");
-        fprintf(stderr, "*    0x%04x    :    0x%04x    :    %5d bytes\n", Compiler::getRuntimeStart() & (Memory::getSizeRAM() - 1), Compiler::getRuntimeEnd(), runtimeSize);
-        fprintf(stderr, "**********************************************\n");
+        // Copy map to vector
+        std::vector<SubIndexSize> internalSubs;
+        std::copy(_internalSubMap.begin(), _internalSubMap.end(), std::back_inserter<std::vector<SubIndexSize>>(internalSubs));
+        
+        // Sort vector, (prioritise by sub size)
+        std::sort(internalSubs.begin(), internalSubs.end(), [](const SubIndexSize& a, const SubIndexSize& b)
+        {
+            if(a.second != b.second) return (a.second > b.second);
+            return (a.first < b.first);
+        });
+
+        // Allocate memory for runtime
+        for(auto it=internalSubs.begin(); it!=internalSubs.end(); ++it)
+        {
+            uint16_t address;
+            if(Memory::getNextCodeAddress(Memory::FitDescending, Compiler::getRuntimeStart(),  _internalSubs[it->first]._size, address))
+            {
+                Memory::takeFreeRAM(address, _internalSubs[it->first]._size, true);
+
+                // Save end of runtime/strings
+                if(address < Compiler::getRuntimeEnd()) Compiler::setRuntimeEnd(address);
+
+                fprintf(stderr, "* %-20s : 0x%04x  :    %2d bytes\n", _internalSubs[it->first]._name.c_str(), address, _internalSubs[it->first]._size);
+
+                _internalSubs[it->first]._address = address;
+            }
+        }
+
+        fprintf(stderr, "*******************************************************\n");
+        fprintf(stderr, "*                     Re-Linking                       \n");
+        fprintf(stderr, "*******************************************************\n");
+        fprintf(stderr, "*      Start           :  End    :    Size             \n");
+        fprintf(stderr, "*******************************************************\n");
+        fprintf(stderr, "*      0x%04x          : 0x%04x  : %5d bytes           \n", Compiler::getRuntimeStart() & (Memory::getSizeRAM() - 1), Compiler::getRuntimeEnd(), runtimeSize);
+        fprintf(stderr, "*******************************************************\n");
     }
 
     void outputInternalSubs(void)
@@ -513,42 +840,29 @@ RESTART_COLLECTION:
             }
         }
 
-        // Zero page call table is not needed when using CALLI
-        if(!Assembler::getUseOpcodeCALLI())
+        // Zero page call table is not needed when using ROMv5a and higher
+        if(Compiler::getCodeRomType() < Cpu::ROMv5a)
         {
-            if(_internalSubs[0]._inUse) {Compiler::getOutput().push_back("realTimeProcAddr" + std::string(LABEL_TRUNC_SIZE - strlen("realTimeProcAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(REAL_TIME_PROC) + "\n");}
+            // Convert relational operators
+            {Compiler::getOutput().push_back("convertEqOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertEqOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_CC_OPS + 0)  + "\n");}
+            {Compiler::getOutput().push_back("convertNeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertNeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_CC_OPS + 2)  + "\n");}
+            {Compiler::getOutput().push_back("convertLeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertLeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_CC_OPS + 4)  + "\n");}
+            {Compiler::getOutput().push_back("convertGeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertGeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_CC_OPS + 6)  + "\n");}
+            {Compiler::getOutput().push_back("convertLtOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertLtOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_CC_OPS + 8)  + "\n");}
+            {Compiler::getOutput().push_back("convertGtOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertGtOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_CC_OPS + 10) + "\n");}
 
-            uint16_t convertCcOpsAddr = CONVERT_CC_OPS;
-            if(_internalSubs[1]._inUse) {Compiler::getOutput().push_back("convertEqOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertEqOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[2]._inUse) {Compiler::getOutput().push_back("convertNeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertNeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[3]._inUse) {Compiler::getOutput().push_back("convertLeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertLeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[4]._inUse) {Compiler::getOutput().push_back("convertGeOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertGeOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[5]._inUse) {Compiler::getOutput().push_back("convertLtOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertLtOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
-            if(_internalSubs[6]._inUse) {Compiler::getOutput().push_back("convertGtOpAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convertGtOpAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(convertCcOpsAddr) + "\n"); convertCcOpsAddr += 2;}
+            // Get array address
+            {Compiler::getOutput().push_back("convert8Arr2dAddr"  + std::string(LABEL_TRUNC_SIZE - strlen("convert8Arr2dAddr"), ' ')  + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_ARRAY + 0) + "\n");}
+            {Compiler::getOutput().push_back("convert8Arr3dAddr"  + std::string(LABEL_TRUNC_SIZE - strlen("convert8Arr3dAddr"), ' ')  + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_ARRAY + 2) + "\n");}
+            {Compiler::getOutput().push_back("convert16Arr2dAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convert16Arr2dAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_ARRAY + 4) + "\n");}
+            {Compiler::getOutput().push_back("convert16Arr3dAddr" + std::string(LABEL_TRUNC_SIZE - strlen("convert16Arr3dAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(CONVERT_ARRAY + 6) + "\n");}
+
+            // Real time proc
+            {Compiler::getOutput().push_back("realTimeStubAddr" + std::string(LABEL_TRUNC_SIZE - strlen("realTimeStubAddr"), ' ') + "EQU" + std::string(9 - sizeof("EQU"), ' ') + Expression::wordToHexString(REAL_TIME_PROC) + "\n");}
         }
 
         Compiler::getOutput().push_back("\n");
 
         for(int i=0; i<int(Compiler::getRuntime().size()); i++) Compiler::getOutput().push_back(Compiler::getRuntime()[i]);
-    }
-
-
-    void resetIncludeFiles(void)
-    {
-        _subIncludeFiles.clear();
-    }
-
-    void resetInternalSubs(void)
-    {
-        for(int i=0; i<int(_internalSubs.size()); i++)
-        {
-            _internalSubs[i]._size = 0;
-            _internalSubs[i]._address = 0;
-            _internalSubs[i]._includeName = "";
-            _internalSubs[i]._loaded = false;
-
-            // RealTimeProc macro and relational init macros are always loaded
-            (i>=0  && i<7) ? _internalSubs[i]._inUse = true : _internalSubs[i]._inUse = false;
-        }
     }
 }

@@ -116,7 +116,7 @@ class Program:
       if word in ['gcl0x']:
         self.version = word
       else:
-        self.error('(%s) Invalid GCL version' % word)
+        self.error('Invalid GCL version')
     elif word == 'def':       self.emitDef()
     elif word == 'do':        self.loops[self.thisBlock()] = self.vPC
     elif word == 'loop':      self.emitLoop()
@@ -179,7 +179,7 @@ class Program:
             # XXX Deprecate in gcl1, replace with i!!
             self.emitOp('SYS'); con = self.sysTicks(con);self.depr('i!', 'i!!')
           else:
-            self.emitOp('CALLI_DEVROM').emit(lo(con)); con = hi(con)
+            self.emitOp('CALLI_v5').emit(lo(con)); con = hi(con)
         elif op == '?':    self.emitOp('LUP');          #self.depr('i?', 'i??')
         elif op == '??':   self.emitOp('LUP')
         elif op == '# ':   self.emitOp(con); con = None # Silent truncation
@@ -514,10 +514,10 @@ class Program:
     self.warning('%s is deprecated, please use %s' % (old, new))
 
   def warning(self, message):
-    print(self.prefix('Warning'), message)
+    highlight(self.prefix('Warning'), message)
 
   def error(self, message):
-    print(self.prefix('Error'), message)
+    highlight(self.prefix('Error'), message)
     sys.exit(1)
 
   def prefix(self, prefix):

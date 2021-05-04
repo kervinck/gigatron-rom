@@ -1,0 +1,48 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
+
+a=0 : b=0 : p=256+252 : cls : z=2 : d=0 : gosub 198
+
+2 k=get("BUTTON_STATE")
+3 if k &> 126 then goto &2
+4 d = 30
+5 gosub 1000
+6 gosub 100
+7 goto &2
+
+100 for c=1 to 4 : p=(c LSL 8)+252 : poke p-1,z : poke p,a : poke p+1,b : next c
+    set SOUND_TIMER,d
+    return
+
+198 print " 2 3   5 6 7   9 0"
+199 print "Q W E R T Y U I O P"
+200 gosub 100
+204 at 2,24:print "Z: ";
+205 on z goto 206,207,208,209
+206 print "Metallic";:return
+207 print "Triangle";:return
+208 print "Pulse   ";:return
+209 print "Sawtooth";:return
+
+1000 if k &= 113 then a=73 :b=8 :return:'C
+     if k &= 50  then a=11 :b=9 :return:'C#
+     if k &= 119 then a=80 :b=9 :return:'D
+     if k &= 51  then a=25 :b=10:return:'D#
+     if k &= 101 then a=103:b=10:return:'E
+     if k &= 114 then a=57 :b=11:return:'F
+     if k &= 53  then a=16 :b=12:return:'F#
+     if k &= 116 then a=108:b=12:return:'G
+     if k &= 54  then a=78 :b=13:return:'G#
+     if k &= 121 then a=53 :b=14:return:'A
+     if k &= 55  then a=35 :b=15:return:'A#
+     if k &= 117 then a=23 :b=16:return:'B
+     if k &= 105 then a=19 :b=17:return:'C
+     if k &= 57  then a=21 :b=18:return:'C#
+     if k &= 111 then a=31 :b=19:return:'D
+     if k &= 48  then a=50 :b=20:return:'D#
+     if k &= 112 then a=77 :b=21:return:'E
+     if k &= 122 then set BUTTON_STATE,&hFF : z=(z+1)AND3 : a=0 : b=0 : d=0 : goto 200
+     a=0 : b=0 : d=0 : return

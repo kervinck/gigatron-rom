@@ -13,9 +13,9 @@ namespace Terminal
 {
     void initialise(void);
 
+    void switchToTerminal(void);
     void scrollToEnd(void);
-    void handleTerminalInput(void);
-
+    
     void process(void);
 }
 

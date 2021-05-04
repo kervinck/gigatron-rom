@@ -1,0 +1,65 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv1
+
+cls
+
+a = 3
+b = 3
+c = 3
+d = a**b**c
+e = 2
+f = 7
+
+a = -3
+b = 2000
+c = -19000
+d = 0
+print abs(a);" ";sgn(a);" ";abs(b);" ";sgn(b);" ";abs(c);" ";sgn(c);" ";abs(d);" ";sgn(d)
+
+if sgn(c) &= 1
+    print sgn(c)
+endif    
+
+print a**b;" ";0**a;" ";1**b;" ";a**0;" ";a**1;" ";a**2;" ";a**c;" ";d
+print e**f
+
+g = -6400
+
+h = g ASR 1
+i = g LSR 1
+print h;" ";i
+h = g ASR 2
+i = g LSR 2
+print h;" ";i
+h = g ASR 3
+i = g LSR 3
+print h;" ";i
+h = g ASR 4
+i = g LSR 4
+print h;" ";i
+h = g ASR 5
+i = g LSR 5
+print h;" ";i
+h = g ASR 6
+i = g LSR 6
+print h;" ";i
+h = g ASR 7
+i = g LSR 7
+print h;" ";i
+h = g ASR 8
+i = g LSR 8
+print h;" ";i
+
+x = e
+y = f
+r = 1
+repeat 
+    if (y AND 1) &&<> 0 then r = r * x 
+
+    x = x * x
+    y = y LSR 1
+until y &&= 0 
+
+print r
+
+end

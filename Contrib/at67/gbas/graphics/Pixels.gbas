@@ -1,0 +1,14 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv2
+
+cls : mode 2
+
+loop:
+    ' fast 0 - 159 and 0 - 119, emulates shaped noise not a true white noise
+    x = (rnd(0) AND &h7F) + (rnd(0) AND &h1F) + (rnd(0) AND &h01)
+    y = (rnd(0) AND &h3F) + (rnd(0) AND &h1F) + (rnd(0) AND &h0F) + (rnd(0) AND &h07) + (rnd(0) AND &h03)
+    ' c = peek(((y + 8) LSL 8) + x)
+    pset x, y, rnd(0) AND &h3F
+goto &loop
+
+end

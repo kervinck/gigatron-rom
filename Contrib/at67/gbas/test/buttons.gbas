@@ -1,0 +1,54 @@
+_runtimePath_ "../runtime"
+_runtimeStart_ &h7FFF
+_codeRomType_ ROMv2
+
+mode 2: cls
+
+f = 'A'
+f = 0
+kk = 255
+repeat
+    wait
+    k = get("SERIAL_RAW")
+    if k &&<> 255
+        gosub handleInput
+    endif
+    kk = k
+    inc f
+forever
+
+
+'repeat delay and auto repeat
+handleInput:
+    if k &&<> kk
+        f = 0
+        gosub k
+    endif
+    if f &&> 20
+        if &((f LSR 1) AND 1)
+            gosub k
+        endif
+    endif
+return
+
+
+127:    print "A"
+        return
+
+191:    print "B"
+        return
+
+10:     print "Enter"
+        return
+
+254:    print "Right"
+        return
+
+253:    print "Left"
+        return
+     
+251:    print "Down"
+        return
+
+247:    print "Up"
+        return

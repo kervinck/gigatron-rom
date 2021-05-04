@@ -1,0 +1,11 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv2
+
+cls : mode 2
+
+loop: 
+    set FG_COLOUR, rnd(0) AND &h3F
+    circlef rnd(100) + (- 50 + 80), rnd(60) + (- 30 + 60), rnd(30) + 1
+    goto &loop
+
+end
