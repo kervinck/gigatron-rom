@@ -69,9 +69,10 @@ $ff7f Mask=
 
 [ do
     [ do
-        \serialRaw, data=  
+        \serialRaw, data= { Read serial data }
+        $ff _serialRaw= { Reset to the sentinal value }
         { Is there a byte? }
-        $ff^ [if<>0  { yes } data Push! loop ] ]
+        data $ff^ [if<>0  { yes } data Push! loop ] ]
     WriteOut!
   loop ]
 

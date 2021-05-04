@@ -22,9 +22,21 @@ The main usecase is to enable unit-testing of Gigatron code for a better develop
 
 This usually follows a normal Arrange, Act, Assert process, where the arrange phase sets up the emulator state, the act phase runs the emulator, and the assert phase verifies that whatever the code was meant to do has been done, usually by reading the RAM and registers.
 
-TODO: add an example here, possibly testing a SYS function.
+The following is output from pytest when a test fails. The Gigatron program under test is an echo function, that writes to, and then reads from a ring buffer. You can see that it has a bug.
+```
+    def test_write():
+        assert _read_bytes(5) == b"READY"
+        for b in b"Hello":
+            Emulator.send_byte(b)
+>       assert _read_bytes(5) == b"Hello"
+E       AssertionError: assert b'\x00Hell' == b'Hello'
+E         At index 0 diff: b'\x00' != b'H'
+E         Use -v to get the full diff
 
-You can look at the tests in this directory for some ideas, and also my Forth for more - although in Forth I've written a lot of wrappers, so the use may not be so obvious.
+tests\test_io.py:40: AssertionError
+```
+
+You can look at my Forth for more - although in Forth I've written a lot of wrappers, so the use may not be so obvious.
 
 ### Debugging Gigatron code
 
