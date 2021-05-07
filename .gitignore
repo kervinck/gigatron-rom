@@ -24,3 +24,4 @@
 /Contrib/at67/tools/gtmakerom/gtmakerom
 /Contrib/at67/tools/gtsplitrom/gtsplitrom
 .DS_Store
+__pycache__/
