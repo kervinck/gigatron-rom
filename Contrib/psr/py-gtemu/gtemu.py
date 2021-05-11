@@ -58,6 +58,19 @@ class _Emulator:
         with open(path, "rb") as fp:
             fp.readinto(_gtemu.ffi.buffer(ROM))
 
+    def load_rom_from_asm_module(self):
+        """Populates the ROM from the contents of the asm module
+
+        This requires that an assembly script has already been executed.
+        """
+        def gen_rom_data():
+            for opcode, operand in zip(asm._rom0, asm._rom1):
+                yield opcode
+                yield operand
+
+        rom_data = bytearray(gen_rom_data())
+        _gtemu.ffi.buffer(ROM)[0 : len(rom_data)] = rom_data
+
     def reset(self):
         self._state = _gtemu.ffi.new("CpuState *")[0]
         self._last_pc = None

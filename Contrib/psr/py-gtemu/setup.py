@@ -10,7 +10,7 @@ REPO_ROOT = (pathlib.Path(__file__).parent / ".." / ".." / "..").resolve()
 
 setup(
     name="py-gtemu",
-    version="0.1a20201211",
+    version="0.1a20210511",
     setup_requires=["cffi>=1.0.0"],
     cffi_modules=["gtemu_extension_build.py:ffibuilder"],
     install_requires=["cffi>=1.0.0"],
