@@ -48,6 +48,25 @@ def _make_zero_page_accessor(
     )
 
 
+def _to_address(address_or_symbol):
+    """Convert a value that may be an address or a symbol, to an address
+
+    Labels are the most likely symbols we encounter"""
+    from_symbol = asm.symbol(address_or_symbol)
+    if from_symbol is not None:
+        address = from_symbol
+    else:
+        try:
+            address = int(address_or_symbol)
+        except TypeError as e:
+            raise ValueError(
+                f"{address_or_symbol:r} is not a valid address or symbol"
+            ) from e
+    if not (0 <= address < (1 << 16)):
+        raise ValueError(f"{address:x} is out of range for an address")
+    return address
+
+
 class _Emulator:
     """Provides programatic control over the a Gigatron Emulator"""
 
@@ -63,6 +82,7 @@ class _Emulator:
 
         This requires that an assembly script has already been executed.
         """
+
         def gen_rom_data():
             for opcode, operand in zip(asm._rom0, asm._rom1):
                 yield opcode
@@ -127,7 +147,7 @@ class _Emulator:
         """
         # To start from an address, we need to fill the pipeline with the instruction at address
         # and set PC to address + 1.
-        address = asm.symbol(address) or address
+        address = _to_address(address)
         self.PC = address + 1
         self.IR = _gtemu.lib.ROM[address][0]
         self.D = _gtemu.lib.ROM[address][1]
@@ -211,7 +231,7 @@ class _Emulator:
         Will stop at breakpoints if they are hit,
         but always executes at least one cycle
         """
-        address = asm.symbol(address) or address
+        address = _to_address(address)
         iterator = (
             range(max_instructions)
             if max_instructions is not None
