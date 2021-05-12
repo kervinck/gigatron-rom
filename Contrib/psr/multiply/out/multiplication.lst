@@ -1,43 +1,304 @@
 * source: C:\Users\peter.russell\Documents\Personal\multiply\Contrib\psr\multiply\src\multiplication.asm.py
-                                          21        enableListing()
-                                          22    # The following code implements a lookup table of floored quarter squares,
-                                          23    # for values up to 255.
-                                          24    # This is supposed to enable a fast multiplication for 7-bit numbers.
-                                          25    align(0x100, size=0x100)
-                                          26    # We jump back here after looking up the low-byte of the result.
-                                          27    label("low-byte return point")
+                                          27        enableListing()
+                                          28
+                                          29    # The following code implements a lookup table of floored quarter squares,
+                                          30    # for values up to 255.
+                                          31    # This is supposed to enable a fast multiplication for 7-bit numbers.
+                                          32
+                                          33
+                                          34    align(0x100, size=0x100)
+                                          35    # First the high-bytes.
+                                          36    # The table is shifted down by 32 places, as the first 32 high-bytes are all zero
+                                          37    # This allows us to have code later in the page which we can branch back to.
+                                          38    align(0x100, size=0x100)
+                                          39    for i in range(32, 256):
+                                          40        val = math.floor(i ** 2 / 4)
               address
               |    encoding
               |    |     instruction
               |    |     |    operands
               |    |     |    |
               V    V     V    V
+                                          41        ld(hi(val))
+              0000 0001  ld   $01         ;$0100 = 256 = floor(32 ** 2 / 4); $0100 >> 8 = $01
+              0001 0001  ld   $01         ;$0110 = 272 = floor(33 ** 2 / 4); $0110 >> 8 = $01
+              0002 0001  ld   $01         ;$0121 = 289 = floor(34 ** 2 / 4); $0121 >> 8 = $01
+              0003 0001  ld   $01         ;$0132 = 306 = floor(35 ** 2 / 4); $0132 >> 8 = $01
+              0004 0001  ld   $01         ;$0144 = 324 = floor(36 ** 2 / 4); $0144 >> 8 = $01
+              0005 0001  ld   $01         ;$0156 = 342 = floor(37 ** 2 / 4); $0156 >> 8 = $01
+              0006 0001  ld   $01         ;$0169 = 361 = floor(38 ** 2 / 4); $0169 >> 8 = $01
+              0007 0001  ld   $01         ;$017c = 380 = floor(39 ** 2 / 4); $017c >> 8 = $01
+              0008 0001  ld   $01         ;$0190 = 400 = floor(40 ** 2 / 4); $0190 >> 8 = $01
+              0009 0001  ld   $01         ;$01a4 = 420 = floor(41 ** 2 / 4); $01a4 >> 8 = $01
+              000a 0001  ld   $01         ;$01b9 = 441 = floor(42 ** 2 / 4); $01b9 >> 8 = $01
+              000b 0001  ld   $01         ;$01ce = 462 = floor(43 ** 2 / 4); $01ce >> 8 = $01
+              000c 0001  ld   $01         ;$01e4 = 484 = floor(44 ** 2 / 4); $01e4 >> 8 = $01
+              000d 0001  ld   $01         ;$01fa = 506 = floor(45 ** 2 / 4); $01fa >> 8 = $01
+              000e 0002  ld   $02         ;$0211 = 529 = floor(46 ** 2 / 4); $0211 >> 8 = $02
+              000f 0002  ld   $02         ;$0228 = 552 = floor(47 ** 2 / 4); $0228 >> 8 = $02
+              0010 0002  ld   $02         ;$0240 = 576 = floor(48 ** 2 / 4); $0240 >> 8 = $02
+              0011 0002  ld   $02         ;$0258 = 600 = floor(49 ** 2 / 4); $0258 >> 8 = $02
+              0012 0002  ld   $02         ;$0271 = 625 = floor(50 ** 2 / 4); $0271 >> 8 = $02
+              0013 0002  ld   $02         ;$028a = 650 = floor(51 ** 2 / 4); $028a >> 8 = $02
+              0014 0002  ld   $02         ;$02a4 = 676 = floor(52 ** 2 / 4); $02a4 >> 8 = $02
+              0015 0002  ld   $02         ;$02be = 702 = floor(53 ** 2 / 4); $02be >> 8 = $02
+              0016 0002  ld   $02         ;$02d9 = 729 = floor(54 ** 2 / 4); $02d9 >> 8 = $02
+              0017 0002  ld   $02         ;$02f4 = 756 = floor(55 ** 2 / 4); $02f4 >> 8 = $02
+              0018 0003  ld   $03         ;$0310 = 784 = floor(56 ** 2 / 4); $0310 >> 8 = $03
+              0019 0003  ld   $03         ;$032c = 812 = floor(57 ** 2 / 4); $032c >> 8 = $03
+              001a 0003  ld   $03         ;$0349 = 841 = floor(58 ** 2 / 4); $0349 >> 8 = $03
+              001b 0003  ld   $03         ;$0366 = 870 = floor(59 ** 2 / 4); $0366 >> 8 = $03
+              001c 0003  ld   $03         ;$0384 = 900 = floor(60 ** 2 / 4); $0384 >> 8 = $03
+              001d 0003  ld   $03         ;$03a2 = 930 = floor(61 ** 2 / 4); $03a2 >> 8 = $03
+              001e 0003  ld   $03         ;$03c1 = 961 = floor(62 ** 2 / 4); $03c1 >> 8 = $03
+              001f 0003  ld   $03         ;$03e0 = 992 = floor(63 ** 2 / 4); $03e0 >> 8 = $03
+              0020 0004  ld   $04         ;$0400 = 1024 = floor(64 ** 2 / 4); $0400 >> 8 = $04
+              0021 0004  ld   $04         ;$0420 = 1056 = floor(65 ** 2 / 4); $0420 >> 8 = $04
+              0022 0004  ld   $04         ;$0441 = 1089 = floor(66 ** 2 / 4); $0441 >> 8 = $04
+              0023 0004  ld   $04         ;$0462 = 1122 = floor(67 ** 2 / 4); $0462 >> 8 = $04
+              0024 0004  ld   $04         ;$0484 = 1156 = floor(68 ** 2 / 4); $0484 >> 8 = $04
+              0025 0004  ld   $04         ;$04a6 = 1190 = floor(69 ** 2 / 4); $04a6 >> 8 = $04
+              0026 0004  ld   $04         ;$04c9 = 1225 = floor(70 ** 2 / 4); $04c9 >> 8 = $04
+              0027 0004  ld   $04         ;$04ec = 1260 = floor(71 ** 2 / 4); $04ec >> 8 = $04
+              0028 0005  ld   $05         ;$0510 = 1296 = floor(72 ** 2 / 4); $0510 >> 8 = $05
+              0029 0005  ld   $05         ;$0534 = 1332 = floor(73 ** 2 / 4); $0534 >> 8 = $05
+              002a 0005  ld   $05         ;$0559 = 1369 = floor(74 ** 2 / 4); $0559 >> 8 = $05
+              002b 0005  ld   $05         ;$057e = 1406 = floor(75 ** 2 / 4); $057e >> 8 = $05
+              002c 0005  ld   $05         ;$05a4 = 1444 = floor(76 ** 2 / 4); $05a4 >> 8 = $05
+              002d 0005  ld   $05         ;$05ca = 1482 = floor(77 ** 2 / 4); $05ca >> 8 = $05
+              002e 0005  ld   $05         ;$05f1 = 1521 = floor(78 ** 2 / 4); $05f1 >> 8 = $05
+              002f 0006  ld   $06         ;$0618 = 1560 = floor(79 ** 2 / 4); $0618 >> 8 = $06
+              0030 0006  ld   $06         ;$0640 = 1600 = floor(80 ** 2 / 4); $0640 >> 8 = $06
+              0031 0006  ld   $06         ;$0668 = 1640 = floor(81 ** 2 / 4); $0668 >> 8 = $06
+              0032 0006  ld   $06         ;$0691 = 1681 = floor(82 ** 2 / 4); $0691 >> 8 = $06
+              0033 0006  ld   $06         ;$06ba = 1722 = floor(83 ** 2 / 4); $06ba >> 8 = $06
+              0034 0006  ld   $06         ;$06e4 = 1764 = floor(84 ** 2 / 4); $06e4 >> 8 = $06
+              0035 0007  ld   $07         ;$070e = 1806 = floor(85 ** 2 / 4); $070e >> 8 = $07
+              0036 0007  ld   $07         ;$0739 = 1849 = floor(86 ** 2 / 4); $0739 >> 8 = $07
+              0037 0007  ld   $07         ;$0764 = 1892 = floor(87 ** 2 / 4); $0764 >> 8 = $07
+              0038 0007  ld   $07         ;$0790 = 1936 = floor(88 ** 2 / 4); $0790 >> 8 = $07
+              0039 0007  ld   $07         ;$07bc = 1980 = floor(89 ** 2 / 4); $07bc >> 8 = $07
+              003a 0007  ld   $07         ;$07e9 = 2025 = floor(90 ** 2 / 4); $07e9 >> 8 = $07
+              003b 0008  ld   $08         ;$0816 = 2070 = floor(91 ** 2 / 4); $0816 >> 8 = $08
+              003c 0008  ld   $08         ;$0844 = 2116 = floor(92 ** 2 / 4); $0844 >> 8 = $08
+              003d 0008  ld   $08         ;$0872 = 2162 = floor(93 ** 2 / 4); $0872 >> 8 = $08
+              003e 0008  ld   $08         ;$08a1 = 2209 = floor(94 ** 2 / 4); $08a1 >> 8 = $08
+              003f 0008  ld   $08         ;$08d0 = 2256 = floor(95 ** 2 / 4); $08d0 >> 8 = $08
+              0040 0009  ld   $09         ;$0900 = 2304 = floor(96 ** 2 / 4); $0900 >> 8 = $09
+              0041 0009  ld   $09         ;$0930 = 2352 = floor(97 ** 2 / 4); $0930 >> 8 = $09
+              0042 0009  ld   $09         ;$0961 = 2401 = floor(98 ** 2 / 4); $0961 >> 8 = $09
+              0043 0009  ld   $09         ;$0992 = 2450 = floor(99 ** 2 / 4); $0992 >> 8 = $09
+              0044 0009  ld   $09         ;$09c4 = 2500 = floor(100 ** 2 / 4); $09c4 >> 8 = $09
+              0045 0009  ld   $09         ;$09f6 = 2550 = floor(101 ** 2 / 4); $09f6 >> 8 = $09
+              0046 000a  ld   $0a         ;$0a29 = 2601 = floor(102 ** 2 / 4); $0a29 >> 8 = $0a
+              0047 000a  ld   $0a         ;$0a5c = 2652 = floor(103 ** 2 / 4); $0a5c >> 8 = $0a
+              0048 000a  ld   $0a         ;$0a90 = 2704 = floor(104 ** 2 / 4); $0a90 >> 8 = $0a
+              0049 000a  ld   $0a         ;$0ac4 = 2756 = floor(105 ** 2 / 4); $0ac4 >> 8 = $0a
+              004a 000a  ld   $0a         ;$0af9 = 2809 = floor(106 ** 2 / 4); $0af9 >> 8 = $0a
+              004b 000b  ld   $0b         ;$0b2e = 2862 = floor(107 ** 2 / 4); $0b2e >> 8 = $0b
+              004c 000b  ld   $0b         ;$0b64 = 2916 = floor(108 ** 2 / 4); $0b64 >> 8 = $0b
+              004d 000b  ld   $0b         ;$0b9a = 2970 = floor(109 ** 2 / 4); $0b9a >> 8 = $0b
+              004e 000b  ld   $0b         ;$0bd1 = 3025 = floor(110 ** 2 / 4); $0bd1 >> 8 = $0b
+              004f 000c  ld   $0c         ;$0c08 = 3080 = floor(111 ** 2 / 4); $0c08 >> 8 = $0c
+              0050 000c  ld   $0c         ;$0c40 = 3136 = floor(112 ** 2 / 4); $0c40 >> 8 = $0c
+              0051 000c  ld   $0c         ;$0c78 = 3192 = floor(113 ** 2 / 4); $0c78 >> 8 = $0c
+              0052 000c  ld   $0c         ;$0cb1 = 3249 = floor(114 ** 2 / 4); $0cb1 >> 8 = $0c
+              0053 000c  ld   $0c         ;$0cea = 3306 = floor(115 ** 2 / 4); $0cea >> 8 = $0c
+              0054 000d  ld   $0d         ;$0d24 = 3364 = floor(116 ** 2 / 4); $0d24 >> 8 = $0d
+              0055 000d  ld   $0d         ;$0d5e = 3422 = floor(117 ** 2 / 4); $0d5e >> 8 = $0d
+              0056 000d  ld   $0d         ;$0d99 = 3481 = floor(118 ** 2 / 4); $0d99 >> 8 = $0d
+              0057 000d  ld   $0d         ;$0dd4 = 3540 = floor(119 ** 2 / 4); $0dd4 >> 8 = $0d
+              0058 000e  ld   $0e         ;$0e10 = 3600 = floor(120 ** 2 / 4); $0e10 >> 8 = $0e
+              0059 000e  ld   $0e         ;$0e4c = 3660 = floor(121 ** 2 / 4); $0e4c >> 8 = $0e
+              005a 000e  ld   $0e         ;$0e89 = 3721 = floor(122 ** 2 / 4); $0e89 >> 8 = $0e
+              005b 000e  ld   $0e         ;$0ec6 = 3782 = floor(123 ** 2 / 4); $0ec6 >> 8 = $0e
+              005c 000f  ld   $0f         ;$0f04 = 3844 = floor(124 ** 2 / 4); $0f04 >> 8 = $0f
+              005d 000f  ld   $0f         ;$0f42 = 3906 = floor(125 ** 2 / 4); $0f42 >> 8 = $0f
+              005e 000f  ld   $0f         ;$0f81 = 3969 = floor(126 ** 2 / 4); $0f81 >> 8 = $0f
+              005f 000f  ld   $0f         ;$0fc0 = 4032 = floor(127 ** 2 / 4); $0fc0 >> 8 = $0f
+              0060 0010  ld   $10         ;$1000 = 4096 = floor(128 ** 2 / 4); $1000 >> 8 = $10
+              0061 0010  ld   $10         ;$1040 = 4160 = floor(129 ** 2 / 4); $1040 >> 8 = $10
+              0062 0010  ld   $10         ;$1081 = 4225 = floor(130 ** 2 / 4); $1081 >> 8 = $10
+              0063 0010  ld   $10         ;$10c2 = 4290 = floor(131 ** 2 / 4); $10c2 >> 8 = $10
+              0064 0011  ld   $11         ;$1104 = 4356 = floor(132 ** 2 / 4); $1104 >> 8 = $11
+              0065 0011  ld   $11         ;$1146 = 4422 = floor(133 ** 2 / 4); $1146 >> 8 = $11
+              0066 0011  ld   $11         ;$1189 = 4489 = floor(134 ** 2 / 4); $1189 >> 8 = $11
+              0067 0011  ld   $11         ;$11cc = 4556 = floor(135 ** 2 / 4); $11cc >> 8 = $11
+              0068 0012  ld   $12         ;$1210 = 4624 = floor(136 ** 2 / 4); $1210 >> 8 = $12
+              0069 0012  ld   $12         ;$1254 = 4692 = floor(137 ** 2 / 4); $1254 >> 8 = $12
+              006a 0012  ld   $12         ;$1299 = 4761 = floor(138 ** 2 / 4); $1299 >> 8 = $12
+              006b 0012  ld   $12         ;$12de = 4830 = floor(139 ** 2 / 4); $12de >> 8 = $12
+              006c 0013  ld   $13         ;$1324 = 4900 = floor(140 ** 2 / 4); $1324 >> 8 = $13
+              006d 0013  ld   $13         ;$136a = 4970 = floor(141 ** 2 / 4); $136a >> 8 = $13
+              006e 0013  ld   $13         ;$13b1 = 5041 = floor(142 ** 2 / 4); $13b1 >> 8 = $13
+              006f 0013  ld   $13         ;$13f8 = 5112 = floor(143 ** 2 / 4); $13f8 >> 8 = $13
+              0070 0014  ld   $14         ;$1440 = 5184 = floor(144 ** 2 / 4); $1440 >> 8 = $14
+              0071 0014  ld   $14         ;$1488 = 5256 = floor(145 ** 2 / 4); $1488 >> 8 = $14
+              0072 0014  ld   $14         ;$14d1 = 5329 = floor(146 ** 2 / 4); $14d1 >> 8 = $14
+              0073 0015  ld   $15         ;$151a = 5402 = floor(147 ** 2 / 4); $151a >> 8 = $15
+              0074 0015  ld   $15         ;$1564 = 5476 = floor(148 ** 2 / 4); $1564 >> 8 = $15
+              0075 0015  ld   $15         ;$15ae = 5550 = floor(149 ** 2 / 4); $15ae >> 8 = $15
+              0076 0015  ld   $15         ;$15f9 = 5625 = floor(150 ** 2 / 4); $15f9 >> 8 = $15
+              0077 0016  ld   $16         ;$1644 = 5700 = floor(151 ** 2 / 4); $1644 >> 8 = $16
+              0078 0016  ld   $16         ;$1690 = 5776 = floor(152 ** 2 / 4); $1690 >> 8 = $16
+              0079 0016  ld   $16         ;$16dc = 5852 = floor(153 ** 2 / 4); $16dc >> 8 = $16
+              007a 0017  ld   $17         ;$1729 = 5929 = floor(154 ** 2 / 4); $1729 >> 8 = $17
+              007b 0017  ld   $17         ;$1776 = 6006 = floor(155 ** 2 / 4); $1776 >> 8 = $17
+              007c 0017  ld   $17         ;$17c4 = 6084 = floor(156 ** 2 / 4); $17c4 >> 8 = $17
+              007d 0018  ld   $18         ;$1812 = 6162 = floor(157 ** 2 / 4); $1812 >> 8 = $18
+              007e 0018  ld   $18         ;$1861 = 6241 = floor(158 ** 2 / 4); $1861 >> 8 = $18
+              007f 0018  ld   $18         ;$18b0 = 6320 = floor(159 ** 2 / 4); $18b0 >> 8 = $18
+              0080 0019  ld   $19         ;$1900 = 6400 = floor(160 ** 2 / 4); $1900 >> 8 = $19
+              0081 0019  ld   $19         ;$1950 = 6480 = floor(161 ** 2 / 4); $1950 >> 8 = $19
+              0082 0019  ld   $19         ;$19a1 = 6561 = floor(162 ** 2 / 4); $19a1 >> 8 = $19
+              0083 0019  ld   $19         ;$19f2 = 6642 = floor(163 ** 2 / 4); $19f2 >> 8 = $19
+              0084 001a  ld   $1a         ;$1a44 = 6724 = floor(164 ** 2 / 4); $1a44 >> 8 = $1a
+              0085 001a  ld   $1a         ;$1a96 = 6806 = floor(165 ** 2 / 4); $1a96 >> 8 = $1a
+              0086 001a  ld   $1a         ;$1ae9 = 6889 = floor(166 ** 2 / 4); $1ae9 >> 8 = $1a
+              0087 001b  ld   $1b         ;$1b3c = 6972 = floor(167 ** 2 / 4); $1b3c >> 8 = $1b
+              0088 001b  ld   $1b         ;$1b90 = 7056 = floor(168 ** 2 / 4); $1b90 >> 8 = $1b
+              0089 001b  ld   $1b         ;$1be4 = 7140 = floor(169 ** 2 / 4); $1be4 >> 8 = $1b
+              008a 001c  ld   $1c         ;$1c39 = 7225 = floor(170 ** 2 / 4); $1c39 >> 8 = $1c
+              008b 001c  ld   $1c         ;$1c8e = 7310 = floor(171 ** 2 / 4); $1c8e >> 8 = $1c
+              008c 001c  ld   $1c         ;$1ce4 = 7396 = floor(172 ** 2 / 4); $1ce4 >> 8 = $1c
+              008d 001d  ld   $1d         ;$1d3a = 7482 = floor(173 ** 2 / 4); $1d3a >> 8 = $1d
+              008e 001d  ld   $1d         ;$1d91 = 7569 = floor(174 ** 2 / 4); $1d91 >> 8 = $1d
+              008f 001d  ld   $1d         ;$1de8 = 7656 = floor(175 ** 2 / 4); $1de8 >> 8 = $1d
+              0090 001e  ld   $1e         ;$1e40 = 7744 = floor(176 ** 2 / 4); $1e40 >> 8 = $1e
+              0091 001e  ld   $1e         ;$1e98 = 7832 = floor(177 ** 2 / 4); $1e98 >> 8 = $1e
+              0092 001e  ld   $1e         ;$1ef1 = 7921 = floor(178 ** 2 / 4); $1ef1 >> 8 = $1e
+              0093 001f  ld   $1f         ;$1f4a = 8010 = floor(179 ** 2 / 4); $1f4a >> 8 = $1f
+              0094 001f  ld   $1f         ;$1fa4 = 8100 = floor(180 ** 2 / 4); $1fa4 >> 8 = $1f
+              0095 001f  ld   $1f         ;$1ffe = 8190 = floor(181 ** 2 / 4); $1ffe >> 8 = $1f
+              0096 0020  ld   $20         ;$2059 = 8281 = floor(182 ** 2 / 4); $2059 >> 8 = $20
+              0097 0020  ld   $20         ;$20b4 = 8372 = floor(183 ** 2 / 4); $20b4 >> 8 = $20
+              0098 0021  ld   $21         ;$2110 = 8464 = floor(184 ** 2 / 4); $2110 >> 8 = $21
+              0099 0021  ld   $21         ;$216c = 8556 = floor(185 ** 2 / 4); $216c >> 8 = $21
+              009a 0021  ld   $21         ;$21c9 = 8649 = floor(186 ** 2 / 4); $21c9 >> 8 = $21
+              009b 0022  ld   $22         ;$2226 = 8742 = floor(187 ** 2 / 4); $2226 >> 8 = $22
+              009c 0022  ld   $22         ;$2284 = 8836 = floor(188 ** 2 / 4); $2284 >> 8 = $22
+              009d 0022  ld   $22         ;$22e2 = 8930 = floor(189 ** 2 / 4); $22e2 >> 8 = $22
+              009e 0023  ld   $23         ;$2341 = 9025 = floor(190 ** 2 / 4); $2341 >> 8 = $23
+              009f 0023  ld   $23         ;$23a0 = 9120 = floor(191 ** 2 / 4); $23a0 >> 8 = $23
+              00a0 0024  ld   $24         ;$2400 = 9216 = floor(192 ** 2 / 4); $2400 >> 8 = $24
+              00a1 0024  ld   $24         ;$2460 = 9312 = floor(193 ** 2 / 4); $2460 >> 8 = $24
+              00a2 0024  ld   $24         ;$24c1 = 9409 = floor(194 ** 2 / 4); $24c1 >> 8 = $24
+              00a3 0025  ld   $25         ;$2522 = 9506 = floor(195 ** 2 / 4); $2522 >> 8 = $25
+              00a4 0025  ld   $25         ;$2584 = 9604 = floor(196 ** 2 / 4); $2584 >> 8 = $25
+              00a5 0025  ld   $25         ;$25e6 = 9702 = floor(197 ** 2 / 4); $25e6 >> 8 = $25
+              00a6 0026  ld   $26         ;$2649 = 9801 = floor(198 ** 2 / 4); $2649 >> 8 = $26
+              00a7 0026  ld   $26         ;$26ac = 9900 = floor(199 ** 2 / 4); $26ac >> 8 = $26
+              00a8 0027  ld   $27         ;$2710 = 10000 = floor(200 ** 2 / 4); $2710 >> 8 = $27
+              00a9 0027  ld   $27         ;$2774 = 10100 = floor(201 ** 2 / 4); $2774 >> 8 = $27
+              00aa 0027  ld   $27         ;$27d9 = 10201 = floor(202 ** 2 / 4); $27d9 >> 8 = $27
+              00ab 0028  ld   $28         ;$283e = 10302 = floor(203 ** 2 / 4); $283e >> 8 = $28
+              00ac 0028  ld   $28         ;$28a4 = 10404 = floor(204 ** 2 / 4); $28a4 >> 8 = $28
+              00ad 0029  ld   $29         ;$290a = 10506 = floor(205 ** 2 / 4); $290a >> 8 = $29
+              00ae 0029  ld   $29         ;$2971 = 10609 = floor(206 ** 2 / 4); $2971 >> 8 = $29
+              00af 0029  ld   $29         ;$29d8 = 10712 = floor(207 ** 2 / 4); $29d8 >> 8 = $29
+              00b0 002a  ld   $2a         ;$2a40 = 10816 = floor(208 ** 2 / 4); $2a40 >> 8 = $2a
+              00b1 002a  ld   $2a         ;$2aa8 = 10920 = floor(209 ** 2 / 4); $2aa8 >> 8 = $2a
+              00b2 002b  ld   $2b         ;$2b11 = 11025 = floor(210 ** 2 / 4); $2b11 >> 8 = $2b
+              00b3 002b  ld   $2b         ;$2b7a = 11130 = floor(211 ** 2 / 4); $2b7a >> 8 = $2b
+              00b4 002b  ld   $2b         ;$2be4 = 11236 = floor(212 ** 2 / 4); $2be4 >> 8 = $2b
+              00b5 002c  ld   $2c         ;$2c4e = 11342 = floor(213 ** 2 / 4); $2c4e >> 8 = $2c
+              00b6 002c  ld   $2c         ;$2cb9 = 11449 = floor(214 ** 2 / 4); $2cb9 >> 8 = $2c
+              00b7 002d  ld   $2d         ;$2d24 = 11556 = floor(215 ** 2 / 4); $2d24 >> 8 = $2d
+              00b8 002d  ld   $2d         ;$2d90 = 11664 = floor(216 ** 2 / 4); $2d90 >> 8 = $2d
+              00b9 002d  ld   $2d         ;$2dfc = 11772 = floor(217 ** 2 / 4); $2dfc >> 8 = $2d
+              00ba 002e  ld   $2e         ;$2e69 = 11881 = floor(218 ** 2 / 4); $2e69 >> 8 = $2e
+              00bb 002e  ld   $2e         ;$2ed6 = 11990 = floor(219 ** 2 / 4); $2ed6 >> 8 = $2e
+              00bc 002f  ld   $2f         ;$2f44 = 12100 = floor(220 ** 2 / 4); $2f44 >> 8 = $2f
+              00bd 002f  ld   $2f         ;$2fb2 = 12210 = floor(221 ** 2 / 4); $2fb2 >> 8 = $2f
+              00be 0030  ld   $30         ;$3021 = 12321 = floor(222 ** 2 / 4); $3021 >> 8 = $30
+              00bf 0030  ld   $30         ;$3090 = 12432 = floor(223 ** 2 / 4); $3090 >> 8 = $30
+              00c0 0031  ld   $31         ;$3100 = 12544 = floor(224 ** 2 / 4); $3100 >> 8 = $31
+              00c1 0031  ld   $31         ;$3170 = 12656 = floor(225 ** 2 / 4); $3170 >> 8 = $31
+              00c2 0031  ld   $31         ;$31e1 = 12769 = floor(226 ** 2 / 4); $31e1 >> 8 = $31
+              00c3 0032  ld   $32         ;$3252 = 12882 = floor(227 ** 2 / 4); $3252 >> 8 = $32
+              00c4 0032  ld   $32         ;$32c4 = 12996 = floor(228 ** 2 / 4); $32c4 >> 8 = $32
+              00c5 0033  ld   $33         ;$3336 = 13110 = floor(229 ** 2 / 4); $3336 >> 8 = $33
+              00c6 0033  ld   $33         ;$33a9 = 13225 = floor(230 ** 2 / 4); $33a9 >> 8 = $33
+              00c7 0034  ld   $34         ;$341c = 13340 = floor(231 ** 2 / 4); $341c >> 8 = $34
+              00c8 0034  ld   $34         ;$3490 = 13456 = floor(232 ** 2 / 4); $3490 >> 8 = $34
+              00c9 0035  ld   $35         ;$3504 = 13572 = floor(233 ** 2 / 4); $3504 >> 8 = $35
+              00ca 0035  ld   $35         ;$3579 = 13689 = floor(234 ** 2 / 4); $3579 >> 8 = $35
+              00cb 0035  ld   $35         ;$35ee = 13806 = floor(235 ** 2 / 4); $35ee >> 8 = $35
+              00cc 0036  ld   $36         ;$3664 = 13924 = floor(236 ** 2 / 4); $3664 >> 8 = $36
+              00cd 0036  ld   $36         ;$36da = 14042 = floor(237 ** 2 / 4); $36da >> 8 = $36
+              00ce 0037  ld   $37         ;$3751 = 14161 = floor(238 ** 2 / 4); $3751 >> 8 = $37
+              00cf 0037  ld   $37         ;$37c8 = 14280 = floor(239 ** 2 / 4); $37c8 >> 8 = $37
+              00d0 0038  ld   $38         ;$3840 = 14400 = floor(240 ** 2 / 4); $3840 >> 8 = $38
+              00d1 0038  ld   $38         ;$38b8 = 14520 = floor(241 ** 2 / 4); $38b8 >> 8 = $38
+              00d2 0039  ld   $39         ;$3931 = 14641 = floor(242 ** 2 / 4); $3931 >> 8 = $39
+              00d3 0039  ld   $39         ;$39aa = 14762 = floor(243 ** 2 / 4); $39aa >> 8 = $39
+              00d4 003a  ld   $3a         ;$3a24 = 14884 = floor(244 ** 2 / 4); $3a24 >> 8 = $3a
+              00d5 003a  ld   $3a         ;$3a9e = 15006 = floor(245 ** 2 / 4); $3a9e >> 8 = $3a
+              00d6 003b  ld   $3b         ;$3b19 = 15129 = floor(246 ** 2 / 4); $3b19 >> 8 = $3b
+              00d7 003b  ld   $3b         ;$3b94 = 15252 = floor(247 ** 2 / 4); $3b94 >> 8 = $3b
+              00d8 003c  ld   $3c         ;$3c10 = 15376 = floor(248 ** 2 / 4); $3c10 >> 8 = $3c
+              00d9 003c  ld   $3c         ;$3c8c = 15500 = floor(249 ** 2 / 4); $3c8c >> 8 = $3c
+              00da 003d  ld   $3d         ;$3d09 = 15625 = floor(250 ** 2 / 4); $3d09 >> 8 = $3d
+              00db 003d  ld   $3d         ;$3d86 = 15750 = floor(251 ** 2 / 4); $3d86 >> 8 = $3d
+              00dc 003e  ld   $3e         ;$3e04 = 15876 = floor(252 ** 2 / 4); $3e04 >> 8 = $3e
+              00dd 003e  ld   $3e         ;$3e82 = 16002 = floor(253 ** 2 / 4); $3e82 >> 8 = $3e
+              00de 003f  ld   $3f         ;$3f01 = 16129 = floor(254 ** 2 / 4); $3f01 >> 8 = $3f
+              00df 003f  ld   $3f         ;$3f80 = 16256 = floor(255 ** 2 / 4); $3f80 >> 8 = $3f
+                                          42        C(f"${val:04x} = {val} = floor({i} ** 2 / 4); ${val:04x} >> 8 = ${val >> 8:02x}")
+                                          43
+                                          44    # We jump back here after looking up the low-byte of the result.
+                                          45    label("low-byte return point")
 low-byte return point:
-              0000 0200  nop              28    fillers(until=255)
-              0001 0200  nop
-              0002 0200  nop
-              * 255 times
-                                          29    # With the index in the accumulator, and the current page in the Y register,
-                                          30    # We jump to the right entry in the low-byte table, replace AC with the result,
-                                          31    # and jump back out to 'low-byte return point' defined above,
-                                          32    # using the double-jump trick.
-                                          33    # This exploits the fact the following is the last instruction on the page,
-                                          34    # and the high byte of the PC has already incremented,
-                                          35    # so the bne will take us to an address in the next page.
-                                          36    # We use the Y register to return to the current page.
-                                          37    # The table has two zeros at the start, meaning that we can replace the first
-                                          38    # with the jump back.
-                                          39    label("low-byte table entry")
+              00e0 0200  nop              46    nop()
+                                          47
+                                          48    label("high-byte table entry")
+                                          49    # Calculate an index into the high-byte table.
+                                          50    # This is basically a matter of subtracting 32, and jumping in if the result >= 0.
+                                          51    # But values greater than 160 have the sign-bit set after subtraction,
+                                          52    # despite being >32.
+                                          53    # We test for the sign bit and jump after subtraction even if 'negative' in these cases.
+high-byte table entry:                    54    blt(".value has high bit set")  # 1
+              00e1 e8e6  blt  .value has high bit set
+              00e2 a020  suba $20         55    suba(32)  # 2
+              00e3 f600  bge  ac          56    bge(AC)  # 3
+                                          57    bra("high-byte return point")  # 4
+              00e4 fce8  bra  high-byte return point
+              00e5 0000  ld   $00         58    ld(0)  # 5
+                                          59    label(".value has high bit set")
+.value has high bit set:
+              00e6 fe00  bra  ac          60    bra(AC)  # 3
+                                          61    bra("high-byte return point")  # 4
+              00e7 fce8  bra  high-byte return point
+                                          62
+                                          63    # We jump back here after looking up the high-byte of the result.
+                                          64    label("high-byte return point")
+                                          65
+high-byte return point:
+              00e8 0200  nop              66    fillers(until=255)
+              00e9 0200  nop
+              00ea 0200  nop
+              * 23 times
+                                          67    label("low-byte table entry")
+                                          68    # With the index in the accumulator, and the current page in the Y register,
+                                          69    # We jump to the right entry in the low-byte table, replace AC with the result,
+                                          70    # and jump back out to 'low-byte return point' defined above,
+                                          71    # using the double-jump trick.
+                                          72    # This exploits the fact the following is the last instruction on the page,
+                                          73    # and the high byte of the PC has already incremented,
+                                          74    # so the bne will take us to an address in the next page.
+                                          75    # We use the Y register to return to the current page.
+                                          76    # The table has two zeros at the start, meaning that we can replace the first
+                                          77    # with the jump back.
 low-byte table entry:
-              00ff ee00  bne  ac          40    bne(AC)
-                                          41    align(0x100, size=0x100)
-              0100 e000  jmp  y,$00       42    jmp(Y, "low-byte return point")
-                                          43    ld(0)
+              00ff ee00  bne  ac          78    bne(AC)
+                                          79    align(0x100, size=0x100)
+              0100 e0e0  jmp  y,$e0       80    jmp(Y, "low-byte return point")
+                                          81    ld(0)
               0101 0000  ld   $00         ;0 = floor(0 ** 2 / 4) and floor(1 ** 2 / 4)
-                                          44    C("0 = floor(0 ** 2 / 4) and floor(1 ** 2 / 4)")
-                                          45    for i in range(2, 256):
-                                          46        val = math.floor(i ** 2 / 4)
-                                          47        ld(val)
+                                          82    C("0 = floor(0 ** 2 / 4) and floor(1 ** 2 / 4)")
+                                          83    for i in range(2, 256):
+                                          84        val = math.floor(i ** 2 / 4)
+                                          85        ld(val)
               0102 0001  ld   $01         ;$0001 = 1 = floor(2 ** 2 / 4)
               0103 0002  ld   $02         ;$0002 = 2 = floor(3 ** 2 / 4)
               0104 0004  ld   $04         ;$0004 = 4 = floor(4 ** 2 / 4)
@@ -292,10 +553,13 @@ low-byte table entry:
               01fd 0082  ld   $82         ;$3e82 = 16002 = floor(253 ** 2 / 4)
               01fe 0001  ld   $01         ;$3f01 = 16129 = floor(254 ** 2 / 4)
               01ff 0080  ld   $80         ;$3f80 = 16256 = floor(255 ** 2 / 4)
-                                          47        ld(val)
-                                          48        C(f"${val:04x} = {val} = floor({i} ** 2 / 4)")
-                                          49    end()
-                                          50
-                                          51    if __name__ == "__main__":
-                                          52        disableListing()
+                                          85        ld(val)
+                                          86        C(f"${val:04x} = {val} = floor({i} ** 2 / 4)")
+                                          87    align(0x100, size=0x100)
+                                          88
+                                          89
+                                          90    end()
+                                          91
+                                          92    if __name__ == "__main__":
+                                          93        disableListing()
               0200

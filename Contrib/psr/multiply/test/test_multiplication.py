@@ -31,3 +31,14 @@ def test_low_byte_lookup(value):
     Emulator.run_to("low-byte return point")
 
     assert int(math.floor((value ** 2) / 4)) & 0xFF == Emulator.AC
+
+
+@given(value=st.integers(min_value=0, max_value=255))
+def test_high_byte_lookup(value):
+    """Lookup of the high-byte of a quarter square should work"""
+    Emulator.AC = value
+    Emulator.next_instruction = "high-byte table entry"
+
+    Emulator.run_to("high-byte return point")
+
+    assert int(math.floor((value ** 2) / 4)) >> 8 == Emulator.AC
