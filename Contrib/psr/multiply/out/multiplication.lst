@@ -1,25 +1,36 @@
 * source: C:\Users\peter.russell\Documents\Personal\multiply\Contrib\psr\multiply\src\multiplication.asm.py
-                                          27        enableListing()
-                                          28
-                                          29    # The following code implements a lookup table of floored quarter squares,
-                                          30    # for values up to 255.
-                                          31    # This is supposed to enable a fast multiplication for 7-bit numbers.
-                                          32
-                                          33
-                                          34    align(0x100, size=0x100)
-                                          35    # First the high-bytes.
-                                          36    # The table is shifted down by 32 places, as the first 32 high-bytes are all zero
-                                          37    # This allows us to have code later in the page which we can branch back to.
-                                          38    align(0x100, size=0x100)
-                                          39    for i in range(32, 256):
-                                          40        val = math.floor(i ** 2 / 4)
+                                          34        enableListing()
+                                          35
+                                          36    # Inputs
+                                          37    a, b = zpByte(), zpByte()
+                                          38    # Output
+                                          39    result = zpByte(2)
+                                          40    # Used for storage
+                                          41    tmp = zpByte()
+                                          42    # Used for the continuation address after lookup.
+                                          43    continuation = zpByte()
+                                          44    # Used for the action to take with the high byte.
+                                          45    high_byte_action = zpByte()
+                                          46
+                                          47
+                                          48    # The following code implements a lookup table of floored quarter squares,
+                                          49    # for values up to 255.
+                                          50    # This is supposed to enable a fast multiplication for 7-bit numbers.
+                                          51
+                                          52    # First the high-bytes.
+                                          53    # The table is shifted down by 32 places, as the first 32 high-bytes are all zero
+                                          54    # This allows us to have code later in the page which we can branch back to.
+                                          55    align(0x100, size=0x100)
+                                          56    label("Quarter-squares lookup table")
+                                          57    for i in range(32, 256):
+                                          58        val = math.floor(i ** 2 / 4)
               address
               |    encoding
               |    |     instruction
               |    |     |    operands
               |    |     |    |
               V    V     V    V
-                                          41        ld(hi(val))
+Quarter-squares lookup table:             59        ld(hi(val))
               0000 0001  ld   $01         ;$0100 = 256 = floor(32 ** 2 / 4); $0100 >> 8 = $01
               0001 0001  ld   $01         ;$0110 = 272 = floor(33 ** 2 / 4); $0110 >> 8 = $01
               0002 0001  ld   $01         ;$0121 = 289 = floor(34 ** 2 / 4); $0121 >> 8 = $01
@@ -244,61 +255,82 @@
               00dd 003e  ld   $3e         ;$3e82 = 16002 = floor(253 ** 2 / 4); $3e82 >> 8 = $3e
               00de 003f  ld   $3f         ;$3f01 = 16129 = floor(254 ** 2 / 4); $3f01 >> 8 = $3f
               00df 003f  ld   $3f         ;$3f80 = 16256 = floor(255 ** 2 / 4); $3f80 >> 8 = $3f
-                                          42        C(f"${val:04x} = {val} = floor({i} ** 2 / 4); ${val:04x} >> 8 = ${val >> 8:02x}")
-                                          43
-                                          44    # We jump back here after looking up the low-byte of the result.
-                                          45    label("low-byte return point")
+                                          60        C(f"${val:04x} = {val} = floor({i} ** 2 / 4); ${val:04x} >> 8 = ${val >> 8:02x}")
+                                          61
+                                          62    # We jump back here after looking up the low-byte of the result.
+                                          63    label("low-byte return point")
 low-byte return point:
-              00e0 0200  nop              46    nop()
-                                          47
-                                          48    label("high-byte table entry")
-                                          49    # Calculate an index into the high-byte table.
-                                          50    # This is basically a matter of subtracting 32, and jumping in if the result >= 0.
-                                          51    # But values greater than 160 have the sign-bit set after subtraction,
-                                          52    # despite being >32.
-                                          53    # We test for the sign bit and jump after subtraction even if 'negative' in these cases.
-high-byte table entry:                    54    blt(".value has high bit set")  # 1
-              00e1 e8e6  blt  .value has high bit set
-              00e2 a020  suba $20         55    suba(32)  # 2
-              00e3 f600  bge  ac          56    bge(AC)  # 3
-                                          57    bra("high-byte return point")  # 4
-              00e4 fce8  bra  high-byte return point
-              00e5 0000  ld   $00         58    ld(0)  # 5
-                                          59    label(".value has high bit set")
-.value has high bit set:
-              00e6 fe00  bra  ac          60    bra(AC)  # 3
-                                          61    bra("high-byte return point")  # 4
-              00e7 fce8  bra  high-byte return point
-                                          62
-                                          63    # We jump back here after looking up the high-byte of the result.
-                                          64    label("high-byte return point")
-                                          65
-high-byte return point:
-              00e8 0200  nop              66    fillers(until=255)
-              00e9 0200  nop
-              00ea 0200  nop
-              * 23 times
-                                          67    label("low-byte table entry")
-                                          68    # With the index in the accumulator, and the current page in the Y register,
-                                          69    # We jump to the right entry in the low-byte table, replace AC with the result,
-                                          70    # and jump back out to 'low-byte return point' defined above,
-                                          71    # using the double-jump trick.
-                                          72    # This exploits the fact the following is the last instruction on the page,
-                                          73    # and the high byte of the PC has already incremented,
-                                          74    # so the bne will take us to an address in the next page.
-                                          75    # We use the Y register to return to the current page.
-                                          76    # The table has two zeros at the start, meaning that we can replace the first
-                                          77    # with the jump back.
+              00e0 1402  ld   $02,y       64    ld(hi("multiply 7x7"), Y)
+              00e1 e106  jmp  y,[$06]     65    jmp(Y, [continuation])
+              00e2 1400  ld   $00,y       66    ld(hi(pc()), Y)  # Make it easy to get back here!
+                                          67    cost_of_low_byte_return = 3
+                                          68    label("table entry.possibly-negative")
+                                          69    # AC is negative, if b > a. Find absolute value
+table entry.possibly-negative:
+              00e3 e8e6  blt  $00e6       70    blt(pc() + 3)  # 1
+              00e4 fce7  bra  $00e7       71    bra(pc() + 3)  # 2
+              00e5 a001  suba $01         72    suba(1)  # 3; if >= 0
+              00e6 60ff  xora $ff         73    xora(0xFF)  # 3;  if < 0
+              00e7 8001  adda $01         74    adda(1)  # 4
+                                          75    cost_of_absolute = 4
+                                          76    label("table entry")
+                                          77    # Calculate an index into the high-byte table.
+                                          78    # This is basically a matter of subtracting 32, and jumping in if the result >= 0.
+                                          79    # But values greater than 160 have the sign-bit set after subtraction,
+                                          80    # despite being >32.
+                                          81    # We test for the sign bit and jump after subtraction even if 'negative' in these cases.
+table entry:  00e8 c205  st   [$05]       82    st([tmp])  # 1
+              00e9 e8ee  blt  $00ee       83    blt(pc() + 5)  # 2
+              00ea a020  suba $20         84    suba(32)  # 3
+              00eb f600  bge  ac          85    bge(AC)  # 4
+              00ec fd07  bra  [$07]       86    bra([high_byte_action])  # 5
+              00ed 0000  ld   $00         87    ld(0)  # 6
+              00ee fe00  bra  ac          88    bra(AC)  # 4
+              00ef fd07  bra  [$07]       89    bra([high_byte_action])  # 5
+                                          90    cost_of_high_byte_table_entry = 6
+                                          91    # Some space here for other code?
+              00f0 0200  nop              92    fillers(until=251)
+              00f1 0200  nop
+              00f2 0200  nop
+              * 11 times
+                                          93    # We jump back here after looking up the high-byte of the result.
+                                          94    # Counting is in reverse
+                                          95    label("high-byte action.invert-and-add")
+high-byte action.invert-and-add:
+              00fb 60ff  xora $ff         96    xora(0xFF)  # 4
+                                          97    label("high-byte action.add")
+high-byte action.add:
+              00fc 8104  adda [$04]       98    adda([result + 1])  # 3
+                                          99    label("high-byte action.store")
+high-byte action.store:
+              00fd c204  st   [$04]       100   st([result + 1])  # 2
+              00fe 0105  ld   [$05]       101   ld([tmp])  # 1
+                                          102   assert pc() & 0xFF == 0xFF, pc()
+                                          103   cost_of_high_byte_invert_and_add = 4
+                                          104   cost_of_high_byte_add = 3
+                                          105   cost_of_high_byte_store = 2
+                                          106   label("low-byte table entry")
+                                          107   # With the index in the accumulator, and the current page in the Y register,
+                                          108   # We jump to the right entry in the low-byte table, replace AC with the result,
+                                          109   # and jump back out to 'low-byte return point' defined above,
+                                          110   # using the double-jump trick.
+                                          111   # This exploits the fact the following is the last instruction on the page,
+                                          112   # and the high byte of the PC has already incremented,
+                                          113   # so the bne will take us to an address in the next page.
+                                          114   # We use the Y register to return to the current page.
+                                          115   # The table has two zeros at the start, meaning that we can replace the first
+                                          116   # with the jump back.
 low-byte table entry:
-              00ff ee00  bne  ac          78    bne(AC)
-                                          79    align(0x100, size=0x100)
-              0100 e0e0  jmp  y,$e0       80    jmp(Y, "low-byte return point")
-                                          81    ld(0)
+              00ff ee00  bne  ac          117   bne(AC)  # 1
+                                          118   align(0x100, size=0x100)
+              0100 e0e0  jmp  y,$e0       119   jmp(Y, "low-byte return point")  # 2
+                                          120   ld(0)  # 3
               0101 0000  ld   $00         ;0 = floor(0 ** 2 / 4) and floor(1 ** 2 / 4)
-                                          82    C("0 = floor(0 ** 2 / 4) and floor(1 ** 2 / 4)")
-                                          83    for i in range(2, 256):
-                                          84        val = math.floor(i ** 2 / 4)
-                                          85        ld(val)
+                                          121   cost_of_low_byte_table_entry = 3
+                                          122   C("0 = floor(0 ** 2 / 4) and floor(1 ** 2 / 4)")
+                                          123   for i in range(2, 256):
+                                          124       val = math.floor(i ** 2 / 4)
+                                          125       ld(val)
               0102 0001  ld   $01         ;$0001 = 1 = floor(2 ** 2 / 4)
               0103 0002  ld   $02         ;$0002 = 2 = floor(3 ** 2 / 4)
               0104 0004  ld   $04         ;$0004 = 4 = floor(4 ** 2 / 4)
@@ -553,13 +585,85 @@ low-byte table entry:
               01fd 0082  ld   $82         ;$3e82 = 16002 = floor(253 ** 2 / 4)
               01fe 0001  ld   $01         ;$3f01 = 16129 = floor(254 ** 2 / 4)
               01ff 0080  ld   $80         ;$3f80 = 16256 = floor(255 ** 2 / 4)
-                                          85        ld(val)
-                                          86        C(f"${val:04x} = {val} = floor({i} ** 2 / 4)")
-                                          87    align(0x100, size=0x100)
-                                          88
-                                          89
-                                          90    end()
-                                          91
-                                          92    if __name__ == "__main__":
-                                          93        disableListing()
-              0200
+                                          126       C(f"${val:04x} = {val} = floor({i} ** 2 / 4)")
+                                          127   align(0x100, size=0x100)
+                                          128
+                                          129
+                                          130   label("multiply 7x7")
+                                          131   # The formula is floor(((a + b) ** 2) / 4) - floor(((a - b) ** 2) / 4)
+                                          132
+multiply 7x7: 0200 0008  ld   $08         133   ld(".after-first-lookup")  # 1
+              0201 c206  st   [$06]       134   st([continuation])
+              0202 1400  ld   $00,y       135   ld(hi("Quarter-squares lookup table"), Y)
+              0203 00fd  ld   $fd         136   ld("high-byte action.store")
+              0204 c207  st   [$07]       137   st([high_byte_action])  # 5
+              0205 0101  ld   [$01]       138   ld([a])
+              0206 e0e8  jmp  y,$e8       139   jmp(Y, "table entry")  # 7
+              0207 8102  adda [$02]       140   adda([b])  # 8
+                                          141   cost_to_first_lookup = 8
+                                          142
+                                          143   cost_after_first_lookup = (
+                                          144       cost_to_first_lookup
+                                          145       + cost_of_high_byte_table_entry
+                                          146       + cost_of_high_byte_store
+                                          147       + cost_of_low_byte_table_entry
+                                          148       + cost_of_low_byte_return
+                                          149   )
+                                          150
+                                          151   label(".after-first-lookup")
+                                          152   # On return we have the low-byte in the accumulator
+                                          153   # We can safely add one to it without causing an overflow,
+                                          154   # because 255 does not appear in the low-byte table.
+                                          155   # This is part of the following subtraction.
+.after-first-lookup:
+              0208 8001  adda $01         156   adda(1)  # 1
+              0209 c203  st   [$03]       157   st([result])
+              020a 0011  ld   $11         158   ld(".after-second-lookup")
+              020b c206  st   [$06]       159   st([continuation])
+              020c 00fb  ld   $fb         160   ld("high-byte action.invert-and-add")  # 5
+              020d c207  st   [$07]       161   st([high_byte_action])
+              020e 0101  ld   [$01]       162   ld([a])
+              020f e0e3  jmp  y,$e3       163   jmp(Y, "table entry.possibly-negative")  # 8
+              0210 a102  suba [$02]       164   suba([b])  # 9
+                                          165   cost_between_lookups = 9
+                                          166
+                                          167   cost_after_second_lookup = (
+                                          168       cost_after_first_lookup
+                                          169       + cost_between_lookups
+                                          170       + cost_of_absolute
+                                          171       + cost_of_high_byte_table_entry
+                                          172       + cost_of_high_byte_invert_and_add
+                                          173       + cost_of_low_byte_table_entry
+                                          174       + cost_of_low_byte_return
+                                          175   )
+                                          176
+                                          177   label(".after-second-lookup")
+.after-second-lookup:
+              0211 60ff  xora $ff         178   xora(0xFF)  # 1
+                                          179   # We need to add this to the result
+                                          180   # But we may have a carry
+              0212 8103  adda [$03]       181   adda([result])
+              0213 c205  st   [$05]       182   st([tmp])
+              0214 e818  blt  $0218       183   blt(pc() + 4)  # 5
+              0215 a103  suba [$03]       184   suba([result])  # 6
+              0216 fc1a  bra  $021a       185   bra(pc() + 4)  # 7
+              0217 4103  ora  [$03]       186   ora([result])  # 8
+              0218 fc1a  bra  $021a       187   bra(pc() + 2)  # 7
+              0219 2103  anda [$03]       188   anda([result])  # 8
+              021a 3080  anda $80,x       189   anda(0b1000_0000, X)  # 9
+              021b 0105  ld   [$05]       190   ld([tmp])
+              021c c203  st   [$03]       191   st([result])  # 10
+              021d 0500  ld   [x]         192   ld([X])
+              021e 8104  adda [$04]       193   adda([result + 1])
+              021f c204  st   [$04]       ;Total cost: 64 cycles
+                                          194   st([result + 1])  # 13
+                                          195   cost_of_final_add = 13
+                                          196
+                                          197   cost_of_7bit_multiply = cost_after_second_lookup + cost_of_final_add
+                                          198   C(f"Total cost: {cost_of_7bit_multiply} cycles")
+                                          199   label("done")
+                                          200   end()
+                                          201
+                                          202   if __name__ == "__main__":
+                                          203       disableListing()
+              0220
