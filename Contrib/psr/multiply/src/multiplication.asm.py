@@ -21,6 +21,7 @@ from asm import (
     jmp,
     label,
     ld,
+    nop,
     ora,
     pc,
     st,
@@ -124,8 +125,25 @@ for i in range(2, 256):
     val = math.floor(i ** 2 / 4)
     ld(val)
     C(f"${val:04x} = {val} = floor({i} ** 2 / 4)")
-align(0x100, size=0x100)
 
+
+# Code copied from the main ROM. This provides a lookup table for right-shifts
+align(0x100, size=0x100)
+label("shiftTable")
+shiftTable = pc()
+
+for ix in range(255):
+    for n in range(1, 9):  # Find first zero
+        if ~ix & (1 << (n - 1)):
+            break
+    pattern = ["x" if i < n else "1" if ix & (1 << i) else "0" for i in range(8)]
+    ld(ix >> n)
+    C("0b%s >> %d" % ("".join(reversed(pattern)), n))
+
+assert pc() & 255 == 255
+bra([tmp])  # Jumps back into next page
+align(0x100, size=0x100)
+nop()  #
 
 label("multiply 7x7")
 # The formula is floor(((a + b) ** 2) / 4) - floor(((a - b) ** 2) / 4)

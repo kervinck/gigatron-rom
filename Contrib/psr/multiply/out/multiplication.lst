@@ -1,36 +1,36 @@
 * source: C:\Users\peter.russell\Documents\Personal\multiply\Contrib\psr\multiply\src\multiplication.asm.py
-                                          34        enableListing()
-                                          35
-                                          36    # Inputs
-                                          37    a, b = zpByte(), zpByte()
-                                          38    # Output
-                                          39    result = zpByte(2)
-                                          40    # Used for storage
-                                          41    tmp = zpByte()
-                                          42    # Used for the continuation address after lookup.
-                                          43    continuation = zpByte()
-                                          44    # Used for the action to take with the high byte.
-                                          45    high_byte_action = zpByte()
-                                          46
+                                          35        enableListing()
+                                          36
+                                          37    # Inputs
+                                          38    a, b = zpByte(), zpByte()
+                                          39    # Output
+                                          40    result = zpByte(2)
+                                          41    # Used for storage
+                                          42    tmp = zpByte()
+                                          43    # Used for the continuation address after lookup.
+                                          44    continuation = zpByte()
+                                          45    # Used for the action to take with the high byte.
+                                          46    high_byte_action = zpByte()
                                           47
-                                          48    # The following code implements a lookup table of floored quarter squares,
-                                          49    # for values up to 255.
-                                          50    # This is supposed to enable a fast multiplication for 7-bit numbers.
-                                          51
-                                          52    # First the high-bytes.
-                                          53    # The table is shifted down by 32 places, as the first 32 high-bytes are all zero
-                                          54    # This allows us to have code later in the page which we can branch back to.
-                                          55    align(0x100, size=0x100)
-                                          56    label("Quarter-squares lookup table")
-                                          57    for i in range(32, 256):
-                                          58        val = math.floor(i ** 2 / 4)
+                                          48
+                                          49    # The following code implements a lookup table of floored quarter squares,
+                                          50    # for values up to 255.
+                                          51    # This is supposed to enable a fast multiplication for 7-bit numbers.
+                                          52
+                                          53    # First the high-bytes.
+                                          54    # The table is shifted down by 32 places, as the first 32 high-bytes are all zero
+                                          55    # This allows us to have code later in the page which we can branch back to.
+                                          56    align(0x100, size=0x100)
+                                          57    label("Quarter-squares lookup table")
+                                          58    for i in range(32, 256):
+                                          59        val = math.floor(i ** 2 / 4)
               address
               |    encoding
               |    |     instruction
               |    |     |    operands
               |    |     |    |
               V    V     V    V
-Quarter-squares lookup table:             59        ld(hi(val))
+Quarter-squares lookup table:             60        ld(hi(val))
               0000 0001  ld   $01         ;$0100 = 256 = floor(32 ** 2 / 4); $0100 >> 8 = $01
               0001 0001  ld   $01         ;$0110 = 272 = floor(33 ** 2 / 4); $0110 >> 8 = $01
               0002 0001  ld   $01         ;$0121 = 289 = floor(34 ** 2 / 4); $0121 >> 8 = $01
@@ -255,82 +255,82 @@ Quarter-squares lookup table:             59        ld(hi(val))
               00dd 003e  ld   $3e         ;$3e82 = 16002 = floor(253 ** 2 / 4); $3e82 >> 8 = $3e
               00de 003f  ld   $3f         ;$3f01 = 16129 = floor(254 ** 2 / 4); $3f01 >> 8 = $3f
               00df 003f  ld   $3f         ;$3f80 = 16256 = floor(255 ** 2 / 4); $3f80 >> 8 = $3f
-                                          60        C(f"${val:04x} = {val} = floor({i} ** 2 / 4); ${val:04x} >> 8 = ${val >> 8:02x}")
-                                          61
-                                          62    # We jump back here after looking up the low-byte of the result.
-                                          63    label("low-byte return point")
+                                          61        C(f"${val:04x} = {val} = floor({i} ** 2 / 4); ${val:04x} >> 8 = ${val >> 8:02x}")
+                                          62
+                                          63    # We jump back here after looking up the low-byte of the result.
+                                          64    label("low-byte return point")
 low-byte return point:
-              00e0 1402  ld   $02,y       64    ld(hi("multiply 7x7"), Y)
-              00e1 e106  jmp  y,[$06]     65    jmp(Y, [continuation])
-              00e2 1400  ld   $00,y       66    ld(hi(pc()), Y)  # Make it easy to get back here!
-                                          67    cost_of_low_byte_return = 3
-                                          68    label("table entry.possibly-negative")
-                                          69    # AC is negative, if b > a. Find absolute value
+              00e0 1403  ld   $03,y       65    ld(hi("multiply 7x7"), Y)
+              00e1 e106  jmp  y,[$06]     66    jmp(Y, [continuation])
+              00e2 1400  ld   $00,y       67    ld(hi(pc()), Y)  # Make it easy to get back here!
+                                          68    cost_of_low_byte_return = 3
+                                          69    label("table entry.possibly-negative")
+                                          70    # AC is negative, if b > a. Find absolute value
 table entry.possibly-negative:
-              00e3 e8e6  blt  $00e6       70    blt(pc() + 3)  # 1
-              00e4 fce7  bra  $00e7       71    bra(pc() + 3)  # 2
-              00e5 a001  suba $01         72    suba(1)  # 3; if >= 0
-              00e6 60ff  xora $ff         73    xora(0xFF)  # 3;  if < 0
-              00e7 8001  adda $01         74    adda(1)  # 4
-                                          75    cost_of_absolute = 4
-                                          76    label("table entry")
-                                          77    # Calculate an index into the high-byte table.
-                                          78    # This is basically a matter of subtracting 32, and jumping in if the result >= 0.
-                                          79    # But values greater than 160 have the sign-bit set after subtraction,
-                                          80    # despite being >32.
-                                          81    # We test for the sign bit and jump after subtraction even if 'negative' in these cases.
-table entry:  00e8 c205  st   [$05]       82    st([tmp])  # 1
-              00e9 e8ee  blt  $00ee       83    blt(pc() + 5)  # 2
-              00ea a020  suba $20         84    suba(32)  # 3
-              00eb f600  bge  ac          85    bge(AC)  # 4
-              00ec fd07  bra  [$07]       86    bra([high_byte_action])  # 5
-              00ed 0000  ld   $00         87    ld(0)  # 6
-              00ee fe00  bra  ac          88    bra(AC)  # 4
-              00ef fd07  bra  [$07]       89    bra([high_byte_action])  # 5
-                                          90    cost_of_high_byte_table_entry = 6
-                                          91    # Some space here for other code?
-              00f0 0200  nop              92    fillers(until=251)
+              00e3 e8e6  blt  $00e6       71    blt(pc() + 3)  # 1
+              00e4 fce7  bra  $00e7       72    bra(pc() + 3)  # 2
+              00e5 a001  suba $01         73    suba(1)  # 3; if >= 0
+              00e6 60ff  xora $ff         74    xora(0xFF)  # 3;  if < 0
+              00e7 8001  adda $01         75    adda(1)  # 4
+                                          76    cost_of_absolute = 4
+                                          77    label("table entry")
+                                          78    # Calculate an index into the high-byte table.
+                                          79    # This is basically a matter of subtracting 32, and jumping in if the result >= 0.
+                                          80    # But values greater than 160 have the sign-bit set after subtraction,
+                                          81    # despite being >32.
+                                          82    # We test for the sign bit and jump after subtraction even if 'negative' in these cases.
+table entry:  00e8 c205  st   [$05]       83    st([tmp])  # 1
+              00e9 e8ee  blt  $00ee       84    blt(pc() + 5)  # 2
+              00ea a020  suba $20         85    suba(32)  # 3
+              00eb f600  bge  ac          86    bge(AC)  # 4
+              00ec fd07  bra  [$07]       87    bra([high_byte_action])  # 5
+              00ed 0000  ld   $00         88    ld(0)  # 6
+              00ee fe00  bra  ac          89    bra(AC)  # 4
+              00ef fd07  bra  [$07]       90    bra([high_byte_action])  # 5
+                                          91    cost_of_high_byte_table_entry = 6
+                                          92    # Some space here for other code?
+              00f0 0200  nop              93    fillers(until=251)
               00f1 0200  nop
               00f2 0200  nop
               * 11 times
-                                          93    # We jump back here after looking up the high-byte of the result.
-                                          94    # Counting is in reverse
-                                          95    label("high-byte action.invert-and-add")
+                                          94    # We jump back here after looking up the high-byte of the result.
+                                          95    # Counting is in reverse
+                                          96    label("high-byte action.invert-and-add")
 high-byte action.invert-and-add:
-              00fb 60ff  xora $ff         96    xora(0xFF)  # 4
-                                          97    label("high-byte action.add")
+              00fb 60ff  xora $ff         97    xora(0xFF)  # 4
+                                          98    label("high-byte action.add")
 high-byte action.add:
-              00fc 8104  adda [$04]       98    adda([result + 1])  # 3
-                                          99    label("high-byte action.store")
+              00fc 8104  adda [$04]       99    adda([result + 1])  # 3
+                                          100   label("high-byte action.store")
 high-byte action.store:
-              00fd c204  st   [$04]       100   st([result + 1])  # 2
-              00fe 0105  ld   [$05]       101   ld([tmp])  # 1
-                                          102   assert pc() & 0xFF == 0xFF, pc()
-                                          103   cost_of_high_byte_invert_and_add = 4
-                                          104   cost_of_high_byte_add = 3
-                                          105   cost_of_high_byte_store = 2
-                                          106   label("low-byte table entry")
-                                          107   # With the index in the accumulator, and the current page in the Y register,
-                                          108   # We jump to the right entry in the low-byte table, replace AC with the result,
-                                          109   # and jump back out to 'low-byte return point' defined above,
-                                          110   # using the double-jump trick.
-                                          111   # This exploits the fact the following is the last instruction on the page,
-                                          112   # and the high byte of the PC has already incremented,
-                                          113   # so the bne will take us to an address in the next page.
-                                          114   # We use the Y register to return to the current page.
-                                          115   # The table has two zeros at the start, meaning that we can replace the first
-                                          116   # with the jump back.
+              00fd c204  st   [$04]       101   st([result + 1])  # 2
+              00fe 0105  ld   [$05]       102   ld([tmp])  # 1
+                                          103   assert pc() & 0xFF == 0xFF, pc()
+                                          104   cost_of_high_byte_invert_and_add = 4
+                                          105   cost_of_high_byte_add = 3
+                                          106   cost_of_high_byte_store = 2
+                                          107   label("low-byte table entry")
+                                          108   # With the index in the accumulator, and the current page in the Y register,
+                                          109   # We jump to the right entry in the low-byte table, replace AC with the result,
+                                          110   # and jump back out to 'low-byte return point' defined above,
+                                          111   # using the double-jump trick.
+                                          112   # This exploits the fact the following is the last instruction on the page,
+                                          113   # and the high byte of the PC has already incremented,
+                                          114   # so the bne will take us to an address in the next page.
+                                          115   # We use the Y register to return to the current page.
+                                          116   # The table has two zeros at the start, meaning that we can replace the first
+                                          117   # with the jump back.
 low-byte table entry:
-              00ff ee00  bne  ac          117   bne(AC)  # 1
-                                          118   align(0x100, size=0x100)
-              0100 e0e0  jmp  y,$e0       119   jmp(Y, "low-byte return point")  # 2
-                                          120   ld(0)  # 3
+              00ff ee00  bne  ac          118   bne(AC)  # 1
+                                          119   align(0x100, size=0x100)
+              0100 e0e0  jmp  y,$e0       120   jmp(Y, "low-byte return point")  # 2
+                                          121   ld(0)  # 3
               0101 0000  ld   $00         ;0 = floor(0 ** 2 / 4) and floor(1 ** 2 / 4)
-                                          121   cost_of_low_byte_table_entry = 3
-                                          122   C("0 = floor(0 ** 2 / 4) and floor(1 ** 2 / 4)")
-                                          123   for i in range(2, 256):
-                                          124       val = math.floor(i ** 2 / 4)
-                                          125       ld(val)
+                                          122   cost_of_low_byte_table_entry = 3
+                                          123   C("0 = floor(0 ** 2 / 4) and floor(1 ** 2 / 4)")
+                                          124   for i in range(2, 256):
+                                          125       val = math.floor(i ** 2 / 4)
+                                          126       ld(val)
               0102 0001  ld   $01         ;$0001 = 1 = floor(2 ** 2 / 4)
               0103 0002  ld   $02         ;$0002 = 2 = floor(3 ** 2 / 4)
               0104 0004  ld   $04         ;$0004 = 4 = floor(4 ** 2 / 4)
@@ -585,85 +585,361 @@ low-byte table entry:
               01fd 0082  ld   $82         ;$3e82 = 16002 = floor(253 ** 2 / 4)
               01fe 0001  ld   $01         ;$3f01 = 16129 = floor(254 ** 2 / 4)
               01ff 0080  ld   $80         ;$3f80 = 16256 = floor(255 ** 2 / 4)
-                                          126       C(f"${val:04x} = {val} = floor({i} ** 2 / 4)")
-                                          127   align(0x100, size=0x100)
+                                          127       C(f"${val:04x} = {val} = floor({i} ** 2 / 4)")
                                           128
                                           129
-                                          130   label("multiply 7x7")
-                                          131   # The formula is floor(((a + b) ** 2) / 4) - floor(((a - b) ** 2) / 4)
-                                          132
-multiply 7x7: 0200 0008  ld   $08         133   ld(".after-first-lookup")  # 1
-              0201 c206  st   [$06]       134   st([continuation])
-              0202 1400  ld   $00,y       135   ld(hi("Quarter-squares lookup table"), Y)
-              0203 00fd  ld   $fd         136   ld("high-byte action.store")
-              0204 c207  st   [$07]       137   st([high_byte_action])  # 5
-              0205 0101  ld   [$01]       138   ld([a])
-              0206 e0e8  jmp  y,$e8       139   jmp(Y, "table entry")  # 7
-              0207 8102  adda [$02]       140   adda([b])  # 8
-                                          141   cost_to_first_lookup = 8
+                                          130   # Code copied from the main ROM. This provides a lookup table for right-shifts
+                                          131   align(0x100, size=0x100)
+                                          132   label("shiftTable")
+                                          133   shiftTable = pc()
+                                          134
+                                          135   for ix in range(255):
+                                          136       for n in range(1, 9):  # Find first zero
+                                          137           if ~ix & (1 << (n - 1)):
+                                          138               break
+                                          139       pattern = ["x" if i < n else "1" if ix & (1 << i) else "0" for i in range(8)]
+                                          140       ld(ix >> n)
+shiftTable:   0200 0000  ld   $00         ;0b0000000x >> 1
+              0201 0000  ld   $00         ;0b000000xx >> 2
+              0202 0001  ld   $01         ;0b0000001x >> 1
+              0203 0000  ld   $00         ;0b00000xxx >> 3
+              0204 0002  ld   $02         ;0b0000010x >> 1
+              0205 0001  ld   $01         ;0b000001xx >> 2
+              0206 0003  ld   $03         ;0b0000011x >> 1
+              0207 0000  ld   $00         ;0b0000xxxx >> 4
+              0208 0004  ld   $04         ;0b0000100x >> 1
+              0209 0002  ld   $02         ;0b000010xx >> 2
+              020a 0005  ld   $05         ;0b0000101x >> 1
+              020b 0001  ld   $01         ;0b00001xxx >> 3
+              020c 0006  ld   $06         ;0b0000110x >> 1
+              020d 0003  ld   $03         ;0b000011xx >> 2
+              020e 0007  ld   $07         ;0b0000111x >> 1
+              020f 0000  ld   $00         ;0b000xxxxx >> 5
+              0210 0008  ld   $08         ;0b0001000x >> 1
+              0211 0004  ld   $04         ;0b000100xx >> 2
+              0212 0009  ld   $09         ;0b0001001x >> 1
+              0213 0002  ld   $02         ;0b00010xxx >> 3
+              0214 000a  ld   $0a         ;0b0001010x >> 1
+              0215 0005  ld   $05         ;0b000101xx >> 2
+              0216 000b  ld   $0b         ;0b0001011x >> 1
+              0217 0001  ld   $01         ;0b0001xxxx >> 4
+              0218 000c  ld   $0c         ;0b0001100x >> 1
+              0219 0006  ld   $06         ;0b000110xx >> 2
+              021a 000d  ld   $0d         ;0b0001101x >> 1
+              021b 0003  ld   $03         ;0b00011xxx >> 3
+              021c 000e  ld   $0e         ;0b0001110x >> 1
+              021d 0007  ld   $07         ;0b000111xx >> 2
+              021e 000f  ld   $0f         ;0b0001111x >> 1
+              021f 0000  ld   $00         ;0b00xxxxxx >> 6
+              0220 0010  ld   $10         ;0b0010000x >> 1
+              0221 0008  ld   $08         ;0b001000xx >> 2
+              0222 0011  ld   $11         ;0b0010001x >> 1
+              0223 0004  ld   $04         ;0b00100xxx >> 3
+              0224 0012  ld   $12         ;0b0010010x >> 1
+              0225 0009  ld   $09         ;0b001001xx >> 2
+              0226 0013  ld   $13         ;0b0010011x >> 1
+              0227 0002  ld   $02         ;0b0010xxxx >> 4
+              0228 0014  ld   $14         ;0b0010100x >> 1
+              0229 000a  ld   $0a         ;0b001010xx >> 2
+              022a 0015  ld   $15         ;0b0010101x >> 1
+              022b 0005  ld   $05         ;0b00101xxx >> 3
+              022c 0016  ld   $16         ;0b0010110x >> 1
+              022d 000b  ld   $0b         ;0b001011xx >> 2
+              022e 0017  ld   $17         ;0b0010111x >> 1
+              022f 0001  ld   $01         ;0b001xxxxx >> 5
+              0230 0018  ld   $18         ;0b0011000x >> 1
+              0231 000c  ld   $0c         ;0b001100xx >> 2
+              0232 0019  ld   $19         ;0b0011001x >> 1
+              0233 0006  ld   $06         ;0b00110xxx >> 3
+              0234 001a  ld   $1a         ;0b0011010x >> 1
+              0235 000d  ld   $0d         ;0b001101xx >> 2
+              0236 001b  ld   $1b         ;0b0011011x >> 1
+              0237 0003  ld   $03         ;0b0011xxxx >> 4
+              0238 001c  ld   $1c         ;0b0011100x >> 1
+              0239 000e  ld   $0e         ;0b001110xx >> 2
+              023a 001d  ld   $1d         ;0b0011101x >> 1
+              023b 0007  ld   $07         ;0b00111xxx >> 3
+              023c 001e  ld   $1e         ;0b0011110x >> 1
+              023d 000f  ld   $0f         ;0b001111xx >> 2
+              023e 001f  ld   $1f         ;0b0011111x >> 1
+              023f 0000  ld   $00         ;0b0xxxxxxx >> 7
+              0240 0020  ld   $20         ;0b0100000x >> 1
+              0241 0010  ld   $10         ;0b010000xx >> 2
+              0242 0021  ld   $21         ;0b0100001x >> 1
+              0243 0008  ld   $08         ;0b01000xxx >> 3
+              0244 0022  ld   $22         ;0b0100010x >> 1
+              0245 0011  ld   $11         ;0b010001xx >> 2
+              0246 0023  ld   $23         ;0b0100011x >> 1
+              0247 0004  ld   $04         ;0b0100xxxx >> 4
+              0248 0024  ld   $24         ;0b0100100x >> 1
+              0249 0012  ld   $12         ;0b010010xx >> 2
+              024a 0025  ld   $25         ;0b0100101x >> 1
+              024b 0009  ld   $09         ;0b01001xxx >> 3
+              024c 0026  ld   $26         ;0b0100110x >> 1
+              024d 0013  ld   $13         ;0b010011xx >> 2
+              024e 0027  ld   $27         ;0b0100111x >> 1
+              024f 0002  ld   $02         ;0b010xxxxx >> 5
+              0250 0028  ld   $28         ;0b0101000x >> 1
+              0251 0014  ld   $14         ;0b010100xx >> 2
+              0252 0029  ld   $29         ;0b0101001x >> 1
+              0253 000a  ld   $0a         ;0b01010xxx >> 3
+              0254 002a  ld   $2a         ;0b0101010x >> 1
+              0255 0015  ld   $15         ;0b010101xx >> 2
+              0256 002b  ld   $2b         ;0b0101011x >> 1
+              0257 0005  ld   $05         ;0b0101xxxx >> 4
+              0258 002c  ld   $2c         ;0b0101100x >> 1
+              0259 0016  ld   $16         ;0b010110xx >> 2
+              025a 002d  ld   $2d         ;0b0101101x >> 1
+              025b 000b  ld   $0b         ;0b01011xxx >> 3
+              025c 002e  ld   $2e         ;0b0101110x >> 1
+              025d 0017  ld   $17         ;0b010111xx >> 2
+              025e 002f  ld   $2f         ;0b0101111x >> 1
+              025f 0001  ld   $01         ;0b01xxxxxx >> 6
+              0260 0030  ld   $30         ;0b0110000x >> 1
+              0261 0018  ld   $18         ;0b011000xx >> 2
+              0262 0031  ld   $31         ;0b0110001x >> 1
+              0263 000c  ld   $0c         ;0b01100xxx >> 3
+              0264 0032  ld   $32         ;0b0110010x >> 1
+              0265 0019  ld   $19         ;0b011001xx >> 2
+              0266 0033  ld   $33         ;0b0110011x >> 1
+              0267 0006  ld   $06         ;0b0110xxxx >> 4
+              0268 0034  ld   $34         ;0b0110100x >> 1
+              0269 001a  ld   $1a         ;0b011010xx >> 2
+              026a 0035  ld   $35         ;0b0110101x >> 1
+              026b 000d  ld   $0d         ;0b01101xxx >> 3
+              026c 0036  ld   $36         ;0b0110110x >> 1
+              026d 001b  ld   $1b         ;0b011011xx >> 2
+              026e 0037  ld   $37         ;0b0110111x >> 1
+              026f 0003  ld   $03         ;0b011xxxxx >> 5
+              0270 0038  ld   $38         ;0b0111000x >> 1
+              0271 001c  ld   $1c         ;0b011100xx >> 2
+              0272 0039  ld   $39         ;0b0111001x >> 1
+              0273 000e  ld   $0e         ;0b01110xxx >> 3
+              0274 003a  ld   $3a         ;0b0111010x >> 1
+              0275 001d  ld   $1d         ;0b011101xx >> 2
+              0276 003b  ld   $3b         ;0b0111011x >> 1
+              0277 0007  ld   $07         ;0b0111xxxx >> 4
+              0278 003c  ld   $3c         ;0b0111100x >> 1
+              0279 001e  ld   $1e         ;0b011110xx >> 2
+              027a 003d  ld   $3d         ;0b0111101x >> 1
+              027b 000f  ld   $0f         ;0b01111xxx >> 3
+              027c 003e  ld   $3e         ;0b0111110x >> 1
+              027d 001f  ld   $1f         ;0b011111xx >> 2
+              027e 003f  ld   $3f         ;0b0111111x >> 1
+              027f 0000  ld   $00         ;0bxxxxxxxx >> 8
+              0280 0040  ld   $40         ;0b1000000x >> 1
+              0281 0020  ld   $20         ;0b100000xx >> 2
+              0282 0041  ld   $41         ;0b1000001x >> 1
+              0283 0010  ld   $10         ;0b10000xxx >> 3
+              0284 0042  ld   $42         ;0b1000010x >> 1
+              0285 0021  ld   $21         ;0b100001xx >> 2
+              0286 0043  ld   $43         ;0b1000011x >> 1
+              0287 0008  ld   $08         ;0b1000xxxx >> 4
+              0288 0044  ld   $44         ;0b1000100x >> 1
+              0289 0022  ld   $22         ;0b100010xx >> 2
+              028a 0045  ld   $45         ;0b1000101x >> 1
+              028b 0011  ld   $11         ;0b10001xxx >> 3
+              028c 0046  ld   $46         ;0b1000110x >> 1
+              028d 0023  ld   $23         ;0b100011xx >> 2
+              028e 0047  ld   $47         ;0b1000111x >> 1
+              028f 0004  ld   $04         ;0b100xxxxx >> 5
+              0290 0048  ld   $48         ;0b1001000x >> 1
+              0291 0024  ld   $24         ;0b100100xx >> 2
+              0292 0049  ld   $49         ;0b1001001x >> 1
+              0293 0012  ld   $12         ;0b10010xxx >> 3
+              0294 004a  ld   $4a         ;0b1001010x >> 1
+              0295 0025  ld   $25         ;0b100101xx >> 2
+              0296 004b  ld   $4b         ;0b1001011x >> 1
+              0297 0009  ld   $09         ;0b1001xxxx >> 4
+              0298 004c  ld   $4c         ;0b1001100x >> 1
+              0299 0026  ld   $26         ;0b100110xx >> 2
+              029a 004d  ld   $4d         ;0b1001101x >> 1
+              029b 0013  ld   $13         ;0b10011xxx >> 3
+              029c 004e  ld   $4e         ;0b1001110x >> 1
+              029d 0027  ld   $27         ;0b100111xx >> 2
+              029e 004f  ld   $4f         ;0b1001111x >> 1
+              029f 0002  ld   $02         ;0b10xxxxxx >> 6
+              02a0 0050  ld   $50         ;0b1010000x >> 1
+              02a1 0028  ld   $28         ;0b101000xx >> 2
+              02a2 0051  ld   $51         ;0b1010001x >> 1
+              02a3 0014  ld   $14         ;0b10100xxx >> 3
+              02a4 0052  ld   $52         ;0b1010010x >> 1
+              02a5 0029  ld   $29         ;0b101001xx >> 2
+              02a6 0053  ld   $53         ;0b1010011x >> 1
+              02a7 000a  ld   $0a         ;0b1010xxxx >> 4
+              02a8 0054  ld   $54         ;0b1010100x >> 1
+              02a9 002a  ld   $2a         ;0b101010xx >> 2
+              02aa 0055  ld   $55         ;0b1010101x >> 1
+              02ab 0015  ld   $15         ;0b10101xxx >> 3
+              02ac 0056  ld   $56         ;0b1010110x >> 1
+              02ad 002b  ld   $2b         ;0b101011xx >> 2
+              02ae 0057  ld   $57         ;0b1010111x >> 1
+              02af 0005  ld   $05         ;0b101xxxxx >> 5
+              02b0 0058  ld   $58         ;0b1011000x >> 1
+              02b1 002c  ld   $2c         ;0b101100xx >> 2
+              02b2 0059  ld   $59         ;0b1011001x >> 1
+              02b3 0016  ld   $16         ;0b10110xxx >> 3
+              02b4 005a  ld   $5a         ;0b1011010x >> 1
+              02b5 002d  ld   $2d         ;0b101101xx >> 2
+              02b6 005b  ld   $5b         ;0b1011011x >> 1
+              02b7 000b  ld   $0b         ;0b1011xxxx >> 4
+              02b8 005c  ld   $5c         ;0b1011100x >> 1
+              02b9 002e  ld   $2e         ;0b101110xx >> 2
+              02ba 005d  ld   $5d         ;0b1011101x >> 1
+              02bb 0017  ld   $17         ;0b10111xxx >> 3
+              02bc 005e  ld   $5e         ;0b1011110x >> 1
+              02bd 002f  ld   $2f         ;0b101111xx >> 2
+              02be 005f  ld   $5f         ;0b1011111x >> 1
+              02bf 0001  ld   $01         ;0b1xxxxxxx >> 7
+              02c0 0060  ld   $60         ;0b1100000x >> 1
+              02c1 0030  ld   $30         ;0b110000xx >> 2
+              02c2 0061  ld   $61         ;0b1100001x >> 1
+              02c3 0018  ld   $18         ;0b11000xxx >> 3
+              02c4 0062  ld   $62         ;0b1100010x >> 1
+              02c5 0031  ld   $31         ;0b110001xx >> 2
+              02c6 0063  ld   $63         ;0b1100011x >> 1
+              02c7 000c  ld   $0c         ;0b1100xxxx >> 4
+              02c8 0064  ld   $64         ;0b1100100x >> 1
+              02c9 0032  ld   $32         ;0b110010xx >> 2
+              02ca 0065  ld   $65         ;0b1100101x >> 1
+              02cb 0019  ld   $19         ;0b11001xxx >> 3
+              02cc 0066  ld   $66         ;0b1100110x >> 1
+              02cd 0033  ld   $33         ;0b110011xx >> 2
+              02ce 0067  ld   $67         ;0b1100111x >> 1
+              02cf 0006  ld   $06         ;0b110xxxxx >> 5
+              02d0 0068  ld   $68         ;0b1101000x >> 1
+              02d1 0034  ld   $34         ;0b110100xx >> 2
+              02d2 0069  ld   $69         ;0b1101001x >> 1
+              02d3 001a  ld   $1a         ;0b11010xxx >> 3
+              02d4 006a  ld   $6a         ;0b1101010x >> 1
+              02d5 0035  ld   $35         ;0b110101xx >> 2
+              02d6 006b  ld   $6b         ;0b1101011x >> 1
+              02d7 000d  ld   $0d         ;0b1101xxxx >> 4
+              02d8 006c  ld   $6c         ;0b1101100x >> 1
+              02d9 0036  ld   $36         ;0b110110xx >> 2
+              02da 006d  ld   $6d         ;0b1101101x >> 1
+              02db 001b  ld   $1b         ;0b11011xxx >> 3
+              02dc 006e  ld   $6e         ;0b1101110x >> 1
+              02dd 0037  ld   $37         ;0b110111xx >> 2
+              02de 006f  ld   $6f         ;0b1101111x >> 1
+              02df 0003  ld   $03         ;0b11xxxxxx >> 6
+              02e0 0070  ld   $70         ;0b1110000x >> 1
+              02e1 0038  ld   $38         ;0b111000xx >> 2
+              02e2 0071  ld   $71         ;0b1110001x >> 1
+              02e3 001c  ld   $1c         ;0b11100xxx >> 3
+              02e4 0072  ld   $72         ;0b1110010x >> 1
+              02e5 0039  ld   $39         ;0b111001xx >> 2
+              02e6 0073  ld   $73         ;0b1110011x >> 1
+              02e7 000e  ld   $0e         ;0b1110xxxx >> 4
+              02e8 0074  ld   $74         ;0b1110100x >> 1
+              02e9 003a  ld   $3a         ;0b111010xx >> 2
+              02ea 0075  ld   $75         ;0b1110101x >> 1
+              02eb 001d  ld   $1d         ;0b11101xxx >> 3
+              02ec 0076  ld   $76         ;0b1110110x >> 1
+              02ed 003b  ld   $3b         ;0b111011xx >> 2
+              02ee 0077  ld   $77         ;0b1110111x >> 1
+              02ef 0007  ld   $07         ;0b111xxxxx >> 5
+              02f0 0078  ld   $78         ;0b1111000x >> 1
+              02f1 003c  ld   $3c         ;0b111100xx >> 2
+              02f2 0079  ld   $79         ;0b1111001x >> 1
+              02f3 001e  ld   $1e         ;0b11110xxx >> 3
+              02f4 007a  ld   $7a         ;0b1111010x >> 1
+              02f5 003d  ld   $3d         ;0b111101xx >> 2
+              02f6 007b  ld   $7b         ;0b1111011x >> 1
+              02f7 000f  ld   $0f         ;0b1111xxxx >> 4
+              02f8 007c  ld   $7c         ;0b1111100x >> 1
+              02f9 003e  ld   $3e         ;0b111110xx >> 2
+              02fa 007d  ld   $7d         ;0b1111101x >> 1
+              02fb 001f  ld   $1f         ;0b11111xxx >> 3
+              02fc 007e  ld   $7e         ;0b1111110x >> 1
+              02fd 003f  ld   $3f         ;0b111111xx >> 2
+              02fe 007f  ld   $7f         ;0b1111111x >> 1
+                                          141       C("0b%s >> %d" % ("".join(reversed(pattern)), n))
                                           142
-                                          143   cost_after_first_lookup = (
-                                          144       cost_to_first_lookup
-                                          145       + cost_of_high_byte_table_entry
-                                          146       + cost_of_high_byte_store
-                                          147       + cost_of_low_byte_table_entry
-                                          148       + cost_of_low_byte_return
-                                          149   )
+                                          143   assert pc() & 255 == 255
+              02ff fd05  bra  [$05]       144   bra([tmp])  # Jumps back into next page
+                                          145   align(0x100, size=0x100)
+              0300 0200  nop              146   nop()  #
+                                          147
+                                          148   label("multiply 7x7")
+                                          149   # The formula is floor(((a + b) ** 2) / 4) - floor(((a - b) ** 2) / 4)
                                           150
-                                          151   label(".after-first-lookup")
-                                          152   # On return we have the low-byte in the accumulator
-                                          153   # We can safely add one to it without causing an overflow,
-                                          154   # because 255 does not appear in the low-byte table.
-                                          155   # This is part of the following subtraction.
+multiply 7x7: 0301 0009  ld   $09         151   ld(".after-first-lookup")  # 1
+              0302 c206  st   [$06]       152   st([continuation])
+              0303 1400  ld   $00,y       153   ld(hi("Quarter-squares lookup table"), Y)
+              0304 00fd  ld   $fd         154   ld("high-byte action.store")
+              0305 c207  st   [$07]       155   st([high_byte_action])  # 5
+              0306 0101  ld   [$01]       156   ld([a])
+              0307 e0e8  jmp  y,$e8       157   jmp(Y, "table entry")  # 7
+              0308 8102  adda [$02]       158   adda([b])  # 8
+                                          159   cost_to_first_lookup = 8
+                                          160
+                                          161   cost_after_first_lookup = (
+                                          162       cost_to_first_lookup
+                                          163       + cost_of_high_byte_table_entry
+                                          164       + cost_of_high_byte_store
+                                          165       + cost_of_low_byte_table_entry
+                                          166       + cost_of_low_byte_return
+                                          167   )
+                                          168
+                                          169   label(".after-first-lookup")
+                                          170   # On return we have the low-byte in the accumulator
+                                          171   # We can safely add one to it without causing an overflow,
+                                          172   # because 255 does not appear in the low-byte table.
+                                          173   # This is part of the following subtraction.
 .after-first-lookup:
-              0208 8001  adda $01         156   adda(1)  # 1
-              0209 c203  st   [$03]       157   st([result])
-              020a 0011  ld   $11         158   ld(".after-second-lookup")
-              020b c206  st   [$06]       159   st([continuation])
-              020c 00fb  ld   $fb         160   ld("high-byte action.invert-and-add")  # 5
-              020d c207  st   [$07]       161   st([high_byte_action])
-              020e 0101  ld   [$01]       162   ld([a])
-              020f e0e3  jmp  y,$e3       163   jmp(Y, "table entry.possibly-negative")  # 8
-              0210 a102  suba [$02]       164   suba([b])  # 9
-                                          165   cost_between_lookups = 9
-                                          166
-                                          167   cost_after_second_lookup = (
-                                          168       cost_after_first_lookup
-                                          169       + cost_between_lookups
-                                          170       + cost_of_absolute
-                                          171       + cost_of_high_byte_table_entry
-                                          172       + cost_of_high_byte_invert_and_add
-                                          173       + cost_of_low_byte_table_entry
-                                          174       + cost_of_low_byte_return
-                                          175   )
-                                          176
-                                          177   label(".after-second-lookup")
+              0309 8001  adda $01         174   adda(1)  # 1
+              030a c203  st   [$03]       175   st([result])
+              030b 0012  ld   $12         176   ld(".after-second-lookup")
+              030c c206  st   [$06]       177   st([continuation])
+              030d 00fb  ld   $fb         178   ld("high-byte action.invert-and-add")  # 5
+              030e c207  st   [$07]       179   st([high_byte_action])
+              030f 0101  ld   [$01]       180   ld([a])
+              0310 e0e3  jmp  y,$e3       181   jmp(Y, "table entry.possibly-negative")  # 8
+              0311 a102  suba [$02]       182   suba([b])  # 9
+                                          183   cost_between_lookups = 9
+                                          184
+                                          185   cost_after_second_lookup = (
+                                          186       cost_after_first_lookup
+                                          187       + cost_between_lookups
+                                          188       + cost_of_absolute
+                                          189       + cost_of_high_byte_table_entry
+                                          190       + cost_of_high_byte_invert_and_add
+                                          191       + cost_of_low_byte_table_entry
+                                          192       + cost_of_low_byte_return
+                                          193   )
+                                          194
+                                          195   label(".after-second-lookup")
 .after-second-lookup:
-              0211 60ff  xora $ff         178   xora(0xFF)  # 1
-                                          179   # We need to add this to the result
-                                          180   # But we may have a carry
-              0212 8103  adda [$03]       181   adda([result])
-              0213 c205  st   [$05]       182   st([tmp])
-              0214 e818  blt  $0218       183   blt(pc() + 4)  # 5
-              0215 a103  suba [$03]       184   suba([result])  # 6
-              0216 fc1a  bra  $021a       185   bra(pc() + 4)  # 7
-              0217 4103  ora  [$03]       186   ora([result])  # 8
-              0218 fc1a  bra  $021a       187   bra(pc() + 2)  # 7
-              0219 2103  anda [$03]       188   anda([result])  # 8
-              021a 3080  anda $80,x       189   anda(0b1000_0000, X)  # 9
-              021b 0105  ld   [$05]       190   ld([tmp])
-              021c c203  st   [$03]       191   st([result])  # 10
-              021d 0500  ld   [x]         192   ld([X])
-              021e 8104  adda [$04]       193   adda([result + 1])
-              021f c204  st   [$04]       ;Total cost: 64 cycles
-                                          194   st([result + 1])  # 13
-                                          195   cost_of_final_add = 13
-                                          196
-                                          197   cost_of_7bit_multiply = cost_after_second_lookup + cost_of_final_add
-                                          198   C(f"Total cost: {cost_of_7bit_multiply} cycles")
-                                          199   label("done")
-                                          200   end()
-                                          201
-                                          202   if __name__ == "__main__":
-                                          203       disableListing()
-              0220
+              0312 60ff  xora $ff         196   xora(0xFF)  # 1
+                                          197   # We need to add this to the result
+                                          198   # But we may have a carry
+              0313 8103  adda [$03]       199   adda([result])
+              0314 c205  st   [$05]       200   st([tmp])
+              0315 e819  blt  $0319       201   blt(pc() + 4)  # 5
+              0316 a103  suba [$03]       202   suba([result])  # 6
+              0317 fc1b  bra  $031b       203   bra(pc() + 4)  # 7
+              0318 4103  ora  [$03]       204   ora([result])  # 8
+              0319 fc1b  bra  $031b       205   bra(pc() + 2)  # 7
+              031a 2103  anda [$03]       206   anda([result])  # 8
+              031b 3080  anda $80,x       207   anda(0b1000_0000, X)  # 9
+              031c 0105  ld   [$05]       208   ld([tmp])
+              031d c203  st   [$03]       209   st([result])  # 10
+              031e 0500  ld   [x]         210   ld([X])
+              031f 8104  adda [$04]       211   adda([result + 1])
+              0320 c204  st   [$04]       ;Total cost: 64 cycles
+                                          212   st([result + 1])  # 13
+                                          213   cost_of_final_add = 13
+                                          214
+                                          215   cost_of_7bit_multiply = cost_after_second_lookup + cost_of_final_add
+                                          216   C(f"Total cost: {cost_of_7bit_multiply} cycles")
+                                          217   label("done")
+                                          218
+                                          219   # Extend the 7bit by 7bit multiplication to 8bit by 8bit.
+                                          220
+                                          221   label("multiply 8x8")
+                                          222   end()
+                                          223
+                                          224   if __name__ == "__main__":
+                                          225       disableListing()
+              0321
