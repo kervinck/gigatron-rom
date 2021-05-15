@@ -104,7 +104,7 @@ def test_subtract_quarter_square(a, b, previous_value):
 
 
 @given(a=_seven_bit_integers, b=_seven_bit_integers)
-def test_multiplication(a, b):
+def test_multiplication_7(a, b):
     """Multiplication of two seven-bit integers should work"""
     RAM[vars.a] = a
     RAM[vars.b] = b
@@ -115,3 +115,25 @@ def test_multiplication(a, b):
     result = int.from_bytes(RAM[vars.result : vars.result + 2], "little", signed=False)
     assert a * b == result
     assert vars.cost_of_7bit_multiply == cycles
+
+
+@given(a=_bytes, b=_bytes)
+def test_multiplication_8(a, b):
+    """Multiplication of two eight-bit integers should work"""
+    Emulator.reset()
+    RAM[vars.a] = a
+    RAM[vars.b] = b
+    Emulator.next_instruction = "multiply 8x8"
+    expected_saving = (
+        vars.no_msb_cost_saving
+        if a < 128 and b < 128
+        else vars.one_msb_cost_saving
+        if a < 128 or b < 128
+        else 0
+    )
+
+    cycles = Emulator.run_to("done")
+
+    result = int.from_bytes(RAM[vars.result : vars.result + 2], "little", signed=False)
+    assert a * b == result
+    assert vars.cost_of_8bit_multiply - expected_saving == cycles

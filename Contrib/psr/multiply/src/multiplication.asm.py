@@ -21,6 +21,7 @@ from asm import (
     jmp,
     label,
     ld,
+    lo,
     nop,
     ora,
     pc,
@@ -141,7 +142,7 @@ for ix in range(255):
     C("0b%s >> %d" % ("".join(reversed(pattern)), n))
 
 assert pc() & 255 == 255
-bra([tmp])  # Jumps back into next page
+bra([continuation])  # Jumps back into next page
 align(0x100, size=0x100)
 nop()  #
 
@@ -215,6 +216,164 @@ cost_of_final_add = 13
 cost_of_7bit_multiply = cost_after_second_lookup + cost_of_final_add
 C(f"Total cost: {cost_of_7bit_multiply} cycles")
 label("done")
+nop()
+
+
+label("multiply 8x8")
+# Extend the 7bit x 7bit multiplication to 8bit x 8bit
+#
+# The logic goes as follows.
+# Let A and B be the low seven bits of a and b, e.g.
+# A = a₆2⁶ + a₅2⁵ + a₄2⁴ + a₃2³ + a₂2² + a₁2¹ + a₀2⁰
+# B = b₆2⁶ + b₅2⁵ + b₄2⁴ + b₃2³ + b₂2² + b₁2¹ + b₀2⁰
+# Then we could think of 8bit x 8bit multiply as
+# (a₇2⁷ + A)(b₇2⁷ + B)
+# Multiplying out the brackets gives
+# a₇2⁷b₇2⁷ + a₇2⁷B + b₇2⁷A + AB
+# (and AB is the result we already know how to calculate)
+# Simplifying a bit, we get
+# a₇b₇2¹⁴ + 2⁷(a₇B + b₇A) + AB
+# Since a₇ and b₇ are one or zero, multiplying by them is like an if.
+# We can consider four cases,
+# if a₇ is 1 and b₇ is 1:
+#   2¹⁴ + 2⁷(B + A) + AB
+# if a₇ is 1 and b₇ is 0:
+#   2⁷B + AB
+# if a₇ is 0 and b₇ is 1:
+#   2⁷A + AB
+# if a₇ is 0 and b₇ is 0:
+#   AB
+# Multiplication by 2⁷(=128) is a left-shift by seven, which
+# can be broken down as moving the LSB of the low-byte to the
+# MSB of the low-byte, and setting all of the other bits to zero,
+# The other bits of the low byte can be right-shifted by one,
+# and moved to the high byte.
+
+# Test which of the branches we are on.
+ld([a])  # 1
+xora([b])
+blt(".one MSB set")  # 3
+ld([a])  # 4
+
+# Both MSBs equal
+bge("multiply 7x7")  # 5
+anda(0b0111_1111)  # 6
+cost_of_8bit_multiply__both_msbs_low = cost_of_7bit_multiply + 6
+
+# Both MSBs set
+st([a])  # 7; a = A
+ld(".after right-shift")
+st([continuation])
+ld(2 ** 14 >> 8)  # 10; Write the high-byte for later addition.
+st([result + 1])
+ld([b])
+anda(0b0111_1111)
+st([b])  # b = B
+adda([a])  # 15
+cost_of_both_msbs_set = 15
+
+label(". << 7")
+st([tmp])  # 1
+anda(0b0000_0001)  # Clear all but the bottom bit
+adda(0b0111_1111)  # Carries bottom bit to top bit
+anda(0b1000_0000)  # Clears all but the top bit
+st([result])  # 5
+ld([tmp])
+anda(0b1111_1110)  # Calculate index to right-shift-table
+ld(hi("shiftTable"), Y)
+jmp(Y, AC)  # 9
+bra(0xFF)  # 10
+# 11 ld (a + b) >> 1
+# 12 bra [continuation]
+# 12 nop
+cost_of_right_shift = 13
+cost_after_right_shift = cost_of_both_msbs_set + cost_of_right_shift
+
+label(".one MSB set")
+bge(".b has msb set")  # 5
+ld(0b0111_1111)  # 6
+# a has msb set
+anda([a])  # 7
+st([a])
+ld(lo(".after right-shift") + 1)
+st([continuation])  # 10
+bra(". << 7")  # 11
+ld([b])  # 12
+label(".b has msb set")
+anda([b])  # 7
+st([b])
+ld(lo(".after right-shift") + 1)
+st([continuation])  # 10
+bra(". << 7")  # 11
+ld([a])  # 12
+cost_of_one_msb_set = 12
+one_msb_cost_saving = cost_of_both_msbs_set - cost_of_one_msb_set + 1
+
+label(".after right-shift")
+adda([result + 1])  # 1
+st([result + 1])
+ld(".after-first-lookup-8bit")
+st([continuation])
+ld(hi("Quarter-squares lookup table"), Y)  # 5
+ld("high-byte action.add")
+st([high_byte_action])
+ld([a])
+jmp(Y, "table entry")  # 9
+adda([b])  # 10
+cost_of_after_right_shift = 10
+cost_after_first_lookup__8bit = (
+    cost_after_right_shift
+    + cost_of_after_right_shift
+    + cost_of_high_byte_table_entry
+    + cost_of_high_byte_add
+    + cost_of_low_byte_table_entry
+    + cost_of_low_byte_return
+)
+
+label(".after-first-lookup-8bit")
+# On return we have the low-byte in the accumulator
+# We already either have 0 or 128 in the low byte of the result.
+# Adding will cause an overflow into the high byte iff both
+# have the MSB set, in which case the result will definitely
+# not have the MSB set.
+adda([result])  # 1
+blt(pc() + 3)  # 2
+bra(pc() + 3)  # 3
+ld([result], X)  # 4; May be a carry
+ld(0, X)  # 4; Definitely no carry
+# We can safely add one to the result without causing a further overflow,
+# because 255 does not appear in the low-byte table.
+# This is part of the subtraction.
+adda(1)  # 5
+st([result])
+# Do the carry
+ld([X])
+adda([result + 1])
+st([result + 1])
+ld(".after-second-lookup")  # 10
+st([continuation])
+ld("high-byte action.invert-and-add")
+st([high_byte_action])
+ld([a])
+jmp(Y, "table entry.possibly-negative")  # 15
+suba([b])  # 16
+cost_between_lookups__8bit = 16
+
+cost_after_second_lookup__8bit = (
+    cost_after_first_lookup__8bit
+    + cost_between_lookups__8bit
+    + cost_of_absolute
+    + cost_of_high_byte_table_entry
+    + cost_of_high_byte_invert_and_add
+    + cost_of_low_byte_table_entry
+    + cost_of_low_byte_return
+)
+
+cost_of_8bit_multiply = cost_after_second_lookup__8bit + cost_of_final_add
+no_msb_cost_saving = cost_of_8bit_multiply - cost_of_8bit_multiply__both_msbs_low
+C(f"Worst case cost: {cost_of_8bit_multiply}")
+C(f"Saving when both values < 128: {no_msb_cost_saving}")
+C(f"Saving when only one value < 128: {one_msb_cost_saving}")
 end()
 
 if __name__ == "__main__":
