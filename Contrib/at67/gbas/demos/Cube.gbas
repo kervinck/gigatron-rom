@@ -8,6 +8,7 @@ K=0:X=K:M=X:N=M:I=N:A=I:B=A:L=B:F=L
 DIM P(7)=0
 DIM Q(7)=0
 
+init time, noupdate
 set FGBG_COLOUR, &h3F00
 
 10 MODE 3:CLS:U=48:GOTO 100
@@ -27,7 +28,6 @@ set FGBG_COLOUR, &h3F00
 100 S=45:C=45:F=U LSL 2
     gosub 110
 
-init time, noupdate
 timer=0
 for i=0 &to 100
     gosub 254

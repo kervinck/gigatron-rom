@@ -11,6 +11,8 @@ lutIndex            EQU     register8
 romType             EQU     register0
 romErrAddr          EQU     register1
 romErrPixel         EQU     register2
+romExec_vLR         EQU     register0
+romReadAddr         EQU     register0
 
 
 %SUB                romCheck
@@ -27,6 +29,22 @@ romC_loop           LD      romErrPixel
                     BRA     romC_loop                       ; flash center pixel indicating rom error
                     
 romC_return         RET                    
+%ENDS
+
+%SUB                romExec
+romExec             LDW     romExec_vLR
+                    STW     giga_vLR
+                    LDI     SYS_Exec_88                     ; address < 0x0100 so use LDI
+                    STW     giga_sysFn
+                    SYS     88                              ; doesn't return from here!
+%ENDS
+
+%SUB                romRead
+romRead             LDI     SYS_ReadRomDir_v5_80            ; address < 0x0100 so use LDI
+                    STW     giga_sysFn
+                    LDW     romReadAddr
+                    SYS     80
+                    RET
 %ENDS
 
 %SUB                realTimeStub

@@ -203,18 +203,22 @@ _label_ CALLI   _label
         CALLI   newLineScroll
 %ENDM
 
-%MACRO  PrintChar _chr
+%MACRO  PrintChr _chr
         LDI     _chr
         CALLI   printChr
 %ENDM
 
-%MACRO  PrintAcChar
+%MACRO  PrintAcChr
         CALLI   printChr
 %ENDM
 
-%MACRO  PrintVarChar _var
+%MACRO  PrintVarChr _var
         LD      _var
         CALLI   printChr
+%ENDM
+
+%MACRO  PrintSpc
+        CALLI   printSpc
 %ENDM
 
 %MACRO  PrintHex
@@ -279,6 +283,11 @@ _label_ CALLI   _label
 
 %MACRO  StringChr
         CALLI   stringChr
+%ENDM
+
+%MACRO  StringSpc
+        STW     strAddr
+        CALLI   stringSpc
 %ENDM
 
 %MACRO  StringHex
@@ -655,6 +664,15 @@ _id_    CALLI   _label
 %MACRO  RomCheck
         LDWI    romCheck
         CALL    giga_vAC
+%ENDM
+
+%MACRO  RomExec
+        CALLI   romExec
+%ENDM
+
+%MACRO  RomRead
+        STW     romReadAddr
+        CALLI   romRead
 %ENDM
 
 %MACRO  Initialise

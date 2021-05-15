@@ -22,7 +22,7 @@ poke &h18E0, a.lo
 doke &h18E0, a.lo - b.hi * 3 + 1 - a
 
 const big$="aioujehfiadsuhgfaissuhfgdiughafpiusfghpdsiufghspi;udf"
-const a=23
+const ca=23
 dog=0
 cat$="cat"
 'hours = 0

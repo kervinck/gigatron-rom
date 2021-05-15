@@ -39,6 +39,8 @@ load sprite, ../../res/image/Xmas2020/Rudolph3.tga, 3
 load sprite, ../../res/image/Xmas2020/Rudolph4.tga, 4
 load sprite, ../../res/image/Xmas2020/Rudolph5.tga, 5
 
+'scrolling has to happen immediately after vertical blank or glitches ensue, so attach scroll sub before midi player
+init scrollSanta, MIDI
 
 def frame, cont, yxd, anim0, anim1
 
@@ -133,7 +135,5 @@ initialise:
     'audio fix for ROMv5a
     poke &h21, peek(&h21) OR 3
     
-    'scrolling has to happen immediately after vertical blank or glitches ensue, so attach scroll sub before midi player
-    init scrollSanta, MIDI
     play MIDI, &h20A0, 3
 return

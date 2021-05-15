@@ -4,15 +4,22 @@ project(gtmidi)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
 
-if(MSVC)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-endif()
+add_definitions(-DSTAND_ALONE)
 
 set(headers ../../cpu.h ../../memory.h ../../expression.h ../../midi.h ../../gtmidi.h)
 set(sources ../../expression.cpp gtmidi.cpp)
 
+if(MSVC)
+    add_compile_options(/W4)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+else()
+    add_compile_options(-Wall -Wextra -pedantic)
+endif()
+
 add_executable(gtmidi ${headers} ${sources})
 
-target_link_libraries(gtmidi)
+if(MSVC)
+    set_target_properties(gtmidi PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ..)
+endif()
 
-set_target_properties(gtmidi PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ..)
+target_link_libraries(gtmidi)

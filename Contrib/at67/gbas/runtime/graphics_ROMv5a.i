@@ -88,7 +88,7 @@ scanlineMode        LDWI    SYS_SetMode_v2_80
 %SUB                waitVBlanks
 waitVBlanks         PUSH
 
-waitVB_loop         LDW     waitVBlankNum
+waitVB_loop0        LDW     waitVBlankNum
                     SUBI    0x01
                     STW     waitVBlankNum
                     BGE     waitVB_vblank
@@ -96,12 +96,20 @@ waitVB_loop         LDW     waitVBlankNum
                     RET
     
 waitVB_vblank       CALLI   waitVBlank
-                    BRA     waitVB_loop
+
+waitVB_loop1        LD      giga_videoY         ; wait until bottom scanline, (0x01EE), is done
+                    XORI    &HEE
+                    BEQ     waitVB_loop1
+                    BRA     waitVB_loop0
 %ENDS   
 
 %SUB                waitVBlank
+                    ; 179 is normally the start of vBlank, but if a vBlank routine is executing there
+                    ; is a very good chance by the time the vBlank routine is over giga_videoY will
+                    ; have progressed past 179, (by how much is nondeterministic). So instead we wait
+                    ; for the scanline before vBlank, i.e. when videoY = 0xEE, (videoTablePtr = 0x01EE)
 waitVBlank          LD      giga_videoY
-                    XORI    179
+                    XORI    &HEE
                     BNE     waitVBlank
                     RET
 %ENDS

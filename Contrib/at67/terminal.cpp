@@ -569,11 +569,11 @@ namespace Terminal
             helpScreen = !helpScreen;
             Graphics::setDisplayHelpScreen(helpScreen);
         }
-        // Disassembler
-        else if(keyCode == Editor::getEmulatorScanCode("Disassembler")  &&  keyMod == Editor::getEmulatorKeyMod("Disassembler"))
-        {
-            Editor::setEditorMode(Editor::Dasm);
-        }
+        // TODO: conflicts with CTRL-D in pluggy terminal mode, Disassembler
+        //else if(keyCode == Editor::getEmulatorScanCode("Disassembler")  &&  keyMod == Editor::getEmulatorKeyMod("Disassembler"))
+        //{
+        //    Editor::setEditorMode(Editor::Dasm);
+        //}
         // Browser
         else if(keyCode == Editor::getEmulatorScanCode("Browse")  &&  keyMod == Editor::getEmulatorKeyMod("Browse"))
         {

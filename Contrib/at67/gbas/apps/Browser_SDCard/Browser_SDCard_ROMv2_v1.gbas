@@ -1,0 +1,425 @@
+_runtimePath_ "../../runtime"
+_runtimeStart_ &h7FFF
+_codeRomType_ ROMv2
+
+
+const sysArg0 = &h24
+const sysArg7 = &h2B
+
+'payload protocol: <isLast>, <length>, <payload 0...62>
+'filename packet: <type>, <length>, <name>, <0> : <type> = 1:file or 2:dir
+const MAX_FILES     = 100
+const PAYLOAD_SIZE  = 63
+const PROTOCOL_SIZE = 1 + 1 + PAYLOAD_SIZE
+const PACKET_SIZE   = 1 + 1 + 12 + 1
+
+const CmdSDList  = 1
+const CmdSDExec  = 2
+const CmdSDOpen  = 3
+const CmdSDClose = 4
+const CmdSDBegin = 5
+const CmdSDInit  = 6
+
+const EntryFile  = 1
+const EntryDir   = 2
+const EntryError = 3
+
+def execAddr, commsAddr, commsSize, commsRetn, browserIdx, browserY, cursorY, cursOldY, isLast, length, runStrAddr, execRtn, waitRtn
+
+runName$ = ""
+execName$ = ""
+pathName$ = ""
+
+dim commsCmd%(PACKET_SIZE-1) = 0
+dim buffer%(PROTOCOL_SIZE-1) = 0
+dim browser%(MAX_FILES-1, PACKET_SIZE-1) 
+
+
+gosub findLoader
+    
+restart:
+
+gosub initialise
+gosub initSDComms
+gosub beginSDCard
+gosub openSDCard
+    
+repeat
+    gosub listSDCard
+    gosub loadDir
+    gosub fillBrowser
+until &(isLast)
+
+gosub closeSDCard
+gosub printBrowser
+
+f = 0
+kk = 255
+repeat
+    wait
+
+    gosub handleInput
+    if &(execRtn) then goto &restart
+
+    inc f
+forever
+end
+
+
+findLoader:
+    romType = get("ROM_TYPE")
+    if romType     &= &h20  'ROMv2
+        execAddr = &hE23E
+    elseif romType &= &h28  'ROMv3
+        execAddr = &hB4A8
+    elseif romType &= &h38  'ROMv4
+        execAddr = &hAD5A
+    elseif romType &>= &h40 'ROMv5 or higher
+        repeat
+            'create name string
+            execAddr = get("ROM_READ_DIR", execAddr)
+            if (execAddr)
+                poke @execName$, 6
+                for j=sysArg0 &to sysArg7
+                    poke @execName$ + j - (sysArg0 - 1), peek(j)
+                next j
+
+                if execName$ = "Loader" then return
+            endif
+        until execAddr &= 0
+
+        print "Loader not found!"
+        end
+    endif
+return
+
+
+sendCommsCmd:
+    asm
+        LDWI    SYS_SendSerial1_v3_80
+        STW     giga_sysFn
+        LDW     _commsAddr
+        STW     giga_sysArg0
+        LDI     1
+        STW     giga_sysArg2
+        LD      _commsSize
+        LSLW
+        LSLW
+        LSLW
+        STW     giga_sysArg3
+        SYS     80
+        STW     _commsRetn
+    endasm
+return
+
+
+'simplified version of Loader, removes checksum, destination address, copying of buffer
+'to destination address and visuals
+loadDir:
+    asm
+        LDW     _NextByteIn_32
+        STW     giga_sysFn
+
+loadD0: LDWI    _buffer_array
+        STW     giga_sysArg0            'buffer
+
+        LDI     207
+        ST      giga_sysArg3            'scanline 207
+        SYS     32                      'isLast, (0 or 1)
+        
+        LDWI    _buffer_array
+        PEEK
+        XORI    255
+        BEQ     _loadD0                 'loop while idle
+
+        LDI     219
+        ST      giga_sysArg3            'scanline 219
+        SYS     32                      'length, (6 bits : 0..62)
+
+        LDI     235
+        ST      giga_sysArg3            'scanline 235
+        SYS     32                      'payload 0
+        
+        LDI     251
+        ST      giga_sysArg3            'scanline 251
+        SYS     32                      'payload 1
+        
+        LDI     2
+        ST      giga_sysArg3            'scanline 2
+        
+loadD1: SYS     32                      'payload 2-61
+        LD      giga_sysArg3
+        ADDI    4
+        ST      giga_sysArg3
+        XORI    242                     'scanline end is 238
+        BNE     _loadD1
+        LDI     185
+        ST      giga_sysArg3            'scanline 185
+        SYS     32                      'payload 62
+    endasm
+
+    isLast = peek(@buffer)
+    length = peek(@buffer + 1) AND 63    
+return
+
+
+fillBrowser:
+    bIdx = 2
+
+    if length &= 0 then return
+    if browserIdx &&= MAX_FILES then return
+        
+    repeat
+        cIdx = 0
+        
+        repeat
+            char = peek(@buffer + bIdx)
+            poke addr(browser(browserIdx, cIdx)), char
+            inc bIdx
+            inc cIdx
+        until char &&= 0
+
+        inc browserIdx
+        if browserIdx &&= MAX_FILES then return
+    until (bIdx - 2) &= length
+return
+
+
+printBrowser:
+    startY = max(min(browserY, browserIdx-15), 0)
+    endY = min(browserY+14, browserIdx-1)
+    for i=startY to endY
+        strAddr = addr(browser(i, 0)) + 1
+        strLen = peek(strAddr)
+        isFile = peek(strAddr - 1)
+        if (i-browserY) &= cursorY
+            if isFile &&= 1
+                set FGBG_COLOUR, &h203F
+            else
+                set FGBG_COLOUR, &h202A
+            endif
+            runStrAddr = strAddr
+        else
+            if isFile &= 1
+                set FGBG_COLOUR, &h3F20
+            else
+                set FGBG_COLOUR, &h2A20
+            endif
+        endif
+        at 2, (i-browserY) LSL 3
+        print string$(strAddr);spc$(12 - strLen);
+    next i
+return
+
+
+updateBrowser:
+    startY = max(min(browserY, browserIdx-15), 0)
+
+    prevY = startY + cursOldY
+    prevAddr = addr(browser(prevY, 0)) + 1
+    prevLen = peek(prevAddr)
+    isFile = peek(prevAddr - 1)
+    if isFile &&= 1
+        set FGBG_COLOUR, &h3F20
+    else
+        set FGBG_COLOUR, &h2A20
+    endif        
+    at 2, (prevY - startY) LSL 3
+    print string$(prevAddr);spc$(12 - prevLen);
+    cursOldY = cursorY
+
+    currY = startY + cursorY
+    currAddr = addr(browser(currY, 0)) + 1
+    currLen = peek(currAddr)
+    isFile = peek(currAddr - 1)
+    if isFile &= 1
+        set FGBG_COLOUR, &h203F
+    else
+        set FGBG_COLOUR, &h202A
+    endif        
+    at 2, (currY - startY) LSL 3
+    print string$(currAddr);spc$(12 - currLen);
+    runStrAddr = currAddr
+return
+
+
+getRomType:
+    'defaults to ROMv1
+    NextByteIn_32 = &h02E9
+    romType = get("ROM_TYPE")
+    if romType     &=  &h20 'ROMv2
+        NextByteIn_32 = &h0BB1
+    elseif romType &=  &h28 'ROMv3
+        NextByteIn_32 = &h0BDF
+    elseif romType &&= &h38 'ROMv4
+        NextByteIn_32 = &h8A31
+    elseif romType &&= &h40 'ROMv5a
+        NextByteIn_32 = &h5907
+    elseif romType &&= &hF0 'SDCARD
+        NextByteIn_32 = &h1300
+    elseif romType &&= &hF8 'DEVROM
+        NextByteIn_32 = &h5907
+    endif
+return
+
+
+openSDCard:
+    poke @commsCmd, CmdSDOpen
+    len = peek(@pathName$)
+    if len &> 0
+        for i=1 &to len + 1
+            poke @commsCmd + i, peek(@pathName$ + i)
+        next i
+    else
+        poke @commsCmd + 1, 0
+    endif
+    commsSize = 1 + len + 1
+    gosub sendCommsCmd
+    
+    'SDCard open can take a variable amount of time
+    gosub waitSDCard
+    
+    pathName$ = ""
+return
+
+
+execApp:
+    gosub initSDComms
+    poke @commsCmd, CmdSDExec
+    runName$ = string$(runStrAddr)
+    len = peek(@runName$)
+    for i=1 &to len + 1
+        poke @commsCmd + i, peek(@runName$ + i)
+    next i
+    set FGBG_COLOUR, &h0F20 : cls INIT : cls
+    commsSize = 1 + len + 1
+    gosub sendCommsCmd
+    exec execAddr
+return
+
+
+'repeat delay and auto repeat
+handleInput:
+    k = get("SERIAL_RAW")
+    if k &&<> kk
+        f = 0
+        kk = k
+        gosub k
+    endif
+    if f &> 20
+        if ((f LSR 1) AND 1)
+            gosub k
+        endif
+    endif
+return
+
+
+'button A
+127:    gosub execOrList
+        return
+
+'enter
+10:     gosub execOrList
+        return
+
+'right
+254:    browserY = browserY + 15
+        browserY = max(min(browserY, browserIdx-15), 0)
+        gosub printBrowser
+        return
+
+'left
+253:    browserY = browserY - 15
+        browserY = max(browserY, 0)
+        gosub printBrowser
+        return
+     
+'down     
+251:    inc cursorY
+        if cursorY &&> min(browserIdx - 1, 14) then cursorY = 0
+        gosub updateBrowser
+        return
+
+'up
+247:    dec cursorY
+        if cursorY &< 0 then cursorY = min(browserIdx - 1, 14)
+        gosub updateBrowser
+        return
+
+
+'execute files, list directories
+execOrList:
+    entry = peek(runStrAddr - 1)
+    if entry &= EntryFile
+        execRtn = 0
+        gosub execApp
+    elseif entry &= EntryDir
+        execRtn = 1
+        pathName$ = string$(runStrAddr)
+    elseif entry &&= EntryError
+        execRtn = 2
+        pathName$ = ""
+    endif
+return
+
+
+waitSDCard:
+    asm
+        LDW     _NextByteIn_32
+        STW     giga_sysFn
+
+waitSD: LDI     _waitRtn
+        STW     giga_sysArg0            'waitRtn address
+
+        LDI     207
+        ST      giga_sysArg3            'scanline 207
+        SYS     32                      'waitRtn result, (0:ready)
+        
+        LD      _waitRtn
+        BNE     _waitSD                 'loop while busy
+    endasm
+
+    wait 2
+return
+
+
+'this command is used to break BabelFish out of it's game controller loop and start checking comms
+initSDComms:
+    commsSize = 1
+    poke @commsCmd, CmdSDInit
+    gosub sendCommsCmd
+    wait
+return
+
+
+listSDCard:
+    commsSize = 1
+    poke @commsCmd, CmdSDList
+    gosub sendCommsCmd
+return
+
+
+closeSDCard:
+    commsSize = 1
+    poke @commsCmd, CmdSDClose
+    gosub sendCommsCmd
+return
+
+
+beginSDCard:
+    commsSize = 1
+    poke @commsCmd, CmdSDBegin
+    gosub sendCommsCmd
+    
+    'SDCard begin can take a variable amount of time
+    gosub waitSDCard
+return
+
+
+initialise:
+    init vars @commsSize
+    gosub getRomType
+    commsAddr = @commsCmd
+
+    mode 2 : set FGBG_COLOUR, &h3F20 : cls INIT : cls
+return

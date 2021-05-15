@@ -1,0 +1,13 @@
+/.venv/
+/_gtemu.c
+_gtemu*.pyd
+/Release/
+__pycache__/
+/roms/
+/*.exe
+/*.obj
+.vscode
+/install-test/
+/build/
+/py_gtemu.egg-info/
+/dist/

@@ -1,0 +1,215 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Application menu                                                |
+|                                                                       |
++-----------------------------------------------------------------------}
+gcl0x
+
+{ Fall into Easter Egg if [Start] is pressed for >4 seconds }
+\buttonState;                   {Fetch buttonState and resetTimer in one go}
+[if>0                           {If resetTimer positive}
+  16& [if=0                     {And [Start] pressed}
+  \Egg _sysArgs0= 88!!]]        {Start program. SYS_Exec_88 still in sysFn}
+
+{ Print ASCII character (32..127) on screen in 5x8 pixels }
+[def
+  {Map ASCII code to offset in font table}
+  Char 82- [if<0 50+ i= \font32up
+            else     i= \font82up] fontData= {Select low or high page}
+  i 2<< i+             {Multiply by 5}
+  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
+
+  {Draw 5 vertical slices: 5 using font data}
+  32      \sysArgs0. {Blue}
+  Color   \sysArgs1.
+  Pos     \sysArgs4:
+  6+      Pos=
+  \SYS_VDrawBits_134 \sysFn:
+  $fb i= [do
+    fontData 0? <fontData++ \sysArgs2. 134!!
+    <\sysArgs4++
+    <i++ i if<>0loop]
+  ret
+] PrintChar=
+
+{ PrintText }
+[def
+  push
+  Text=
+  [do
+    Text, if<>0 Char= <Text++           {while((Char=*Text++)!=0)...}
+    9^ [if=0 Pos 18+ Pos= loop]         {Horizontal tab}
+    3^ [if=0 Newline! loop]             {Newline 9^10=3}
+    PrintChar!                          {Regular character}
+    loop]
+  pop ret
+] PrintText=
+
+{ Print 26 dashes }
+[def
+ push
+ $2d {'-'} Char=
+ 26 [do j= PrintChar! j 1- if>0loop]
+ Newline!
+ pop ret
+] PrintDivider=
+
+[def
+  push
+  MenuItem 6- [if<0 $200b else $f059] Pos=
+  MenuItem [do j= $800 Pos+ Pos= j 1- if>=0loop]
+  130 {'->'} Char= PrintChar!
+  pop ret
+] PrintArrow=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+*=$0300
+
+{ Operate menu }
+[def
+  push
+  [do
+    \frameCount, Color= PrintArrow!     {Flashing cursor effect}
+
+    { Handle each stroke of Up/Down and A controller buttons }
+
+    \buttonState, $fe^ [if=0            {buttonRight}
+       WipeOutArrow!
+       MenuItem 5- [if<=0 11+ MenuItem=]
+       $ef \buttonState.]
+
+    \buttonState, $fd^ [if=0            {buttonLeft}
+       WipeOutArrow!
+       MenuItem 6- [if>=0 MenuItem=]
+       $ef \buttonState.]
+
+    \buttonState, $fb^ [if=0            {buttonDown}
+       WipeOutArrow!
+       MenuItem 5- [if<>0 6- if<>0 <MenuItem++]
+       $ef \buttonState.]
+
+    \buttonState, $f7^ [if=0            {buttonUp}
+       WipeOutArrow!
+       MenuItem [if<>0 6- if<>0 MenuItem 1- MenuItem=]
+       $ef \buttonState.]
+
+    {buttonA, or any ASCII key from keyboard, 'A' included...}
+    \buttonState, 128& if<>0loop
+
+    42 {Gray} Color= PrintArrow!
+
+    [def
+      ##\SDCard
+      ##\Racer
+      ##\Mandelbrot
+      ##\Pictures
+      ##\Credits
+      ##\Loader
+
+      ##\Snake
+      ##\Bricks
+      ##\TicTac
+      ##\TinyBASIC
+      ##\MSBASIC
+      ##\Apple1
+    ]
+    MenuItem+ MenuItem+ deek Program=
+  ]
+  pop ret
+] SelectMenu=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+*=$0400
+
+{Newline}
+[def
+  >Pos, 8+ >Pos.
+  2 <Pos.
+  ret
+] Newline=
+
+[def
+  #9 `SDCard #9 `` #9 `Snake      #10
+  #9 `Racer #9 ``` #9 `Bricks     #10
+  #9 `Mandelbrot   #9 `TicTacToe  #10
+  #9 `Pictures ``` #9 `BASIC      #10
+  #9 `Credits #9   #9 `MS`BASIC   #10
+  #9 `Loader #9 `` #9 `Apple-1    #10 #0
+] MainMenu=
+
+[def
+  `Use` #91 `Arrows #93 ``to`select     #10
+  `Press` #91 `A #93 ``to`start`program #10
+                                        #10
+  `Hold` #91 `Start #93 ``for`reset     #0
+] HelpText=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+*=$0500
+
+[def
+  push
+  Pos 12- Pos=
+  $20 {space} Char= PrintChar! PrintChar!
+  pop ret
+] WipeOutArrow=
+
+[def {PrintMenu}
+  push
+  42 {Gray}   Color= PrintDivider!
+  15 {Yellow} Color= MainMenu PrintText!
+  42 {Gray}   Color= PrintDivider!
+                     HelpText PrintText!
+  pop ret
+] PrintMenu=
+
+\channelMask_v4, 3|
+\channelMask_v4.                {Enable all 4 sound channels}
+90 \soundTimer.                 {Play sound for 1.5 seconds}
+$2002 Pos=
+
+PrintMenu!
+0 MenuItem=                     {Point at first item (SDCard)}
+SelectMenu!                     {Let user navigate and select}
+
+{ Wipe out everything but the selected and bottom line }
+\screenMemory _sysArgs4=        {Start of screen memory}
+$8801 i=                        {Offset to next stripe}
+$ff80 j=                        {Mask for keeping the selected item}
+Pos 48+ j& q=                   {Box of current cursor}
+\SYS_VDrawBits_134 _sysFn=      {SYS function}
+32 \sysArgs0. \sysArgs1.        {Colors}
+[do
+  _sysArgs4
+  [do
+    48+ j& q^ [if<>0            {Don't clear selected item}
+      >p, $78^ if<>0            {Also don't clear the bottom row}
+      134!!]                    {Clears 8 pixels vertically}
+    $800
+    #\ADDW #\sysArgs4           {Inline assembly}
+    \sysArgs4:
+    if>0loop]                   {Step down}
+  i+ \sysArgs4:
+  255& 160^ if<>0loop]          {Next stripe}
+
+{ Load and start the selected program }
+\SYS_Exec_88 _sysFn=            {ROM loader}
+Program _sysArgs0=              {ROM image}
+\userCode _vLR=                 {Start of execution address}
+MenuItem 10- [if<>0 1-]         {XXX MSBASIC and Apple1 need workaround}
+[if=0
+  \channelMask_v4, $f8&         {Clear channelMask before loading}
+  \channelMask_v4.]
+88!!                            {Load from ROM and execute}
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
+

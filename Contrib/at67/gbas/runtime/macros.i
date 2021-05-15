@@ -221,23 +221,29 @@ _label_ CALL    giga_vAC
         CALL    giga_vAC
 %ENDM
 
-%MACRO  PrintChar _chr
+%MACRO  PrintChr _chr
         LDI     _chr
         ST      textChr
         LDWI    printChr
         CALL    giga_vAC
 %ENDM
 
-%MACRO  PrintAcChar
+%MACRO  PrintAcChr
         ST      textChr
         LDWI    printChr
         CALL    giga_vAC
 %ENDM
 
-%MACRO  PrintVarChar _var
+%MACRO  PrintVarChr _var
         LD      _var
         ST      textChr
         LDWI    printChr
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  PrintSpc
+        ST      textSpc
+        LDWI    printSpc
         CALL    giga_vAC
 %ENDM
 
@@ -324,6 +330,12 @@ _label_ CALL    giga_vAC
 %MACRO  StringChr
         STW     strDstAddr
         LDWI    stringChr
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  StringSpc
+        STW     strAddr
+        LDWI    stringSpc
         CALL    giga_vAC
 %ENDM
 
@@ -880,6 +892,18 @@ _id_    CALL    giga_vAC
 
 %MACRO  RomCheck
         LDWI    romCheck
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  RomExec
+        STW     romExec_vLR
+        LDWI    romExec
+        CALL    giga_vAC
+%ENDM
+
+%MACRO  RomRead
+        STW     romReadAddr
+        LDWI    romRead
         CALL    giga_vAC
 %ENDM
 

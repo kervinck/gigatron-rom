@@ -85,7 +85,7 @@ namespace Pragmas
         Expression::strToUpper(pragma);
         if(Cpu::getRomTypeMap().find(pragma) == Cpu::getRomTypeMap().end())
         {
-            fprintf(stderr, "Pragmas::CODEROMTYPE() : Syntax error, _codeRomType_ <\"ROM TYPE\">, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::CODEROMTYPE() : 'Main:%d' : syntax error, use _codeRomType_ <\"ROM TYPE\"> : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
@@ -100,7 +100,7 @@ namespace Pragmas
         Expression::stripNonStringWhitespace(pragma);
         if(pragma.size() < 3  ||  !Expression::isStringValid(pragma))
         {
-            fprintf(stderr, "Pragmas::RUNTIMEPATH() : Syntax error, _runtimePath_ <\"Path to runtime\">, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::RUNTIMEPATH() : 'Main:%d' : syntax error, use _runtimePath_ <\"Path to runtime\"> : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
@@ -122,28 +122,30 @@ namespace Pragmas
         std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Pragmas::RUNTIMESTART() : Syntax error, _runtimeStart_ <address>, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::RUNTIMESTART() : 'Main:%d' : syntax error, use _runtimeStart_ <address> : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
         Expression::Numeric addrNumeric;
         std::string addrOperand;
-        Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric);
-
-        uint16_t address = uint16_t(std::lround(addrNumeric._value));
-        if(address < DEFAULT_START_ADDRESS)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
         {
-            fprintf(stderr, "Pragmas::RUNTIMESTART() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::RUNTIMESTART() : 'Main:%d' : syntax error in address field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
+            return false;
+        }
+        uint16_t address = uint16_t(std::lround(addrNumeric._value));
+        if(address < DEFAULT_EXEC_ADDRESS)
+        {
+            fprintf(stderr, "Pragmas::RUNTIMESTART() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_EXEC_ADDRESS, tokens[0].c_str(), input.c_str());
             return false;
         }
 
         Compiler::setRuntimeStart(address);
 
         // Re-initialise memory manager for 64K
-        if(address >= RAM_EXPANSION_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
+        if(address >= RAM_UPPER_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
         {
             Memory::setSizeRAM(RAM_SIZE_HI);
-            Memory::initialise();
         }
 
         // String work area needs to be updated, (return old work areas and get new ones)
@@ -153,7 +155,7 @@ namespace Pragmas
             Memory::giveFreeRAM(Compiler::getStrWorkArea(i), USER_STR_SIZE + 2);
             if(!Memory::getFreeRAM(Memory::FitDescending, USER_STR_SIZE + 2, USER_CODE_START, address, strWorkArea))
             {
-                fprintf(stderr, "Pragmas::RUNTIMESTART() : Setting new String Work Area failed, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+                fprintf(stderr, "Pragmas::RUNTIMESTART() : 'Main:%d' : setting new String Work Area failed : %s\n", codeLineIndex + 1, input.c_str());
                 return false;
             }
             Compiler::setStrWorkArea(strWorkArea, i);
@@ -169,20 +171,26 @@ namespace Pragmas
         std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Pragmas::USERCODESTART() : Syntax error, _userCodeStart_ <address>, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::USERCODESTART() : 'Main:%d' : syntax error, use _userCodeStart_ <address> : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
         Expression::Numeric addrNumeric;
         std::string addrOperand;
-        Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric);
-
-        uint16_t address = uint16_t(std::lround(addrNumeric._value));
-        if(address < DEFAULT_START_ADDRESS)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
         {
-            fprintf(stderr, "Pragmas::USERCODESTART() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::USERCODESTART() : 'Main:%d' : syntax error in address field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
             return false;
         }
+        uint16_t address = uint16_t(std::lround(addrNumeric._value));
+        if(address < DEFAULT_EXEC_ADDRESS)
+        {
+            fprintf(stderr, "Pragmas::USERCODESTART() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_EXEC_ADDRESS, tokens[0].c_str(), input.c_str());
+            return false;
+        }
+
+        // Programmer wants to use video memory as code space
+        if(address >= 0x0800  &&  address < 0x7FA0  &&  (address & 0x00FF) < 0x00A0) Memory::invertFreeRAM();
 
         Compiler::setUserCodeStart(address);
 
@@ -196,28 +204,30 @@ namespace Pragmas
         std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Pragmas::ARRAYSSTART() : Syntax error, _arraysStart_ <address>, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::ARRAYSSTART() : 'Main:%d' : syntax error, use _arraysStart_ <address> : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
         Expression::Numeric addrNumeric;
         std::string addrOperand;
-        Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric);
-
-        uint16_t address = uint16_t(std::lround(addrNumeric._value));
-        if(address < DEFAULT_START_ADDRESS)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
         {
-            fprintf(stderr, "Pragmas::ARRAYSSTART() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::ARRAYSSTART() : 'Main:%d' : syntax error in address field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
+            return false;
+        }
+        uint16_t address = uint16_t(std::lround(addrNumeric._value));
+        if(address < DEFAULT_EXEC_ADDRESS)
+        {
+            fprintf(stderr, "Pragmas::ARRAYSSTART() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_EXEC_ADDRESS, tokens[0].c_str(), input.c_str());
             return false;
         }
 
         Compiler::setArraysStart(address);
 
         // Re-initialise memory manager for 64K
-        if(address >= RAM_EXPANSION_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
+        if(address >= RAM_UPPER_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
         {
             Memory::setSizeRAM(RAM_SIZE_HI);
-            Memory::initialise();
         }
 
         return true;
@@ -230,28 +240,30 @@ namespace Pragmas
         std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Pragmas::STRINGSSTART() : Syntax error, _stringsStart_ <address>, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::STRINGSSTART() : 'Main:%d' : syntax error, use _stringsStart_ <address> : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
         Expression::Numeric addrNumeric;
         std::string addrOperand;
-        Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric);
-
-        uint16_t address = uint16_t(std::lround(addrNumeric._value));
-        if(address < DEFAULT_START_ADDRESS)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
         {
-            fprintf(stderr, "Pragmas::STRINGSSTART() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::STRINGSSTART() : 'Main:%d' : syntax error in address field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
+            return false;
+        }
+        uint16_t address = uint16_t(std::lround(addrNumeric._value));
+        if(address < DEFAULT_EXEC_ADDRESS)
+        {
+            fprintf(stderr, "Pragmas::STRINGSSTART() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_EXEC_ADDRESS, tokens[0].c_str(), input.c_str());
             return false;
         }
 
         Compiler::setStringsStart(address);
 
         // Re-initialise memory manager for 64K
-        if(address >= RAM_EXPANSION_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
+        if(address >= RAM_UPPER_START  &&  Memory::getSizeRAM() != RAM_SIZE_HI)
         {
             Memory::setSizeRAM(RAM_SIZE_HI);
-            Memory::initialise();
         }
 
         return true;
@@ -264,17 +276,21 @@ namespace Pragmas
         std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Pragmas::STRINGWORKAREA() : Syntax error, _stringWorkArea_ <address>, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::STRINGWORKAREA() : 'Main:%d' : syntax error, use _stringWorkArea_ <address> : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
         Expression::Numeric addrNumeric;
         std::string addrOperand;
-        Compiler::parseExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric);
-        uint16_t strWorkArea = uint16_t(std::lround(addrNumeric._value));
-        if(strWorkArea < DEFAULT_START_ADDRESS)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], addrOperand, addrNumeric) == Compiler::OperandInvalid)
         {
-            fprintf(stderr, "Pragmas::STRINGWORKAREA() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[0].c_str(), input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::STRINGWORKAREA() : 'Main:%d' : syntax error in address field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
+            return false;
+        }
+        uint16_t strWorkArea = uint16_t(std::lround(addrNumeric._value));
+        if(strWorkArea < DEFAULT_EXEC_ADDRESS)
+        {
+            fprintf(stderr, "Pragmas::STRINGWORKAREA() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_EXEC_ADDRESS, tokens[0].c_str(), input.c_str());
             return false;
         }
 
@@ -282,14 +298,14 @@ namespace Pragmas
         Memory::giveFreeRAM(Compiler::getStrWorkArea(0), USER_STR_SIZE + 2);
         if(!Memory::takeFreeRAM(strWorkArea, USER_STR_SIZE + 2))
         {
-            fprintf(stderr, "Pragmas::STRINGWORKAREA() : Setting new String Work Area failed, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::STRINGWORKAREA() : 'Main:%d' : setting new string work area failed : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
         Compiler::setStrWorkArea(strWorkArea, 0);
         Memory::giveFreeRAM(Compiler::getStrWorkArea(1), USER_STR_SIZE + 2);
         if(!Memory::getFreeRAM(Memory::FitDescending, USER_STR_SIZE + 2, USER_CODE_START, strWorkArea, strWorkArea))
         {
-            fprintf(stderr, "Pragmas::STRINGWORKAREA() : Setting new String Work Area failed, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::STRINGWORKAREA() : 'Main:%d' : setting new string work area failed : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
         Compiler::setStrWorkArea(strWorkArea, 1);
@@ -304,18 +320,21 @@ namespace Pragmas
         std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Pragmas::TEMPVARSIZE() : Syntax error, use '_tempVarSize_ <size>', in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::TEMPVARSIZE() : 'Main:%d' : syntax error, use '_tempVarSize_ <size>' : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
         Expression::Numeric sizeNumeric;
         std::string sizeOperand;
-        Compiler::parseExpression(codeLineIndex, tokens[0], sizeOperand, sizeNumeric);
-
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], sizeOperand, sizeNumeric) == Compiler::OperandInvalid)
+        {
+            fprintf(stderr, "Pragmas::TEMPVARSIZE() : 'Main:%d' : syntax error in size field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
+            return false;
+        }
         uint8_t size = uint8_t(std::lround(sizeNumeric._value));
         if(size < 2  ||  size > 16)
         {
-            fprintf(stderr, "Pragmas::TEMPVARSIZE() : Size field must be in the range 2 to 16, found %s in '%s' on line %d\n", tokens[0].c_str(), input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::TEMPVARSIZE() : 'Main:%d' : size field must be in the range 2 to 16, found %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
             return false;
         }
 
@@ -331,7 +350,7 @@ namespace Pragmas
         std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Pragmas::CODEOPTIMISETYPE() : Syntax error, _codeOptimiseType_ <size/speed>, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::CODEOPTIMISETYPE() : 'Main:%d' : syntax error, use _codeOptimiseType_ <size/speed> : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
@@ -346,7 +365,7 @@ namespace Pragmas
             return true;
         }
 
-        fprintf(stderr, "Pragmas::CODEOPTIMISETYPE() : Syntax error, _codeOptimiseType_ <'size'/'speed'>, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+        fprintf(stderr, "Pragmas::CODEOPTIMISETYPE() : 'Main:%d' : syntax error, _use codeOptimiseType_ <'size'/'speed'> : %s\n", codeLineIndex + 1, input.c_str());
 
         return false;
     }
@@ -369,24 +388,28 @@ namespace Pragmas
         std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false, true);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Pragmas::MAXNUMSPRITES() : Syntax error, _maxNumSprites_ <max num sprites>, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::MAXNUMSPRITES() : 'Main:%d' : syntax error, use _maxNumSprites_ <max num sprites> : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
         // Max num sprites
         Expression::Numeric maxNumNumeric;
         std::string maxNumOperand;
-        Compiler::parseExpression(codeLineIndex, tokens[0], maxNumOperand, maxNumNumeric);
-        uint16_t maxNumSprites = uint16_t(std::lround(maxNumNumeric._value));
-        if(Compiler::getRuntimeStart() < RAM_EXPANSION_START  &&  maxNumSprites > MAX_NUM_SPRITES_LO)
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], maxNumOperand, maxNumNumeric) == Compiler::OperandInvalid)
         {
-            fprintf(stderr, "Pragmas::MAXNUMSPRITES() : Maximum number of sprites for 32K RAM is limited to %d, found %s in '%s' on line %d\n", MAX_NUM_SPRITES_LO, tokens[0].c_str(), input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::MAXNUMSPRITES() : 'Main:%d' : syntax error in max num field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
+            return false;
+        }
+        uint16_t maxNumSprites = uint16_t(std::lround(maxNumNumeric._value));
+        if(Compiler::getRuntimeStart() < RAM_UPPER_START  &&  maxNumSprites > MAX_NUM_SPRITES_LO)
+        {
+            fprintf(stderr, "Pragmas::MAXNUMSPRITES() : 'Main:%d' : maximum number of sprites for 32K RAM is limited to %d, found %s : %s\n", codeLineIndex + 1, MAX_NUM_SPRITES_LO, tokens[0].c_str(), input.c_str());
             return false;
         }
 
-        if(Compiler::getRuntimeStart() >= RAM_EXPANSION_START  &&  maxNumSprites > MAX_NUM_SPRITES_HI)
+        if(Compiler::getRuntimeStart() >= RAM_UPPER_START  &&  maxNumSprites > MAX_NUM_SPRITES_HI)
         {
-            fprintf(stderr, "Pragmas::MAXNUMSPRITES() : Maximum number of sprites for 64K RAM is limited to %d, found %s in '%s' on line %d\n", MAX_NUM_SPRITES_HI, tokens[0].c_str(), input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::MAXNUMSPRITES() : 'Main:%d' : maximum number of sprites for 64K RAM is limited to %d, found %s : %s\n", codeLineIndex + 1, MAX_NUM_SPRITES_HI, tokens[0].c_str(), input.c_str());
             return false;
         }
 
@@ -395,7 +418,7 @@ namespace Pragmas
         int lutSize = int(maxNumSprites) * 2;
         if(!Memory::getFreeRAM(Memory::FitDescending, lutSize, USER_CODE_START, Compiler::getRuntimeStart(), lutAddress))
         {
-            fprintf(stderr, "Pragmas::MAXNUMSPRITES() : Not enough RAM for sprites LUT of size %d\n", lutSize);
+            fprintf(stderr, "Pragmas::MAXNUMSPRITES() : 'Main:%d' : not enough RAM for sprites LUT of size %d : %s\n", codeLineIndex + 1, lutSize, input.c_str());
             return false;
         }
         Compiler::setSpritesAddrLutAddress(lutAddress);
@@ -410,18 +433,22 @@ namespace Pragmas
         std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false, true);
         if(tokens.size() < 1  ||  tokens.size() > 3)
         {
-            fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : Syntax error, _spriteStripeChunks_ <num chunks>, <optional minimum address>, <optional ascending/descending>, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : 'Main:%d' : syntax error, use _spriteStripeChunks_ <num chunks>, <optional minimum address>, <optional ascending/descending> : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
         // Number of chunks
         Expression::Numeric chunksNumeric;
         std::string chunksOperand;
-        Compiler::parseExpression(codeLineIndex, tokens[0], chunksOperand, chunksNumeric);
+        if(Compiler::parseStaticExpression(codeLineIndex, tokens[0], chunksOperand, chunksNumeric) == Compiler::OperandInvalid)
+        {
+            fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : 'Main:%d' : syntax error in num chunks field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
+            return false;
+        }
         uint16_t spriteStripeChunks = uint16_t(std::lround(chunksNumeric._value));
         if(spriteStripeChunks > SPRITE_STRIPE_CHUNKS_HI)
         {
-            fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : Num chunks field can not be larger than %d, found %s in '%s' on line %d\n", SPRITE_STRIPE_CHUNKS_HI, tokens[0].c_str(), input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : 'Main:%d' : num chunks field can not be larger than %d, found %s : %s\n", codeLineIndex + 1, SPRITE_STRIPE_CHUNKS_HI, tokens[0].c_str(), input.c_str());
             return false;
         }
 
@@ -432,11 +459,15 @@ namespace Pragmas
         {
             Expression::Numeric addrNumeric;
             std::string addrOperand;
-            Compiler::parseExpression(codeLineIndex, tokens[1], addrOperand, addrNumeric);
-            uint16_t minAddress = uint16_t(std::lround(addrNumeric._value));
-            if(minAddress < DEFAULT_START_ADDRESS)
+            if(Compiler::parseStaticExpression(codeLineIndex, tokens[1], addrOperand, addrNumeric) == Compiler::OperandInvalid)
             {
-                fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : Address field must be above %04x, found %s in '%s' on line %d\n", DEFAULT_START_ADDRESS, tokens[1].c_str(), input.c_str(), codeLineIndex + 1);
+                fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : 'Main:%d' : syntax error in address field %s : %s\n", codeLineIndex + 1, tokens[0].c_str(), input.c_str());
+                return false;
+            }
+            uint16_t minAddress = uint16_t(std::lround(addrNumeric._value));
+            if(minAddress < DEFAULT_EXEC_ADDRESS)
+            {
+                fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : 'Main:%d' : address field must be above &h%04x, found %s : %s\n", codeLineIndex + 1, DEFAULT_EXEC_ADDRESS, tokens[1].c_str(), input.c_str());
                 return false;
             }
 
@@ -458,7 +489,7 @@ namespace Pragmas
             }
             else
             {
-                fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : Search direction field must be 'ascending or descending', found '%s' in '%s' on line %d\n", tokens[2].c_str(), input.c_str(), codeLineIndex + 1);
+                fprintf(stderr, "Pragmas::SPRITESTRIPECHUNKS() : 'Main:%d' : search direction field must be 'ascending or descending', found '%s' : %s\n", codeLineIndex + 1, tokens[2].c_str(), input.c_str());
                 return false;
             }
         }
@@ -468,9 +499,13 @@ namespace Pragmas
 
     bool ENABLE6BITAUDIOEMU(const std::string& input, int codeLineIndex, size_t foundPos)
     {
+#ifdef STAND_ALONE
+        UNREFERENCED_PARAM(foundPos);
+#endif
+
         if(Compiler::getCodeRomType() < Cpu::ROMv5a)
         {
-            fprintf(stderr, "Pragmas::ENABLE6BITAUDIOEMU() : Version error, '_enable6BitAudioEmu_ <ON/OFF>' only works with ROMv5a or greater; try using '_codeRomType_ ROMv5a', before '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::ENABLE6BITAUDIOEMU() : 'Main:%d' : version error, '_enable6BitAudioEmu_ <ON/OFF>' only works with ROMv5a or greater; use '_codeRomType_ ROMv5a' : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
@@ -480,7 +515,7 @@ namespace Pragmas
         std::vector<std::string> tokens = Expression::tokenise(pragma, ',', false, true);
         if(tokens.size() != 1)
         {
-            fprintf(stderr, "Pragmas::ENABLE6BITAUDIOEMU() : Syntax error, use '_enable6BitAudioEmu_ <ON/OFF>', in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::ENABLE6BITAUDIOEMU() : 'Main:%d' : syntax error, use '_enable6BitAudioEmu_ <ON/OFF>' : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
@@ -491,16 +526,15 @@ namespace Pragmas
         else if(tokens[0] == "OFF") enable = false;
         else
         {
-            fprintf(stderr, "Pragmas::ENABLE6BITAUDIOEMU() : Syntax error, use '_enable6BitAudioEmu_ <ON/OFF>', in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+            fprintf(stderr, "Pragmas::ENABLE6BITAUDIOEMU() : 'Main:%d' : syntax error, use '_enable6BitAudioEmu_ <ON/OFF>' : %s\n", codeLineIndex + 1, input.c_str());
             return false;
         }
 
         Cpu::enable6BitSound(Cpu::ROMv5a, enable);
+        return true;
 #else
-        fprintf(stderr, "Pragmas::ENABLE6BITAUDIOEMU() : Error, '_enable6BitAudioEmu_ <ON/OFF>', works in emulation mode only, in '%s' on line %d\n", input.c_str(), codeLineIndex + 1);
+        fprintf(stderr, "Pragmas::ENABLE6BITAUDIOEMU() : 'Main:%d' : syntax error, '_enable6BitAudioEmu_ <ON/OFF>', only works in emulation mode : %s\n", codeLineIndex + 1, input.c_str());
         return false;
 #endif
-
-        return true;
     }
 }

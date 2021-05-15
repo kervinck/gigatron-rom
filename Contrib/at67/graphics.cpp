@@ -499,7 +499,6 @@ namespace Graphics
 
     void refreshTimingPixel(const Cpu::State& S, int vgaX, int pixelY, uint32_t colour, bool debugging)
     {
-        UNREFERENCED_PARAM(debugging);
         UNREFERENCED_PARAM(S);
 
         _hlineTiming[pixelY % GIGA_HEIGHT] = colour;
@@ -561,9 +560,9 @@ namespace Graphics
         x1 *= 3;
         y0 *= 4;
         y1 *= 4;
-        for(int y=y0; y<y1; y++)
+        for(int y=y0; y<=y1; y++)
         {
-            for(int x=x0; x<x1; x++)
+            for(int x=x0; x<=x1; x++)
             {
                 _pixels[y*SCREEN_WIDTH + x] = colour;
             }
@@ -647,24 +646,20 @@ namespace Graphics
 
     void drawLeds(void)
     {
-        // Update N times per second independently of the main window FPS
-        if(Timing::getFrameTime()  &&  Timing::getFrameUpdate())
+        for(int i=0; i<NUM_LEDS; i++)
         {
-            for(int i=0; i<NUM_LEDS; i++)
-            {
-                int mask = 1 << (NUM_LEDS-1 - i);
-                int state = Cpu::getXOUT() & mask;
-                uint32_t colour = state ? 0xFF00FF00 : 0xFF770000;
+            int mask = 1 << (NUM_LEDS-1 - i);
+            int state = Cpu::getXOUT() & mask;
+            uint32_t colour = state ? 0xFF00FF00 : 0xFF770000;
 
-                int address = int(float(SCREEN_WIDTH) * 0.866f) + i*NUM_LEDS + 3*SCREEN_WIDTH;
-                _pixels[address + 0] = colour;
-                _pixels[address + 1] = colour;
-                _pixels[address + 2] = colour;
-                address += SCREEN_WIDTH;
-                _pixels[address + 0] = colour;
-                _pixels[address + 1] = colour;
-                _pixels[address + 2] = colour;
-            }
+            int address = int(float(SCREEN_WIDTH) * 0.866f) + i*NUM_LEDS + 3*SCREEN_WIDTH;
+            _pixels[address + 0] = colour;
+            _pixels[address + 1] = colour;
+            _pixels[address + 2] = colour;
+            address += SCREEN_WIDTH;
+            _pixels[address + 0] = colour;
+            _pixels[address + 1] = colour;
+            _pixels[address + 2] = colour;
         }
     }
 
@@ -827,53 +822,49 @@ namespace Graphics
 
     void renderText(void)
     {
-        // Update N times per second independently of the main window FPS
-        if(Timing::getFrameTime()  &&  Timing::getFrameUpdate())
+        char str[32];
+
+        sprintf(str, "CPU        A:%04X B:%04X", 0x200, 0x220);
+        drawText(std::string(str), _pixels, 0, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0, false);
+        sprintf(str, "%05.1f%%", Cpu::getvCpuUtilisation() * 100.0);
+        drawUsageBar(Cpu::getvCpuUtilisation(), FONT_WIDTH*4 - 3, FONT_CELL_Y*2 - 3, FONT_WIDTH*6 + 5, FONT_HEIGHT + 5);
+        drawText(std::string(str), _pixels, FONT_WIDTH*4, FONT_CELL_Y*2, 0x80808080, false, 0, 0, 0x00000000, true);
+
+        //drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);
+        sprintf(str, "FPS %5.1f  XOUT:%02X IN:%02X", 1.0f / Timing::getFrameTime(), Cpu::getXOUT(), Cpu::getIN());
+        drawText(std::string(str), _pixels, 0, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+        drawText("M:              R:", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+
+        switch(Editor::getEditorMode())
         {
-            char str[32];
+            case Editor::Hex:   (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Hex   "); break;
+            case Editor::Rom:   (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Rom   "); break;
+            case Editor::Load:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Load  "); break;
+            case Editor::Dasm:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Dasm  "); break;
+            case Editor::Term:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Term  "); break;
+            case Editor::Image: (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Image "); break;
+            case Editor::Audio: (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Audio "); break;
 
-            sprintf(str, "CPU        A:%04X B:%04X", 0x200, 0x220);
-            drawText(std::string(str), _pixels, 0, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0, false);
-            sprintf(str, "%05.1f%%", Cpu::getvCpuUtilisation() * 100.0);
-            drawUsageBar(Cpu::getvCpuUtilisation(), FONT_WIDTH*4 - 3, FONT_CELL_Y*2 - 3, FONT_WIDTH*6 + 5, FONT_HEIGHT + 5);
-            drawText(std::string(str), _pixels, FONT_WIDTH*4, FONT_CELL_Y*2, 0x80808080, false, 0, 0, 0x00000000, true);
-
-            //drawText(std::string("LEDS:"), _pixels, 0, 0, 0xFFFFFFFF, false, 0);
-            sprintf(str, "FPS %5.1f  XOUT:%02X IN:%02X", 1.0f / Timing::getFrameTime(), Cpu::getXOUT(), Cpu::getIN());
-            drawText(std::string(str), _pixels, 0, FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-            drawText("M:              R:", _pixels, 0, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-
-            switch(Editor::getEditorMode())
-            {
-                case Editor::Hex:   (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Hex   "); break;
-                case Editor::Rom:   (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Rom   "); break;
-                case Editor::Load:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Load  "); break;
-                case Editor::Dasm:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Dasm  "); break;
-                case Editor::Term:  (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Term  "); break;
-                case Editor::Image: (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Image "); break;
-                case Editor::Audio: (Editor::getSingleStepEnabled()) ? strcpy(str, "Debug ") : strcpy(str, "Audio "); break;
-
-                default: strcpy(str, "     ");
-            }
-            drawText(std::string(str), _pixels, 12, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
-
-            switch(Editor::getKeyboardMode())
-            {
-                case Editor::Giga:   strcpy(str, "Kbd   "); break;
-                case Editor::PS2:    strcpy(str, "PS2   "); break;
-                case Editor::HwGiga: strcpy(str, "HwKbd "); break;
-                case Editor::HwPS2:  strcpy(str, "HwPS2 "); break;
-
-                default: strcpy(str, "     ");
-            }
-            drawText("K:", _pixels, 48, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
-            drawText(std::string(str), _pixels, 60, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
-
-            sprintf(str, "%-5d", Memory::getSizeFreeRAM());
-            drawText(std::string(str), _pixels, RAM_START, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
-            sprintf(str, " ROM %02X", Cpu::getRomType());
-            drawText(std::string(VERSION_STR) + std::string(str), _pixels, 0, 472, 0xFFFFFFFF, false, 0);
+            default: strcpy(str, "     ");
         }
+        drawText(std::string(str), _pixels, 12, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
+
+        switch(Editor::getKeyboardMode())
+        {
+            case Editor::Giga:   strcpy(str, "Kbd   "); break;
+            case Editor::PS2:    strcpy(str, "PS2   "); break;
+            case Editor::HwGiga: strcpy(str, "HwKbd "); break;
+            case Editor::HwPS2:  strcpy(str, "HwPS2 "); break;
+
+            default: strcpy(str, "     ");
+        }
+        drawText("K:", _pixels, 48, 472 - FONT_CELL_Y, 0xFFFFFFFF, false, 0);
+        drawText(std::string(str), _pixels, 60, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
+
+        sprintf(str, "%-5d", Memory::getSizeFreeRAM());
+        drawText(std::string(str), _pixels, RAM_START, 472 - FONT_CELL_Y, 0xFF00FF00, false, 0);
+        sprintf(str, " ROM %02X", Cpu::getRomType());
+        drawText(std::string(VERSION_STR) + std::string(str), _pixels, 0, 472, 0xFFFFFFFF, false, 0);
     }
 
     int renderHexMonitor(bool onHex)
@@ -912,7 +903,7 @@ namespace Graphics
                 uint32_t colour = (Editor::getHexEdit() && Editor::getMemoryMode() == Editor::RAM && onCursor) ? 0xFF00FF00 : 0xFFB0B0B0;
                 drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, FONT_CELL_Y*4 + j*(FONT_HEIGHT+FONT_GAP_Y), colour, onCursor, 2);
                 if(onCursor) cursorAddress = hexAddress;
-                hexAddress = (hexAddress + 1) & (Memory::getSizeRAM() - 1);
+                hexAddress = (Editor::getMemoryMode() == Editor::RAM) ? (hexAddress + 1) & (Memory::getSizeRAM() - 1) : hexAddress + 1;
             }
         }
 
@@ -1078,114 +1069,110 @@ namespace Graphics
 
     void renderTextWindow(void)
     {
-        // Update N times per second independently of the main window FPS
-        if(Timing::getFrameTime()  &&  Timing::getFrameUpdate())
+        char str[32] = "";
+
+        int x, y, cy;
+        Editor::getMouseUiCursor(x, y, cy);
+        Editor::setCursorX(x);
+        Editor::setCursorY(cy);
+
+        // Addresses
+        uint16_t cpuUsageAddressA = Editor::getCpuUsageAddressA();
+        uint16_t cpuUsageAddressB = Editor::getCpuUsageAddressB();
+        uint16_t varsAddress = Editor::getVarsBaseAddress();
+
+        // Mouse cursor over vars
+        Editor::OnVarType onVarType = Editor::getOnVarType();
+        bool onHex   = (onVarType == Editor::OnHex);
+        bool onCpuA  = (onVarType == Editor::OnCpuA);
+        bool onCpuB  = (onVarType == Editor::OnCpuB);
+        bool onVars  = (onVarType == Editor::OnVars);
+        bool onWatch = (onVarType == Editor::OnWatch);
+        uint8_t onVarMask = uint8_t(onHex) | (uint8_t(onCpuA) <<1) | (uint8_t(onCpuB) <<2) | (uint8_t(onVars) <<3) | (uint8_t(onWatch) <<4);
+        static uint8_t onVarMaskPrev = onVarMask;
+
+        // Text window
+        int hexDigitIndex = -1;
+        static int hexDigitIndexPrev = hexDigitIndex;
+        switch(Editor::getEditorMode())
         {
-            char str[32] = "";
+            case Editor::Hex:  hexDigitIndex = renderHexMonitor(onHex); break;
+            case Editor::Rom:  renderRomBrowser();                      break;
+            case Editor::Audio:
+            case Editor::Image:
+            case Editor::Load: renderLoadBrowser(onHex);                break;
+            case Editor::Dasm: renderDisassembler(onHex);               break;
 
-            int x, y, cy;
-            Editor::getMouseUiCursor(x, y, cy);
-            Editor::setCursorX(x);
-            Editor::setCursorY(cy);
+            default: break;
+        }
 
-            // Addresses
-            uint16_t cpuUsageAddressA = Editor::getCpuUsageAddressA();
-            uint16_t cpuUsageAddressB = Editor::getCpuUsageAddressB();
-            uint16_t varsAddress = Editor::getVarsBaseAddress();
+        // Disable hex/var editing when mouse moves off a currently editing field
+        if(onVarMask != onVarMaskPrev  ||  hexDigitIndex != hexDigitIndexPrev) Editor::setHexEdit(false);
+        onVarMaskPrev = onVarMask;
+        hexDigitIndexPrev = hexDigitIndex;
 
-            // Mouse cursor over vars
-            Editor::OnVarType onVarType = Editor::getOnVarType();
-            bool onHex   = (onVarType == Editor::OnHex);
-            bool onCpuA  = (onVarType == Editor::OnCpuA);
-            bool onCpuB  = (onVarType == Editor::OnCpuB);
-            bool onVars  = (onVarType == Editor::OnVars);
-            bool onWatch = (onVarType == Editor::OnWatch);
-            uint8_t onVarMask = uint8_t(onHex) | (uint8_t(onCpuA) <<1) | (uint8_t(onCpuB) <<2) | (uint8_t(onVars) <<3) | (uint8_t(onWatch) <<4);
-            static uint8_t onVarMaskPrev = onVarMask;
+        // Draw addresses
+        if(Editor::getSingleStepEnabled())
+        {
+            drawText("Watch:", _pixels, WATCH_START, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0);
+            sprintf(str, "%04X   ", Editor::getSingleStepAddress());
+            uint32_t colour = (Editor::getHexEdit() && onWatch) ? 0xFF00FF00 : 0xFFFFFFFF;
+            drawText(str, _pixels, WATCH_START+36, FONT_CELL_Y*2, colour, onWatch, 4);
+        }
+        else
+        {
+            sprintf(str, "%04X", cpuUsageAddressA);
+            uint32_t colourA = (Editor::getHexEdit() && onCpuA) ? 0xFF00FF00 : 0xFFFFFFFF;
+            drawText(std::string(str), _pixels, CPUA_START, FONT_CELL_Y*2, colourA, onCpuA, 4);
+            sprintf(str, "%04X", cpuUsageAddressB);
+            uint32_t colourB = (Editor::getHexEdit() && onCpuB) ? 0xFF00FF00 : 0xFFFFFFFF;
+            drawText(std::string(str), _pixels, CPUB_START, FONT_CELL_Y*2, colourB, onCpuB, 4);
+        }
+        sprintf(str, "%04X", varsAddress);
+        uint32_t colour = (Editor::getHexEdit() && onVars) ? 0xFF00FF00 : 0xFFFFFFFF;
+        drawText(std::string(str), _pixels, VAR_START, FONT_CELL_Y*3, colour, onVars, 4);
 
-            // Text window
-            int hexDigitIndex = -1;
-            static int hexDigitIndexPrev = hexDigitIndex;
-            switch(Editor::getEditorMode())
+        // Edit digit select for addresses
+        if(Editor::getHexEdit())
+        {
+            // Draw address digit selections
+            if(onCpuA)       drawDigitBox(Editor::getAddressDigit(), CPUA_START,     FONT_CELL_Y*2, 0xFFFF00FF);
+            else if(onCpuB)  drawDigitBox(Editor::getAddressDigit(), CPUB_START,     FONT_CELL_Y*2, 0xFFFF00FF);
+            else if(onHex)   drawDigitBox(Editor::getAddressDigit(), HEX_START,      FONT_CELL_Y*3, 0xFFFF00FF);
+            else if(onVars)  drawDigitBox(Editor::getAddressDigit(), VAR_START,      FONT_CELL_Y*3, 0xFFFF00FF);
+            else if(onWatch) drawDigitBox(Editor::getAddressDigit(), WATCH_START+36, FONT_CELL_Y*2, 0xFFFF00FF);
+        }
+
+        // 8 * 2 hex display of vCPU program variables
+        for(int j=0; j<2; j++)
+        {
+            for(int i=0; i<HEX_CHARS_X; i++)
             {
-                case Editor::Hex:  hexDigitIndex = renderHexMonitor(onHex); break;
-                case Editor::Rom:  renderRomBrowser();                      break;
-                case Editor::Audio:
-                case Editor::Image:
-                case Editor::Load: renderLoadBrowser(onHex);                break;
-                case Editor::Dasm: renderDisassembler(onHex);               break;
-
-                default: break;
+                sprintf(str, "%02X ", Cpu::getRAM(varsAddress++));
+                drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, int(FONT_CELL_Y*4.25) + FONT_CELL_Y*HEX_CHARS_Y + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFF00FFFF, false, 0);
             }
+        }
 
-            // Disable hex/var editing when mouse moves off a currently editing field
-            if(onVarMask != onVarMaskPrev  ||  hexDigitIndex != hexDigitIndexPrev) Editor::setHexEdit(false);
-            onVarMaskPrev = onVarMask;
-            hexDigitIndexPrev = hexDigitIndex;
+        // Upload bar
+        drawUploadBar(_uploadPercentage);
 
-            // Draw addresses
-            if(Editor::getSingleStepEnabled())
-            {
-                drawText("Watch:", _pixels, WATCH_START, FONT_CELL_Y*2, 0xFFFFFFFF, false, 0);
-                sprintf(str, "%04X   ", Editor::getSingleStepAddress());
-                uint32_t colour = (Editor::getHexEdit() && onWatch) ? 0xFF00FF00 : 0xFFFFFFFF;
-                drawText(str, _pixels, WATCH_START+36, FONT_CELL_Y*2, colour, onWatch, 4);
-            }
-            else
-            {
-                sprintf(str, "%04X", cpuUsageAddressA);
-                uint32_t colourA = (Editor::getHexEdit() && onCpuA) ? 0xFF00FF00 : 0xFFFFFFFF;
-                drawText(std::string(str), _pixels, CPUA_START, FONT_CELL_Y*2, colourA, onCpuA, 4);
-                sprintf(str, "%04X", cpuUsageAddressB);
-                uint32_t colourB = (Editor::getHexEdit() && onCpuB) ? 0xFF00FF00 : 0xFFFFFFFF;
-                drawText(std::string(str), _pixels, CPUB_START, FONT_CELL_Y*2, colourB, onCpuB, 4);
-            }
-            sprintf(str, "%04X", varsAddress);
-            uint32_t colour = (Editor::getHexEdit() && onVars) ? 0xFF00FF00 : 0xFFFFFFFF;
-            drawText(std::string(str), _pixels, VAR_START, FONT_CELL_Y*3, colour, onVars, 4);
+        // Page up/down icons
+        strcpy(str, "^");
+        drawText(std::string(str), _pixels, PAGEUP_START_X, PAGEUP_START_Y, 0xFF00FF00, Editor::getPageUpButton(), 1);
+        str[0] = 127; str[1] = 0;
+        drawText(std::string(str), _pixels, PAGEDN_START_X, PAGEDN_START_Y, 0xFF00FF00, Editor::getPageDnButton(), 1);
 
-            // Edit digit select for addresses
-            if(Editor::getHexEdit())
-            {
-                // Draw address digit selections
-                if(onCpuA)       drawDigitBox(Editor::getAddressDigit(), CPUA_START,     FONT_CELL_Y*2, 0xFFFF00FF);
-                else if(onCpuB)  drawDigitBox(Editor::getAddressDigit(), CPUB_START,     FONT_CELL_Y*2, 0xFFFF00FF);
-                else if(onHex)   drawDigitBox(Editor::getAddressDigit(), HEX_START,      FONT_CELL_Y*3, 0xFFFF00FF);
-                else if(onVars)  drawDigitBox(Editor::getAddressDigit(), VAR_START,      FONT_CELL_Y*3, 0xFFFF00FF);
-                else if(onWatch) drawDigitBox(Editor::getAddressDigit(), WATCH_START+36, FONT_CELL_Y*2, 0xFFFF00FF);
-            }
-
-            // 8 * 2 hex display of vCPU program variables
-            for(int j=0; j<2; j++)
-            {
-                for(int i=0; i<HEX_CHARS_X; i++)
-                {
-                    sprintf(str, "%02X ", Cpu::getRAM(varsAddress++));
-                    drawText(std::string(str), _pixels, HEX_START_X + i*HEX_CHAR_WIDE, int(FONT_CELL_Y*4.25) + FONT_CELL_Y*HEX_CHARS_Y + j*(FONT_HEIGHT+FONT_GAP_Y), 0xFF00FFFF, false, 0);
-                }
-            }
-
-            // Upload bar
-            drawUploadBar(_uploadPercentage);
-
-            // Page up/down icons
-            strcpy(str, "^");
-            drawText(std::string(str), _pixels, PAGEUP_START_X, PAGEUP_START_Y, 0xFF00FF00, Editor::getPageUpButton(), 1);
-            str[0] = 127; str[1] = 0;
-            drawText(std::string(str), _pixels, PAGEDN_START_X, PAGEDN_START_Y, 0xFF00FF00, Editor::getPageDnButton(), 1);
-
-            // Delete icon, (currently only used for clearing breakpoints)
-            if(Editor::getEditorMode() == Editor::Dasm  &&  (Editor::getSingleStepEnabled()))
-            {
-                int numBrkPoints = (Editor::getMemoryMode() == Editor::RAM) ? Editor::getVpcBreakPointsSize() : Editor::getNtvBreakPointsSize();
-                sprintf(str, "%02d", numBrkPoints);
-                drawText(str, _pixels, DELALL_START_X-12, DELALL_START_Y, 0xFFFFFFFF, false, 0);
-                drawText("x", _pixels, DELALL_START_X, DELALL_START_Y, 0xFFFF0000, Editor::getDelAllButton(), 1);
-            }
-            else
-            {
-                drawText("   ", _pixels, DELALL_START_X-12, DELALL_START_Y, 0, false, 0);
-            }
+        // Delete icon, (currently only used for clearing breakpoints)
+        if(Editor::getEditorMode() == Editor::Dasm  &&  (Editor::getSingleStepEnabled()))
+        {
+            int numBrkPoints = (Editor::getMemoryMode() == Editor::RAM) ? Editor::getVpcBreakPointsSize() : Editor::getNtvBreakPointsSize();
+            sprintf(str, "%02d", numBrkPoints);
+            drawText(str, _pixels, DELALL_START_X-12, DELALL_START_Y, 0xFFFFFFFF, false, 0);
+            drawText("x", _pixels, DELALL_START_X, DELALL_START_Y, 0xFFFF0000, Editor::getDelAllButton(), 1);
+        }
+        else
+        {
+            drawText("   ", _pixels, DELALL_START_X-12, DELALL_START_Y, 0, false, 0);
         }
     }
 
