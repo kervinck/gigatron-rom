@@ -1,0 +1,251 @@
+_runtimePath_ "../../at67/gbas/runtime"
+_codeRomType_ ROMv3
+cls : mode 2
+
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
+sound off
+cls
+
+' ------------------
+'   Constants
+' ------------------
+const MAXFISH = 8
+const TETRA = 0
+const RASBORA = 1
+const MOLLY = 2
+const SWIMRIGHT = 0
+const SWIMLEFT = 1
+const SWIMUP = 0
+const SWIMDOWN = 1
+const SWIMFWD = 2
+const MIX1 = 0
+const MIX2 = 1
+const MIX3 = 2
+
+' ------------------
+'   Sprites
+' ------------------
+const TETRA1 = 0
+load sprite, ./graphics/cardinalTetra.tga, TETRA1
+const TETRA2 = 1
+load sprite, ./graphics/cardinalTetra.tga, TETRA2, FlipX
+const RASBORA1 = 2
+load sprite, ./graphics/harlequinRasbora.tga, RASBORA1
+const RASBORA2 = 3
+load sprite, ./graphics/harlequinRasbora.tga, RASBORA2, FlipX
+const MOLLY1 = 4
+load sprite, ./graphics/molly.tga, MOLLY1
+const MOLLY2 = 5
+load sprite, ./graphics/molly.tga, MOLLY2, FlipX
+
+' ------------------
+'   Fish Arrays
+' ------------------
+dim fishType%(MAXFISH) = TETRA, TETRA, TETRA, TETRA, TETRA, RASBORA, RASBORA, MOLLY
+dim fishSprite%(MAXFISH)
+dim fishX%(MAXFISH)
+dim fishY%(MAXFISH)
+dim fishXmax%(MAXFISH)
+dim fishXmin%(MAXFISH)
+dim fishYmax%(MAXFISH)
+dim fishYmin%(MAXFISH)
+dim fishThink1%(MAXFISH)
+dim fishThink2%(MAXFISH)
+dim fishTimer%(MAXFISH)
+
+' ------------------
+'   Tank Vars
+' ------------------
+dim gravelMix1%(7) = 0, 6, 22, 10, 47, 42, 47
+dim gravelMix2%(7) = 0, 6, 22, 10, 47, 42, 3
+dim gravelMix3%(7) = 0, 6, 22, 10, 47, 49, 33
+dim tankGravel%(7)
+gravelType = MIX1
+
+' ------------------
+'   Other Vars
+' ------------------
+inputDevice = 255
+
+' ------------------
+'   Game Setup
+' ------------------
+gosub drawTank
+gosub drawGravel
+gosub initFish
+
+' ------------------
+'   Main Loop
+' ------------------
+loop:
+    gosub updateFish
+    gosub drawFish
+    gosub checkInput
+    goto &loop
+
+' ------------------
+'   Fish
+' ------------------
+updateFish:
+    for i = 0 to (MAXFISH -1)
+        fishTimer(i) = fishTimer(i) + 1
+
+        if fishTimer(i) > 100
+            fishTimer(i) = 0
+            fishRandom = rnd(100)
+            if fishRandom < 10
+                fishThink2(i) = SWIMDOWN
+            elseif fishRandom < 20
+                fishThink2(i) = SWIMUP
+            else
+                fishThink2(i) = SWIMFWD
+            endif
+        endif
+
+        if fishThink1(i) &= SWIMRIGHT
+            if fishX(i) > fishXmax(i)
+                fishSprite(i) = fishSprite(i) + 1
+                fishThink1(i) = SWIMLEFT
+            else
+                fishX(i) = fishX(i) + 1
+            endif
+        elseif fishThink1(i) &= SWIMLEFT
+            if fishX(i) < fishXmin(i)
+                fishSprite(i) = fishSprite(i) - 1
+                fishThink1(i) = SWIMRIGHT
+            else
+                fishX(i) = fishX(i) - 1
+            endif
+        endif
+
+        if fishThink2(i) &= SWIMUP
+            if fishY(i) < fishYmin(i)
+                fishThink2(i) = SWIMDOWN
+            else
+                fishY(i) = fishY(i) - 1
+            endif
+        elseif fishThink2(i) &= SWIMDOWN
+            if fishY(i) > fishYmax(i)
+                fishThink2(i) = SWIMUP
+            else
+                fishY(i) = fishY(i) + 1
+            endif
+        endif
+    next i
+
+    wait 2
+return
+
+drawFish:
+    for i = 0 to (MAXFISH -1)
+        if fishThink1(i) &= SWIMRIGHT
+            sprite noFlip, fishSprite(i), fishX(i), fishY(i)
+        else
+            sprite FlipX, fishSprite(i), fishX(i), fishY(i)
+        endif
+    next i
+return
+
+randomFish:
+    for i = 0 to (MAXFISH -1)
+        fishType(i) = rnd(3)
+    next i
+return
+
+' ------------------
+'   Tank
+' ------------------
+setGravelMix:
+    for i = 0 to 7
+        if gravelType &= MIX1
+            tankGravel(i) = gravelMix1(i)
+        elseif gravelType &= MIX2
+            tankGravel(i) = gravelMix2(i)
+        elseif gravelType &= MIX3
+            tankGravel(i) = gravelMix3(i)
+        endif
+    next i
+return
+
+drawGravel:
+    gosub setGravelMix
+
+    for x = 0 to 159
+        for y = 110 to 119 
+            pset x, y, tankGravel(rnd(0) AND 7)
+        next y
+    next x
+return
+
+drawTank:
+    set BG_COLOUR, 32
+    set FG_COLOUR, 32
+    rectf 0, 0, 159, 109
+return
+
+' ------------------
+'   Input
+' ------------------
+checkInput:
+    inputDevice = get("BUTTON_STATE")
+
+    if inputDevice = 127
+        gosub drawTank
+        gosub randomFish
+        gosub initFish
+    elseif inputDevice = 191
+        gravelType = gravelType + 1
+        if gravelType > 2
+            gravelType = 0
+        endif
+        gosub drawGravel
+    endif
+return
+
+' ------------------
+'   Sound FX
+' ------------------
+
+
+' ------------------
+'   Init
+' ------------------
+initFish:
+    for i = 0 to (MAXFISH -1)
+        fishTimer(i) = rnd(100)
+
+        if fishType(i) &= TETRA
+            fishXmax(i) = 140
+            fishXmin(i) = 3
+            fishYmax(i) = 95
+            fishYmin(i) = 5
+            fishX(i) = rnd(135)
+            fishY(i) = rnd(90)
+            fishThink1(i) = rnd(2)
+            fishThink2(i) = SWIMFWD
+            fishSprite(i) = TETRA1 + fishThink1(i)
+        elseif fishType(i) &= RASBORA
+            fishXmax(i) = 135
+            fishXmin(i) = 3
+            fishYmax(i) = 95
+            fishYmin(i) = 5
+            fishX(i) = rnd(130)
+            fishY(i) = rnd(90)
+            fishThink1(i) = rnd(2)
+            fishThink2(i) = SWIMFWD
+            fishSprite(i) = RASBORA1 + fishThink1(i)
+        elseif fishType(i) &= MOLLY
+            fishXmax(i) = 135
+            fishXmin(i) = 3
+            fishYmax(i) = 95
+            fishYmin(i) = 5
+            fishX(i) = rnd(130)
+            fishY(i) = rnd(90)
+            fishThink1(i) = rnd(2)
+            fishThink2(i) = SWIMFWD
+            fishSprite(i) = MOLLY1 + fishThink1(i)
+        endif
+    next i
+return
+
