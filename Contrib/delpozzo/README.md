@@ -2,6 +2,10 @@
 A collection of software and tools I developed for the [Gigatron TTL microcomputer](https://gigatron.io).
 
 ## Software
+
++ [Video Poker](#video-poker)
++ [Fish Tank](#fish-tank)
+
 ### Video Poker
 
 A 5-card poker game for Gigatron developed in [at67's gtBASIC](https://forum.gigatron.io/viewtopic.php?f=4&t=232). Requires Gigatron ROMv3 or higher.
@@ -9,7 +13,6 @@ A 5-card poker game for Gigatron developed in [at67's gtBASIC](https://forum.gig
 ![Screenshot](screenshots/videopoker-02.png?raw=true)
 
 **Gamepad Controls**
-
 - **Left, Right** - Card selection
 - **Up, Down** - Increase / Decrease bet
 - **A Button** - Hold / Unhold card
@@ -45,9 +48,28 @@ Winning hands and rewards are as follows:
 
 **Pair of Jacks or Better:** 1 x Bet
 
+### Fish Tank
+
+**Work-in-Progress**
+
+A fish tank simulation for Gigatron developed in [at67's gtBASIC](https://forum.gigatron.io/viewtopic.php?f=4&t=232). Requires Gigatron ROMv3 or higher.
+
+![Screenshot](screenshots/fishtank-alpha-03.png?raw=true)
+
+**Gamepad Controls**
+- **A Button** - Spawn random fish
+- **B Button** - Change gravel mixture
+
+**Keyboard Controls**
+- **Backspace, Delete, End** - Spawn random fish
+- **Home, PrtScn/Insert/SysReq** - Change gravel mixture
+
 ## Tools
 ### CustomFish
 A personalized version of the BabelFish firmware which supports Arduino Mega as well as breadboard buttons to load software.
 
 ### sendFile.py
 Modification of the original which adds support for the Arduino Mega. Sends GT1 or BASIC files to the Gigatron from a computer.
+
+### gigatron-gimp-palette.gpl
+Gigatron Color Palette for GIMP
