@@ -114,7 +114,7 @@ task Listing {
     }
     Push-Location $output
     try {
-        Get-ChildItem -Path $SRC_DIR -Filter '*.asm.py' -ErrorAction SilentlyContinue | ForEach-Object {
+        $SRC_DIR, $SYS_DIR | Get-ChildItem -Filter '*.asm.py' -ErrorAction SilentlyContinue | ForEach-Object {
             executeScript 'python.exe' @(, $_.FullName)
         }
     }

@@ -156,12 +156,17 @@
 import importlib
 from sys import argv
 from os  import getenv
+import pathlib
+import math
 
 from asm import *
 import gcl0x as gcl
 import font_v4 as font
 
-enableListing()
+repo_root = pathlib.Path(__file__).parent / '..' / '..' / '..' / '..'
+repo_root = repo_root.resolve()
+
+if __name__ == '__main__': enableListing()
 #-----------------------------------------------------------------------
 #
 #  Start of core
@@ -170,8 +175,9 @@ enableListing()
 
 # Pre-loading the formal interface as a way to get warnings when
 # accidentally redefined with a different value
-loadBindings('interface.json')
-loadBindings('Core/interface-dev.json') # Provisional values for DEVROM
+#
+loadBindings(repo_root / 'interface.json')
+loadBindings(repo_root / 'Core' / 'interface-dev.json') # Provisional values for DEVROM
 
 # Gigatron clock
 cpuClock = 6.250e+06
@@ -5364,7 +5370,7 @@ suba(1)                         #
 #  End of core
 #
 #-----------------------------------------------------------------------
-disableListing()
+if __name__ == '__main__': disableListing()
 
 #-----------------------------------------------------------------------
 #
@@ -5452,7 +5458,7 @@ lastRomFile = ''
 
 def insertRomDir(name):
   global lastRomFile
-  if name[0] != '_':                    # Mechanism for hiding files
+  if name and name[0] != '_':                    # Mechanism for hiding files
     if pc()&255 >= 251-14:              # Prevent page crossing
       trampoline()
     s = lastRomFile[0:8].ljust(8,'\0')  # Cropping and padding
@@ -5477,6 +5483,8 @@ if pc()&255 >= 251:                     # Don't start in a trampoline region
   align(0x100)
 
 for application in argv[1:]:
+  if __name__ != '__main__':
+    break
   print()
 
   # Determine label
@@ -5680,5 +5688,7 @@ if pc()&255 > 0:
 #-----------------------------------------------------------------------
 # Finish assembly
 #-----------------------------------------------------------------------
+if symbol('Reset') is None:
+  define('Reset', 0) 
 end()
-writeRomFiles(argv[0])
+if __name__ == '__main__': writeRomFiles(argv[0])
