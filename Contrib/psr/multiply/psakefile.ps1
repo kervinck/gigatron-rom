@@ -6,10 +6,11 @@ $REPO_ROOT_PATH = Join-Path $PSScriptRoot '..\..\..' -Resolve
 $VENV_DIR = Join-Path $PSScriptRoot '.venv'
 $SCRIPT_DIR = Join-Path $VENV_DIR 'Scripts'
 $SRC_DIR = Join-Path $PSScriptRoot 'src'
+$SYS_DIR = Join-Path $PSScriptRoot 'sys'
 $OUT_DIR = Join-Path $PSScriptRoot 'out'
 $TEST_DIR = Join-Path $PSScriptRoot 'test'
 
-$dirExcludes = '.venv', '.pytest_cache'
+$dirExcludes = '.venv', '.pytest_cache', 'sys'
 
 function findFilesToFormat() {
     $filesToFormat = @(Get-ChildItem -Exclude $dirExcludes -Directory | ForEach-Object { Get-ChildItem -path $_ -Recurse -Filter '*.py' })
@@ -113,7 +114,7 @@ task Listing {
     }
     Push-Location $output
     try {
-        Get-ChildItem $SRC_DIR '*.asm.py' -ErrorAction SilentlyContinue | ForEach-Object {
+        Get-ChildItem -Path $SRC_DIR -Filter '*.asm.py' -ErrorAction SilentlyContinue | ForEach-Object {
             executeScript 'python.exe' @(, $_.FullName)
         }
     }
