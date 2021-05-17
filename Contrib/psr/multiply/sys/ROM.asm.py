@@ -2708,12 +2708,12 @@ ld(hi('v6502_next'),Y)          #43
 jmp(Y,'v6502_next')             #44
 ld(-46/2)                       #45
 
-#-----------------------------------------------------------------------
-#       Reserved
-#-----------------------------------------------------------------------
-
-# XXX Reserve space for LSRW?
-
+label("sys_MultiplyBytes#114")
+adda([vAC + 1])                 #114
+st([vAC + 1])                   #115
+ld(hi('NEXTY'), Y)              #116
+jmp(Y, 'NEXTY')                 #117
+ld(-120/2)                      #118
 #-----------------------------------------------------------------------
 #
 #  $0700 ROM page 7-8: Gigatron font data
@@ -5364,6 +5364,154 @@ bne('.slb1')                    #
 suba(1)                         #
 
 # XXX Unfinished
+
+align(0x100, 0x200)
+#-----------------------------------------------------------------------
+#
+#  Quarter-Square table
+#
+#  Used for a reasonably fast multiplication routine
+#-----------------------------------------------------------------------
+# High-bytes, stored inverted, and shifted down by 32 places
+for i in range(32, 256):
+    val = math.floor(i ** 2 / 4)
+    ld(hi(~val))
+    C(f"${val:04x} = {val} = floor({i} ** 2 / 4); !${val:04x} >> 8 = ${(~val & 0xffff) >> 8:02x}")
+# Return to code
+label("sys_MultiplyBytes.tableExit")
+ld(hi("sys_MultiplyBytes#44"), Y) #41,65
+jmp(Y, [sysArgs + 5])           #42,66
+ld(hi(pc()), Y)                 #43,67
+# Implementation of sysMultiplyBytes
+label("SYS_MultiplyBytes_120")
+ld("sys_MultiplyBytes.high-byte-action.store-inverted") #15
+st([sysArgs + 4])               #16
+ld("sys_MultiplyBytes#44")      #17
+st([sysArgs + 5])               #18
+ld([sysArgs + 0])               #19
+anda(0b0111_1111)               #20
+st([sysArgs + 2])               #21
+ld([sysArgs + 1])               #22
+anda(0b0111_1111)               #23
+st([sysArgs + 3])               #24
+suba([sysArgs + 2])             #25
+blt(pc() + 3)                   #26
+bra(pc() + 3)                   #27
+suba(1)                         #28
+xora(0xFF)                      #28
+adda(1)                         #29
+label("sys_MultiplyBytes.tableEntry")
+st([vTmp])                      #30,52
+blt(pc() + 5)                   #31,53
+suba(32)                        #32,54
+bge(AC)                         #33,55
+bra([sysArgs + 4])              #34,56
+ld(0xff)                        #35,57
+bra(AC)                         #33,55
+bra([sysArgs + 4])              #34,56
+fillers(until=251)
+label("sys_MultiplyBytes.high-byte-action.restore-and-add")
+xora(0xFF)                      #58
+adda([vAC + 1])                 #59
+label("sys_MultiplyBytes.high-byte-action.store-inverted")
+st([vAC + 1])                   #36,60
+ld([vTmp])                      #37,61
+assert pc() & 0xFF == 0xFF, pc()
+bne(AC)                         #38,62
+jmp(Y, "sys_MultiplyBytes.tableExit")  #39,63
+ld(0xff)                        #40,64
+
+# Low-bytes, stored inverted.
+C("0 = floor(0 ** 2 / 4) and floor(1 ** 2 / 4); !$0 = $ff")
+for i in range(2, 256):
+    val = math.floor(i ** 2 / 4)
+    ld(~val)
+    C(f"${val:04x} = {val} = floor({i} ** 2 / 4); !${val:02x} = ${(~val) & 0xff:02x}")
+align(0x100)
+
+
+label("sys_MultiplyBytes#44")
+st([vAC])                       #44
+ld("sys_MultiplyBytes.high-byte-action.restore-and-add")  #45
+st([sysArgs + 4])               #46
+ld("sys_MultiplyBytes#68")      #47
+st([sysArgs + 5])               #48
+ld([sysArgs + 2])               #49
+jmp(Y, "sys_MultiplyBytes.tableEntry") #50
+adda([sysArgs + 3])             #51
+label("sys_MultiplyBytes#68")
+xora(0xff)                      #68
+adda(1)                         #69
+adda([vAC])                     #70
+st([vTmp])                      #71
+blt(pc() + 4)                   #72
+suba([vAC])                     #73
+bra(pc() + 4)                   #74
+ora([vAC])                      #75
+bra(pc() + 2)                   #74
+anda([vAC])                     #75
+anda(0b1000_0000, X)            #76
+ld([vTmp])                      #77
+st([vAC])                       #78
+ld([X])                         #79
+adda([vAC + 1])                 #80
+st([vAC + 1])                   #81
+# 7 bit x 7 bit multiply complete
+ld([sysArgs + 0])               #82
+xora([sysArgs + 1])             #83
+blt("sys_MultiplyBytes.oneMsbSetCase") # 84
+ld([sysArgs + 0])               #85
+blt(pc() + 5)                   #86
+ld(2 ** 14 >> 8)                #87
+ld(hi('NEXTY'), Y)              #88
+jmp(Y, 'NEXTY')                 #89
+ld(-92/2)                       #90
+
+adda([vAC + 1])                 #88
+st([vAC + 1])                   #89
+ld([sysArgs + 2])               #90
+adda([sysArgs + 3])             #91
+label("sys_MultiplyBytes#92")
+# Reusing sysArgs + 2, because we can't use vTmp twice
+st([sysArgs + 2])               #92
+anda(0b0000_0001)               #93
+adda(0b0111_1111)               #94
+anda(0b1000_0000)               #95
+ld(AC, X)                       #96
+adda([vAC])                     #97
+st([vAC])                       #98
+blt(pc() + 3)                   #99
+bra(pc() + 3)                   #100
+ld([X])                         #101
+ld(0)                           #101
+adda([vAC + 1])                 #102
+st([vAC + 1])                   #103
+ld("sys_MultiplyBytes#114")     #104
+st([vTmp])                      #105
+ld([sysArgs + 2])               #106
+anda(0b1111_1110)               #107
+ld(hi("shiftTable"), Y)         #108
+jmp(Y, AC)                      #109
+bra(0xFF)                       #110
+# The rest happens in and after the shift table,
+# but to save you looking it, looks like this
+#111 ld (ac >> 1)
+#112 bra [vTmp]
+#113 nop
+#114 adda [vAC + 1]
+#115 st [vAC + 1]
+#116 ld hi('NEXTY'), y
+#117 jmp y, 'NEXTY'
+#118 ld -120/2
+label("sys_MultiplyBytes.oneMsbSetCase")
+bge(pc() + 3) # 86
+bra(pc() + 3) # 87 
+ld([sysArgs + 3]) # 88
+ld([sysArgs + 2]) # 88
+nop() # 89
+bra("sys_MultiplyBytes#92") # 90
+nop() # 91
+
 
 #-----------------------------------------------------------------------
 #

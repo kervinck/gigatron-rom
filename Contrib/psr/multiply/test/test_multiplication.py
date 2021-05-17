@@ -1,6 +1,7 @@
 import math
 import os.path
 import pathlib
+from importlib import reload
 from types import SimpleNamespace
 
 from hypothesis import given
@@ -16,6 +17,7 @@ SCRIPT = SRC_DIR / "multiplication.asm.py"
 def setup_module():
     global vars
     """Load the Emulator from the multiplication script"""
+    reload(asm)
     name, _ = os.path.splitext(os.path.basename(SCRIPT))
     script_globals = {"__file__": str(SCRIPT.absolute()), "__name__": name}
     with SCRIPT.open("rb") as file:
