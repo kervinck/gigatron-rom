@@ -1,0 +1,355 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Mandelbrot fractal                                              |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x
+
+{
+  Plot the Mandelbrot set
+
+  - 160x120 pixels and 64 colors
+  - Faithful translation of mandelbrot.c pre-study
+  - Use 16-bit vCPU math as 7-bit fixed point arithmetic (1.00 -> 128)
+  - Implement multiplication in interpreter
+  - Show settable clock, with blinking colon as long as unset
+
+  Ideas for after ROMv1:
+  XXX Random color offset for each new rendering
+  XXX Lookup table for intensity mapping
+  XXX Refactor pixel order from what to do with it
+  XXX Double vertical resolution by exploiting vertical symmetry
+}
+
+{ Pretty accurate multiply-shift ((A*B)>>7), but it can be off by one }
+[def
+  push
+
+  {Extract sign and absolute values}
+  0 sign= C=
+ {0}A- [if>0 A= 1 sign=]
+  0 B- [if>0 B= sign 1^ sign=]
+
+  {Multiply}
+  7 shift= {Maximum pending normalisation shift}
+  \SYS_LSRW1_48 \sysFn:
+  $200
+  [do
+    bit=
+    -$4000 C+ [if<0
+      C 1<< C=
+    else
+      {Shift prematurely in an attempt to avoid overflow, this is where
+       the algorithm loses some accuracy}
+      B 48!! {ShiftRight} B=
+      shift 1- shift=]
+
+    {Add partial product}
+    A bit- [if>=0
+      A=
+      C B+ C=]
+
+    bit 48!! {ShiftRight} if<>0loop]
+
+  {Normalise by shifting the word right}
+  {Organized as a switch statement for some more speed}
+  shift 7^ [if=0 \SYS_LSRW7_30 \sysFn: {Shift Right 7} C 30!! else
+  shift 6^ [if=0 \SYS_LSRW6_48 \sysFn: {Shift Right 6} C 48!! else
+  shift 5^ [if=0 \SYS_LSRW5_50 \sysFn: {Shift Right 5} C 50!! else
+  shift 4^ [if=0 \SYS_LSRW4_50 \sysFn: {Shift Right 4} C 50!! else
+  shift 3^ [if=0 \SYS_LSRW3_52 \sysFn: {Shift Right 3} C 52!! else
+  shift 2^ [if=0 \SYS_LSRW2_52 \sysFn: {Shift Right 2} C 52!! else
+  shift 1^ [if=0{\SYS_LSRW1_48 \sysFn:}{Shift Right 1} C 48!!]]]]]]] C=
+
+  {Apply sign to return value}
+  sign [if<>0 0 C- else C]
+
+  pop ret
+] MulShift7=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+$0300:
+
+[def {CalcSet}
+  push
+
+  $800 Pen= {Start of video}
+  120 Height= 160 Width= len=
+  LastPixel= {Anything well-defined}
+  0 DY=
+  Step DX=
+
+  [do
+    {Draw white pixel while busy here}
+    63 Pen.
+
+    {Update clock}
+    UpdateClock!
+
+    LastPixel [if=0
+      {Check if we are inside one of the main bulbs for
+       a quick bailout (Wikipedia)
+       (x+1)^ + y^2 < 1/16}
+      Y0 A= B= MulShift7! YY=
+      X0 128+ A= B= MulShift7! YY+ 8- [if<0 0
+      else
+
+        {q*(q + x - 1/4) < 1/4*y^2, where q = (x - 1/4)^2 + y^2}
+        X0 32- A= B= MulShift7! YY+ {q}
+        A= X0+ 32- B= MulShift7! tmp=
+        tmp+ tmp= tmp+ tmp= {*4} YY- [if<0 0
+        else
+
+          {Otherwise run the escape time algorithm}
+          CalcPixel!
+        ]
+      ]
+    else
+      {No shortcut}
+      CalcPixel!
+    ]
+
+    LastPixel= Pen. {Plot pixel}
+
+    len 1- [if<=0
+      {Turn right}
+      DY tmp= DX DY= 0 tmp- DX=
+
+      {Length of next segment, either horizontal or vertical}
+      DX [if<>0 Width 1- Width= else Height 1- Height=]
+    ]
+
+    {Break when reaching a zero-length segment}
+    len= if>0
+
+    {Step in the fractal plane}
+    X0 DX+ X0=
+    Y0 DY+ Y0=
+
+    {Matching step in video frame}
+    DX [if<0 Pen 1-     Pen=]
+    DX [if>0 Pen 1+     Pen=]
+    DY [if<0 -$100 Pen+ Pen=]
+    DY [if>0  $100 Pen+ Pen=]
+
+  loop]
+
+  {60 \soundTimer. {For debugging}}
+
+  GrayOut!
+
+  pop ret
+] CalcSet=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+$0400:
+
+[def {GrayOut}
+  push
+
+  $800 Pen=
+  120 Height= 160 Width= len=
+  1 DX= 0 DY=
+
+  [do
+    \SYS_LSRW1_48 \sysFn:
+    0 Level=
+    32 [do
+      i=
+      Pen, 63& i- [if>=0 Pen. i 21& [if<>0 1 else 2] Level+ Level=]
+      i 48!! {ShiftRight}
+      if>0loop]
+    {Level in 0..9}
+    Pen. {Paint it black}
+
+    Level [if<>0
+      {Level in 1..9}
+
+      {Ordered dithering}
+      Pen>, 1& i= i+ i= {2 * bit 0 of y}
+      Pen   1&    i+ i= {+   bit 0 of x}
+      [def 0# 2# {Bayer matrix (Wikipedia)}
+           3# 1#]
+      i+ peek Level+ 1- Level=
+      {Level in 0..11}
+     
+      {Map intensity level to actual gray color (multiple of 1+4+16)}
+      [do Level 3- if>=0 Level= Pen, 21+ Pen. loop]
+    ]
+
+    {Advance to next pixel}
+    len 1- [if<=0
+      {Turn right}
+      DY tmp= DX DY= 0 tmp- DX=
+
+      {Length of next segment, either horizontal or vertical}
+      DX [if<>0 Width 1- Width= else Height 1- Height=]
+    ]
+
+    {Break when reaching a zero-length segment}
+    len= if>0
+
+    {Matching step in video frame}
+    DX [if<0 Pen 1-     Pen=]
+    DX [if>0 Pen 1+     Pen=]
+    DY [if<0 -$100 Pen+ Pen=]
+    DY [if>0  $100 Pen+ Pen=]
+
+    {Update clock}
+    UpdateClock!
+
+  loop]
+
+  pop ret
+] GrayOut=
+
+$201a Separator= {High: separator character, Low: XOR when blinking}
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+$0500:
+
+{Update 24-hour clock}
+[def
+  \frameCount,
+  LastFrame- 255& Elapsed=
+  60- [if<0
+    \buttonState, 128& [if<>0 ret]
+    15 {Yellow}
+  else
+    63 {White}]
+  Color=
+  {1 second has elapsed, or button A was pressed}
+
+  push
+
+  Clock0 Elapsed+ Clock0=
+  LastFrame Elapsed+ LastFrame=
+
+  -3599 Clock0+ [if>=0
+    Clock0=
+    1 AddMinutes!
+  ]
+
+  {Change separator between on/off ($3a/$20)}
+  Separator>, Separator^ Separator>.
+
+  {Check if user is adjusting the time}
+  \buttonState, 119^ {A+Up}    [if=0 Clock0=  +1 else
+                 12^ {A+Down}  [if=0 Clock0=  -1 else
+                  6^ {A+Left}  [if=0 Clock0= -60 else
+                  3^ {A+Right} [if=0 Clock0= +60 else 0]]]]
+  [if<>0
+       AddMinutes!      {Adjust minutes/hours clock}
+       0 Clock0=        {Reset seconds/subseconds clock}
+       $3a00 Separator= {Stop blinking once adjusted}
+  ]
+  \buttonState, 15| \buttonState. {Reset arrow presses, but not the others}
+
+  {Convert to HH:MM:SS and draw on screen}
+  $445c Pos=
+  Clock1 Value= 600 NextDigit! {10-hour digit}
+                 60 NextDigit! { 1-hour digit}
+        Separator>, PrintChar! {Colon or space}
+                 10 NextDigit! {10-minute digit}
+                  1 NextDigit! { 1-minute digit}
+
+  pop ret
+] UpdateClock=
+
+[def {PrintChar}
+  32- i= \font32up fontData= {All of '0'-'9' and ':' are in the first page}
+  i 2<< i+                   {Multiply by 5}
+  fontData+ fontData=        {Add to page address to reach bitmap data}
+  $800 Pos+ q=               {Where to stop the inner drawing loop}
+
+  {Draw 5 vertical slices: 5 using font data}
+  0       \sysArgs0. {Black}
+  Color   \sysArgs1.
+  Pos     \sysArgs4:
+  6+      Pos=
+  \SYS_VDrawBits_134 \sysFn:
+  $fb i= [do
+    fontData 0? fontData<++ \sysArgs2. 134!!
+    \sysArgs4<++
+    i<++ i if<>0loop]
+  ret
+] PrintChar=
+
+{-----------------------------------------------------------------------+
+|}\vLR>++ ret{          RAM page 6                                      |
++-----------------------------------------------------------------------}
+$0600:
+
+[def {NextDigit -- Value Radix}
+  push
+  Radix=
+  $30 Digit=
+  Value Radix- [if>=0
+    [do Value= Digit<++ Radix- if>=0loop]
+  ]
+  Digit PrintChar!
+  pop ret
+] NextDigit=
+
+[def {AddMinutes}
+  Clock1+ Clock1=
+  [if<0 1440 Clock1+ Clock1=]
+  -1440 Clock1+ [if>=0 Clock1=]
+  ret
+] AddMinutes=
+
+{ Calculate color for (X0,Y0) using the escape time algorithm }
+[def {CalcPixel}
+  push
+  0 X= XX= Y= YY= i=
+  [do
+    i 1+ i= 64^ if<>0           {Break after completing 63 iterations}
+
+                                {Mandelbrot function: z' := z^2 + c}
+    X A= Y Y+ B= MulShift7! Y0+ Y= {Y = 2*X*Y + Y0}
+    XX YY- X0+                  X= {X = X^2 - Y^2 + X0}
+
+                                {Calculate squares}
+   {X}A= B= MulShift7!          XX=
+    Y A= B= MulShift7!          YY=
+
+    -$200 XX+ YY+
+    if<=0loop {else} i          {Also break when X^2 + Y^2 > 4}
+  ]
+  pop ret
+] CalcPixel=
+
+{ Main }
+
+0 Clock0= Clock1= {Frames and minutes}
+Digit=
+\frameCount, LastFrame=
+
+[do
+  -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 1127.446 seconds}
+  -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1  2125.648 seconds}
+   -60 Y0= -256 X0= 1 Step= CalcSet!    {Zoom2  2050.341 seconds}
+  -320 Y0= -360 X0= 9 Step= CalcSet!    {Wide    356.482 seconds}
+     0 Y0= -100 X0= 1 Step= CalcSet!    {Zoom3  2337.633 seconds}
+   -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  1409.569 seconds}
+  loop]
+
+{ Benchmark settings:
++  $1c10 p= {Start of video}
++  96 Height= 128 Width= len=
++    i 1+ i= 27^ if<>0           {Break after completing 26 iterations}
++  -144 Y0= -256 X0= 3 Step= CalcSet!    {Global  736.586 seconds}
+}
+
+{-----------------------------------------------------------------------+
+|       End                                                             |
++-----------------------------------------------------------------------}
+
