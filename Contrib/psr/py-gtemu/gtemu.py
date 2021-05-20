@@ -41,7 +41,7 @@ def _make_zero_page_accessor(
         )
 
     def _setter(self, value):
-        return value.to_bytes(width, byteorder=byteorder, signed=signed)
+        RAM[address : address + width] = value.to_bytes(width, byteorder=byteorder, signed=signed)
 
     return property(
         _getter, _setter, doc=f"Get or set the current state of the {name} register"
@@ -58,10 +58,10 @@ def _to_address(address_or_symbol):
     else:
         try:
             address = int(address_or_symbol)
-        except TypeError as e:
+        except (TypeError, ValueError):
             raise ValueError(
                 f"{address_or_symbol:r} is not a valid address or symbol"
-            ) from e
+            )
     if not (0 <= address < (1 << 16)):
         raise ValueError(f"{address:x} is out of range for an address")
     return address
