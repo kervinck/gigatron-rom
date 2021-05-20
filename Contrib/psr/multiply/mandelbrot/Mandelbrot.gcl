@@ -10,64 +10,45 @@ gcl0x
 {
   Plot the Mandelbrot set
 
-  - 160x120 pixels and 64 colors
-  - Faithful translation of mandelbrot.c pre-study
-  - Use 16-bit vCPU math as 7-bit fixed point arithmetic (1.00 -> 128)
-  - Implement multiplication in interpreter
-  - Show settable clock, with blinking colon as long as unset
+  Originally by Marcel. This version is adapted to use SYS_MultiplyBytes_120
 
-  Ideas for after ROMv1:
-  XXX Random color offset for each new rendering
-  XXX Lookup table for intensity mapping
-  XXX Refactor pixel order from what to do with it
-  XXX Double vertical resolution by exploiting vertical symmetry
+  In order to make the multiplication as fast as possible we use 8 fraction
+  bits instead of 7.
 }
 
-{ Pretty accurate multiply-shift ((A*B)>>7), but it can be off by one }
+{ multiply-shift ((A*B)>>8) }
+{
+  Assumes that sysFn already holds SYS_MultiplyBytes_120
+  \SYS_MultiplyBytes_120 \sysFn:
+}
+
 [def
-  push
 
   {Extract sign and absolute values}
-  0 sign= C=
+  0 sign=
  {0}A- [if>0 A= 1 sign=]
   0 B- [if>0 B= sign 1^ sign=]
 
   {Multiply}
-  7 shift= {Maximum pending normalisation shift}
-  \SYS_LSRW1_48 \sysFn:
-  $200
-  [do
-    bit=
-    -$4000 C+ [if<0
-      C 1<< C=
-    else
-      {Shift prematurely in an attempt to avoid overflow, this is where
-       the algorithm loses some accuracy}
-      B 48!! {ShiftRight} B=
-      shift 1- shift=]
+  { multiply low bytes, right-shift by 8 and store in C }
+  <A, \sysArgs0.
+  <B, \sysArgs1.
+  120!! \vACH, C=
+  { multiply low-byte of A by high-byte of B and add to C }
+  >B, \sysArgs1.
+  120!! C+ C=
+  { multiply high-byte of A by high-byte of B, left-shift by 8 and add to C }
+  >A, \sysArgs0.
+  120!! \vACH. 255| 255^ C+ C=
+  { multiply high-byte of A by low-byte of B, add C }
+  <B, \sysArgs1.
+  120!! C+ C=
 
-    {Add partial product}
-    A bit- [if>=0
-      A=
-      C B+ C=]
-
-    bit 48!! {ShiftRight} if<>0loop]
-
-  {Normalise by shifting the word right}
-  {Organized as a switch statement for some more speed}
-  shift 7^ [if=0 \SYS_LSRW7_30 \sysFn: {Shift Right 7} C 30!! else
-  shift 6^ [if=0 \SYS_LSRW6_48 \sysFn: {Shift Right 6} C 48!! else
-  shift 5^ [if=0 \SYS_LSRW5_50 \sysFn: {Shift Right 5} C 50!! else
-  shift 4^ [if=0 \SYS_LSRW4_50 \sysFn: {Shift Right 4} C 50!! else
-  shift 3^ [if=0 \SYS_LSRW3_52 \sysFn: {Shift Right 3} C 52!! else
-  shift 2^ [if=0 \SYS_LSRW2_52 \sysFn: {Shift Right 2} C 52!! else
-  shift 1^ [if=0{\SYS_LSRW1_48 \sysFn:}{Shift Right 1} C 48!!]]]]]]] C=
-
-  {Apply sign to return value}
+  {Apply sign to return value }
   sign [if<>0 0 C- else C]
 
-  pop ret
-] MulShift7=
+  ret
+] MulShift8=
 
 {-----------------------------------------------------------------------+
 |}\vLR>++ ret{          RAM page 3                                      |
@@ -90,17 +71,18 @@ $0300:
     {Update clock}
     UpdateClock!
 
+    \SYS_MultiplyBytes_120 \sysFn:
     LastPixel [if=0
       {Check if we are inside one of the main bulbs for
        a quick bailout (Wikipedia)
        (x+1)^ + y^2 < 1/16}
-      Y0 A= B= MulShift7! YY=
-      X0 128+ A= B= MulShift7! YY+ 8- [if<0 0
+      Y0 A= B= MulShift8! YY=
+      X0 128+ A= B= MulShift8! YY+ 8- [if<0 0
       else
 
         {q*(q + x - 1/4) < 1/4*y^2, where q = (x - 1/4)^2 + y^2}
-        X0 32- A= B= MulShift7! YY+ {q}
-        A= X0+ 32- B= MulShift7! tmp=
+        X0 64- A= B= MulShift8! YY+ {q}
+        A= X0+ 64- B= MulShift8! tmp=
         tmp+ tmp= tmp+ tmp= {*4} YY- [if<0 0
         else
 
@@ -314,14 +296,14 @@ $0600:
     i 1+ i= 64^ if<>0           {Break after completing 63 iterations}
 
                                 {Mandelbrot function: z' := z^2 + c}
-    X A= Y Y+ B= MulShift7! Y0+ Y= {Y = 2*X*Y + Y0}
+    X A= Y Y+ B= MulShift8! Y0+ Y= {Y = 2*X*Y + Y0}
     XX YY- X0+                  X= {X = X^2 - Y^2 + X0}
 
                                 {Calculate squares}
-   {X}A= B= MulShift7!          XX=
-    Y A= B= MulShift7!          YY=
+   {X}A= B= MulShift8!          XX=
+    Y A= B= MulShift8!          YY=
 
-    -$200 XX+ YY+
+    -$400 XX+ YY+
     if<=0loop {else} i          {Also break when X^2 + Y^2 > 4}
   ]
   pop ret
@@ -334,12 +316,12 @@ Digit=
 \frameCount, LastFrame=
 
 [do
-  -180 Y0= -320 X0= 3 Step= CalcSet!    {Global 1127.446 seconds}
-  -148 Y0=  -98 X0= 1 Step= CalcSet!    {Zoom1  2125.648 seconds}
-   -60 Y0= -256 X0= 1 Step= CalcSet!    {Zoom2  2050.341 seconds}
-  -320 Y0= -360 X0= 9 Step= CalcSet!    {Wide    356.482 seconds}
-     0 Y0= -100 X0= 1 Step= CalcSet!    {Zoom3  2337.633 seconds}
-   -60 Y0=    0 X0= 1 Step= CalcSet!    {Zoom4  1409.569 seconds}
+  -360 Y0= -640 X0=  6 Step= CalcSet!    {Global 1127.446 seconds}
+  -296 Y0= -196 X0=  2 Step= CalcSet!    {Zoom1  2125.648 seconds}
+  -120 Y0= -512 X0=  2 Step= CalcSet!    {Zoom2  2050.341 seconds}
+  -640 Y0= -720 X0= 18 Step= CalcSet!    {Wide    356.482 seconds}
+     0 Y0= -200 X0=  2 Step= CalcSet!    {Zoom3  2337.633 seconds}
+  -120 Y0=    0 X0=  2 Step= CalcSet!    {Zoom4  1409.569 seconds}
   loop]
 
 { Benchmark settings:
