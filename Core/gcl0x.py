@@ -8,6 +8,7 @@
 from asm import *
 import string
 import sys
+from pathlib import Path
 
 class Program:
   def __init__(self, name, forRom=True):
@@ -30,7 +31,11 @@ class Program:
     self.execute = None
     self.needPatch = False
     self.lengths = {} # block -> length, or var -> length
-    loadBindings('Core/v6502.json') # XXX Provisional method to load mnemonics
+    # XXX Provisional method to load mnemonics
+    try:
+      loadBindings(Path('Core') / 'v6502.json')
+    except FileNotFoundError:
+      loadBindings(Path(__file__).parent / 'v6502.json')
 
   def org(self, address):
     """Set start address"""
