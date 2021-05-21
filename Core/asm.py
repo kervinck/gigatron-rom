@@ -12,6 +12,7 @@
 import inspect
 import json
 from os.path import basename, splitext
+import re
 import sys
 
 # Python 2/3 compatibility
@@ -436,13 +437,27 @@ def disassemble(opcode, operand, address=None, lastOpcode=None):
   # Emit as text
   return text
 
+# Read a given file Python source file, using the correct encoding.
+# Taken from the Python3 reference Section 2.1.4
+_encodingRe = re.compile(rb'coding[=:]\s*([-\w.]+)')
+def _readSource(filename):
+  encoding = 'utf-8'
+  with open(filename, 'rb') as fp:
+    for _ in range(2):
+      line = fp.readline()
+      match = _encodingRe.search(line)
+      if match:
+        encoding = match.group(1).decode('ascii')
+        break
+  with open(filename, 'r', encoding=encoding) as fp:
+    return fp.readlines()
+
 # Start to include source lines in output listing
 def enableListing():
   global _listing, _listingSource, _lineno
   _listing = inspect.currentframe().f_back
   info = inspect.getframeinfo(_listing)
-  with open(info.filename, 'r') as fp:
-    _listingSource = fp.readlines()
+  _listingSource = _readSource(info.filename)
   _lineno = inspect.getframeinfo(_listing).lineno
 
 # Get source lines from last line number up to current
@@ -527,7 +542,7 @@ def writeRomFiles(sourceFile):
   # Disassemble for readability
   filename = stem + '.lst'
   print('Create file', filename)
-  with open(filename, 'w') as file:
+  with open(filename, 'w', encoding='utf-8') as file:
     address = 0
     repeats, previous, line0 = 0, None, None
     maxRepeat = 3
