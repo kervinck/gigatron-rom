@@ -5449,7 +5449,7 @@ label('.sysCm#64')
 ld(-52/2)                            #64
 adda([vTicks])                       #13 = 65 - 52
 st([vTicks])                         #14
-adda(min(0,14-(26+52)/2))            #15
+adda(min(0,14-(26+52)/2))            #15   could probably be min(0,maxTicks-(26+52)/2)
 bge('sys_CopyMemory')                #16
 ld([vAC])                            #17
 ld(-2)                               #18   notime
@@ -5550,7 +5550,7 @@ label('.sysCme#76')
 ld(-56/2)                            #76
 adda([vTicks])                       #21 = 77 - 56
 st([vTicks])                         #22
-adda(min(0,14-(34+56)/2))            #23
+adda(min(0,14-(34+56)/2))            #23   could probably be min(0,maxTicks-(26+56)/2)
 bge('.sysCme#26')                    #24
 ld([vAC])                            #25
 ld(-2)                               #26   notime
