@@ -864,28 +864,43 @@ jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_StoreBytes_DEVROM_XXX
+# Extension SYS_CopyMemory_DEVROM_80
 #-----------------------------------------------------------------------
 
-ld(hi('REENTER'),Y)             #15 slot 0xe9
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
-
-#-----------------------------------------------------------------------
-# Extension SYS_LoadBytes_DEVROM_XXX
-#-----------------------------------------------------------------------
-
-# Load object variables into zero-page
-# XXX Unfinished
+# SYS function for copying 1..256 bytes
 #
-# Variables
-#       vLR             Pointer to size byte + object variables
-#       $30...$30+n-1   Target location
+# sysArgs[0:1]    Destination address
+# sysArgs[2:3]    Source address
+# vAC[0]          Count (0 means 256)
+#
+# Doesn't cross page boundaries.
+# Overwrites sysArgs[4:7] and vLR.
 
-label('SYS_LoadBytes_DEVROM_XXX')
-ld(hi('sys_LoadBytes'),Y)       #15
-jmp(Y,'sys_LoadBytes')          #16
-ld([vLR+1],Y)                   #17
+label('SYS_CopyMemory_DEVROM_80')
+ld(hi('sys_CopyMemory'),Y)       # 15 slot 0xe9
+jmp(Y, 'sys_CopyMemory')         # 16
+ld([vAC])                        # 17
+
+#-----------------------------------------------------------------------
+# Extension SYS_CopyMemoryExt_DEVROM_94
+#-----------------------------------------------------------------------
+
+# SYS function for copying 1..256 bytes to a different bank
+#
+# sysArgs[0:1]    Destination address
+# sysArgs[2:3]    Source address
+# vAC[0]          Count (0 means 256)
+# vAC[1]          Bits 7 and 6 contain the bank number
+#
+# Doesn't cross page boundaries.
+# Overwrites sysArgs[4:7], vLR, and vTmp.
+# Returns -1 in vAC if no expansion card is present.
+
+label('SYS_CopyMemoryExt_DEVROM_42')
+ld(hi('sys_CopyMemoryExt'),Y)    # 15 slot 0xec
+jmp(Y, 'sys_CopyMemoryExt')      # 16
+ld(hi(ctrlBits), Y)              # 17
+
 
 #-----------------------------------------------------------------------
 # Extension SYS_ReadRomDir_v5_80
@@ -5331,39 +5346,231 @@ ld(hi('NEXTY'),Y)               #40
 jmp(Y,'NEXTY')                  #41
 ld(-44/2)                       #42
 
-# SYS_LoadBytes_DEVROM_XXX implementation
-label('sys_LoadBytes')
-ld(0x30)                        # Target address
-st([sysArgs+1])                 #
-ld([vLR+0])                     # Source address
-st([sysArgs+0],X)               #
-ld([Y,X])                       # Byte count
-label('.slb1')                  #
-st([sysArgs+2])                 #
 
-ld([sysArgs+0])                 # Advance source address
-adda(1)                         #
-st([sysArgs+0],X)               #
+#-----------------------------------------------------------------------
+#
+#  $0000 ROM page 0: CopyMemory implementation 
+#
+#-----------------------------------------------------------------------
 
-ld([Y,X])                       # Copy byte
-ld([sysArgs+1],X)               #
-st([X])                         #
+align(0x100, size=0x100)
 
-ld([sysArgs+1])                 # Advance target address
-adda(1)                         #
-st([sysArgs+1])                 #
+# SYS_CopyMemory_DEVROM_80 implementation
 
-ld([sysArgs+2])                 # Decrement byte count and loop
-bne('.slb1')                    #
-suba(1)                         #
+label('sys_CopyMemory')
+ble('.sysCm#20')                     #18   goto burst6
+suba(6)                              #19
+bge('.sysCm#22')                     #20   goto burst6
+ld([sysArgs+3],Y)                    #21
+adda(3)                              #22
+bge('.sysCm#25')                     #23   goto burst3
+ld([sysArgs+2],X)                    #24
 
-# XXX Unfinished
+adda(2)                              #25   single
+st([vAC])                            #26
+ld([Y,X])                            #27
+ld([sysArgs+1],Y)                    #28
+ld([sysArgs+0],X)                    #29
+st([Y,X])                            #30
+ld([sysArgs+0])                      #31
+adda(1)                              #32
+st([sysArgs+0])                      #33
+ld([sysArgs+2])                      #34
+adda(1)                              #35
+st([sysArgs+2])                      #36
+ld([vAC])                            #37
+beq(pc()+3)                          #38
+bra(pc()+3)                          #39
+ld(-2)                               #40
+ld(0)                                #40!
+adda([vPC])                          #41
+st([vPC])                            #42
+ld(hi('REENTER'),Y)                  #43
+jmp(Y,'REENTER')                     #44
+ld(-48/2)                            #45
+
+label('.sysCm#25')
+st([vAC])                            #25   burst3
+for i in range(3):
+  ld([Y,X])                            #26+3*i
+  st([sysArgs+4+i])                    #27+3*i
+  st([Y,Xpp]) if i<2 else None         #28+3*i
+ld([sysArgs+1],Y)                    #34
+ld([sysArgs+0],X)                    #35
+for i in range(3):
+  ld([sysArgs+4+i])                    #36+2*i
+  st([Y,Xpp])                          #37+2*i
+ld([sysArgs+0])                      #42
+adda(3)                              #43
+st([sysArgs+0])                      #44
+ld([sysArgs+2])                      #45
+adda(3)                              #46
+st([sysArgs+2])                      #47
+ld([vAC])                            #48
+beq(pc()+3)                          #49
+bra(pc()+3)                          #50
+ld(-2)                               #51
+ld(0)                                #51!
+adda([vPC])                          #52
+st([vPC])                            #53
+ld(hi('NEXTY'),Y)                    #54
+jmp(Y,'NEXTY')                       #55
+ld(-58/2)                            #56
+
+label('.sysCm#20')
+nop()                                #20   burst6
+ld([sysArgs+3],Y)                    #21
+label('.sysCm#22')
+st([vAC])                            #22   burst6
+ld([sysArgs+2],X)                    #23
+for i in range(6):
+  ld([Y,X])                            #24+i*3
+  st([vLR+i if i<2 else sysArgs+2+i])  #25+i*3
+  st([Y,Xpp]) if i<5 else None         #26+i*3 if i<5
+ld([sysArgs+1],Y)                    #41
+ld([sysArgs+0],X)                    #42
+for i in range(6):
+  ld([vLR+i if i<2 else sysArgs+2+i])  #43+i*2
+  st([Y,Xpp])                          #44+i*2
+ld([sysArgs+0])                      #55
+adda(6)                              #56
+st([sysArgs+0])                      #57
+ld([sysArgs+2])                      #58
+adda(6)                              #59
+st([sysArgs+2])                      #60
+
+ld([vAC])                            #61
+bne('.sysCm#64')                     #62
+ld(hi('REENTER'),Y)                  #63
+jmp(Y,'REENTER')                     #64
+ld(-68/2)                            #65
+
+label('.sysCm#64')
+ld(-52/2)                            #64
+adda([vTicks])                       #13 = 65 - 52
+st([vTicks])                         #14
+adda(min(0,14-(26+52)/2))            #15   could probably be min(0,maxTicks-(26+52)/2)
+bge('sys_CopyMemory')                #16
+ld([vAC])                            #17
+ld(-2)                               #18   notime
+adda([vPC])                          #19
+st([vPC])                            #20
+ld(hi('REENTER'),Y)                  #21
+jmp(Y,'REENTER')                     #22
+ld(-26/2)                            #23
+
+# SYS_CopyMemoryExt_DEVROM_94 implementation
+
+label('sys_CopyMemoryExt')
+
+ld([Y,ctrlBits])                     #18
+bne('.sysCme#21')                    #19
+st([vTmp])                           #20
+ld(255)                              #21 no expansion present
+st([vAC])                            #22
+st([vAC+1])                          #23
+ld(hi('NEXTY'),Y)                    #24
+jmp(Y,'NEXTY')                       #25
+ld(-28/2)                            #26
+
+label('.sysCme#21')
+xora([vAC+1])                        #21
+anda(0xc0)                           #22
+xora([vTmp])                         #23
+st([vAC+1])                          #24 ctrl values in [vAC+1] and [vTmp]
+ld([vAC])                            #25
+
+label('.sysCme#26')
+ble('.sysCme#28')                    #26   goto burst6
+suba(6)                              #27
+bge('.sysCme#30')                    #28   goto burst6
+ld([sysArgs+3],Y)                    #29
+ld([sysArgs+2],X)                    #30
+adda(5)                              #31
+
+st([vAC])                            #32   single
+ld([Y,X])                            #33
+ld([vAC+1],X)                        #34
+ctrl(X)                              #35
+ld([sysArgs+1],Y)                    #36
+ld([sysArgs+0],X)                    #37
+st([Y,X])                            #38
+ld([vTmp],X)                         #39
+ctrl(X)                              #40
+ld([sysArgs+0])                      #41
+adda(1)                              #42
+st([sysArgs+0])                      #43
+ld([sysArgs+2])                      #44
+adda(1)                              #45
+st([sysArgs+2])                      #46
+ld([vAC])                            #47
+beq(pc()+3)                          #48
+bra(pc()+3)                          #49
+ld(-2)                               #50
+ld(0)                                #50!
+adda([vPC])                          #51
+st([vPC])                            #52
+ld(hi('REENTER'),Y)                  #53
+jmp(Y,'REENTER')                     #54
+ld(-58/2)                            #55
+
+label('.sysCme#28')
+nop()                                #28   burst6
+ld([sysArgs+3],Y)                    #29
+label('.sysCme#30')
+st([vAC])                            #30   burst6
+ld([sysArgs+2],X)                    #31
+for i in range(6):
+  ld([Y,X])                            #32+i*3
+  st([vLR+i if i<2 else sysArgs+2+i])  #33+i*3
+  st([Y,Xpp]) if i<5 else None         #34+i*3 if i<5
+ld([vAC+1],X)                        #49
+ctrl(X)                              #50
+ld([sysArgs+1],Y)                    #51
+ld([sysArgs+0],X)                    #52
+for i in range(6):
+  ld([vLR+i if i<2 else sysArgs+2+i])  #53+i*2
+  st([Y,Xpp])                          #54+i*2
+ld([vTmp],X)                         #65
+ctrl(X)                              #66
+ld([sysArgs+0])                      #67
+adda(6)                              #68
+st([sysArgs+0])                      #69
+ld([sysArgs+2])                      #70
+adda(6)                              #71
+st([sysArgs+2])                      #72
+
+ld([vAC])                            #73
+bne('.sysCme#76')                    #74
+ld(hi('REENTER'),Y)                  #75
+jmp(Y,'REENTER')                     #76
+ld(-80/2)                            #77
+
+label('.sysCme#76')
+ld(-56/2)                            #76
+adda([vTicks])                       #21 = 77 - 56
+st([vTicks])                         #22
+adda(min(0,14-(34+56)/2))            #23   could probably be min(0,maxTicks-(26+56)/2)
+bge('.sysCme#26')                    #24
+ld([vAC])                            #25
+ld(-2)                               #26   notime
+adda([vPC])                          #27
+st([vPC])                            #28
+ld(hi('REENTER'),Y)                  #29
+jmp(Y,'REENTER')                     #30
+ld(-34/2)                            #31
+
+
+
 
 #-----------------------------------------------------------------------
 #
 #  End of core
 #
 #-----------------------------------------------------------------------
+
+align(0x100)
+
 disableListing()
 
 #-----------------------------------------------------------------------
