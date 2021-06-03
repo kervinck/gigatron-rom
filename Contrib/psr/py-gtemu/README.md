@@ -36,6 +36,9 @@ E         Use -v to get the full diff
 tests\test_io.py:40: AssertionError
 ```
 
+For a more complete example of usage,
+see the tests in Contrib/psr/multiply,
+which demonstrates use in native and vCPU code.
 You can look at my Forth for more - although in Forth I've written a lot of wrappers, so the use may not be so obvious.
 
 ### Debugging Gigatron code
