@@ -2,7 +2,6 @@
 /_gtemu.c
 _gtemu*.pyd
 /Release/
-__pycache__/
 /roms/
 /*.exe
 /*.obj

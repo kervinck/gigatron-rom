@@ -69,7 +69,7 @@ task Extension {
 
 
 task RomFiles {
-    $testScripts = @(Get-ChildItem 'test-scripts' -Recurse -Include '*.gcl')
+    $testScripts = @(Get-ChildItem -Path 'test-scripts' -Filter '*.gcl' -Recurse )
     try {
         Push-Location 'roms'
         Remove-Item '*.rom', '*.lst'
@@ -77,19 +77,10 @@ task RomFiles {
     catch {
         New-Item 'roms' -Type Directory | Push-Location
     }
-    # We're going to use the roms directory as the working directory when we run the rom.py script
-    # So we need to make sure that some expected files are present
     Copy-Item (Join-Path $REPO_ROOT_PATH 'interface.json')
     try {
-        Get-Item 'Core' -ErrorAction 'stop' > $null
-    }
-    catch {
-        New-Item -type Directory 'Core' > $null 
-    }
-    Copy-Item (Join-Path (Join-Path $REPO_ROOT_PATH 'Core') 'v6502.json') 'Core'
-    try {
         $testScripts | ForEach-Object {
-            executeScript python.exe ((Join-Path (Join-Path $REPO_ROOT_PATH 'Core') 'ROMv4.py'), "Reset=$($_.FullName)")
+            executeScript python.exe ((Join-Path (Join-Path $REPO_ROOT_PATH 'Core') 'ROMv4.asm.py'), "Reset=$($_.FullName)")
             if ($LASTEXITCODE -ne 0 ) {
                 throw "Failed to generate ROM from $($_.FullName)";
             }
