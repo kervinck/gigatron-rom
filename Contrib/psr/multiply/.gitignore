@@ -1,0 +1,5 @@
+/.venv/
+/.vscode/
+/out/*.rom
+/.pytest_cache/
+/.hypothesis/

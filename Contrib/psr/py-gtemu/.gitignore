@@ -11,3 +11,4 @@ __pycache__/
 /build/
 /py_gtemu.egg-info/
 /dist/
+/.eggs/

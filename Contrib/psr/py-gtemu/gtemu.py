@@ -41,11 +41,30 @@ def _make_zero_page_accessor(
         )
 
     def _setter(self, value):
-        return value.to_bytes(width, byteorder=byteorder, signed=signed)
+        RAM[address : address + width] = value.to_bytes(width, byteorder=byteorder, signed=signed)
 
     return property(
         _getter, _setter, doc=f"Get or set the current state of the {name} register"
     )
+
+
+def _to_address(address_or_symbol):
+    """Convert a value that may be an address or a symbol, to an address
+
+    Labels are the most likely symbols we encounter"""
+    from_symbol = asm.symbol(address_or_symbol)
+    if from_symbol is not None:
+        address = from_symbol
+    else:
+        try:
+            address = int(address_or_symbol)
+        except (TypeError, ValueError):
+            raise ValueError(
+                f"{address_or_symbol:r} is not a valid address or symbol"
+            )
+    if not (0 <= address < (1 << 16)):
+        raise ValueError(f"{address:x} is out of range for an address")
+    return address
 
 
 class _Emulator:
@@ -57,6 +76,20 @@ class _Emulator:
     def load_rom_file(self, path):
         with open(path, "rb") as fp:
             fp.readinto(_gtemu.ffi.buffer(ROM))
+
+    def load_rom_from_asm_module(self):
+        """Populates the ROM from the contents of the asm module
+
+        This requires that an assembly script has already been executed.
+        """
+
+        def gen_rom_data():
+            for opcode, operand in zip(asm._rom0, asm._rom1):
+                yield opcode
+                yield operand
+
+        rom_data = bytearray(gen_rom_data())
+        _gtemu.ffi.buffer(ROM)[0 : len(rom_data)] = rom_data
 
     def reset(self):
         self._state = _gtemu.ffi.new("CpuState *")[0]
@@ -114,7 +147,7 @@ class _Emulator:
         """
         # To start from an address, we need to fill the pipeline with the instruction at address
         # and set PC to address + 1.
-        address = asm.symbol(address) or address
+        address = _to_address(address)
         self.PC = address + 1
         self.IR = _gtemu.lib.ROM[address][0]
         self.D = _gtemu.lib.ROM[address][1]
@@ -198,7 +231,7 @@ class _Emulator:
         Will stop at breakpoints if they are hit,
         but always executes at least one cycle
         """
-        address = asm.symbol(address) or address
+        address = _to_address(address)
         iterator = (
             range(max_instructions)
             if max_instructions is not None
