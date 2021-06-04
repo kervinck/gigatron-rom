@@ -61,7 +61,10 @@ def _to_address(address_or_symbol):
         try:
             address = int(address_or_symbol)
         except (TypeError, ValueError):
-            raise ValueError(f"{address_or_symbol:r} is not a valid address or symbol")
+            raise ValueError(
+                f"{address_or_symbol:r} is not a valid address or symbol"
+            )
+
     if not (0 <= address < (1 << 16)):
         raise ValueError(f"{address:x} is out of range for an address")
     return address

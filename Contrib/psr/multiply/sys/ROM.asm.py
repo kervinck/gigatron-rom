@@ -156,12 +156,17 @@
 import importlib
 from sys import argv
 from os  import getenv
+import pathlib
+import math
 
 from asm import *
 import gcl0x as gcl
 import font_v4 as font
 
-enableListing()
+repo_root = pathlib.Path(__file__).parent / '..' / '..' / '..' / '..'
+repo_root = repo_root.resolve()
+
+if __name__ == '__main__': enableListing()
 #-----------------------------------------------------------------------
 #
 #  Start of core
@@ -170,8 +175,9 @@ enableListing()
 
 # Pre-loading the formal interface as a way to get warnings when
 # accidentally redefined with a different value
-loadBindings('interface.json')
-loadBindings('Core/interface-dev.json') # Provisional values for DEVROM
+#
+loadBindings(repo_root / 'interface.json')
+loadBindings(repo_root / 'Core' / 'interface-dev.json') # Provisional values for DEVROM
 
 # Gigatron clock
 cpuClock = 6.250e+06
@@ -645,7 +651,7 @@ st([ledState_v2])               # Setting to 1..126 means "stopped"
 # !!! Better use vReset as generic entry point for soft reset
 
 # ROM type (see also Docs/GT1-files.txt)
-romTypeValue = symbol('romTypeValue_DEVROM')
+romTypeValue = symbol('romTypeValue_ROMv5')
 
 label('SYS_Reset_88')
 assert pc()>>8 == 0
@@ -864,43 +870,28 @@ jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_CopyMemory_DEVROM_80
+# Extension SYS_StoreBytes_DEVROM_XXX
 #-----------------------------------------------------------------------
 
-# SYS function for copying 1..256 bytes
-#
-# sysArgs[0:1]    Destination address
-# sysArgs[2:3]    Source address
-# vAC[0]          Count (0 means 256)
-#
-# Doesn't cross page boundaries.
-# Overwrites sysArgs[4:7] and vLR.
-
-label('SYS_CopyMemory_DEVROM_80')
-ld(hi('sys_CopyMemory'),Y)       # 15 slot 0xe9
-jmp(Y, 'sys_CopyMemory')         # 16
-ld([vAC])                        # 17
+ld(hi('REENTER'),Y)             #15 slot 0xe9
+jmp(Y,'REENTER')                #16
+ld(-20/2)                       #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_CopyMemoryExt_DEVROM_94
+# Extension SYS_LoadBytes_DEVROM_XXX
 #-----------------------------------------------------------------------
 
-# SYS function for copying 1..256 bytes to a different bank
+# Load object variables into zero-page
+# XXX Unfinished
 #
-# sysArgs[0:1]    Destination address
-# sysArgs[2:3]    Source address
-# vAC[0]          Count (0 means 256)
-# vAC[1]          Bits 7 and 6 contain the bank number
-#
-# Doesn't cross page boundaries.
-# Overwrites sysArgs[4:7], vLR, and vTmp.
-# Returns -1 in vAC if no expansion card is present.
+# Variables
+#       vLR             Pointer to size byte + object variables
+#       $30...$30+n-1   Target location
 
-label('SYS_CopyMemoryExt_DEVROM_42')
-ld(hi('sys_CopyMemoryExt'),Y)    # 15 slot 0xec
-jmp(Y, 'sys_CopyMemoryExt')      # 16
-ld(hi(ctrlBits), Y)              # 17
-
+label('SYS_LoadBytes_DEVROM_XXX')
+ld(hi('sys_LoadBytes'),Y)       #15
+jmp(Y,'sys_LoadBytes')          #16
+ld([vLR+1],Y)                   #17
 
 #-----------------------------------------------------------------------
 # Extension SYS_ReadRomDir_v5_80
@@ -2717,12 +2708,12 @@ ld(hi('v6502_next'),Y)          #43
 jmp(Y,'v6502_next')             #44
 ld(-46/2)                       #45
 
-#-----------------------------------------------------------------------
-#       Reserved
-#-----------------------------------------------------------------------
-
-# XXX Reserve space for LSRW?
-
+label("sys_MultiplyBytes#114")
+adda([vAC + 1])                 #114
+st([vAC + 1])                   #115
+ld(hi('NEXTY'), Y)              #116
+jmp(Y, 'NEXTY')                 #117
+ld(-120/2)                      #118
 #-----------------------------------------------------------------------
 #
 #  $0700 ROM page 7-8: Gigatron font data
@@ -5346,221 +5337,180 @@ ld(hi('NEXTY'),Y)               #40
 jmp(Y,'NEXTY')                  #41
 ld(-44/2)                       #42
 
+# SYS_LoadBytes_DEVROM_XXX implementation
+label('sys_LoadBytes')
+ld(0x30)                        # Target address
+st([sysArgs+1])                 #
+ld([vLR+0])                     # Source address
+st([sysArgs+0],X)               #
+ld([Y,X])                       # Byte count
+label('.slb1')                  #
+st([sysArgs+2])                 #
 
+ld([sysArgs+0])                 # Advance source address
+adda(1)                         #
+st([sysArgs+0],X)               #
+
+ld([Y,X])                       # Copy byte
+ld([sysArgs+1],X)               #
+st([X])                         #
+
+ld([sysArgs+1])                 # Advance target address
+adda(1)                         #
+st([sysArgs+1])                 #
+
+ld([sysArgs+2])                 # Decrement byte count and loop
+bne('.slb1')                    #
+suba(1)                         #
+
+# XXX Unfinished
+
+align(0x100, 0x200)
 #-----------------------------------------------------------------------
 #
-#  $0000 ROM page 0: CopyMemory implementation 
+#  Quarter-Square table
 #
+#  Used for a reasonably fast multiplication routine
 #-----------------------------------------------------------------------
+# High-bytes, stored inverted, and shifted down by 32 places
+for i in range(32, 256):
+    val = math.floor(i ** 2 / 4)
+    ld(hi(~val))
+    C(f"${val:04x} = {val} = floor({i} ** 2 / 4); !${val:04x} >> 8 = ${(~val & 0xffff) >> 8:02x}")
+# Return to code
+label("sys_MultiplyBytes.tableExit")
+ld(hi("sys_MultiplyBytes#44"), Y) #41,65
+jmp(Y, [sysArgs + 5])           #42,66
+ld(hi(pc()), Y)                 #43,67
+# Implementation of sysMultiplyBytes
+label("SYS_MultiplyBytes_120")
+ld("sys_MultiplyBytes.high-byte-action.store-inverted") #15
+st([sysArgs + 4])               #16
+ld("sys_MultiplyBytes#44")      #17
+st([sysArgs + 5])               #18
+ld([sysArgs + 0])               #19
+anda(0b0111_1111)               #20
+st([sysArgs + 2])               #21
+ld([sysArgs + 1])               #22
+anda(0b0111_1111)               #23
+st([sysArgs + 3])               #24
+suba([sysArgs + 2])             #25
+blt(pc() + 3)                   #26
+bra(pc() + 3)                   #27
+suba(1)                         #28
+xora(0xFF)                      #28
+adda(1)                         #29
+label("sys_MultiplyBytes.tableEntry")
+st([vTmp])                      #30,52
+blt(pc() + 5)                   #31,53
+suba(32)                        #32,54
+bge(AC)                         #33,55
+bra([sysArgs + 4])              #34,56
+ld(0xff)                        #35,57
+bra(AC)                         #33,55
+bra([sysArgs + 4])              #34,56
+fillers(until=251)
+label("sys_MultiplyBytes.high-byte-action.restore-and-add")
+xora(0xFF)                      #58
+adda([vAC + 1])                 #59
+label("sys_MultiplyBytes.high-byte-action.store-inverted")
+st([vAC + 1])                   #36,60
+ld([vTmp])                      #37,61
+assert pc() & 0xFF == 0xFF, pc()
+bne(AC)                         #38,62
+jmp(Y, "sys_MultiplyBytes.tableExit")  #39,63
+ld(0xff)                        #40,64
 
-align(0x100, size=0x100)
-
-# SYS_CopyMemory_DEVROM_80 implementation
-
-label('sys_CopyMemory')
-ble('.sysCm#20')                     #18   goto burst6
-suba(6)                              #19
-bge('.sysCm#22')                     #20   goto burst6
-ld([sysArgs+3],Y)                    #21
-adda(3)                              #22
-bge('.sysCm#25')                     #23   goto burst3
-ld([sysArgs+2],X)                    #24
-
-adda(2)                              #25   single
-st([vAC])                            #26
-ld([Y,X])                            #27
-ld([sysArgs+1],Y)                    #28
-ld([sysArgs+0],X)                    #29
-st([Y,X])                            #30
-ld([sysArgs+0])                      #31
-adda(1)                              #32
-st([sysArgs+0])                      #33
-ld([sysArgs+2])                      #34
-adda(1)                              #35
-st([sysArgs+2])                      #36
-ld([vAC])                            #37
-beq(pc()+3)                          #38
-bra(pc()+3)                          #39
-ld(-2)                               #40
-ld(0)                                #40!
-adda([vPC])                          #41
-st([vPC])                            #42
-ld(hi('REENTER'),Y)                  #43
-jmp(Y,'REENTER')                     #44
-ld(-48/2)                            #45
-
-label('.sysCm#25')
-st([vAC])                            #25   burst3
-for i in range(3):
-  ld([Y,X])                            #26+3*i
-  st([sysArgs+4+i])                    #27+3*i
-  st([Y,Xpp]) if i<2 else None         #28+3*i
-ld([sysArgs+1],Y)                    #34
-ld([sysArgs+0],X)                    #35
-for i in range(3):
-  ld([sysArgs+4+i])                    #36+2*i
-  st([Y,Xpp])                          #37+2*i
-ld([sysArgs+0])                      #42
-adda(3)                              #43
-st([sysArgs+0])                      #44
-ld([sysArgs+2])                      #45
-adda(3)                              #46
-st([sysArgs+2])                      #47
-ld([vAC])                            #48
-beq(pc()+3)                          #49
-bra(pc()+3)                          #50
-ld(-2)                               #51
-ld(0)                                #51!
-adda([vPC])                          #52
-st([vPC])                            #53
-ld(hi('NEXTY'),Y)                    #54
-jmp(Y,'NEXTY')                       #55
-ld(-58/2)                            #56
-
-label('.sysCm#20')
-nop()                                #20   burst6
-ld([sysArgs+3],Y)                    #21
-label('.sysCm#22')
-st([vAC])                            #22   burst6
-ld([sysArgs+2],X)                    #23
-for i in range(6):
-  ld([Y,X])                            #24+i*3
-  st([vLR+i if i<2 else sysArgs+2+i])  #25+i*3
-  st([Y,Xpp]) if i<5 else None         #26+i*3 if i<5
-ld([sysArgs+1],Y)                    #41
-ld([sysArgs+0],X)                    #42
-for i in range(6):
-  ld([vLR+i if i<2 else sysArgs+2+i])  #43+i*2
-  st([Y,Xpp])                          #44+i*2
-ld([sysArgs+0])                      #55
-adda(6)                              #56
-st([sysArgs+0])                      #57
-ld([sysArgs+2])                      #58
-adda(6)                              #59
-st([sysArgs+2])                      #60
-
-ld([vAC])                            #61
-bne('.sysCm#64')                     #62
-ld(hi('REENTER'),Y)                  #63
-jmp(Y,'REENTER')                     #64
-ld(-68/2)                            #65
-
-label('.sysCm#64')
-ld(-52/2)                            #64
-adda([vTicks])                       #13 = 65 - 52
-st([vTicks])                         #14
-adda(min(0,14-(26+52)/2))            #15   could probably be min(0,maxTicks-(26+52)/2)
-bge('sys_CopyMemory')                #16
-ld([vAC])                            #17
-ld(-2)                               #18   notime
-adda([vPC])                          #19
-st([vPC])                            #20
-ld(hi('REENTER'),Y)                  #21
-jmp(Y,'REENTER')                     #22
-ld(-26/2)                            #23
-
-# SYS_CopyMemoryExt_DEVROM_94 implementation
-
-label('sys_CopyMemoryExt')
-
-ld([Y,ctrlBits])                     #18
-bne('.sysCme#21')                    #19
-st([vTmp])                           #20
-ld(255)                              #21 no expansion present
-st([vAC])                            #22
-st([vAC+1])                          #23
-ld(hi('NEXTY'),Y)                    #24
-jmp(Y,'NEXTY')                       #25
-ld(-28/2)                            #26
-
-label('.sysCme#21')
-xora([vAC+1])                        #21
-anda(0xc0)                           #22
-xora([vTmp])                         #23
-st([vAC+1])                          #24 ctrl values in [vAC+1] and [vTmp]
-ld([vAC])                            #25
-
-label('.sysCme#26')
-ble('.sysCme#28')                    #26   goto burst6
-suba(6)                              #27
-bge('.sysCme#30')                    #28   goto burst6
-ld([sysArgs+3],Y)                    #29
-ld([sysArgs+2],X)                    #30
-adda(5)                              #31
-
-st([vAC])                            #32   single
-ld([Y,X])                            #33
-ld([vAC+1],X)                        #34
-ctrl(X)                              #35
-ld([sysArgs+1],Y)                    #36
-ld([sysArgs+0],X)                    #37
-st([Y,X])                            #38
-ld([vTmp],X)                         #39
-ctrl(X)                              #40
-ld([sysArgs+0])                      #41
-adda(1)                              #42
-st([sysArgs+0])                      #43
-ld([sysArgs+2])                      #44
-adda(1)                              #45
-st([sysArgs+2])                      #46
-ld([vAC])                            #47
-beq(pc()+3)                          #48
-bra(pc()+3)                          #49
-ld(-2)                               #50
-ld(0)                                #50!
-adda([vPC])                          #51
-st([vPC])                            #52
-ld(hi('REENTER'),Y)                  #53
-jmp(Y,'REENTER')                     #54
-ld(-58/2)                            #55
-
-label('.sysCme#28')
-nop()                                #28   burst6
-ld([sysArgs+3],Y)                    #29
-label('.sysCme#30')
-st([vAC])                            #30   burst6
-ld([sysArgs+2],X)                    #31
-for i in range(6):
-  ld([Y,X])                            #32+i*3
-  st([vLR+i if i<2 else sysArgs+2+i])  #33+i*3
-  st([Y,Xpp]) if i<5 else None         #34+i*3 if i<5
-ld([vAC+1],X)                        #49
-ctrl(X)                              #50
-ld([sysArgs+1],Y)                    #51
-ld([sysArgs+0],X)                    #52
-for i in range(6):
-  ld([vLR+i if i<2 else sysArgs+2+i])  #53+i*2
-  st([Y,Xpp])                          #54+i*2
-ld([vTmp],X)                         #65
-ctrl(X)                              #66
-ld([sysArgs+0])                      #67
-adda(6)                              #68
-st([sysArgs+0])                      #69
-ld([sysArgs+2])                      #70
-adda(6)                              #71
-st([sysArgs+2])                      #72
-
-ld([vAC])                            #73
-bne('.sysCme#76')                    #74
-ld(hi('REENTER'),Y)                  #75
-jmp(Y,'REENTER')                     #76
-ld(-80/2)                            #77
-
-label('.sysCme#76')
-ld(-56/2)                            #76
-adda([vTicks])                       #21 = 77 - 56
-st([vTicks])                         #22
-adda(min(0,14-(34+56)/2))            #23   could probably be min(0,maxTicks-(26+56)/2)
-bge('.sysCme#26')                    #24
-ld([vAC])                            #25
-ld(-2)                               #26   notime
-adda([vPC])                          #27
-st([vPC])                            #28
-ld(hi('REENTER'),Y)                  #29
-jmp(Y,'REENTER')                     #30
-ld(-34/2)                            #31
+# Low-bytes, stored inverted.
+C("0 = floor(0 ** 2 / 4) and floor(1 ** 2 / 4); !$0 = $ff")
+for i in range(2, 256):
+    val = math.floor(i ** 2 / 4)
+    ld(~val)
+    C(f"${val:04x} = {val} = floor({i} ** 2 / 4); !${val:02x} = ${(~val) & 0xff:02x}")
+align(0x100)
 
 
+label("sys_MultiplyBytes#44")
+st([vAC])                       #44
+ld("sys_MultiplyBytes.high-byte-action.restore-and-add")  #45
+st([sysArgs + 4])               #46
+ld("sys_MultiplyBytes#68")      #47
+st([sysArgs + 5])               #48
+ld([sysArgs + 2])               #49
+jmp(Y, "sys_MultiplyBytes.tableEntry") #50
+adda([sysArgs + 3])             #51
+label("sys_MultiplyBytes#68")
+xora(0xff)                      #68
+adda(1)                         #69
+adda([vAC])                     #70
+st([vTmp])                      #71
+blt(pc() + 4)                   #72
+suba([vAC])                     #73
+bra(pc() + 4)                   #74
+ora([vAC])                      #75
+bra(pc() + 2)                   #74
+anda([vAC])                     #75
+anda(0b1000_0000, X)            #76
+ld([vTmp])                      #77
+st([vAC])                       #78
+ld([X])                         #79
+adda([vAC + 1])                 #80
+st([vAC + 1])                   #81
+# 7 bit x 7 bit multiply complete
+ld([sysArgs + 0])               #82
+xora([sysArgs + 1])             #83
+blt("sys_MultiplyBytes.oneMsbSetCase") # 84
+ld([sysArgs + 0])               #85
+blt(pc() + 5)                   #86
+ld(2 ** 14 >> 8)                #87
+ld(hi('NEXTY'), Y)              #88
+jmp(Y, 'NEXTY')                 #89
+ld(-92/2)                       #90
+
+adda([vAC + 1])                 #88
+st([vAC + 1])                   #89
+ld([sysArgs + 2])               #90
+adda([sysArgs + 3])             #91
+label("sys_MultiplyBytes#92")
+# Reusing sysArgs + 2, because we can't use vTmp twice
+st([sysArgs + 2])               #92
+anda(0b0000_0001)               #93
+adda(0b0111_1111)               #94
+anda(0b1000_0000)               #95
+ld(AC, X)                       #96
+adda([vAC])                     #97
+st([vAC])                       #98
+blt(pc() + 3)                   #99
+bra(pc() + 3)                   #100
+ld([X])                         #101
+ld(0)                           #101
+adda([vAC + 1])                 #102
+st([vAC + 1])                   #103
+ld("sys_MultiplyBytes#114")     #104
+st([vTmp])                      #105
+ld([sysArgs + 2])               #106
+anda(0b1111_1110)               #107
+ld(hi("shiftTable"), Y)         #108
+jmp(Y, AC)                      #109
+bra(0xFF)                       #110
+# The rest happens in and after the shift table,
+# but to save you looking it, looks like this
+#111 ld (ac >> 1)
+#112 bra [vTmp]
+#113 nop
+#114 adda [vAC + 1]
+#115 st [vAC + 1]
+#116 ld hi('NEXTY'), y
+#117 jmp y, 'NEXTY'
+#118 ld -120/2
+label("sys_MultiplyBytes.oneMsbSetCase")
+bge(pc() + 3) # 86
+bra(pc() + 3) # 87 
+ld([sysArgs + 3]) # 88
+ld([sysArgs + 2]) # 88
+nop() # 89
+bra("sys_MultiplyBytes#92") # 90
+nop() # 91
 
 
 #-----------------------------------------------------------------------
@@ -5568,10 +5518,7 @@ ld(-34/2)                            #31
 #  End of core
 #
 #-----------------------------------------------------------------------
-
-align(0x100)
-
-disableListing()
+if __name__ == '__main__': disableListing()
 
 #-----------------------------------------------------------------------
 #
@@ -5659,7 +5606,7 @@ lastRomFile = ''
 
 def insertRomDir(name):
   global lastRomFile
-  if name[0] != '_':                    # Mechanism for hiding files
+  if name and name[0] != '_':                    # Mechanism for hiding files
     if pc()&255 >= 251-14:              # Prevent page crossing
       trampoline()
     s = lastRomFile[0:8].ljust(8,'\0')  # Cropping and padding
@@ -5684,6 +5631,8 @@ if pc()&255 >= 251:                     # Don't start in a trampoline region
   align(0x100)
 
 for application in argv[1:]:
+  if __name__ != '__main__':
+    break
   print()
 
   # Determine label
@@ -5887,5 +5836,7 @@ if pc()&255 > 0:
 #-----------------------------------------------------------------------
 # Finish assembly
 #-----------------------------------------------------------------------
+if symbol('Reset') is None:
+  define('Reset', 0) 
 end()
-writeRomFiles(argv[0])
+if __name__ == '__main__': writeRomFiles(argv[0])
