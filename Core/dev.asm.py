@@ -885,18 +885,19 @@ ld([vAC])                        # 17
 # Extension SYS_CopyMemoryExt_DEVROM_94
 #-----------------------------------------------------------------------
 
-# SYS function for copying 1..256 bytes to a different bank
+# SYS function for copying 1..256 bytes across banks
 #
-# sysArgs[0:1]    Destination address
-# sysArgs[2:3]    Source address
-# vAC[0]          Count (0 means 256)
-# vAC[1]          Bits 7 and 6 contain the bank number
+# sysArgs[0:1]  Destination address
+# sysArgs[2:3]  Source address
+# vAC[0]        Count (0 means 256)
+# vAC[1]        Bits 7 and 6 contain the destination bank number,
+#               and bits 5 and 4 the source bank number.
 #
 # Doesn't cross page boundaries.
 # Overwrites sysArgs[4:7], vLR, and vTmp.
 # Returns -1 in vAC if no expansion card is present.
 
-label('SYS_CopyMemoryExt_DEVROM_42')
+label('SYS_CopyMemoryExt_DEVROM_94')
 ld(hi('sys_CopyMemoryExt'),Y)    # 15 slot 0xec
 jmp(Y, 'sys_CopyMemoryExt')      # 16
 ld(hi(ctrlBits), Y)              # 17
@@ -5474,91 +5475,112 @@ jmp(Y,'NEXTY')                       #25
 ld(-28/2)                            #26
 
 label('.sysCme#21')
-xora([vAC+1])                        #21
-anda(0xc0)                           #22
-xora([vTmp])                         #23
-st([vAC+1])                          #24 ctrl values in [vAC+1] and [vTmp]
-ld([vAC])                            #25
+ld([vAC+1])                          #21
+adda([vAC+1])                        #22
+st([vLR])                            #23
+adda([vLR])                          #24
+xora([vTmp])                         #25
+anda(0xc0)                           #26
+xora([vTmp])                         #27
+st([vTmp])                           #28 [vTmp] = source ctrl value
+xora([vAC+1])                        #29
+anda(0xc0)                           #30
+xora([vTmp])                         #31
+st([vLR])                            #32 [vLR] = destination ctrl value (nonono)
 
-label('.sysCme#26')
-ble('.sysCme#28')                    #26   goto burst6
-suba(6)                              #27
-bge('.sysCme#30')                    #28   goto burst6
-ld([sysArgs+3],Y)                    #29
-ld([sysArgs+2],X)                    #30
-adda(5)                              #31
+ld([vAC])                            #33
+label('.sysCme#34')
+ble('.sysCme#36')                    #34   goto burst5
+suba(5)                              #35
+bge('.sysCme#38')                    #36   goto burst5
+ld([sysArgs+3],Y)                    #37
+adda(4)                              #38
 
-st([vAC])                            #32   single
-ld([Y,X])                            #33
-ld([vAC+1],X)                        #34
-ctrl(X)                              #35
-ld([sysArgs+1],Y)                    #36
-ld([sysArgs+0],X)                    #37
-st([Y,X])                            #38
+st([vAC])                            #39   single
+ld([vTmp],X)                         #40
+ctrl(X)                              #41
+ld([sysArgs+2],X)                    #42
+ld([Y,X])                            #43
+ld([vLR],X)                          #44
+ctrl(X)                              #45
+ld([sysArgs+1],Y)                    #46
+ld([sysArgs+0],X)                    #47
+st([Y,X])                            #48
+ld(hi(ctrlBits), Y)                  #49
+ld([Y,ctrlBits])                     #50
+ld(AC,X)                             #51
+ctrl(X)                              #52
+ld([sysArgs+0])                      #53
+adda(1)                              #54
+st([sysArgs+0])                      #55
+ld([sysArgs+2])                      #56
+adda(1)                              #57
+st([sysArgs+2])                      #58
+ld([vAC])                            #59
+beq(pc()+3)                          #60
+bra(pc()+3)                          #61
+ld(-2)                               #62
+ld(0)                                #62!
+adda([vPC])                          #63
+st([vPC])                            #64
+ld(hi('REENTER'),Y)                  #65
+jmp(Y,'REENTER')                     #66
+ld(-70/2)                            #67
+
+label('.sysCme#36')
+nop()                                #36   burst5
+ld([sysArgs+3],Y)                    #37
+label('.sysCme#38')
+st([vAC])                            #38   burst5
 ld([vTmp],X)                         #39
 ctrl(X)                              #40
-ld([sysArgs+0])                      #41
-adda(1)                              #42
-st([sysArgs+0])                      #43
-ld([sysArgs+2])                      #44
-adda(1)                              #45
-st([sysArgs+2])                      #46
-ld([vAC])                            #47
-beq(pc()+3)                          #48
-bra(pc()+3)                          #49
-ld(-2)                               #50
-ld(0)                                #50!
-adda([vPC])                          #51
-st([vPC])                            #52
-ld(hi('REENTER'),Y)                  #53
-jmp(Y,'REENTER')                     #54
-ld(-58/2)                            #55
+ld([sysArgs+2],X)                    #41
+for i in range(5):
+  ld([Y,X])                            #42+i*3
+  st([vLR+1 if i<1 else sysArgs+3+i])  #43+i*3
+  st([Y,Xpp]) if i<4 else None         #44+i*3 if i<5
+ld([vLR],X)                          #56
+ctrl(X)                              #57
+ld([sysArgs+1],Y)                    #58
+ld([sysArgs+0],X)                    #59
+for i in range(5):
+  ld([vLR+1 if i<1 else sysArgs+3+i])  #60+i*2
+  st([Y,Xpp])                          #61+i*2
+ld([sysArgs+0])                      #70
+adda(5)                              #71
+st([sysArgs+0])                      #72
+ld([sysArgs+2])                      #73
+adda(5)                              #74
+st([sysArgs+2])                      #75
 
-label('.sysCme#28')
-nop()                                #28   burst6
-ld([sysArgs+3],Y)                    #29
-label('.sysCme#30')
-st([vAC])                            #30   burst6
-ld([sysArgs+2],X)                    #31
-for i in range(6):
-  ld([Y,X])                            #32+i*3
-  st([vLR+i if i<2 else sysArgs+2+i])  #33+i*3
-  st([Y,Xpp]) if i<5 else None         #34+i*3 if i<5
-ld([vAC+1],X)                        #49
-ctrl(X)                              #50
-ld([sysArgs+1],Y)                    #51
-ld([sysArgs+0],X)                    #52
-for i in range(6):
-  ld([vLR+i if i<2 else sysArgs+2+i])  #53+i*2
-  st([Y,Xpp])                          #54+i*2
-ld([vTmp],X)                         #65
-ctrl(X)                              #66
-ld([sysArgs+0])                      #67
-adda(6)                              #68
-st([sysArgs+0])                      #69
-ld([sysArgs+2])                      #70
-adda(6)                              #71
-st([sysArgs+2])                      #72
+ld([vAC])                            #76
+bne('.sysCme#79')                    #77
+ld(hi(ctrlBits), Y)                  #78
+ld([Y,ctrlBits])                     #79
+ld(AC,X)                             #80
+ctrl(X)                              #81
+ld(hi('NEXTY'),Y)                    #82
+jmp(Y,'NEXTY')                       #83
+ld(-86/2)                            #84
 
-ld([vAC])                            #73
-bne('.sysCme#76')                    #74
-ld(hi('REENTER'),Y)                  #75
-jmp(Y,'REENTER')                     #76
-ld(-80/2)                            #77
-
-label('.sysCme#76')
-ld(-56/2)                            #76
-adda([vTicks])                       #21 = 77 - 56
-st([vTicks])                         #22
-adda(min(0,14-(34+56)/2))            #23   could probably be min(0,maxTicks-(26+56)/2)
-bge('.sysCme#26')                    #24
-ld([vAC])                            #25
-ld(-2)                               #26   notime
+label('.sysCme#79')
+nop()                                #79
+ld(-52/2)                            #80
+adda([vTicks])                       #29 = 81 - 52
+st([vTicks])                         #30
+adda(min(0,maxTicks-(38+56)/2))      #31  note use of maxTicks
+bge('.sysCme#34')                    #32
+ld([vAC])                            #33
+ld(-2)                               #34  notime
 adda([vPC])                          #27
 st([vPC])                            #28
-ld(hi('REENTER'),Y)                  #29
-jmp(Y,'REENTER')                     #30
-ld(-34/2)                            #31
+ld(hi(ctrlBits), Y)                  #29
+ld([Y,ctrlBits])                     #30
+ld(AC,X)                             #31
+ctrl(X)                              #32
+ld(hi('REENTER'),Y)                  #33
+jmp(Y,'REENTER')                     #34
+ld(-38/2)                            #35  max: 38 + 52 = 90 cycles
 
 
 
