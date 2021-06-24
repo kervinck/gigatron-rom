@@ -5568,7 +5568,7 @@ nop()                                #79
 ld(-52/2)                            #80
 adda([vTicks])                       #29 = 81 - 52
 st([vTicks])                         #30
-adda(min(0,maxTicks-(38+56)/2))      #31  note use of maxTicks
+adda(min(0,maxTicks-(38+52)/2))      #31  note use of maxTicks
 bge('.sysCme#34')                    #32
 ld([vAC])                            #33
 ld(-2)                               #34  notime
