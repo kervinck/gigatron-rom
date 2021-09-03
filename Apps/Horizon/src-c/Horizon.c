@@ -7,16 +7,14 @@
 
 // Standard includes
 #include <stdio.h>
-
-// System include
-#include <Gigatron.h>
+#include <gigatron/sys.h>
 
 #define screenWidth 160
 #define screenHeight 120
 #define horizonY 32
 #define maxPitch (256 - screenWidth) // Aim for max possible pitch at bottom
-#define color1 White
-#define color2 LightRed
+#define color1 0x3f
+#define color2 0x03
 #define maxV 32
 
 int main(void)
@@ -24,8 +22,8 @@ int main(void)
   int y, x, i, j, v = 8;
   byte *p, *q = &videoTable[240];
 
-  #define makeEven(v) (((v) + 1) & ~1) // Odd pitches give jagged edges?
-  #define calcPitch(y) makeEven((y) + maxPitch - screenHeight + 1)
+#define makeEven(v) (((v) + 1) & ~1) // Odd pitches give jagged edges?
+#define calcPitch(y) makeEven((y) + (maxPitch - screenHeight + 1))
 
   // Draw tiles in perspective in screen memory
   for (y=screenHeight-1; y>=horizonY; y--) {
@@ -38,9 +36,9 @@ int main(void)
         i = pitch - 1;
       screenMemory[y][x] = (i+i >= pitch) ? color1^j : color2^j;
     }
-    videoTop_DEVROM = y+y;      // Safe no-op on ROMs without videoTop
+    videoTop_v5 = y+y;      // Safe no-op on ROMs without videoTop
   }
-  videoTop_DEVROM = 0;          // Show all
+  videoTop_v5 = 0;          // Show all
 
   // Interactive animation
   for (x=0; ; x+=v) {
@@ -53,7 +51,11 @@ int main(void)
     // Quickly update videoTable, in steps of 2 pixel lines for more speed
     p = &videoTable[horizonY*2+1];
     i += i;
-    BusyWait(1);                // Synchronize with vertical blank
+
+    // Synchronize with vertical blank
+    { byte nextFrame = frameCount + 1;
+      while (frameCount != nextFrame) /**/ ; }
+    
     for (; p<q; p+=4) {
       *p = j >> 8;              // LCC nicely emits LD vAC+1 for the shift
       j = i + (j & 255);        // Faster operand order for LCC...

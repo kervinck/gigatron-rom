@@ -52,7 +52,7 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		WozMon=Apps/WozMon/WozMon_v2.gcl\
 		Apple1=Apps/Apple-1/Apple-1_v2.gt1\
 		MSBASIC=Apps/MSBASIC/MSBASIC_v1.gt1\
-		Egg=Apps/Horizon/Horizon_at67_v1.gt1\
+		Egg=Apps/Horizon/Horizon_dev_c.gt1\
 		Boot=Apps/CardTest/CardBoot.gcl\
 		Main=Apps/MainMenu/MainMenu_v5.gcl\
 		Reset=Core/Reset.gcl
