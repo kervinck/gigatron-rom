@@ -1,7 +1,7 @@
 _runtimePath_ "../../../Contrib/at67/gbas/runtime"
 _runtimeStart_ &h26FF
 _arraysStart_ &h26FF
-_codeRomType_ ROMv1
+_codeRomType_ ROMv5a
 
 cls
 
@@ -36,13 +36,13 @@ for y=119 downto horizonY
     a = ((y + 8) LSL 8)
 
     for x=0 to pitch + 159
-        if i &= 0
+        if i &&= 0
             i = pitch - 1
         else
             i = i - 1
         endif
 
-        if i+i &&>= pitch
+        if i+i &>= pitch
             p = color1 XOR j
         else
             p = color2 XOR j
