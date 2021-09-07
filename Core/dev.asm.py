@@ -859,9 +859,22 @@ ld(hi('REENTER'),Y)             #15 slot 0xe3
 jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
-ld(hi('REENTER'),Y)             #15 slot 0xe6
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
+#-----------------------------------------------------------------------
+# Extension SYS_ScanMemory_DEVROM_50
+#-----------------------------------------------------------------------
+
+# SYS function for searching a byte in a 0 to 256 bytes string
+# Returns a pointer to the target if found or zero.
+# Doesn't cross page boundaries.
+#
+# sysArgs[0:1]            Start address
+# sysArgs[2], sysArgs[3]  Bytes to locate in the string
+# vACL                    Length of the string (0 means 256)
+
+label('SYS_ScanMemory_DEVROM_50')
+ld(hi('sys_ScanMemory'),Y)      #15 slot 0xe6
+jmp(Y,'sys_ScanMemory')         #16
+ld([sysArgs+1],Y)               #17
 
 #-----------------------------------------------------------------------
 # Extension SYS_CopyMemory_DEVROM_80
@@ -901,7 +914,6 @@ label('SYS_CopyMemoryExt_DEVROM_94')
 ld(hi('sys_CopyMemoryExt'),Y)    # 15 slot 0xec
 jmp(Y, 'sys_CopyMemoryExt')      # 16
 ld(hi(ctrlBits), Y)              # 17
-
 
 #-----------------------------------------------------------------------
 # Extension SYS_ReadRomDir_v5_80
@@ -5350,7 +5362,7 @@ ld(-44/2)                       #42
 
 #-----------------------------------------------------------------------
 #
-#  $0000 ROM page 0: CopyMemory implementation 
+#  $1300 ROM page 19/20: CopyMemory/CopyMemoryExt/ScanMemory
 #
 #-----------------------------------------------------------------------
 
@@ -5450,7 +5462,7 @@ label('.sysCm#64')
 ld(-52/2)                            #64
 adda([vTicks])                       #13 = 65 - 52
 st([vTicks])                         #14
-adda(min(0,14-(26+52)/2))            #15   could probably be min(0,maxTicks-(26+52)/2)
+adda(min(0,maxTicks-(26+52)/2))      #15   could probably be min(0,maxTicks-(26+52)/2)
 bge('sys_CopyMemory')                #16
 ld([vAC])                            #17
 ld(-2)                               #18   notime
@@ -5583,6 +5595,57 @@ jmp(Y,'REENTER')                     #34
 ld(-38/2)                            #35  max: 38 + 52 = 90 cycles
 
 
+
+align(0x100, size=0x100)
+
+# SYS_ScanMemory_DEVROM_50 implementation
+
+label('sys_ScanMemory')
+ld([sysArgs+0],X)                    #18
+ld([Y,X])                            #19
+label('.sysSme#20')
+xora([sysArgs+2])                    #20
+beq('.sysSme#23')                    #21
+ld([Y,X])                            #22
+xora([sysArgs+3])                    #23
+beq('.sysSme#26')                    #24
+ld([sysArgs+0])                      #25
+adda(1);                             #26
+st([sysArgs+0],X)                    #27
+ld([vAC])                            #28
+suba(1)                              #29
+beq('.sysSme#32')                    #30 return zero
+st([vAC])                            #31
+ld(-18/2)                            #14 = 32 - 18
+adda([vTicks])                       #15
+st([vTicks])                         #16
+adda(min(0,maxTicks -(28+18)/2))     #17
+bge('.sysSme#20')                    #18
+ld([Y,X])                            #19
+ld(-2)                               #20 restart
+adda([vPC])                          #21
+st([vPC])                            #22
+ld(hi('REENTER'),Y)                  #23
+jmp(Y,'REENTER')                     #24
+ld(-28/2)                            #25
+
+label('.sysSme#32')
+st([vAC+1])                          #32 return zero
+ld(hi('REENTER'),Y)                  #33
+jmp(Y,'REENTER')                     #34
+ld(-38/2)                            #35
+
+label('.sysSme#23')
+nop()                                #23 success
+nop()                                #24
+ld([sysArgs+0])                      #25
+label('.sysSme#26')
+st([vAC])                            #26 success
+ld([sysArgs+1])                      #27
+st([vAC+1])                          #28
+ld(hi('REENTER'),Y)                  #29
+jmp(Y,'REENTER')                     #30
+ld(-34/2)                            #31
 
 
 #-----------------------------------------------------------------------
