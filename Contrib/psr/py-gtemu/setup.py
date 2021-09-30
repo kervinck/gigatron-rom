@@ -8,7 +8,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="py-gtemu",
-    version="0.1a20210520",
+    version="0.1a20210930",
     setup_requires=["cffi>=1.0.0"],
     cffi_modules=["gtemu_extension_build.py:ffibuilder"],
     install_requires=["cffi>=1.0.0"],
