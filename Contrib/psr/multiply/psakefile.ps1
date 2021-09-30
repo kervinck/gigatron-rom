@@ -10,7 +10,7 @@ $SYS_DIR = Join-Path $PSScriptRoot 'sys'
 $OUT_DIR = Join-Path $PSScriptRoot 'out'
 $TEST_DIR = Join-Path $PSScriptRoot 'test'
 
-$dirExcludes = '.venv', '.pytest_cache', 'sys'
+$dirExcludes = '.venv', '.pytest_cache', 'sys', '.pypy-venv'
 
 function findFilesToFormat() {
     $filesToFormat = @(Get-ChildItem -Exclude $dirExcludes -Directory | ForEach-Object { Get-ChildItem -path $_ -Recurse -Filter '*.py' })

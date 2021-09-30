@@ -3,3 +3,4 @@
 /out/*.rom
 /.pytest_cache/
 /.hypothesis/
+/.pypy-venv/
