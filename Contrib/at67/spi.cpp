@@ -336,8 +336,10 @@ namespace Spi {
             {
               if (type < SDSC)
                 set_send_r1_state(CMD, 4 + idle);
-              else
-                set_send_r1_state(CMD, idle = 0);
+              else {
+                idle = 0;
+                set_send_r1_state(CMD, 0);
+              }
               break;
             }
       case 128+23: // ACMD22: SET_WR_BLOCK_ERASE_COUNT
@@ -354,8 +356,8 @@ namespace Spi {
         }
       case 1:  // CMD1: SEND_OP_COND
         {
-          if (type < SDSC)
-            set_send_r1_state(CMD, idle = 0);
+          idle = 0;
+          set_send_r1_state(CMD, 0);
           break;
         }
       case 8:  // CMD8: SEND_IF_COND
