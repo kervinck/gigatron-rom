@@ -71,7 +71,7 @@ def _to_address(address_or_symbol):
 
 
 class _Emulator:
-    """Provides programatic control over the a Gigatron Emulator"""
+    """Provides programatic control over the Gigatron Emulator"""
 
     def __init__(self):
         self.reset()
@@ -329,26 +329,61 @@ class _Emulator:
         print_ = self._print
         try:
             self._print = False
-            if self.run_for(1000) == 1000:
+            cycles = self.run_for(1000)
+            if cycles == 1000:
                 if self.next_instruction not in breakpoints:
                     raise ValueError("timeout")
+            return cycles
         finally:
             self._print = print_
             self.breakpoints -= new_breakpoints
 
     def step_vcpu(self):
-        self._step_vcpu()
+        """Run the emulator up to NEXT or ENTER.
+        
+        Returns the number of machine instructions exectuted.
+
+        Does stop at breakpoints if they are set.
+        
+        The method name is slightly misleading. 
+        It will always complete the currently executing instruction if there is one,
+        but it doesn't follow that it leaves us in a state where we're about to execute the next one.
+        We might instead be about to return to the display loop,
+        or the next instruction might be a SYS function which doesn't have time to execute.
+        It might therefore take several call to see a change in vPC.
+        """
+        cycles = self._step_vcpu()
         if self._print:
             print(self.vcpu_state)
+        return cycles
 
-    def run_vcpu_to(self, address):
+    def run_vcpu_to(self, address, *, always_run_some_code=True):
+        """Run the emulator until we are at NEXT or ENTER, before vPC is advanced to address.
+        
+        Returns the number of machine instructions exectuted.
+
+        Does stop at breakpoints if they are set.
+
+        This will always run some code if always_run_some_code is True (the default),
+        even if the vPC is already in the desired state,
+        to allow repeated calls in a loop.
+        See the docstring for step_vcpu for further caveats.
+        """
         # Before we run the instruction at 0x200, vPC should be 0x2fe,
         # Because only the low byte is incremented
         target_vpc = address & 0xFF00 | (address - 2) & 0xFF
+        cycles = 0
+        while always_run_some_code and self.vPC == target_vpc:
+            cycles += self._step_vcpu()
+            if self.next_instruction in self.breakpoints:
+                return cycles
         while self.vPC != target_vpc:
-            self._step_vcpu()
+            cycles += self._step_vcpu()
+            if self.next_instruction in self.breakpoints:
+                return cycles
         if self._print:
             print(self.vcpu_state)
+        return cycles
 
     def send_byte(self, value):
         """Send a byte through the input port"""
