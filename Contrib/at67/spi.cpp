@@ -147,8 +147,10 @@ namespace Spi {
       fprintf(stderr, "sdi0: selected\n");
 #endif
       mask = 0x80;
-      if (action() != BUSY)
+      if (action() != BUSY) {
+        set_wait_state((context() == INIT ? INIT : CMD));
         miso_byte = 0xff;
+      }
       Cpu::setXIN(miso_byte & mask ? 0xf : 0);
     }
 #if SPIVERBOSE
