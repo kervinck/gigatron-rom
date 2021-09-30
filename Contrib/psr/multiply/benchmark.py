@@ -76,12 +76,13 @@ def _read_word(address, *, signed):
     return int.from_bytes(RAM[address : address + 2], "little", signed=signed)
 
 
-for name, gcl_file in [("Original", ORIGINAL_MANDELBROT), ("Modified", MY_MANDELBROT)]:
+def _load(gcl_file):
     symbols = get_symbol_table(gcl_file)
     compile_and_load_rom(gcl_file)
-    message = f"Running {name}"
-    print(message)
-    print("=" * len(message))
+    return symbols
+
+
+def _run_to_main_start():
     cycles = Emulator.run_to("SYS_Reset_88", max_instructions=10_000_000)
     print(f"Boot reached SYS_RESET_88 in {cycles} cycles ({cycles * CLOCK_PERIOD}s)")
     cycles += Emulator.run_to("SYS_Exec_88")
@@ -98,13 +99,48 @@ for name, gcl_file in [("Original", ORIGINAL_MANDELBROT), ("Modified", MY_MANDEL
     print(
         f"Program was ready to begin exectution after {cycles} cycles ({cycles * CLOCK_PERIOD}s)"
     )
+    return cycles
+
+
+def _run_to_function_entry(symbols, function):
     # Can't run to CALL, as it's included in DEF
-    cycles += Emulator.run_to(asm.symbol("CALL") + 1, max_instructions=10_000)
-    assert Emulator.AC == symbols["CalcSet"], (Emulator.AC, symbols["CalcSet"])
+    target_instruction = asm.symbol("CALL") + 1
+    cycles = Emulator.run_to(target_instruction, max_instructions=10_000)
+    if Emulator.next_instruction != target_instruction:
+        # Must have hit a breakpoint, just return and hope the caller knows what to do
+        return cycles
+    # May be calling the wrong function
+    while Emulator.AC != symbols[function]:
+        cycles += Emulator.run_to(target_instruction, max_instructions=10_000)
+        if Emulator.next_instruction != target_instruction:
+            return cycles
+    # Allow CALL to run, so that we return when to enter the function
     cycles += Emulator.step_vcpu()
+    return cycles
+
+
+def _complete_function():
+    return Emulator.run_vcpu_to(Emulator.vLR)
+
+
+def benchmark(name, gcl_file):
+    symbols = _load(gcl_file)
+    message = f"Running {name}"
+    print(message)
+    print("=" * len(message))
+    cycles = _run_to_main_start()
+    cycles += _run_to_function_entry(symbols, "CalcSet")
     print(
         f"Program initialisation was complete after {cycles} cycles ({cycles * CLOCK_PERIOD}s)"
     )
-    cycles += Emulator.run_vcpu_to(Emulator.vLR)
+    cycles += _complete_function()
     print(f"CalcSet was complete after {cycles} cycles ({cycles * CLOCK_PERIOD}s)")
     print()
+
+
+if __name__ == "__main__":
+    for name, gcl_file in [
+        ("Original", ORIGINAL_MANDELBROT),
+        ("Modified", MY_MANDELBROT),
+    ]:
+        benchmark(name, gcl_file)
