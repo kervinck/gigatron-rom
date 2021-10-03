@@ -75,9 +75,9 @@ $0300:
     LastPixel [if=0
       {Check if we are inside one of the main bulbs for
        a quick bailout (Wikipedia)
-       (x+1)^ + y^2 < 1/16}
+       (x+1)^2 + y^2 < 1/16}
       Y0 A= B= MulShift8! YY=
-      X0 128+ A= B= MulShift8! YY+ 8- [if<0 0
+      256 X0+ A= B= MulShift8! YY+ 16- [if<0 0
       else
 
         {q*(q + x - 1/4) < 1/4*y^2, where q = (x - 1/4)^2 + y^2}
