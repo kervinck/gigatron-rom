@@ -28,6 +28,7 @@
 #include "graphics.h"
 #include "inih/INIReader.h"
 #include "rs232/rs232.h"
+#include "spi.h"
 #endif
 
 #include "memory.h"
@@ -489,7 +490,7 @@ namespace Loader
         if(_configIniReader.ParseError() == 0)
         {
             // Parse Loader Keys
-            enum Section {Comms, ROMS, RAM};
+            enum Section {Comms, ROMS, RAM, Unk = -1 };
             std::map<std::string, Section> section;
             section["Comms"] = Comms;
             section["ROMS"]  = ROMS;
@@ -497,14 +498,13 @@ namespace Loader
 
             for(auto sectionString : _configIniReader.Sections())
             {
-                if(section.find(sectionString) == section.end())
-                {
-                    fprintf(stderr, "Loader::initialise() : INI file '%s' has bad Sections : reverting to default values.\n", LOADER_CONFIG_INI);
-                    break;
-                }
-
                 std::string result;
-                switch(section[sectionString])
+                Section sec = Unk;
+
+                if(section.find(sectionString) != section.end())
+                    sec = section[sectionString];
+
+                switch(sec)
                 {
                     case Comms:
                     {
@@ -569,7 +569,14 @@ namespace Loader
                     }
                     break;
 
-                    default: break;
+                    default:
+                    {
+                        // Delegate to other ini handlers.
+                        if (! Spi::config(_configIniReader, sectionString))
+                            fprintf(stderr, "Loader::initialise() : INI file '%s' has bad Sections : reverting to default values.\n", LOADER_CONFIG_INI);
+                    }
+                    break;
+
                 }
             }
         }

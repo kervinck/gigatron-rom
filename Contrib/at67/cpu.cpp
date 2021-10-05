@@ -9,6 +9,7 @@
 #include "memory.h"
 #include "assembler.h"
 #include "cpu.h"
+#include "spi.h"
 
 #ifndef STAND_ALONE
 #include <SDL.h>
@@ -38,22 +39,27 @@
 namespace Cpu
 {
     class RAM_s {
-        size_t  size;
-        uint8_t ram[4][0x8000];
+        size_t   size;
         uint16_t ctrl;
         uint8_t  xin;
-        int bank;
+        uint8_t  bank;
+        uint8_t  ram[4][0x8000];
+
     public:
         RAM_s(size_t size) {
             resize(size);}
         const uint8_t& operator[](uint16_t address) const {
-            return (ctrl&1)?xin:ram[(address&0x8000)?bank:0][address&0x7fff];}
+            if (! address && (ctrl & 1))  return xin;
+            return const_cast<RAM_s*>(this)->operator[](address); }
         uint8_t& operator[](uint16_t address) {
-            return ram[(address&0x8000)?bank:0][address&0x7fff];}
+            if ((!(ctrl & 0x20)) && (address & 0x7f80) == 0x80)  address ^= 0x8000;
+            return ram[(address & 0x8000) ? bank : 0][address &0x7fff]; }
         bool has_extension() {
             return size==0x20000;}
         void setctrl(uint16_t c) {
-            if (has_extension()) {ctrl=(c&0x80fd); bank=(ctrl&0xC0)>>6;} }
+            if (has_extension()) {
+                c &= 0x80fd; Spi::clock(ctrl, c);
+                ctrl = c; bank = (c & 0xC0) >> 6; } }
         uint16_t getctrl() { return ctrl; }
         void setxin(uint8_t x) {xin=x;}
         uint8_t getxin() { return xin; }
@@ -64,6 +70,7 @@ namespace Cpu
         void set(uint32_t addr,uint8_t data) {ram[(addr>>15)&3][addr&0x7fff]=data;}
     } _RAM(0x8000);
 
+    const RAM_s &_cRAM = _RAM;
 
     const uint8_t _endianBytes[] = {0x00, 0x01, 0x02, 0x03};
 
@@ -363,10 +370,10 @@ namespace Cpu
     uint8_t getXIN(void) {return _RAM.getxin();}
     uint16_t getVPC(void) {return _vPC.first;}
     uint16_t getOldVPC(void) {return _vPC.second;}
-    uint8_t getRAM(uint16_t address) {return _RAM[address];}
+    uint8_t getRAM(uint16_t address) {return _cRAM[address];}
     uint8_t getXRAM(uint32_t address) {return _RAM.get(address);}
     uint8_t getROM(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01];}
-    uint16_t getRAM16(uint16_t address) {return _RAM[address] | (_RAM[address+1]<<8);}
+    uint16_t getRAM16(uint16_t address) {return _cRAM[address] | (_cRAM[address+1]<<8);}
     uint16_t getXRAM16(uint32_t address) {return _RAM.get(address) | (_RAM.get(address+1)<<8);}
     uint16_t getROM16(uint16_t address, int page) {return _ROM[address & (ROM_SIZE-1)][page & 0x01] | (_ROM[(address+1) & (ROM_SIZE-1)][page & 0x01]<<8);}
     float getvCpuUtilisation(void) {return _vCpuUtilisation;}
@@ -887,7 +894,7 @@ namespace Cpu
             case 0x5D: // ora [Y,X++],OUT
             {
                 uint16_t addr = MAKE_ADDR(S._Y, S._X);
-                T._OUT = _RAM[addr] | S._AC;
+                T._OUT = _cRAM[addr] | S._AC;
                 T._X++;
                 T._PC = S._PC + 1;
                 return;
@@ -904,7 +911,7 @@ namespace Cpu
 
             case 0x01: // ld [D]
             {
-                T._AC = _RAM[S._D];
+                T._AC = _cRAM[S._D];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -937,7 +944,7 @@ namespace Cpu
             case 0x0D: // ld [Y,X]
             {
                 uint16_t addr = MAKE_ADDR(S._Y, S._X);
-                T._AC = _RAM[addr];
+                T._AC = _cRAM[addr];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -960,7 +967,7 @@ namespace Cpu
 
             case 0x81: // adda [D]
             {
-                T._AC += _RAM[S._D];
+                T._AC += _cRAM[S._D];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -969,7 +976,7 @@ namespace Cpu
             case 0x89: // adda [Y,D]
             {
                 uint16_t addr = MAKE_ADDR(S._Y, S._D);
-                T._AC += _RAM[addr];
+                T._AC += _cRAM[addr];
                 T._PC = S._PC + 1;
                 return;
             }
@@ -1025,7 +1032,7 @@ namespace Cpu
         switch(bus)
         {
             case 0: B=S._D;                                            break;
-            case 1: if (!W) B = _RAM[addr]; else _RAM.setctrl(addr);   break;
+            case 1: if (!W) B = _cRAM[addr]; else _RAM.setctrl(addr);   break;
             case 2: B=S._AC;                                           break;
             case 3: B=_IN;                                             break;
 
@@ -1237,11 +1244,11 @@ namespace Cpu
 
             if(!_debugging  &&  _clock - _clockStall > CPU_STALL_CLOCKS)
             {
+                fprintf(stderr, "Cpu::process(): CPU stall for %" PRId64 " clocks : rebooting.\n", _clock - _clockStall);
                 _clockStall = CLOCK_RESET;
                 reset(true);
                 _vgaX = 0, _vgaY = 0;
                 _hSync = 0, _vSync = 0;
-                fprintf(stderr, "Cpu::process(): CPU stall for %" PRId64 " clocks : rebooting.\n", _clock - _clockStall);
             }
         }
 
