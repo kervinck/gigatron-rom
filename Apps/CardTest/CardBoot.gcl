@@ -597,6 +597,13 @@ $500 Address=                   {512 bytes memory for one sector}
   pop ret
 ] ReadMBR=
 
+{ CompCluster }
+[def
+  ClusterSize= 
+  ClusterSize+ 1- \vACH. $ff| ClusterMask=
+ret] CompCluster=
+
+
 {-----------------------------------------------------------------------+
 |} >_vLR++ [ret] {      RAM page $62                                    |
 +-----------------------------------------------------------------------}
@@ -615,8 +622,7 @@ $500 Address=                   {512 bytes memory for one sector}
               - 2 * ClusterSize                 from VolumeId
   }
 
-  $00d Address+ peek            {Sectors per cluster}
-  ClusterSize=
+  $00d Address+ peek CompCluster!  {Sectors per cluster}
 
   SectorL ValueL=               {Partition's first sector, from MBR}
   SectorH ValueH=
@@ -1353,9 +1359,7 @@ ValueToDecimal=
   push
 
   <SectorL++                    {To next sector}
-  ClusterSize ClusterSize+ 1-   {1>1 2>0x11, 4>0x111...}
-  \vACH. 255|   
-  FilePosL&
+  $200 FilePosL+ ClusterMask&
   [if=0
     List 4+ List= deek ValueL=  {Get next cluster from ClusterList}
     List 2+       deek ValueH=
