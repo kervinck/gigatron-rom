@@ -105,13 +105,13 @@ def _run_to_main_start():
 def _run_to_function_entry(symbols, function):
     # Can't run to CALL, as it's included in DEF
     target_instruction = asm.symbol("CALL") + 1
-    cycles = Emulator.run_to(target_instruction, max_instructions=10_000)
+    cycles = Emulator.run_to(target_instruction, max_instructions=1_000_000)
     if Emulator.next_instruction != target_instruction:
         # Must have hit a breakpoint, just return and hope the caller knows what to do
         return cycles
     # May be calling the wrong function
     while Emulator.AC != symbols[function]:
-        cycles += Emulator.run_to(target_instruction, max_instructions=10_000)
+        cycles += Emulator.run_to(target_instruction, max_instructions=1_000_000)
         if Emulator.next_instruction != target_instruction:
             return cycles
     # Allow CALL to run, so that we return when to enter the function
