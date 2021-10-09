@@ -20,6 +20,13 @@ gcl0x
 {
   Assumes that sysFn already holds SYS_MultiplyBytes_120
   \SYS_MultiplyBytes_120 \sysFn:
+
+  As an evil hack, stores temporary values in sysArgs5:sysArgs7!
+
+  The low-byte is used by SYS_MultiplyBytes_120, but we don't care,
+
+  This is done because we need to be able to load at an offset, and we can use the sysArgs defines for this.
+
 }
 
 [def
@@ -33,16 +40,18 @@ gcl0x
   { multiply low bytes, right-shift by 8 and store in C }
   <A, \sysArgs0.
   <B, \sysArgs1.
-  120!! \vACH, C=
+  120!! \sysArgs5:
   { multiply low-byte of A by high-byte of B and add to C }
   >B, \sysArgs1.
-  120!! C+ C=
+  120!! C=
   { multiply high-byte of A by high-byte of B, left-shift by 8 and add to C }
   >A, \sysArgs0.
-  120!! \vACH. 255| 255^ C+ C=
+  98!! \sysArgs7.
+  _sysArgs6 C+ C= { Might as well do this addition, because we're faced with a large stall otherwise}
   { multiply high-byte of A by low-byte of B, add C }
   <B, \sysArgs1.
   120!! C+ C=
+
 
   {Apply sign to return value }
   sign [if<>0 0 C- else C]
