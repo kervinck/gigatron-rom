@@ -148,7 +148,8 @@ namespace Spi {
 #endif
       mask = 0x80;
       if (action() != BUSY) {
-        set_wait_state((context() == INIT ? INIT : CMD));
+        Context ctx = context();
+        set_wait_state((ctx == INIT || ctx == APPCMD) ? ctx : CMD);
         miso_byte = 0xff;
       }
       Cpu::setXIN(miso_byte & mask ? 0xf : 0);
@@ -362,14 +363,14 @@ namespace Spi {
         }
       case 8:  // CMD8: SEND_IF_COND
         {
-          buffer[0] = 0;
+          buffer[0] = idle;
           if (type < SDSC)
             set_send_r1_state(CMD, 4 + idle);
           else
             set_send_state(CMD, 5);
           break;
         }
-      case 9:  // CMD8: SEND_CSD
+      case 9:  // CMD9: SEND_CSD
         { 
           long size = filelen / (512 * 1024);
           if (type >= SDHC) {  //1   2   3   4   5   6   7   8   9   0   1   2   3   4   5   6
@@ -386,7 +387,7 @@ namespace Spi {
           set_send_state(REG, 1);
           break;
         }
-      case 10: // CMD8: SEND_CID
+      case 10: // CMD10: SEND_CID
         {
           memcpy(buffer, "\0" "\xbbSD00000\x11\0\0\0\0\0\1\xf1" "XX", 16+3);
           set_send_state(REG, 1);
