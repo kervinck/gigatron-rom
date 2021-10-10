@@ -143,7 +143,7 @@ $500 Address=                   {512 bytes memory for one sector}
     Resets the SD Memory Card
   }
   push
-  [def `CMD0`` #0] PrintText!
+  {[def `CMD0`` #0] PrintText!}
 
   0 CardType=
 
@@ -193,7 +193,7 @@ $500 Address=                   {512 bytes memory for one sector}
   }
 
   WaitForCardReply!
-  1^ PrintResult!               {Only 1 means success}
+  1^ {PrintResult!}               {Only 1 means success}
 
   pop ret
 ] CMD0=
@@ -209,7 +209,7 @@ $500 Address=                   {512 bytes memory for one sector}
     Send interface condition
   }
   push
-  [def `CMD8`` #0] PrintText!
+  {[def `CMD8`` #0] PrintText!}
 
   {
   |  """Following a successful reset, test if your system can successfully
@@ -271,7 +271,7 @@ $500 Address=                   {512 bytes memory for one sector}
     ]
   ]
 
-  CardReply 250& PrintResult!   {Return result: 0, 1, 4 or 5 means success}
+  CardReply 250& {PrintResult!}   {Return result: 0, 1, 4 or 5 means success}
 
   pop ret
 ] CMD8=
@@ -284,16 +284,16 @@ $500 Address=                   {512 bytes memory for one sector}
 { CMD58: READ_OCR }
 [def
   push
-  [def `CMD58` #0] PrintText!
+  {[def `CMD58` #0] PrintText!}
   EnableCard!
   [def #$7a #0 #0 #0 #0 #0]     {CMD58}
   SendCommandToCard!
   WaitForCardReply!
   SendOnesToCard!               {R3 response}
+  $40& [if<>0 4 CardType=]  {CCS bit signals card is SDXC/SDHC}
   SendOnesToCard!
   SendOnesToCard!
-  $c0& $c0^ [if=0 4 CardType=]  {CCS bit signals card is SDXC/SDHC}
-  CardReply 254& PrintResult!   {Only 0 and 1 mean success}
+  CardReply 254& {PrintResult!}   {Only 0 and 1 mean success}
   pop ret
 ] CMD58=
 
@@ -304,11 +304,11 @@ $500 Address=                   {512 bytes memory for one sector}
     command rather than a standard command
   }
   push
-  [def `CMD55` #0] PrintText!
+  {[def `CMD55` #0] PrintText!}
   [def #$77 #0 #0 #0 #0 #0]     {CMD55}
   SendCommandToCard!
   WaitForCardReply!
-  254& PrintResult!             {Only 0 and 1 mean success}
+  254& {PrintResult!}             {Only 0 and 1 mean success}
   pop ret
 ] CMD55=
 
@@ -324,7 +324,7 @@ $500 Address=                   {512 bytes memory for one sector}
     initialization process. Reserved bits shall be set to '0'
   }
   push
-  [def `ACMD41 #0] PrintText!
+  {[def `ACMD41 #0] PrintText!}
   CardType 1^ [if=0
     [def #$69 #0 #0 #0 #0 #0]   {ACMD41 for version 1.X}
   else
@@ -332,7 +332,7 @@ $500 Address=                   {512 bytes memory for one sector}
   ]
   SendCommandToCard!
   WaitForCardReply!
-  254& PrintResult!             {Only 0 and 1 mean success}
+  254& {PrintResult!}             {Only 0 and 1 mean success}
   pop ret
 ] ACMD41=
 
@@ -342,11 +342,11 @@ $500 Address=                   {512 bytes memory for one sector}
     Set block size to 512 bytes
   }
   push
-  [def `CMD16` #0] PrintText!
+  {[def `CMD16` #0] PrintText!}
   [def #$50 #0 #0 #$02 #0 #0]   {CMD16}
   SendCommandToCard!
   WaitForCardReply!
-  254& PrintResult!             {Only 0 and 1 mean success}
+  254& {PrintResult!}             {Only 0 and 1 mean success}
   pop ret
 ] CMD16=
 
@@ -365,10 +365,10 @@ $500 Address=                   {512 bytes memory for one sector}
 
   [def #$51 #0 #0 #0 #0 #0]     {CMD17}
   p= q=
-  >SectorH, <q++ q.             {Put SectorL,H in argument, big-endian order}
-  <SectorH, <q++ q.
-  >SectorL, <q++ q.
-  <SectorL, <q++ q.
+  >SectorH, <q++ q. {PrintByte!}            {Put SectorL,H in argument, big-endian order}
+  <SectorH, <q++ q. {PrintByte!}
+  >SectorL, <q++ q. {PrintByte!}
+  <SectorL, <q++ q. {PrintByte!}
   p SendCommandToCard!
 
   WaitForCardReply!
@@ -506,8 +506,8 @@ $500 Address=                   {512 bytes memory for one sector}
 
   {32 PrintChar!                 {Space}}
   \sysArgs6, CardReply=         {Store reply from card}
-  PrintByte!                    {Print hex value}
-  CardReply                     {As return value}
+  {PrintByte!                    {Print hex value}
+   CardReply                     {As return value}}
   pop ret
 ] WaitForCardReply=
 
@@ -597,6 +597,13 @@ $500 Address=                   {512 bytes memory for one sector}
   pop ret
 ] ReadMBR=
 
+{ CompCluster }
+[def
+  ClusterSize= 
+  ClusterSize+ 1- \vACH. $ff| ClusterMask=
+ret] CompCluster=
+
+
 {-----------------------------------------------------------------------+
 |} >_vLR++ [ret] {      RAM page $62                                    |
 +-----------------------------------------------------------------------}
@@ -615,8 +622,7 @@ $500 Address=                   {512 bytes memory for one sector}
               - 2 * ClusterSize                 from VolumeId
   }
 
-  $00d Address+ peek            {Sectors per cluster}
-  ClusterSize=
+  $00d Address+ peek CompCluster!  {Sectors per cluster}
 
   SectorL ValueL=               {Partition's first sector, from MBR}
   SectorH ValueH=
@@ -663,7 +669,7 @@ InitFat32=
   EnableCard!
 
   CardType 2-
-  [if<0 SectorToByte!]          {Version 1.X cards do byte addressing}
+  [if<=0 SectorToByte!]          {Version 1.X cards do byte addressing}
   CMD17!                        {Request block of data}
 
   0 Checksum=                   {Reset CRC16 checksum}
@@ -677,7 +683,6 @@ InitFat32=
     Read sector from card into memory (clobbers ValueL,H and OffsetL,H)
   }
   push
-
   OpenSector!                   {Start data stream}
 
   Address q=                    {Setup write pointer}
@@ -721,7 +726,8 @@ InitFat32=
       SendOnesToCard!           {Ignore checksum}
       SendOnesToCard!
       OpenSector!               {Open next sector}
-      NextSector!]
+      NextSector!
+      0 <Pos. FilePosH PrintWord! FilePosL PrintWord! ]
 
     FilePosL 1+ FilePosL=       {Increment position in file}
     [if=0 FilePosH 1+ FilePosH=]
@@ -1090,7 +1096,7 @@ AddOffset=
 *=$6da0
 
 { Newline -- writes i Pos _sysFn _sysArgs[01245] }
-{ !!! This version scrolls only pixel row 16 through 119 !!! }
+{ !!! This version scrolls only pixel row 16 through 111 !!! }
 [def
                                 {Clear new line first}
   $3f20 _sysArgs0=              {White on blue}
@@ -1104,11 +1110,11 @@ AddOffset=
     \sysArgs4, 160^             {Test for end of line}
     if<>0loop]
                                 {Then scroll up by modifying videoTable}
-  $01 >i. 208                   {Last entry at $100+238, minus 30}
+  $01 >i. 192                   {Last entry at $100+238, minus 30, minus 16}
   [do
     30+ <i.
-    i, 120- [if<0 128+
-             else 24+] i.       {Rotate by 8 in 24..127 range}
+    i, 112- [if<0 120+
+             else 24+] i.       {Rotate by 8 in 24..119 range}
     <i, 32- if>0loop]           {Move to previous entry in video table}
 
   ret
@@ -1173,7 +1179,9 @@ AddOffset=
         PrintDirEntry!          {Print entry}
         IsBootGt1!              {Are we looking for this file?}
         [if=0                   {File found}
+          192 SetVideoTop!
           LoadGt1!              {Load file}
+          0 SetVideoTop!
           Execute!              {Execute otherwise}
         ]
       ]
@@ -1285,12 +1293,13 @@ ValueToDecimal=
   [do                           {Chunk copy loop}
     >Address.                   {High-address comes first}
     LoadByte! <Address.         {Then the low address}
-    LoadByte!                   {Byte count (0 means 256)}
+    {Address PrintWord!}
+    LoadByte! clen=             {Byte count (0 means 256)}
+    {PrintByte! Newline!}
     [do                         {Byte copy loop}
-      \sysArgs5.                {Implicitly chops counter to 8 bits}
       LoadByte! Address.        {Poke next byte into memory}
       <Address++                {Advance write pointer in page}
-      \sysArgs5, 1-             {Decrement counter}
+      clen 1- \vACL, clen=      {Decrement counter}
       if<>0loop]
     LoadByte!                   {Go to next block}
     if<>0loop]
@@ -1329,7 +1338,6 @@ ValueToDecimal=
 
 { Execute }
 [def
-
   120 [do i=                    {Restore video table}
     i+ $fe+ p=
     i 7+ p. 8- if>0loop]
@@ -1351,8 +1359,7 @@ ValueToDecimal=
   push
 
   <SectorL++                    {To next sector}
-
-  $1fff FileSizeL&              {XXX Hardcoded. Should derive from ClusterSize}
+  $200 FilePosL+ ClusterMask&
   [if=0
     List 4+ List= deek ValueL=  {Get next cluster from ClusterList}
     List 2+       deek ValueH=
@@ -1361,6 +1368,11 @@ ValueToDecimal=
 
   pop ret
 ] NextSector=
+
+{ Videotop }
+[def 
+   i= \videoTop_v5 k= i k. ret
+] SetVideoTop=
 
 {-----------------------------------------------------------------------+
 |} >_vLR++ [ret] {      RAM page $76                                    |
@@ -1377,7 +1389,7 @@ ValueToDecimal=
 
   \ClusterList List=            {Reset}
   Newline!
-  PrintValue!
+  {PrintValue!}
   [do
     { Store in list }
     ValueL List: <List++ <List++
@@ -1388,7 +1400,7 @@ ValueToDecimal=
     $0007 ValueL| 1+] if<>0     {Optionally test low word, ignore bit 0:2}
 
     NextCluster!
-    PrintValue!
+    {PrintValue!}
     loop]
 
   \ClusterList                  {Reset}
@@ -1469,7 +1481,7 @@ ReadDirectory!                  {Read root directory XXX Move into PrintDir}
 |                       RAM page $7f                                    |
 +-----------------------------------------------------------------------}
 
-_ClusterList=$7fa0              {Room for 96/4 = 24 clusters}
+_ClusterList=$7f00              {Room for 256/4 = 64 clusters = 32KB}
 
 {-----------------------------------------------------------------------+
 |                                                                       |
