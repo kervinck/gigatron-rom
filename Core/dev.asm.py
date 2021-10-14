@@ -895,7 +895,7 @@ jmp(Y, 'sys_CopyMemory')         # 16
 ld([vAC])                        # 17
 
 #-----------------------------------------------------------------------
-# Extension SYS_CopyMemoryExt_DEVROM_94
+# Extension SYS_CopyMemoryExt_DEVROM_100
 #-----------------------------------------------------------------------
 
 # SYS function for copying 1..256 bytes across banks
@@ -910,7 +910,7 @@ ld([vAC])                        # 17
 # Overwrites sysArgs[4:7], vLR, and vTmp.
 # Returns -1 in vAC if no expansion card is present.
 
-label('SYS_CopyMemoryExt_DEVROM_94')
+label('SYS_CopyMemoryExt_DEVROM_100')
 ld(hi('sys_CopyMemoryExt'),Y)    # 15 slot 0xec
 jmp(Y, 'sys_CopyMemoryExt')      # 16
 ld(hi(ctrlBits), Y)              # 17
@@ -5472,7 +5472,7 @@ ld(hi('REENTER'),Y)                  #21
 jmp(Y,'REENTER')                     #22
 ld(-26/2)                            #23
 
-# SYS_CopyMemoryExt_DEVROM_94 implementation
+# SYS_CopyMemoryExt_DEVROM_100 implementation
 
 label('sys_CopyMemoryExt')
 
@@ -5580,19 +5580,19 @@ nop()                                #79
 ld(-52/2)                            #80
 adda([vTicks])                       #29 = 81 - 52
 st([vTicks])                         #30
-adda(min(0,maxTicks-(38+52)/2))      #31  note use of maxTicks
+adda(min(0,maxTicks-(46+52)/2))      #31  note use of maxTicks
 bge('.sysCme#34')                    #32
 ld([vAC])                            #33
 ld(-2)                               #34  notime
-adda([vPC])                          #27
-st([vPC])                            #28
-ld(hi(ctrlBits), Y)                  #29
-ld([Y,ctrlBits])                     #30
-ld(AC,X)                             #31
-ctrl(X)                              #32
-ld(hi('REENTER'),Y)                  #33
-jmp(Y,'REENTER')                     #34
-ld(-38/2)                            #35  max: 38 + 52 = 90 cycles
+adda([vPC])                          #35
+st([vPC])                            #36
+ld(hi(ctrlBits), Y)                  #37
+ld([Y,ctrlBits])                     #38
+ld(AC,X)                             #39
+ctrl(X)                              #40
+ld(hi('REENTER'),Y)                  #41
+jmp(Y,'REENTER')                     #42
+ld(-46/2)                            #43  max: 46 + 52 = 98 cycles
 
 
 
