@@ -1285,9 +1285,12 @@ namespace Loader
 
     void setMemoryModel64k(void)
     {
-        Memory::setSizeRAM(RAM_SIZE_HI);
-        Cpu::setSizeRAM(Memory::getSizeRAM());
-        Cpu::setRAM(0x0001, 0x00); // inform system that RAM is 64k
+        if (Memory::getSizeRAM() < RAM_SIZE_HI)
+        {
+            Memory::setSizeRAM(RAM_SIZE_HI);
+            Cpu::setSizeRAM(Memory::getSizeRAM());
+            Cpu::setRAM(0x0001, 0x00); // inform system that RAM is 64k
+        }
     }
 
     void uploadToEmulatorRAM(const Gt1File& gt1File)
