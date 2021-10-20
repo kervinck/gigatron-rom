@@ -5513,6 +5513,84 @@ bra("sys_MultiplyBytes#92") # 90
 nop() # 91
 
 
+label("SYS_KaratsubaPrepare_54")
+# Prepare arguments for SYS_MultiplyBytes.
+# Arguments are in sysArgs[0:1] and vAC[0:1]
+# Result goes in sysArgs[0:1], and vAC contains  zero if the result is going to be positive
+# 
+# First calculate abs(sysArgs[0] - sysArgs[1]), remembering whether we had to negate.
+ld([sysArgs])                   # 15
+bmi("sysKaratsubaPrepare#18")   # 16
+suba([sysArgs + 1])             # 17
+
+st([sysArgs])                   # 18
+bra("sysKaratsubaPrepare#21")   # 19
+ora([sysArgs + 1])              # 20
+
+label("sysKaratsubaPrepare#18")
+st([sysArgs])                   # 18
+anda([sysArgs + 1])             # 19
+nop()                           # 20
+
+label("sysKaratsubaPrepare#21")
+anda(0x80,X)                    # 21 Store sign for later
+bmi(pc()+4)                     # 22 Invert if necessary
+ld([sysArgs])                   # 23
+
+bra(pc() + 4)                   # 24 No need to negate
+nop()                           # 25
+
+xora(0xff)                      # 24 Need to negate
+adda(1)                         # 25
+
+st([sysArgs])                   # 26
+ld([X])                         # 27 Store sign
+st([vTmp])                      # 28
+
+# Same dance, a second time, but for the other value
+ld([vAC + 1])                   # 29
+bmi("sysKaratsubaPrepare#32")   # 30
+suba([vAC])                     # 31
+
+st([sysArgs + 1])               # 32
+bra("sysKaratsubaPrepare#35")   # 33
+ora([vAC])                      # 34
+
+label("sysKaratsubaPrepare#32")
+st([sysArgs + 1])               # 32
+anda([vAC])                     # 33
+nop()                           # 34
+
+label("sysKaratsubaPrepare#35")
+anda(0x80,X)                    # 35 Store sign for later
+bmi(pc()+4)                     # 36 Invert if necessary
+ld([sysArgs + 1])               # 37
+
+bra(pc() + 4)                   # 38
+nop()                           # 39
+
+xora(0xff)                      # 38
+adda(1)                         # 39
+
+st([sysArgs + 1])               # 40
+
+# Store flag to say if result must be inverted
+ld([vTmp])                      # 41
+xora([X])                       # 42
+st([vAC])                       # 43
+st([vAC + 1])                   # 44
+
+ld(hi("SYS_MultiplyBytes_120")) # 45
+st([sysFn + 1])                 # 46
+ld("SYS_MultiplyBytes_120")     # 47
+st([sysFn])                     # 48
+ld(hi('REENTER'), Y)            # 49
+jmp(Y, 'REENTER')               # 50
+ld(-54/2)                       # 51
+
+
+
+
 #-----------------------------------------------------------------------
 #
 #  End of core
