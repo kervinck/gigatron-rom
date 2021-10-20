@@ -133,7 +133,7 @@ task PreCommit {
     exec { git stash push '-kum' "Unstaged changes, for precommit testing" }
     Push-Location $PSScriptRoot
     try {
-        exec { git clean '-fdxe' '.venv' '-e' '.pytest_cache' }
+        exec { git clean '-fdxe' '.venv' '-e' '.pytest_cache' '-e' '.pypy-venv' }
         Invoke-Task default -ErrorAction Stop
         # Check for any unstaged changes resulting
         # we should be committing everything - including .lst files
