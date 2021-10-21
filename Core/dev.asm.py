@@ -5510,18 +5510,18 @@ adda(4)                              #38
 
 st([vAC])                            #39   single
 ld([vTmp],X)                         #40
-ctrl(X)                              #41
+ctrl(Y,X)                            #41
 ld([sysArgs+2],X)                    #42
 ld([Y,X])                            #43
 ld([vLR],X)                          #44
-ctrl(X)                              #45
+ctrl(Y,X)                            #45
 ld([sysArgs+1],Y)                    #46
 ld([sysArgs+0],X)                    #47
 st([Y,X])                            #48
 ld(hi(ctrlBits), Y)                  #49
 ld([Y,ctrlBits])                     #50
 ld(AC,X)                             #51
-ctrl(X)                              #52
+ctrl(Y,X)                            #52
 ld([sysArgs+0])                      #53
 adda(1)                              #54
 st([sysArgs+0])                      #55
@@ -5545,14 +5545,14 @@ ld([sysArgs+3],Y)                    #37
 label('.sysCme#38')
 st([vAC])                            #38   burst5
 ld([vTmp],X)                         #39
-ctrl(X)                              #40
+ctrl(Y,X)                            #40
 ld([sysArgs+2],X)                    #41
 for i in range(5):
   ld([Y,X])                            #42+i*3
   st([vLR+1 if i<1 else sysArgs+3+i])  #43+i*3
   st([Y,Xpp]) if i<4 else None         #44+i*3 if i<5
 ld([vLR],X)                          #56
-ctrl(X)                              #57
+ctrl(Y,X)                            #57
 ld([sysArgs+1],Y)                    #58
 ld([sysArgs+0],X)                    #59
 for i in range(5):
@@ -5570,7 +5570,7 @@ bne('.sysCme#79')                    #77
 ld(hi(ctrlBits), Y)                  #78
 ld([Y,ctrlBits])                     #79
 ld(AC,X)                             #80
-ctrl(X)                              #81
+ctrl(Y,X)                            #81
 ld(hi('NEXTY'),Y)                    #82
 jmp(Y,'NEXTY')                       #83
 ld(-86/2)                            #84
@@ -5589,7 +5589,7 @@ st([vPC])                            #36
 ld(hi(ctrlBits), Y)                  #37
 ld([Y,ctrlBits])                     #38
 ld(AC,X)                             #39
-ctrl(X)                              #40
+ctrl(Y,X)                            #40
 ld(hi('REENTER'),Y)                  #41
 jmp(Y,'REENTER')                     #42
 ld(-46/2)                            #43  max: 46 + 52 = 98 cycles
