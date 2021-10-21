@@ -5571,9 +5571,10 @@ ld(hi(ctrlBits), Y)                  #78
 ld([Y,ctrlBits])                     #79
 ld(AC,X)                             #80
 ctrl(X)                              #81
-ld(hi('NEXTY'),Y)                    #82
-jmp(Y,'NEXTY')                       #83
-ld(-86/2)                            #84
+ld([vTmp])                           #82 ALWAYS LOAD AFTER CTRL
+ld(hi('REENTER'),Y)                  #83
+jmp(Y,'REENTER')                     #84
+ld(-88/2)                            #85
 
 label('.sysCme#79')
 nop()                                #79
@@ -5590,9 +5591,10 @@ ld(hi(ctrlBits), Y)                  #37
 ld([Y,ctrlBits])                     #38
 ld(AC,X)                             #39
 ctrl(X)                              #40
-ld(hi('REENTER'),Y)                  #41
-jmp(Y,'REENTER')                     #42
-ld(-46/2)                            #43  max: 46 + 52 = 98 cycles
+ld([vTmp])                           #41 ALWAYS LOAD AFTER CTRL
+ld(hi('NEXTY'),Y)                    #42
+jmp(Y,'NEXTY')                       #43
+ld(-46/2)                            #44  max: 46 + 52 = 98 cycles
 
 
 
