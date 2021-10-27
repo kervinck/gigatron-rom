@@ -5492,7 +5492,7 @@ adda([vAC+1])                        #22
 st([vLR])                            #23
 adda([vLR])                          #24
 xora([vTmp])                         #25
-anda(0xc0)                           #26
+anda(0xc3)                           #26 Sanitize [$1f8] as well
 xora([vTmp])                         #27
 st([vTmp])                           #28 [vTmp] = source ctrl value
 xora([vAC+1])                        #29
@@ -5569,7 +5569,7 @@ ld([vAC])                            #76
 bne('.sysCme#79')                    #77
 ld(hi(ctrlBits), Y)                  #78
 ld([Y,ctrlBits])                     #79
-ld(AC,X)                             #80
+anda(0xfc,X)                         #80
 ctrl(X)                              #81
 ld([vTmp])                           #82 ALWAYS LOAD AFTER CTRL
 ld(hi('REENTER'),Y)                  #83
@@ -5589,7 +5589,7 @@ adda([vPC])                          #35
 st([vPC])                            #36
 ld(hi(ctrlBits), Y)                  #37
 ld([Y,ctrlBits])                     #38
-ld(AC,X)                             #39
+anda(0xfc,X)                         #39
 ctrl(X)                              #40
 ld([vTmp])                           #41 ALWAYS LOAD AFTER CTRL
 ld(hi('NEXTY'),Y)                    #42
