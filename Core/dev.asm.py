@@ -500,6 +500,7 @@ ld(syncBits^hSync,OUT)          # Prepare XOUT update, hSync goes down, RGB to b
 ld(syncBits,OUT)                # hSync goes up, updating XOUT
 
 # Setup I/O and RAM expander
+ctrl(0b01111111)                # Reset signal (default state | 0x3)
 ctrl(0b01111100)                # Disable SPI slaves, enable RAM, bank 1
 #      ^^^^^^^^
 #      |||||||`-- SCLK
@@ -676,10 +677,14 @@ st([sysArgs+1])                 #36
 ld([vPC])                       #37 Force second SYS call
 suba(2)                         #38
 st([vPC])                       #39
+# Reset expansion board
+ctrl(0b01111111)                #40 Reset signal (default state | 0x3)
+ctrl(0b01111100)                #41 Default state.
+ld([vTmp])                      #42 Always load after ctrl
 # Return to interpreter
-ld(hi('NEXTY'),Y)               #40
-jmp(Y,'NEXTY')                  #41
-ld(-44/2)                       #42
+ld(hi('REENTER'),Y)             #43
+jmp(Y,'REENTER')                #44
+ld(-48/2)                       #45
 
 #-----------------------------------------------------------------------
 # Placeholders for future SYS functions. This works as a kind of jump
@@ -2916,16 +2921,7 @@ xora(videoYline0)               #17 First line of vertical blank
 label('SYS_ExpanderControl_v4_40')
 ld(hi('sys_ExpanderControl'),Y) #15
 jmp(Y,'sys_ExpanderControl')    #16
-ld(0b11111100)                  #17 Safety (SCLK=0)
-#    ^^^^^^^^
-#    |||||||`-- SCLK
-#    ||||||`--- Not connected
-#    |||||`---- /SS0
-#    ||||`----- /SS1
-#    |||`------ /SS2
-#    ||`------- /SS3
-#    |`-------- B0
-#    `--------- B1
+ld(hi(ctrlBits),Y)              #17
 
 #-----------------------------------------------------------------------
 # Extension SYS_Run6502_v4_80
@@ -3647,25 +3643,33 @@ ld(-62/2)                       #59
 
 #-----------------------------------------------------------------------
 
-label('sys_ExpanderControl')
+align(0x100)
 
-anda([vAC])                     #18
-st([vAC],X)                     #19
-ld(hi(ctrlBits),Y)              #20
-st([Y,ctrlBits])                #21 Set control variable
-ld([vAC+1],Y)                   #22 MOSI (A15)
-ctrl(Y,X)                       #23 Try set the expander control register
+label('sys_ExpanderControl')   
+ld(0b00001100)                      #18 bits 2 and 3
+anda([vAC])                         #19 check for special ctrl code space
+beq('sysEx#22')                     #20
+ld([vAC])                           #21 load low byte of ctrl code in delay slot
+anda(0xfc)                          #22 sanitize normal ctrl code
+st([Y,ctrlBits])                    #23 store in ctrlBits
+st([vTmp])                          #24 store in vTmp
+bra('sysEx#27')                     #25 jump to issuing normal ctrl code 
+ld([vAC+1],Y)                       #26 load high byte of ctrl code in delay slot
+label('sysEx#22')
+anda(0xfc,X)                        #22 * special ctrl code
+ld([Y,ctrlBits])                    #23 get previous normal code from ctrlBits
+st([vTmp])                          #24 save it in vTmp
+ld([vAC+1],Y)                       #25 load high byte of ctrl code
+ctrl(Y,X)                           #26 issue special ctrl code
+label('sysEx#27')
+ld([vTmp])                          #27 load saved normal ctrl code
+anda(0xfc,X)                        #28 sanitize ctrlBits
+ctrl(Y,X)                           #29 issue normal ctrl code
+ld([vTmp])                          #30 always load something after ctrl
+ld(hi('REENTER'),Y)                 #31
+jmp(Y,'REENTER')                    #32
+ld(-36/2)                           #33
 
-ld([sysArgs+3])                 #24 Prepare for SYS_SpiExchangeBytes
-assert pc()&255 < 255-3         # Beware of page crossing: asm.py won't warn
-bne(pc()+3)                     #25
-bra(pc()+2)                     #26
-ld([sysArgs+1])                 #27
-st([sysArgs+3])                 #27,28 (must be idempotent)
-
-ld(hi('REENTER'),Y)             #29
-jmp(Y,'REENTER')                #30
-ld(-34/2)                       #31
 
 #-----------------------------------------------------------------------
 
