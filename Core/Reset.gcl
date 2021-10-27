@@ -289,8 +289,8 @@ PrintS!
 \SYS_SetMode_v2_80 _sysFn=      {!!! Not in ROM v1 !!!}
 1 80!!                          {Mode 1 -> "ABC-"}
 
-{ Try booting from memory card }
-CtrlBits, [if<>0 CheckCard!]
+{ Try booting from memory card if there is an expansion card and at least 64K }
+CtrlBits, [if<>0 \memSize, [if=0 CheckCard!]]
 
 { Load and start ROM program }
 \Main _sysArgs0= $200 _vLR= \SYS_Exec_88 _sysFn= 88!!
