@@ -559,7 +559,7 @@ $1e8 i= [do $7b i. i 2+ i= $1f0 i^ if<>0loop]
 
   [def `Vol.ID` #0] \PrintText!
   $00b Address+ deek k=         {Confirm expected sector length}
-  \PrintWord!                    {Print as little-endian word}
+  \PrintWord!                   {Print as little-endian word}
   512 k^ \PrintResult!
 
   pop ret
@@ -580,21 +580,17 @@ $1e8 i= [do $7b i. i 2+ i= $1f0 i^ if<>0loop]
 
   0 SectorL= SectorH=           {First sector on device}
   \ReadSector!                  {Read MBR}
-
   [def `MBR` #0] \PrintText!
   $1fe Address+ deek k=         {Fetch signature}
   $aa55 k^                      {Check signature}
-
   [if=0
     $1c6 Address+ deek SectorL= {Primary partition's first sector on disk}
     $1c8 Address+ deek SectorH=
-
     $1c2 Address+ peek k=       {Filesystem type code}
     \PrintByte!
     $0b k^ [if<>0 $07^]         {Accepts $0b and $0c}
                                 {XXX In case of $0b: check for CHS vs LBA ???}
   ]
-
   pop ret
 ]
 
@@ -1509,11 +1505,12 @@ ret]
 \InitCard!
 \PrintCardType!
 \ReadMBR! \PrintResult!          {Master Boot Record}
-[if=0 \ReadVolumeId!]            {Read first block of FAT partition}
-\InitFat32!
-\OpenMainDirectory!              {Read root directory XXX Move into PrintDir}
-\PrintDirectory!                 {List directory, find SYSTEM.GT1 and execute it}
-
+\ReadVolumeId!                   {Read first block of FAT partition}
+[if=0 
+  \InitFat32!
+  \OpenMainDirectory!            {Read root directory XXX Move into PrintDir}
+  \PrintDirectory!               {List directory, find SYSTEM.GT1 and execute it}
+]
 32 pVideoTop.                    {Not found!}
 \Newline!
 [def `SYSTEM.GT1`not`found! #0 ] \PrintText!
