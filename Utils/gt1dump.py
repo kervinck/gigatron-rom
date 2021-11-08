@@ -25,11 +25,17 @@ sys.excepthook = lambda exType, exValue, exTrace: print('%s: %s: %s' % (__file__
 
 parser = argparse.ArgumentParser(description='Dump GT1 file')
 parser.add_argument('-d', '--disassemble', dest='disassemble',
-                    help='disassmble as vCPU code',
+                    help='disassemble as vCPU or 6502 code',
                     action='store_true', default=False)
 parser.add_argument('-f', '--force', dest='force',
                     help='accept any filename extension',
                     action='store_true', default=False)
+parser.add_argument('-dv', '--disassemble-vcpu', dest='disassemble',
+                    help='disassemble as vCPU code only',
+                    action='store_const', const='vCPU')
+parser.add_argument('-p', '--prof', dest='prof',
+                    help='display profile information from file ARG',
+                    action='store', metavar='PFILE')
 parser.add_argument('filename', help='GT1 file', nargs='?')
 
 args = parser.parse_args()
@@ -195,6 +201,13 @@ if args.filename:
 else:
   fp = sys.stdin.buffer # Note: `buffer` for binary mode
 
+prof = None
+if args.prof:
+  with open(args.prof) as f:
+    gb = {}
+    exec(f.read(), gb)
+    prof = gb['prof']
+  
 hiAddress = readByte(fp)
 
 cpuType, cpuTag = 0, '[vCPU]'                   # 0 for vCPU, 1 for v6502
@@ -211,6 +224,7 @@ while True:
 
   j, text = 0, ''
   ins, ops = None, 0
+  insaddr = None
   for i in range(segmentSize):
 
     byte = readByte(fp)                         # Data byte
@@ -222,7 +236,7 @@ while True:
         ins = None
         if byte in opcodes[cpuType].keys():     # First probe the last ISA
           ins, ops = opcodes[cpuType][byte]
-        else:
+        elif args.disassemble == True:
           xCpu = 1 - cpuType                    # 0 <-> 1
           if byte in opcodes[xCpu].keys():      # Probe the other if current not valid
             cpuType = xCpu                      # Swap if second is valid
@@ -233,6 +247,7 @@ while True:
           if j > 0:                             # Force new line
             print('%s|%s|' % ((51-j)*' ', text))
             j, text = 0, ''
+          insaddr = address+i
           asm = '%-5s' % ins                    # Format mnemonic
 
       else:                                     # Already in instruction
@@ -278,7 +293,11 @@ while True:
         # Convert single digit operand to decimal
         asm = re.sub(r'\$0([0-9])$', r'\1', asm)
         prefix, cpuTag = (25 * ' ') + cpuTag, ''
-        print('%s %-25s|%s|' % (prefix[-25+j:], asm, text))
+        if prof:
+          cycs='#%d' % prof[insaddr] if insaddr in prof else ''
+          print('%s %-25s %-13s|%s|' % (prefix[-25+j:], asm, cycs, text))
+        else:
+          print('%s %-25s|%s|' % (prefix[-25+j:], asm, text))
         ins, j, text = None, 0, ''
 
       elif (address + i) & 15 == 15 or i == segmentSize - 1:
