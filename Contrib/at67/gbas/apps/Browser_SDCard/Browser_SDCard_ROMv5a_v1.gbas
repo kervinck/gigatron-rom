@@ -244,24 +244,24 @@ return
 
 
 getRomType:
-    'defaults to ROMv1
-    NextByteIn_32 = &h02E9
     romType = get("ROM_TYPE")
-    if romType     &&= &h20 'ROMv2
-        NextByteIn_32 = &h0BB1
-    elseif romType &&= &h28 'ROMv3
-        NextByteIn_32 = &h0BDF
-    elseif romType &&= &h38 'ROMv4
-        NextByteIn_32 = &h8A31
-    elseif romType &&= &h40 'ROMv5a
-        NextByteIn_32 = &h5907
-    elseif romType &&= &hF0 'SDCARD
-        NextByteIn_32 = &h1300
-    elseif romType &&= &hF8 'DEVROM
-        NextByteIn_32 = &h5907
+    if romType &<= &h40
+        NextByteIn = &h02E9                              'ROMv1
+        if romType &&= &h20 then NextByteIn_32 = &h0BB1  'ROMv2
+        if romType &&= &h28 then NextByteIn_32 = &h0BDF  'ROMv3
+        if romType &&= &h38 then NextByteIn_32 = &h8A31  'ROMv4
+        if romType &&= &h40 then NextByteIn_32 = &h5907  'ROMv5a
+    else
+        NextByteIn_32 = &h0b18                           'SYS_ReceiveSerial1
+        if romType &= &hf0
+            NextByteIn_32 = &h1300                       'SDCARD
+        elseif romType &= &hf8                           'DEVROM (v5a+)
+            if execAddr &&= &h5A70 then NextByteIn_32 = &h5907  '(v5a+, initial)
+            if execAddr  &= &h5A72 then NextByteIn_32 = &h5907  '(v5a+, with sys_Loader_vX)
+            if execAddr &&= &h5C72 then NextByteIn_32 = &h5B07  '(v5a+, last before SYS_ReceiveSerial1)
+        endif
     endif
 return
-
 
 openSDCard:
     poke @commsCmd, CmdSDOpen
@@ -342,7 +342,7 @@ return
 
 'up
 247:    dec cursorY
-        if cursorY &&< 0 then cursorY = min(browserIdx - 1, 14)
+        if cursorY &< 0 then cursorY = min(browserIdx - 1, 14)
         gosub updateBrowser
         return
 
@@ -350,13 +350,13 @@ return
 'execute files, list directories
 execOrList:
     entry = peek(runStrAddr - 1)
-    if entry &&= EntryFile
+    if entry &= EntryFile
         execRtn = 0
         gosub execApp
     elseif entry &= EntryDir
         execRtn = 1
         pathName$ = string$(runStrAddr)
-    elseif entry &&= EntryError
+    elseif entry &= EntryError
         execRtn = 2
         pathName$ = ""
     endif

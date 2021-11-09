@@ -3043,6 +3043,30 @@ ld(hi('sys_SpiExchangeBytes'),Y)#15
 jmp(Y,'sys_SpiExchangeBytes')   #16
 ld(hi(ctrlBits),Y)              #17 Control state as saved by SYS_ExpanderControl
 
+
+#-----------------------------------------------------------------------
+# Extension SYS_ReceiveSerial1_DEVROM_32
+#-----------------------------------------------------------------------
+
+# SYS function for receiving one byte over the serial controller port.
+# This is a public version of SYS_NextByteIn from the loader private
+# extension.  A byte is read from IN when videoY reaches
+# sysArgs[3]. The byte is added to the checksum sysArgs[2] then stored
+# at address sysArgs[0:1] which gets incremented.
+#
+# The 65 bytes of a serial frame can be read for the following values
+# of videoY: 207 (protocol byte) 219 (length, 6 bits only) 235, 251
+# (address) then 2, 6, 10, .. 238 stepping by four, then 185.
+#
+# Variables:
+#     sysArgs[0:1] Address
+#     sysArgs[2]   Checksum
+#     sysArgs[3]   Wait value (videoY)
+
+label('SYS_ReceiveSerial1_DEVROM_32')
+bra('sys_ReceiveSerial1')       #15
+ld([sysArgs+3])                 #16
+
 #-----------------------------------------------------------------------
 #  Implementations
 #-----------------------------------------------------------------------
@@ -3220,6 +3244,31 @@ st([vAC])                       #40 Stop sending bits, no error
 st([vAC+1])                     #41
 jmp(Y,'REENTER')                #42
 ld(-46/2)                       #43
+
+# SYS_ReceiveSerialByte implementation
+label('sys_ReceiveSerial1')
+xora([videoY])                  #17
+bne('.sysRsb#20')               #18
+ld([sysArgs+0],X)               #19
+ld([sysArgs+1],Y)               #20
+ld(IN)                          #21
+st([Y,X])                       #22
+adda([sysArgs+2])               #23
+st([sysArgs+2])                 #24
+ld([sysArgs+0])                 #25
+adda(1)                         #26
+st([sysArgs+0])                 #27
+ld(hi('NEXTY'),Y)               #28
+jmp(Y,'NEXTY')                  #29
+ld(-32/2)                       #30
+# Restart the instruction in the next timeslice
+label('.sysRsb#20')
+ld([vPC])                       #20
+suba(2)                         #21
+st([vPC])                       #22
+ld(hi('REENTER'),Y)             #23
+jmp(Y,'REENTER')                #24
+ld(-28/2)                       #25
 
 # CALLI implementation (vCPU instruction)
 label('calli#13')
