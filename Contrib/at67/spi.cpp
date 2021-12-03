@@ -11,24 +11,98 @@
 #include "cpu.h"
 #include "inih/INIReader.h"
 
-#define SPIVERBOSE 0
+#ifndef SPIVERBOSE
+# define SPIVERBOSE 0
+#endif
 
 namespace Spi {
 
   // ---- bus composition
 
-  static Device *spi0 = new SDCard(0);
-  
+  static Device *spi0 = 0;
+  static Device *spi1 = 0;
+
   void clock(uint16_t b, uint16_t a) {
-    spi0->clock(b, a);
+    if (spi0)
+      spi0->clock(b, a);
+    if (spi1)
+      spi1->clock(b, a);
   }
   
   bool config(INIReader &reader, const std::string &sectionString) {
-    if (sectionString == "SPI0")
+    if (sectionString == "SD0") {
+      spi0 = new SDCard(0);
       return spi0->config(reader, sectionString);
+    }
+    if (sectionString == "SD1") {
+      spi1 = new SDCard(1);
+      return spi1->config(reader, sectionString);
+    }
+    if (sectionString == "MCP1") {
+      fprintf(stderr, "Spi::Device: MCP device is not yet supported\n");
+    }
     return false;
   }
 
+
+
+  // ---- generic device
+  
+  Device::Device(int num)
+    : cs((num >= 0 && num < 4) ? (0x4 << num) : 0), mask(0)
+  {
+    if (num < 0 || num > 3)
+      fprintf(stderr, "Spi::Device: port number must be in range 0..3\n");
+  }
+
+  uint8_t Device::spiselect(void)
+  {
+    // first byte returned after selecting the device
+    return 0xff;
+  }
+  
+  void Device::clock(uint16_t b, uint16_t a)
+  {
+    bool selected = (cs && !(a & cs));
+    // cs was just asserted
+    if (selected && (b & cs)) {
+#if SPIVERBOSE
+      fprintf(stderr, "sdi%d: selected\n", ffs(cs)-3);
+#endif
+      mask = 0x80;
+      miso_byte = spiselect();
+      Cpu::setXIN(miso_byte & mask ? 0xf : 0);
+    }
+#if SPIVERBOSE
+    if (!selected && !(b & cs))
+      fprintf(stderr, "sdi%d: deselected\n", ffs(cs)-3);
+#endif
+    // clock change
+    if (selected && ((a ^ b) & 1))
+      {
+        if (a & 1)
+          {
+            // clock rising (latch)
+            if (a & 0x8000)
+              mosi_byte |= mask;
+            else
+              mosi_byte &= ~mask;
+          }
+        else
+          {
+            // clock falling (shift)
+            if (! (mask >>= 1)) {
+              mask = 0x80;
+#if SPIVERBOSE
+              fprintf(stderr,"sdi%d: sent 0x%02x recv 0x%02x\n", ffs(cs)-3, miso_byte, mosi_byte);
+#endif
+              miso_byte = spibyte(mosi_byte);
+            }
+            Cpu::setXIN((miso_byte & mask) ? 0xf : 0);
+          }
+      }
+  }
+  
   // ---- sdcard device
 
 
@@ -67,11 +141,8 @@ namespace Spi {
   }
   
   SDCard::SDCard(int num)
-    : cs((num >= 0 && num < 4) ? (0x4 << num) : 0),
-      idle(1), mask(0), state(0), count(0), len(0), fd(0)
+    : Device(num), idle(1), state(0), count(0), len(0), fd(0)
   {
-    if (num < 0 || num > 3)
-      fprintf(stderr, "Spi::SDCard: spi number must be in range 0..3\n");
     buffer = new uint8_t[512];
   }
 
@@ -137,68 +208,44 @@ namespace Spi {
     }
     return true;
   }
-  
-  void SDCard::clock(uint16_t b, uint16_t a)
+
+  uint8_t SDCard::spiselect(void)
   {
-    bool selected = (cs && !(a & cs));
-    // cs was just asserted
-    if (selected && (b & cs)) {
-#if SPIVERBOSE
-      fprintf(stderr, "sdi0: selected\n");
-#endif
-      mask = 0x80;
-      if (action() != BUSY) {
-        Context ctx = context();
-        set_wait_state((ctx == INIT || ctx == APPCMD) ? ctx : CMD);
-        miso_byte = 0xff;
-      }
-      Cpu::setXIN(miso_byte & mask ? 0xf : 0);
-    }
-#if SPIVERBOSE
-    if (!selected && !(b & cs))
-      fprintf(stderr, "sdi0: deselected\n");
-#endif
-    // clock change
-    if (selected && ((a ^ b) & 1))
-      {
-        if (a & 1)
-          {
-            // clock rising (latch)
-            if (a & 0x8000)
-              mosi_byte |= mask;
-            else
-              mosi_byte &= ~mask;
-          }
-        else
-          {
-            // clock falling (shift)
-            if (! (mask >>= 1)) {
-              mask = 0x80;
-#if SPIVERBOSE
-              fprintf(stderr,"sdi0: sent 0x%02x recv 0x%02x\n", miso_byte, mosi_byte);
-#endif
-              miso_byte = spibyte(mosi_byte);
-            }
-            Cpu::setXIN((miso_byte & mask) ? 0xf : 0);
-          }
-      }
+    // This function is called whenever the spi port is selected (/SSx
+    // falling edge).  Its return value is the byte transmitted to the
+    // host during the next 8 clock cycles.
+    //    In the case of a SD card, it also resets the state to CMD
+    // (listening for a command) except during a long action (during a
+    // read) or when the state is INIT or APPCMD which are also
+    // listening for a command (but while uninitialized or after a
+    // CMD55.)
+    Context ctx = context();
+    if (action() == BUSY)
+      return 0x00;
+    if (ctx != INIT && ctx != APPCMD)
+      ctx = CMD;
+    set_wait_state(ctx);
+    return 0xff;
   }
   
   uint8_t SDCard::spibyte(uint8_t in)
   {
+    // This function is called whenever a byte is exchanged.  Its
+    // argument is the byte received by the slave.  Its return value
+    // is the next byte to be sent by the slave.
+    //    In the case of a SD card, what happens depends on the
+    // card state represented by the (context,action) pair.
     Context c = context();
     Action a = action();
     // consistent action behavior
     switch(a)
       {
       case WAIT:
-        if (in == 0xff || type == NONE)
+        if (in == 0xff || type == NONE) // waiting for master data
           return 0xff;
         break;
       case RECV:
         buffer[count] = in;
-        if (c == WRITEM1 && in == 0xfd && !count) // stop trans
-          break;
         if (++count < len)
           return 0xff;
         break;
@@ -208,7 +255,7 @@ namespace Spi {
         if (count < len)
           return buffer[count++];
         break;
-      case BUSY:
+      case BUSY: // busy state for len bytes
         if (count++ < len)
           return 0;
         break;
@@ -252,7 +299,7 @@ namespace Spi {
         {
           assert(a == SEND);
           if (in == 64 + 12)
-            set_recv_state(CMD, 5, in);
+            set_recv_state(CMD, 6, in);
           else if (! read_data())
             set_send_r1_state(CMD, 9); // send error token
           else
@@ -269,7 +316,7 @@ namespace Spi {
       case WRITE1:
         {
           if (a == WAIT) {
-            set_recv_state(WRITE1, 512+3);
+            set_recv_state(WRITE1, 512+3, in);
           } else {
             set_busy_state(CMD, 4);
             if (buffer[0] == 0xfe && write_data())
@@ -287,10 +334,10 @@ namespace Spi {
         }
       case WRITEM1:
         {
-          if (a == WAIT) {
-            set_recv_state(WRITEM1, 512+3);
-          } else if (count == 0 && in == 0xfd) { // stop trans
-            set_busy_state(CMD, 4);
+          if (a == WAIT && in == 0xfd) {
+            set_busy_state(CMD, 4);   // stop tran
+          } else if (a == WAIT) {
+            set_recv_state(WRITEM1, 512+3, in);
           } else if (buffer[0] == 0xfc && write_data()) {
             offset += 512;
             set_busy_state(WRITEM, 4);

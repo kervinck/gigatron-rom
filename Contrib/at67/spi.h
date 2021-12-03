@@ -16,8 +16,16 @@ namespace Spi {
 
   class Device {
   public:
-    virtual void clock(uint16_t b, uint16_t a) = 0;
+    Device(int port);
+    virtual void clock(uint16_t b, uint16_t a);
     virtual bool config(INIReader &reader, const std::string &sectionString) = 0;
+    virtual uint8_t spiselect(void);
+    virtual uint8_t spibyte(uint8_t) = 0;
+  protected:
+    const uint8_t cs;
+    uint8_t mask;
+    uint8_t miso_byte;
+    uint8_t mosi_byte;
   };
 
   class SDCard : public Device {
@@ -25,11 +33,7 @@ namespace Spi {
 
     enum Type { NONE = 0, MMC, SDSC, SDHC };
     
-    const uint8_t cs;
     uint8_t idle;
-    uint8_t mask;
-    uint8_t miso_byte;
-    uint8_t mosi_byte;
     int     state;
     int     count;
     int     len;
@@ -60,6 +64,7 @@ namespace Spi {
     void set_busy_state(Context context, int n) {
       state = (context<<4) | Action::BUSY; len=n; count=0; }
 
+    uint8_t spiselect(void);
     uint8_t spibyte(uint8_t);
     void    sdcommand(Context ctx);
     bool    read_data();
@@ -67,7 +72,6 @@ namespace Spi {
   public:
     SDCard(int num);
     virtual ~SDCard();
-    virtual void clock(uint16_t b, uint16_t a);
     virtual bool config(INIReader &reader, const std::string &sectionString);
   };
 
