@@ -860,9 +860,21 @@ ld(hi('REENTER'),Y)             #15 slot 0xe0
 jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
-ld(hi('REENTER'),Y)             #15 slot 0xe3
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
+#-----------------------------------------------------------------------
+# Extension SYS_OsCall_DEVROM_80
+#-----------------------------------------------------------------------
+
+# SYS function for calling OS routines in bank2
+# Returns 0x8080 when OS signature is wrong.
+# Otherwise returns status code
+#
+#  vAC: routine number
+#  sysArgs0-7: routine arguments
+
+label('SYS_OsCall_DEVROM_80')
+ld(hi('sys_OsCall'),Y)          #15 slot 0xe3
+jmp(Y,'sys_OsCall')             #16
+ld(hi(ctrlBits),Y)              #17
 
 #-----------------------------------------------------------------------
 # Extension SYS_ScanMemory_DEVROM_50
@@ -5701,6 +5713,72 @@ st([vAC+1])                          #28
 ld(hi('REENTER'),Y)                  #29
 jmp(Y,'REENTER')                     #30
 ld(-34/2)                            #31
+
+
+# SYS_OsCall_DEVROM_80 implementation
+
+label('sys_OsCall')
+ld([Y,ctrlBits])                     #18 check ctrlBits!=0
+beq('.sysOsErr')                     #20
+ld(-30/2)                            #21
+ld([Y,ctrlBits])                     #22
+anda(0xfc)                           #23
+ora(0xc0,X)                          #24
+ld(0x80,Y)                           #25
+ctrl(X)                              #26 set bank 3
+ld([Y,0])                            #27 check 'GTOS' signature in 0x8000
+xora(0x47)                           #28 'G'
+st([vTmp])                           #29
+ld([Y,1])                            #30
+xora(0x54)                           #31 'T'
+ora([vTmp])                          #32
+st([vTmp])                           #33
+ld([Y,2])                            #34
+xora(0x4f)                           #35 'O'
+ora([vTmp])                          #36
+st([vTmp])                           #37
+ld([Y,3])                            #38
+xora(0x53)                           #39 'S'
+ora([vTmp])                          #40
+st([vTmp])                           #41
+bne('.sysOsErrCtrl')                 #42
+ld(-58/2)                            #43
+ld([vPC])                            #44
+adda(2)                              #45
+st([vLR])                            #46 save return address
+ld([vPC+1])                          #47
+st([vLR+1])                          #48
+ld([vAC],X)                          #49 load vector index
+ld([Y,X])                            #50 low byte
+st([Y,Xpp])                          #51 just increment
+st([vTmp])                           #52
+ld([Y,X])                            #53
+bpl('.sysOsErrCtrl')                 #54
+ld(-70/2)                            #55
+ld([Y,X])                            #56
+st([vPC+1])                          #57
+ld([vTmp])                           #58
+suba(2)                              #59
+st([vPC])                            #60 warning: calling os routine
+ld(hi('REENTER'),Y)                  #61   with [ctrlBits] matching the
+jmp(Y,'REENTER')                     #62   previous bank, not bank 2.
+ld(-66/2)                            #63
+
+label('.sysOsErrCtrl')
+st([vTmp])                          #T-14 vAC must contain (-T/2)
+ld(hi(ctrlBits),Y)                  #T-13 reset bank
+ld([Y, ctrlBits])                   #T-12
+anda(0xfc, X)                       #T-11
+ctrl(X)                             #T-10
+ld([vTmp])                          #T-9
+label('.sysOsErr')
+st([vTmp])                          #T-8 vAC must contain (-T/2)
+ld(0x80)                            #T-7
+st([vAC])                           #T-6
+st([vAC+1])                         #T-5
+ld(hi('NEXTY'),Y)                   #T-4
+jmp(Y,'NEXTY')                      #T-3
+ld([vTmp])                          #T-2
 
 
 #-----------------------------------------------------------------------
