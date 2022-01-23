@@ -860,17 +860,34 @@ ld(hi('REENTER'),Y)             #15 slot 0xe0
 jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
-ld(hi('REENTER'),Y)             #15 slot 0xe3
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
+#-----------------------------------------------------------------------
+# Extension SYS_ScanMemoryExt_DEVROM_50
+#-----------------------------------------------------------------------
+
+# SYS function for searching a byte in a 0 to 256 bytes string located
+# in a different bank. Doesn't cross page boundaries. Returns a
+# pointer to the target if found or zero. Temporarily deselects SPI
+# devices.
+#
+# sysArgs[0:1]            Start address
+# sysArgs[2], sysArgs[3]  Bytes to locate in the string
+# vACL                    Length of the string (0 means 256)
+# vACH                    Bit 6 and 7 contain the bank number
+
+label('SYS_ScanMemoryExt_DEVROM_50')
+ld(hi('sys_ScanMemoryExt'),Y)   #15 slot 0xe3
+jmp(Y,'sys_ScanMemoryExt')      #16
+ld([vAC+1])                     #17
+
 
 #-----------------------------------------------------------------------
 # Extension SYS_ScanMemory_DEVROM_50
 #-----------------------------------------------------------------------
 
-# SYS function for searching a byte in a 0 to 256 bytes string
-# Returns a pointer to the target if found or zero.
-# Doesn't cross page boundaries.
+# SYS function for searching a byte in a 0 to 256 bytes string.
+# Returns a pointer to the target if found or zero.  Doesn't cross
+# page boundaries.
+
 #
 # sysArgs[0:1]            Start address
 # sysArgs[2], sysArgs[3]  Bytes to locate in the string
@@ -913,12 +930,13 @@ ld([vAC])                        # 17
 #
 # Doesn't cross page boundaries.
 # Overwrites sysArgs[4:7], vLR, and vTmp.
-# Returns -1 in vAC if no expansion card is present.
+# Temporarily deselect all SPI devices.
+# Should not call without expansion board
 
 label('SYS_CopyMemoryExt_DEVROM_100')
 ld(hi('sys_CopyMemoryExt'),Y)    # 15 slot 0xec
 jmp(Y, 'sys_CopyMemoryExt')      # 16
-ld(hi(ctrlBits), Y)              # 17
+ld([vAC+1])                      # 17
 
 #-----------------------------------------------------------------------
 # Extension SYS_ReadRomDir_v5_80
@@ -3694,7 +3712,7 @@ ld(-62/2)                       #59
 
 align(0x100)
 
-label('sys_ExpanderControl')   
+label('sys_ExpanderControl')
 ld(0b00001100)                      #18 bits 2 and 3
 anda([vAC])                         #19 check for special ctrl code space
 beq('sysEx#22')                     #20
@@ -3702,7 +3720,7 @@ ld([vAC])                           #21 load low byte of ctrl code in delay slot
 anda(0xfc)                          #22 sanitize normal ctrl code
 st([Y,ctrlBits])                    #23 store in ctrlBits
 st([vTmp])                          #24 store in vTmp
-bra('sysEx#27')                     #25 jump to issuing normal ctrl code 
+bra('sysEx#27')                     #25 jump to issuing normal ctrl code
 ld([vAC+1],Y)                       #26 load high byte of ctrl code in delay slot
 label('sysEx#22')
 anda(0xfc,X)                        #22 * special ctrl code
@@ -5415,7 +5433,7 @@ ld(-44/2)                       #42
 
 #-----------------------------------------------------------------------
 #
-#  $1300 ROM page 19/20: CopyMemory/CopyMemoryExt/ScanMemory
+#  $1300 ROM page 19/20: CopyMemory[Ext]/ScanMemory[Ext]
 #
 #-----------------------------------------------------------------------
 
@@ -5529,7 +5547,7 @@ ld(-26/2)                            #23
 
 label('sys_CopyMemoryExt')
 
-adda(AC)                             #18 
+adda(AC)                             #18
 adda(AC)                             #19
 ora(0x3c)                            #20
 st([vTmp])                           #21 [vTmp] = src ctrl value
@@ -5632,7 +5650,6 @@ ld(hi('REENTER'),Y)                  #33
 jmp(Y,'REENTER')                     #34
 ld(-38/2)                            #35 max: 38 + 52 = 90 cycles
 
-
 align(0x100, size=0x100)
 
 # SYS_ScanMemory_DEVROM_50 implementation
@@ -5683,6 +5700,70 @@ st([vAC+1])                          #28
 ld(hi('REENTER'),Y)                  #29
 jmp(Y,'REENTER')                     #30
 ld(-34/2)                            #31
+
+
+# SYS_ScanMemoryExt_DEVROM_50 implementation
+
+label('sys_ScanMemoryExt')
+ora(0x3c,X)                          #18
+ctrl(X)                              #19
+ld([sysArgs+1],Y)                    #20
+ld([sysArgs+0],X)                    #21
+ld([Y,X])                            #22
+nop()                                #23
+label('.sysSmx#24')
+xora([sysArgs+2])                    #24
+beq('.sysSmx#27')                    #25
+ld([Y,X])                            #26
+xora([sysArgs+3])                    #27
+beq('.sysSmx#30')                    #28
+ld([sysArgs+0])                      #29
+adda(1);                             #30
+st([sysArgs+0],X)                    #31
+ld([vAC])                            #32
+suba(1)                              #33
+beq('.sysSmx#36')                    #34 return zero
+st([vAC])                            #35
+ld(-18/2)                            #18 = 36 - 18
+adda([vTicks])                       #19
+st([vTicks])                         #20
+adda(min(0,maxTicks -(30+18)/2))     #21
+bge('.sysSmx#24')                    #22
+ld([Y,X])                            #23
+ld([vPC])                            #24
+suba(2)                              #25 restart
+st([vPC])                            #26
+ld(hi(ctrlBits),Y)                   #27 restore and return
+ld([Y,ctrlBits])                     #28
+anda(0xfc,X)                         #29
+ctrl(X)                              #30
+ld([vTmp])                           #31
+ld(hi('NEXTY'),Y)                    #32
+jmp(Y,'NEXTY')                       #33
+ld(-36/2)                            #34
+
+label('.sysSmx#27')
+nop()                                #27 success
+nop()                                #28
+ld([sysArgs+0])                      #29
+label('.sysSmx#30')
+st([vAC])                            #30 success
+ld([sysArgs+1])                      #31
+nop()                                #32
+nop()                                #33
+nop()                                #34
+nop()                                #35
+label('.sysSmx#36')
+st([vAC+1])                          #36
+ld(hi(ctrlBits),Y)                   #37 restore and return
+ld([Y,ctrlBits])                     #38
+anda(0xfc,X)                         #39
+ctrl(X)                              #40
+ld([vTmp])                           #41
+ld(hi('NEXTY'),Y)                    #42
+jmp(Y,'NEXTY')                       #43
+ld(-46/2)                            #44
+
 
 
 #-----------------------------------------------------------------------
