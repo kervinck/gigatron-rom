@@ -1,0 +1,1619 @@
+'********************************************************************************
+'*																				*
+'*                           G H O S T   T O W N  	    	                    *
+'*                                                                              *
+'*                     for the Gigatron TTL Computer System                     *
+'*                                                                              *
+'*                          ported from TRS-80                                  *
+'*                                                                              *
+'*                        by W A Bushby (January 2022)                          *
+'*                                                                              *
+'*                             version 0.86                                     *
+'*                                                                              *
+'*                                                                              *
+'*                      Based on Scott Adam's Source Code                       *
+'*                   published in Byte magazine December 1980                   *
+'*                                                                              *
+'*                                                                              *
+'********************************************************************************
+_runtimePath_ "../../runtime"
+_runtimeStart_ &hFFFF
+_arraysStart_ &hFFFF
+_codeRomType_ ROMv5a
+
+
+'audio fix for ROMv5a
+POKE &h21, peek(&h21) OR 3
+
+SOUND OFF
+
+MODE 1
+SET FGBG_COLOUR, &h3F00
+CLS
+
+'********************************************************************************
+'*																				*
+'*                  DATA DEFINITIONS FOR THE ADVENTURE                          *
+'*																				*
+'********************************************************************************
+
+TITLE$ = "GHOST TOWN"
+
+const IL = 78               ' Item Count
+const CL = 237              ' Action Count
+const NL = 239              ' Verb/Noun Count
+const RL = 38               ' Room Count
+const MX = 7                ' Maximum Carry Load Count
+const AR = 1                ' Initial Room Number
+const TT = 13               ' Treasure Count
+const LN = 4                ' Used Command Word Length
+const LT = 175              ' Light Time
+const ML = 98               ' Message Count
+const TR = 15               ' Treasure room
+const OL = 7                ' One Letter Command Count
+const LV = 25               ' LOOK verb
+const IN = 62               ' INVENTORY noun
+
+NoLineBreak = 0
+
+Debug = 0
+
+    DIM NV(1)
+    DIM NT$(1)  
+    DIM I2%(IL) 
+
+                    ' Vocab, Condition(1-5),Action(1-2)  Vocab = (Verb X 150) + Noun
+                                                                        'E V E N T S
+
+    DIM CA(CL,7) = {3,193,180,520,0,0,5472,11400,                       ' Random Events
+                    100,1402,183,1400,0,0,8926,1647,
+                    100,29,0,40,240,0,11923,12229,
+                    0,120,0,0,0,0,12153,600,
+                    0,20,500,60,3400,0,8779,12229,
+                    0,140,480,220,0,0,12204,12054,
+                    0,20,20,20,0,0,11937,8100,
+                    100,20,140,0,0,0,12381,11027,
+                    0,515,309,16,0,0,15720,0,
+                    0,15,340,349,0,0,15806,11458,
+                    0,140,60,60,0,0,12231,11631,
+                    0,204,349,0,0,0,8626,0,
+                    100,348,1414,224,192,1400,7950,0,
+                    100,348,227,1414,1400,220,9300,0,
+                    20,4516,120,0,0,0,8700,0,
+                    0,0,0,0,0,0,0,0,
+                    20,60,249,0,0,0,12223,0,
+                    0,15,460,220,0,0,4229,9300,
+                    0,15,600,80,200,80,11931,11931,
+                    0,60,0,0,0,0,12150,0,
+                    100,349,1413,1400,0,0,8850,0,
+                    100,473,80,0,0,0,12227,10950,
+                    0,15,460,0,0,0,8850,0,                              ' Random clear screen ? Changed 8920 to 8850
+                    0,80,0,0,0,0,12150,0,
+                    4,494,0,0,0,0,7551,0,
+                    100,368,360,120,0,0,9081,11623,
+                    0,15,280,840,0,0,10800,0,
+                    0,120,0,0,0,0,12150,0,
+                    100,1221,181,0,0,0,19176,9150,
+                    0,0,0,0,0,0,0,0,
+                    15,44,1434,1413,0,0,6160,21900,
+                    100,721,706,720,0,0,8250,0,                         ' Hide 'which i am wearing' if hat is not held
+                    100,328,320,180,0,0,9059,11400,
+                    0,0,0,0,0,0,0,0,
+                    100,901,0,0,0,0,18361,0,
+                    0,0,0,0,0,0,0,0,
+                    100,764,160,0,0,0,8700,0,
+                    100,168,180,0,0,0,8700,0,
+                    100,188,180,40,0,0,9073,12150,
+                    0,40,0,0,0,0,2028,2181,
+                    0,0,0,0,0,0,11716,9750,
+                    100,168,0,0,0,0,9450,0,
+                    100,40,0,0,0,0,12223,0,
+                    0,128,60,120,0,0,12510,0,
+                    0,48,60,40,0,0,12360,0,
+                    0,68,200,60,0,0,12360,0,
+                    0,108,20,100,0,0,12360,0,
+                    0,40,0,0,0,0,12150,0,
+                    6100,0,0,0,0,0,7200,0,                              ' Action Triggered Events
+                    226,0,0,0,0,0,16200,0,
+                    4507,40,40,40,0,0,12233,12221,
+                    4650,160,180,0,0,0,8758,0,
+                    5700,146,0,0,0,0,905,0,
+                    5710,141,122,160,174,0,1060,7950,
+                    1510,122,420,120,0,0,1351,7858,
+                    257,0,0,0,0,0,7200,0,
+                    6465,203,0,0,0,0,162,21600,
+                    6000,163,203,223,160,200,223,8909,
+                    0,220,240,0,0,0,8903,0,
+                    0,1615,60,0,0,0,8700,0,
+                    253,164,209,0,0,0,915,0,
+                    253,164,208,200,0,0,204,10500,
+                    6900,164,209,200,283,360,167,8758,
+                    10971,302,0,0,0,0,2868,9150,
+                    3771,302,0,0,0,0,187,0,
+                    5067,1502,600,0,0,0,7342,8173,
+                    0,2015,60,0,0,0,11458,0,
+                    211,362,240,0,0,0,204,11400,
+                    3772,383,403,0,0,0,171,3300,
+                    193,42,229,0,0,0,923,0,
+                    9176,462,0,0,0,0,930,0,
+                    9900,462,240,460,480,40,8772,8731,
+                    1531,482,745,0,0,0,4800,0,
+                    193,42,228,260,1133,0,204,11400,
+                    9600,482,269,0,0,0,183,1534,
+                    9600,482,268,0,0,0,187,0,
+                    7565,42,229,0,0,0,3625,0,
+                    8723,42,229,403,220,0,10976,8809,
+                    0,615,40,0,0,0,8700,0,
+                    9175,443,544,860,874,0,18752,1553,
+                    8700,42,229,0,0,0,12627,0,
+                    7587,482,260,500,269,0,1535,8753,
+                    6934,523,283,520,180,360,222,11458,
+                    10384,183,520,180,0,0,222,11400,
+                    10650,462,0,0,0,0,5550,0,
+                    9175,443,0,0,0,0,178,7551,
+                    8439,563,0,0,0,0,189,0,
+                    192,642,300,0,0,0,204,11400,
+                    10245,663,0,0,0,0,190,0,
+                    7565,622,620,580,743,0,222,0,
+                    215,582,280,0,0,0,204,11400,
+                    7565,622,0,0,0,0,17100,0,
+                    4800,180,0,0,0,0,8700,0,
+                    159,82,100,0,0,0,8176,150,
+                    214,62,220,0,0,0,8176,150,
+                    3772,383,0,0,0,0,171,3000,
+                    196,22,320,0,0,0,8176,150,
+                    10650,0,0,0,0,0,191,1650,
+                    8799,1203,1243,1240,1200,1180,8922,150,
+                    11503,164,360,0,0,0,204,11400,
+                    253,364,0,0,0,0,943,0,
+                    11503,364,160,0,0,0,204,11400,
+                    7598,0,0,0,0,0,5850,0,
+                    6460,0,0,0,0,0,1356,0,
+                    12068,703,754,740,40,0,8008,1535,                               ' 80/68 = SHAKE HAT
+                    1531,743,740,0,0,0,7801,0,                                      ' GET KEY
+                    12518,701,720,0,0,0,11101,10950,
+                    0,754,0,0,0,0,4960,6600,
+                    12321,763,302,300,780,0,222,0,
+                    10971,782,780,340,360,0,222,7950,
+                    3818,703,0,0,0,0,152,6750,
+                    213,102,380,0,0,0,204,11400,
+                    16676,462,0,0,0,0,930,0,
+                    16737,462,0,0,0,0,930,0,
+                    13200,164,0,0,0,0,7200,0,
+                    5744,143,464,814,800,0,7957,1573,
+                    0,1615,60,0,0,0,8700,0,
+                    10233,503,0,0,0,0,199,0,
+                    223,823,480,0,0,0,204,11400,
+                    225,322,500,0,0,0,204,11400,
+                    1575,322,0,0,0,0,6306,16950,
+                    173,322,500,0,0,0,204,11400,
+                    6918,283,120,360,0,0,12223,8700,
+                    0,0,0,0,0,0,15388,13200,
+                    0,308,280,0,0,0,8626,8700,
+                    0,288,0,0,0,0,13288,13200,
+                    0,288,280,0,0,0,9056,11400,
+                    0,120,0,0,0,0,12253,0,
+                    5005,504,409,0,0,0,235,17700,
+                    200,262,420,0,0,0,8454,11401,
+                    13350,140,3500,140,0,0,12229,12223,
+                    0,340,0,0,0,0,17460,13288,
+                    0,524,0,0,0,0,17356,8626,
+                    0,527,0,0,0,0,16111,0,
+                    0,14,0,220,0,0,9300,0,
+                    1505,524,540,0,0,0,204,11400,
+                    202,862,520,0,0,0,204,11400,
+                    203,882,560,0,0,0,204,11400,
+                    8550,903,563,900,0,0,8888,16460,
+                    9827,903,0,0,0,0,16650,0,
+                    5700,903,0,0,0,0,16650,0,
+                    5700,905,920,404,0,0,203,0,
+                    164,922,580,0,0,0,204,11400,
+                    9829,963,960,980,100,0,222,16858,
+                    1531,1003,0,0,0,0,900,0,
+                    13981,1054,0,0,0,0,161,7050,
+                    13541,1023,1020,1040,0,0,222,10950,
+                    0,615,60,0,0,0,8700,0,
+                    13970,1020,1082,1034,1054,1074,203,0,
+                    1520,1082,0,0,0,0,1013,0,
+                    7520,1082,0,0,0,0,1014,0,
+                    1541,1063,1060,0,0,0,7801,0,
+                    13970,1082,0,0,0,0,150,0,
+                    14025,322,0,0,0,0,17700,0,
+                    5700,184,254,214,200,0,203,1060,
+                    193,42,228,1134,260,0,7554,11446,
+                    14639,1134,1120,1143,0,0,8000,16350,
+                    14037,482,0,0,0,0,150,0,
+                    1541,1023,1020,1060,0,0,8924,150,
+                    7565,42,228,0,0,0,5850,0,
+                    14700,900,140,900,140,0,12381,12531,
+                    12517,681,0,0,0,0,150,0,
+                    14850,0,0,0,0,0,7200,0,
+                    3768,283,120,120,0,0,12228,17931,
+                    11400,0,0,0,0,0,6300,0,
+                    6933,283,360,500,503,0,8759,150,
+                    6933,183,503,500,0,0,209,0,
+                    6913,242,183,240,0,0,209,18750,
+                    6913,242,283,360,240,0,8701,8975,
+                    6913,1223,183,0,0,0,277,18961,
+                    6913,1223,283,0,0,0,277,18961,
+                    13981,1053,1002,0,0,0,19629,19273,
+                    0,1223,0,0,0,0,19477,18961,
+                    0,243,240,0,0,0,19475,8850,
+                    5005,504,408,0,0,0,235,11090,
+                    0,400,0,0,0,0,18741,9000,
+                    0,720,320,0,0,0,8176,8850,
+                    1562,0,0,0,0,0,9900,0,
+                    9000,0,0,0,0,0,9900,0,
+                    12750,0,0,0,0,0,900,0,
+                    8713,1203,243,1200,240,1220,8922,150,
+                    4950,0,0,0,0,0,235,0,
+                    4350,0,0,0,0,0,900,0,
+                    6900,283,0,0,0,0,17550,0,
+                    6900,183,0,0,0,0,17550,0,
+                    6900,0,0,0,0,0,905,0,
+                    8550,563,0,0,0,0,188,0,
+                    17250,681,504,600,1160,380,18654,9300,
+                    2719,0,0,0,0,0,8,0,
+                    9687,462,0,0,0,0,930,0,
+                    15077,902,703,0,0,0,271,18361,
+                    14002,862,760,389,380,0,203,8700,
+                    171,0,0,0,0,0,1023,0,
+                    15548,1183,1200,1180,1240,0,222,7950,
+                    15548,1223,1200,1220,240,0,222,7950,
+                    1513,243,0,0,0,0,7200,0,
+                    9900,0,0,0,0,0,150,0,
+                    14002,862,0,0,0,0,150,0,
+                    13981,1263,1053,0,0,0,19580,10950,
+                    0,1222,820,1280,1040,0,10927,8850,
+                    0,242,240,0,0,0,8850,0,
+                    0,0,0,0,0,0,12076,0,
+                    13981,1263,1054,0,0,0,1697,0,
+                    12101,0,0,0,0,0,19650,0,
+                    10950,0,0,0,0,0,900,0,
+                    225,504,0,0,0,0,20850,0,
+                    3815,42,0,0,0,0,19800,0,
+                    16650,0,0,0,0,0,161,7050,
+                    12300,763,0,0,0,0,19977,0,
+                    211,1162,620,0,0,0,204,11400,
+                    255,1302,660,0,0,0,204,11534,
+                    3858,664,1334,0,0,0,152,20250,
+                    1609,1334,1320,1340,0,0,11153,150,
+                    1609,1323,1320,0,0,0,7801,0,
+                    211,1342,680,0,0,0,204,11400,
+                    6545,163,0,0,0,0,162,20400,
+                    269,1382,700,0,0,0,204,11400,
+                    1505,604,100,0,0,0,204,11400,
+                    15750,1402,1434,1420,0,0,224,5687,
+                    15750,0,0,0,0,0,187,1697,
+                    3770,1282,1454,1440,0,0,203,1060,
+                    16500,1243,322,403,400,1463,209,10950,
+                    0,1240,400,0,0,0,8908,0,
+                    16500,322,1183,0,0,0,1038,0,
+                    5700,141,0,0,0,0,1061,0,
+                    265,1482,740,0,0,0,204,11400,
+                    9266,1523,1514,1500,0,0,19177,8059,
+                    9266,1523,1513,0,0,0,127,19050,
+                    16500,322,0,0,0,0,910,21450,
+                    9176,1502,0,0,0,0,930,0,
+                    16148,1203,0,0,0,0,174,0,
+                    3750,0,0,0,0,0,152,1726,
+                    6000,0,0,0,0,0,910,21450,
+                    173,504,0,0,0,0,20850,0,
+                    17250,0,0,0,0,0,1697,0,
+                    8700,0,0,0,0,0,984,4050,
+                    160,0,0,0,0,0,1356,0,
+                    0,0,0,0,0,0,0,0 
+                    }
+    
+    
+
+const DIM OL$(OL) = "N","S","E","W","U","D","I","L"
+
+const DIM NV$(NL) =   {"AUTO", "ANY", "GO", "NORTH", "*WALK", "SOUTH", "*RUN", "EAST", "*CLIM", "WEST", "*ENTE", "UP", "*MOUN", 
+                    "DOWN", "*RIDE", "GAME", ".", "AROU", ".", "STAB", "GET", "MANU", "*TAKE", "*PILE", "PICK", "HILL", "*GRAB", "GUNP", "*COLL", "GRAV", "*LIFT",
+                    "SULF", ".", "*POWD", ".", "CHAR", "DROP", "MATC", "*PUT", "ON", "*THRO", "SAFE", "*LEAV", "MIRR", "*REMO", "COMP", "*TOSS", "HORS", ".",
+                    "*MAGN", "LOOK", "BELL", "*EXAM", "GHOS", "*DESC", "*FIGU", "*CHEC", "HAND", "HELP", "*FEET", "SAVE", "HEAD", "QUIT" , "KEY", "SCOR", "*KEYS", "SAY", "MAP",
+                    "*YELL", "CAND", "*SCRE", "*LIGH", "*WHIS", "MUSI", "*SING", "BULL", "DIG", "STAB" , "*SHOV", "DERR", "MIX", "*GUN", "*MAKE", "WIRE", ".", "STOR", "SMEL", "JAIL", "*TAST", 
+                    "ROOF", "*EAT", "SIGN", "BURN", "BARB", "*IGNI", "TUMB", "*LIGH", "*SAGE", ".", "*BRUS", "OPEN", "MINE", "*UNLO", "*ENTR", "LOCK", "BED", ".",
+                    "HOTE", "CLOS", "ROOM", "*SHUT", "GIDD", "LOAD", "*GITT", "SHOO", "*GIDY", "WITH", "*GITY", "*USE", "COIN", "INVE", "TOWN", "HIT", "HOLE", "*RING", "INVE", "*BEAT", "STAL", "PLAY", "SALO", "KILL", "DOOR", "CLAP",
+                    "WIND", "*APPL", "SPUR", "READ", "HAT", "UNLI", "STRI", "*EXTI", "TAPE", "LIST", "*ROLL", "*HEAR", "WALL", "BREA", "TELE", "*SMAS", "*OFFI", "*BUST", "PAIN",
+                    "JUMP", "SLEE", "*LEAP", "SNAK", "CUT", "*RATT", "*SLIC", "WORM", "SHAK", "*SLIM", "*WAVE", "SHOV", "TAPE", "BOX", "WEAR", "*CASH", "*PUTO", "ROAD", "FIND", "FORK", "*LOCA", "VAIN",
+                    "*SEEK", "PIAN", "CROS", "$200", "SLEE", "GO", "CONN", "*BOAR", "*SPLI", "PATH", "*REPA", "HELL", "MOVE", "HI", "*PUSH", "FIEL", "*PRES", "CRYS",
+                    "*TAP","GOLD","PASS","*NUGG", "WAIT", "KEG", "CLEA", "NAIL", "COVE", "FUSE", "", "TOPP", ".", "LOBB", "EMPT", "RAVI", "*SPIL", "*RIDG", "DANC", "SHAC",
+                    "", "TRAI", "FILL", "MOUN", "", "FLOO", "", "PLAN", "SHOE", "PELT", "KNOX", "CUP", "*TOUC", "BAG", "*FEEL", "*DUST", "*KISS", "HAMM", "SPUR", "TEEP",
+                    "*KICK", "TOM", "", "HOW", "", "NECK", "", "COUN"}
+
+    DIM RM%(RL,5) = {0, 0, 0, 0, 0, 0, 0, 0, 17, 2, 0, 0,
+                    0, 0, 1, 3, 0, 0, 0, 0, 2, 4, 0, 0, 
+                    0, 0, 3, 6, 0, 0, 0, 4, 0, 0, 0, 0,
+                    0, 0, 4, 7, 0, 0, 9, 8, 6, 0, 0, 0,
+                    7, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0,
+                    0, 0, 0, 0, 8, 0, 0, 2, 0, 0, 0, 0, 
+                    0, 0, 11, 0, 0, 0, 1, 0, 0, 0, 0, 0, 
+                    13, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 
+                    0, 1, 0, 0, 0, 0, 0, 0, 20, 1, 0, 0,
+                    0, 0, 0, 32, 0, 0, 0, 5, 0, 0, 0, 0, 
+                    0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 10, 22, 
+                    0, 23, 0, 0, 21, 0, 22, 0, 0, 0, 0, 0,
+                    0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 19,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 28, 0, 0,
+                    3, 0, 27, 0, 0, 0, 0, 0, 0, 0, 20, 0,
+                    0, 0, 0, 0, 0, 0, 19, 0, 0, 0, 0, 0,
+                    0, 0, 18, 0, 0, 0, 0, 32, 0, 0, 0, 0,
+                    0, 0, 0, 0, 33, 0, 28, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 36, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0
+                    }
+
+const DIM RS$(RL) =  {"", "GHOST TOWN", "GHOST TOWN", "GHOST TOWN", "GHOST TOWN", 
+                    "STABLE", "ROAD", "FORK IN THE ROAD", 
+                    "*I'M ON A RIDGE ABOVE A NARROW RAVINE. I SEE MOUNTAINS IN THE DISTANCE",
+                    "LARGE FIELD", "RAVINE", "SALOON", "HIDDEN OFFICE", "JAIL",
+                    "CELL", "DRY GOODS STORE", "BARBERSHOP", "ROAD",
+                    "*I'M ON A RIDGE ABOVE A RAVINE", "STALL", "*I'M ON BOOT HILL",
+                    "MINE", "MINE", "MINE", "TELEGRAPH OFFICE", "*I'M ON BACK OF 'OLE PAINT",
+                    "WARM BED", "HOTEL ROOM", "LOBBY", "GRAVE", 
+                    "*I'M FLAT ON MY BACK IN A MANURE PILE", "STOREROOM", "MOUNTAIN TRAIL", 
+                    "LINE SHACK", "ROOT CELLAR", "*I'M BEHIND THE COUNTER", 
+                    "HIDDEN CANYON", "TEEPEE", "LOT OF ~TROUBLE~"
+                    }
+
+
+const DIM MS$(ML) =  {"*** INVALID MESSAGE ***",
+                    "OK",
+                    "I SEE",
+                    "WELCOME TO ADVENTURE 9 ~GHOST TOWN~",
+                    "BY SCOTT ADAMS DEDICATED: THE CHERENS",
+                    "I'VE NOTHING TO DO WITH THAT",
+                    "SORRY I CAN'T",
+                    "I FOUND",
+                    "WEAR?",
+                    "~BARF~",
+                    "SOMETHING",
+                    " NOTHING SPECIAL",
+                    "REMINDS ME OF",
+                    "YOU'VE MADE",
+                    " ~BONUS~ POINTS OUT OF A POSSIBLE 50 IN",
+                    "ITS FULL OF SAGE BRUSH, TUMBLEWEED AND IS IMPASSABLE",
+                    " MOVES",
+                    "THE DRY WASH IS BURNT CLEAR",
+                    "FLYING GLASS SLICES ME UP",
+                    "CRACK!",
+                    " NORTH",
+                    "ITS POINTING TO THE",
+                    " HORSHOE",
+                    "DOORS CLOSED, WINDOWS BARRED!",
+                    "WITH WHAT?",
+                    "INSIDE BOLT IS LATCHED!",
+                    "MAGNET!",
+                    " DOESN'T SEEM TO DO IT!",
+                    "DING-DING",
+                    "BELL RINGS SOMEWHERE",
+                    "MY HAND PASSES THROUGH!",
+                    "GHOST STANDS, BOWS, VANISHES!",
+                    "SILLY, WRONG TYPE OF KEYS!",
+                    "ODD",
+                    "GOES THUNK!",
+                    "FALLS OUT",
+                    "CANDLE BLEW OUT!",
+                    "VERY PRETTY",
+                    "SHOOTS STREAM OF WATER",
+                    "IT ALREADY IS",
+                    "DROP *TREASURES* HERE, THEN SAY ~SCORE~",
+                    "I HEAR",
+                    "WHAT?",
+                    "TOO STEEP!",
+                    "FEELS STRANGE",
+                    "ITS MY SIZE",
+                    "DON'T COLLECT $200 THEN DON'T PASS GO! ~CONTRAPOSITIVE~",
+                    "HAPPENS",
+                    "HOW?",
+                    "ITS MINE, DIG ROOF!",
+                    "GHOSTLY VOICE WHISPERS: ",
+                    "VAIN...",
+                    "MATCH FLARES UP...",
+                    "...AND THEN GOES OUT",
+                    "ITS GETTING",
+                    "SUNSET!",
+                    "I FEEL REFRESHED",
+                    "NIGHTS ARE COLD! I CAUGHT PNEUMONIA",
+                    "TRY: ~SLEEP~",
+                    "IT WORKED!",
+                    "ITS GONE",
+                    "SNAKE WON'T LET ME",
+                    "THAT FELT GOOD",
+                    "TOO BIG!",
+                    "ITS LOCKED!",
+                    "GOOD MORNING",
+                    "GOOD NIGHT",
+                    "ITS FIREPROOF",
+                    "HE WON'T BUDGE",
+                    " LEFT!",
+                    "DARK!",
+                    "THROUGH THE HAT!",
+                    "I'M SNAKE BIT",
+                    "I'M NOT ALICE!",
+                    "HE BUCKS, I'M THROWN",
+                    "WHOOSH!",
+                    "~TOO CLOSE~! PIECES OF ME RAIN DOWN FOR DAYS!",
+                    "~BOOM!~",
+                    "... .... .- -.- . - --- .--. .--. . .-.",
+                    "~SPARK!~ * * * * *",
+                    "CLICK",
+                    "IS HE A GHOST? ANYWAY WRONG IDEA",
+                    "THERE'S NOT EVEN A KEYHOLE!",
+                    "MASKING TAPE",
+                    "FLOORBOARDS SURE ARE CREAKY",
+                    "LOOSE PLANK HERE",
+                    "SALT PETER",
+                    "I WON A PROZE!",
+                    "REACH A NAIL",
+                    "MAY NEED TO SAY A MAGIC WORD HERE",
+                    "AFTER A LONG RIDE",
+                    "HE RIDES OFF WITHOUT ME",
+                    "GERONIMO SAYS: ~ITS EASY! HAPPY LANDINGS!~",
+                    "IS MISSING",
+                    "ROTTEN EGGS",
+                    ".",
+                    "IN SALOON",
+                    "SCARED THEM OFF!",
+                    "BUY A ~GIGATRON~ COMPUTER TODAY."
+                    }
+                    
+const DIM IA$(IL) = {"WORN OUT FIDDLE STRINGS/STRI/", "BARBERSHOP", "JAIL",
+                    "SALOON", "STABLE", "STALL", "MANURE PILE", "SHOVEL/SHOV/",                                      ' 8 items
+                    "WHITE CRYSTALS/CRYS/", "LIT CANDLE/CAND/", "YELLOW POWDER/SULF/", 
+                    "SAGEBRUSH CHARCOAL/CHAR/", "PILE OF GUNPOWDER", "ENTRANCE TO A MINE",
+                    "MATCHES/MATC/", "MIRROR", "'OLE PAINT", "BROKEN MIRROR",  
+                    "HOLE IN THE WALL", "COMPASS/COMP/", "HORSESHOE/HORS/",
+                    "MALE COW MANURE/MANU/", "LARGE BELL/BELL/",                                                      ' 23 items
+                    "WRAITHLIKE FIGURE PLAYING EQUALLY GHOSTLY PIANO",
+                    "PIANO WITH SET OF KEYS", "MAP/MAP/", "UNLIT CANDLE/CAND/",
+                    "*SILVER BULLET*/BULL/", "*GOLDEN DERRINGER*/DERR/", "OPEN DOOR", 
+                    "SIGN- ~RING FOR ROOM SERVICE~/SIGN/", "LOCKED DOOR", "DRY-GOODS STORE",
+                    "SIGN/SIGN/", "*SILVER SPURS*/SPUR/", "STETSON HAT/HAT/",
+                    "WHICH I'M WEARING", "SMALL KEY/KEY/", "ROLL OF TAPE/TAPE/", 
+                    "TAPED UP MIRROR", "*GOLD NUGGET*/GOLD/", "TELEGRAPH OFFICE",
+                    "EMPTY MATCHBOOK/MATC/", "BED", "HOTEL", "RATTLESNAKE/SNAK/",                                      ' 46 items
+                    "OPEN GRAVE", "*GOLD COIN*/COIN/", "PURPLE WORM/WORM/",
+                    "PURPLE SLIME/WORM/", "TELEGRAPH KEY", "2 LOOSE WIRES", "SPLICED WIRE", 
+                    "PIECES OF WIRE/WIRE/", "LARGE SAFE", "*CASHBOX*/BOX/",
+                    "*$200*/$200/", "*ORIENTAL GO BOARD*/GO/",                                                          '58 items
+                    "HOLE KICKED IN WALL AND BARE HOOF PRINT", "KEG OF NAILS/KEG/",
+                    "EMPTY KEG/KEG/", "KEG OF GUNPOWDER/KEG/", "NAILS/NAIL/", "TELEGRAPH KEY",
+                    "SMOKING OPEN SAFE", "LINE SHACK", "PLANK/PLAN/",
+                    "HOLE IN FLOOR", "*PELTS*/PELT/", "COUNTER", "GHOSTLY SQUARE DANCE",  
+                    "*SILVER CUP*/CUP/", "*BAG GOLD DUST*/BAG/", "HAMMER/HAMM/", "TEEPEE",                               '75 ITEMS
+                    "INDIAN GHOST", "*SACRED TOM TOM*/TOM/", "*TORQUOISE NECKLACE*/NECK/",                              '78 ITEMS
+                    "A PAINTED MESSAGE THAT SAYS: PORTED TO ~GIGATRON~ BY W. BUSHBY (2022)"
+                    }
+
+    DIM IA%(IL) =  {0, 1, 1, 2, 4, 5, 5, 15, 0, 0, 0, 10, 0, 10, 15, 11, 19, 0, 0, 15, 19, 0, 11, 0, 0, 0, 22, 21, 13, 0, 
+                    35, 13, 2, 15, 25, 16, 0, 0, 0, 0, 0, 3, 0, 0, 3, 20, 0, 29, 29, 0, 24, 0, 0, 0, 24, 35, 0, 12, 0, 31, 0, 0, 0,
+                    33, 0, 32, 0, 0, 34, 28, 0, 0, 0, 14, 36, 0, 37, 37, 34}
+
+
+
+const HELD = 255
+const NONSET = 255
+
+'********************************************************************************
+'*																				*
+'*                          PROGRAM INITIALISATION                              *
+'*																				*
+'********************************************************************************
+
+    SET FG_COLOUR, 57
+
+    DIM Counters(16) = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    DIM SpecialFlags%(32) = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    DIM SavedRooms%(RL) = 0
+
+    Z$="I'VE TOO MUCH TOO CARRY.  TRY -TAKE INVENTORY-" 
+
+    UL$ = "========================="
+
+    FOR X=0 TO IL
+        I2(X)=IA(X)
+    NEXT X
+
+    GOTO SkipSave
+
+'********************************************************************************
+'*																				*
+'*                          Introduction Screen                                 *
+'*																				*
+'********************************************************************************
+
+STARTSCREEN:
+    CLS 
+    SET BG_COLOUR, 0
+    SET FG_COLOUR, 57
+
+    TL = 26-LEN(TITLE$)
+    AT (TL*6)/2, 0:PRINT TITLE$
+    PRINT
+    SET FG_COLOUR, 58
+    PRINT " Unless told differently  you must find ";
+    SET FG_COLOUR, 11
+    PRINT "TREASURES";
+    SET FG_COLOUR, 58
+    PRINT "   and return them to their  proper place!" 
+    PRINT:PRINT "I'm your puppet. give me  English commands that     consist of a noun and verb"
+
+    GOSUB WaitAnyKey
+
+
+    CLS
+    PRINT "Some examples..."
+    PRINT
+    PRINT "To find out what you're   carrying you might say :  ";
+    SET FG_COLOUR, 28
+    PRINT "TAKE INVENTORY"
+    SET FG_COLOUR, 58
+    PRINT "To go into a hole you     might say : ";
+    SET FG_COLOUR, 28
+    PRINT "GO HOLE"
+    SET FG_COLOUR, 58
+    PRINT
+    PRINT "Directions, Inventory and Look can be used with the single first letters"
+
+    GOSUB WaitAnyKey
+
+    CLS
+    PRINT
+    PRINT "If you are stuck, type "
+    SET FG_COLOUR, 28
+    PRINT "HELP"
+    SET FG_COLOUR, 58
+    PRINT
+    PRINT "You will at times need    special items to do things but I'm sure you'll be a good Adventurer";
+    PRINT " and figure these things out."
+    PRINT 
+    PRINT "Happy Adventuring..."
+
+    GOSUB WaitEnter
+
+    CLS
+
+    RETURN
+
+'********************************************************************************
+'*																				*
+'*                          PROGRAM LOGIC                                       *
+'*																				*
+'********************************************************************************
+
+SkipSave:
+
+    WaitCLS = 0
+    SavedRoom = AR
+
+    X%=0
+    Y%=0
+    Z%=0
+    KK%=0
+    R%=AR
+    V%=0
+    N%=0
+    LL%=0
+    F%=0
+
+    K$ = " "
+    TP$=K$
+    
+    IP%=0
+    P%=0
+    LX%=LT 
+
+    DF=0
+    DONEXT = 0
+
+    CURCOUNT = 0
+
+    FOR I=0 TO 16
+        Counters(I) = 0
+    NEXT I
+
+    FOR I=0 TO 32
+        SpecialFlags(I) = 0
+    NEXT I
+
+    FOR I=0 TO RL
+        SavedRooms(I) = 0
+    NEXT I
+
+    FOR X=0 TO IL
+        I2(X)=IA(X)
+    NEXT X
+
+    GOSUB STARTSCREEN
+
+    GOSUB WHEREAMI
+
+    GOTO SKIPINPUT
+
+'********************************************************************************
+'*																				*
+'*                          INPUT AND PROCESS CONTROL                           *
+'*																				*
+'********************************************************************************
+
+GETINPUT:
+    SET FG_COLOUR, 56
+
+    INPUT "TELL ME WHAT TO DO?";TP$
+ 
+    WaitCLS = 0
+
+
+    SET FG_COLOUR, 58
+    PRINT
+    GOSUB FINDCOMMAND 
+
+    IF F <> 0 
+        Text$ = "YOU USE WORD(S) I DON'T KNOW"
+        GOSUB PrintLine
+        GOTO GETINPUT 
+    ENDIF
+
+    GOSUB ANALYSECOMMAND
+    
+    IF IA(9) = HELD 
+        LX=LX-1 
+        IF LX=0 
+            PRINT "LIGHT HAS RUN OUT"
+            IA(9) =0 
+        ELSEIF LX<25 
+            PRINT "LIGHT RUNS OUT IN " ;LX; " TURNS!"
+        ENDIF
+    ENDIF
+    
+
+SKIPINPUT:
+    NV(0)=0
+    GOSUB ANALYSECOMMAND
+    GOTO GETINPUT
+    
+'********************************************************************************
+'*																				*
+'*                          LOCATE COMMAND TABLE REFERENCE                      *
+'*																				*
+'********************************************************************************
+
+FINDCOMMAND:
+    
+    KK=0:XX=0
+    NT$(0)=" "
+    NT$(1)=" "
+    Verb$ = " "
+    Noun$ = " "
+
+    IF LEN(TP$) = 0 THEN RETURN
+
+    TP$=UCASE$(TP$)
+
+    ' 1 Letter Commands
+    XX=NONSET
+    IF LEN(TP$) = 1
+        FOR X=0 TO OL
+            IF TP$=OL$(X) THEN XX=X:X=OL
+        NEXT X
+    ENDIF
+    
+    IF XX <> NONSET
+        IF XX < 6 THEN NV(0) = 1:NT$(0) = "GO":NV(1) = XX+1:NT$(1) = NV$((XX+1)*2+1)
+        IF XX = 6 THEN NV(0) = 10:NT$(0) = "GET":NV(1) = IN:NT$(1) = NV$(IN*2+1)
+        IF XX = 7 THEN NV(0) = LV:NT$(0) = NV$(LV*2):NV(1) = 0
+
+        Verb$ = NT$(0)
+        Noun$ = NT$(1)
+
+        NT$(0) = LEFT$(NT$(0),LN)
+        NT$(1) = LEFT$(NT$(1),LN)
+
+        GOTO FindEnd
+    ENDIF
+
+    ' Normal Command Processing
+    
+    XX=0
+    FOR X=0 TO LEN(TP$)
+        K$=MID$(TP$, X, 1)
+        IF K$=" " 
+            NT$(KK) = LEFT$(TP$,X)
+            XX=X+1
+            KK=1 
+        ENDIF
+    NEXT X 
+
+    NT$(KK) = RIGHT$(TP$,LEN(TP$)-XX)
+
+    Verb$ = NT$(0)
+    Noun$ = NT$(1)
+
+    NT$(0) = LEFT$(NT$(0),LN)
+    NT$(1) = LEFT$(NT$(1),LN)
+
+    FOR X=0 TO 1
+        NV(X)=0
+        IF NT$(X)=" " 
+            GOTO NXTX 
+        ELSE 
+            FOR Y=0 TO ((NL-1)/2)
+                K$=NV$(Y*2+X)
+                IF LEFT$(K$,1)="*" THEN K$=RIGHT$(K$,LEN(K$)-1) ' CHECK RIGHT n-1 characters
+        ENDIF
+             
+        IF X=1 
+            IF Y<7 
+                K$=LEFT$(K$, LN) 
+            ENDIF
+        ENDIF
+
+        IF NT$(X)=K$ 
+            NV(X)=Y
+        ELSE 
+            NEXT Y
+            GOTO NXTX
+        ENDIF
+
+DROPSTAR:                           'Drop alias and use main verb
+        IF LEFT$(NV$(NV(X)*2+X), 1) = "*" 
+            NV(X)=NV(X)-1 
+            GOTO DROPSTAR
+        ENDIF
+NXTX:
+    NEXT X                          ' Line 230
+
+FindEnd:    
+    F = (NV(0)<1) OR ((LEN(NT$(1))>1) AND (NV(1)<1))
+    RETURN 
+
+'********************************************************************************
+'*																				*
+'*                          DISPLAY LOCATION DATA                               *
+'*																				*
+'********************************************************************************
+
+WHEREAMI:
+    IF DF
+        IF (IA(9)<>HELD) AND (IA(9) <> R) 
+            PRINT "I CAN'T SEE, ITS TOO DARK."
+            WAIT(100)
+            RETURN
+        ENDIF
+    ENDIF
+
+    KK=NONSET
+    
+    SET FG_COLOUR, 19
+    IF LEFT$(RS$(R),1)="*" 
+        LL = LEN(RS$(R))-1
+        Text$ = RIGHT$(RS$(R),LL)
+    ELSE 
+        Text$ = "I'M IN A " + RS$(R)
+    ENDIF
+
+    GOSUB PrintLine
+
+    SET FG_COLOUR, 59
+    PRINT UL$
+    SET FG_COLOUR, 58
+
+    COM=NONSET
+    FOR Z=0 TO IL
+        IF KK <> 0
+            IF IA(Z)=R 
+                SET FG_COLOUR, 28
+                PRINT "VISIBLE ITEMS HERE:"
+                SET FG_COLOUR, 58
+                KK=0
+            ENDIF
+        ENDIF
+
+        GOTO PRINTITEMS
+
+STRIPSLASH:
+        TP$=IA$(Z)
+        IF RIGHT$(TP$,1) = "/" 
+            FOR W=1 TO LEN(IA$(Z))
+                IF MID$(IA$(Z),W,1) = "/" 
+                    W = LEN(IA$(Z))
+                ELSE 
+                    TP$ = LEFT$(IA$(Z),W+1)
+                    NEXT W
+                ENDIF
+        ENDIF
+        RETURN
+
+PRINTITEMS:                         ' Line 300
+        IF IA(Z)<>R 
+            GOTO SKIPPRINTITEMS 
+        ELSE 
+            GOSUB STRIPSLASH
+            IF LEN(TP$)+3 > 63 THEN PRINT 
+        ENDIF
+
+        IF COM <> NONSET THEN PRINT ", ";
+        Text$ = TP$
+        NoLineBreak = 1
+
+        GOSUB PrintLine
+        NoLineBreak = 0
+        
+        COM=Z
+
+
+SKIPPRINTITEMS:
+    NEXT Z 
+    PRINT 
+
+    KK=NONSET:
+    FOR Z=0 TO 5 
+        IF KK <> 0
+            IF RM(R, Z) <> 0 
+                SET FG_COLOUR, 28
+                PRINT "OBVIOUS EXITS: "
+                SET FG_COLOUR, 58
+                KK=0 
+            ENDIF
+        ENDIF
+        IF RM(R,Z) <> 0 THEN PRINT NV$((Z+1)*2+1);" "; 
+    NEXT Z
+    
+    PRINT 
+    PRINT
+    
+    RETURN 
+
+'********************************************************************************
+'*																				*
+'*                       ANALYSE COMMAND AND PROCESS INSTRUCTIONS               *
+'*																				*
+'********************************************************************************
+
+ANALYSECOMMAND:                 ' Line 360
+    F2=NONSET
+    F=NONSET
+    F3=0
+
+    IF NV(0)=1 AND NV(1)<7      ' GO NORTH.....DOWN
+        GOTO J610 
+    ELSE 
+        FOR X=0 TO CL
+            V=CA(X, 0)/150
+
+            IF NV(0)=0 
+                IF V<>0 THEN RETURN 
+            ENDIF
+    ENDIF
+
+    IF NV(0)<>V 
+        GOTO DOLOOPX
+    ELSE 
+        N=CA(X,0)-(V*150)
+    ENDIF
+
+    IF CA(X, 0)=0 AND DONEXT = 0 THEN GOTO DOLOOPX         ' Added In Strange Odyssey to fix random Jumps to other rooms
+
+    IF NV(0)=0 
+        F=0
+        RR=RND(100)
+        IF RR <= N
+            GOTO J400 
+        ELSEIF DONEXT > 0
+            IF CA(X+1,0) <> 0 THEN DONEXT=0
+            GOTO J400
+        ELSE 
+            GOTO DOLOOPX
+        ENDIF
+    ENDIF
+
+    IF N<>NV(1) AND N<>0 
+        GOTO DOLOOPX
+    ENDIF
+
+J400:
+    JP = 0
+    F2=NONSET: F=0: F3=NONSET
+    FOR Y=1 TO 4
+        W=CA(X,Y)
+        LL=W/20
+        KK=W-(LL*20)
+        F1=NONSET 
+
+        ON KK+1 GOTO J9000,J550,J430,J450,J470,J490,J500,J510,J520,J530,J540,J410,J420,J440,J460,J480,J541,J542,J543,J544,J545       'KK=19 only
+
+J410:                ' (10)Carrying Somthing ?
+    F1=NONSET
+    FOR Z=0 TO IL
+        IF IA(Z)=HELD 
+            GOTO J550 
+        ELSE 
+            NEXT Z
+        ENDIF
+
+        F1=0 
+        GOTO J550 
+J420:                ' (11)Not Carrying Anything ?
+    F1=0
+    FOR Z=0 TO IL
+        IF IA(Z)=HELD 
+            GOTO J550 
+        ELSE 
+            NEXT Z
+        ENDIF
+
+        F1=NONSET
+        GOTO J550 
+J430:               ' (1)Is Item Held ?                 () = KK
+    F1=(IA(LL)=HELD): GOTO J550 
+J440:               ' (12)Is item not held and not here ?
+    F1=(IA(LL)<>HELD) AND (IA(LL)<>R):GOTO J550 
+J450:               ' (2)Item in room
+    F1=(IA(LL)=R):GOTO J550 
+J460:               ' (13)Item not hidden
+    F1=(IA(LL)<>0):GOTO J550 
+J470:               ' (3)Is item held or in room ?
+    F1=(IA(LL)=R) OR (IA(LL)=HELD):GOTO J550 
+J480:               ' (14) Item is hidden ?
+    F1=(IA(LL)=0): GOTO J550 
+J490:               ' (4)Is it this room ?
+    F1=(R=LL):GOTO J550 
+J500:               ' (5)Is Item not here ?
+    F1=(IA(LL)<>R):GOTO J550
+J510:               ' (6)Is Item not held ?
+    F1=(IA(LL)<>HELD):GOTO J550
+J520:               ' (7)Not this room ?
+    F1=(R<>LL)
+    GOTO J550
+J530:               ' (8)Specified Flag is TRUE (15 Flags) MUST SUPPORT 32 FLAGS
+    F1=SpecialFlags(LL)
+    F1=(F1<>0): GOTO J550 
+J540:               ' (9)Specified Flag is FALSE (15 Flags)  MUST SUPPORT 32 FLAGS
+    F1=SpecialFlags(LL)
+    F1=(F1=0): GOTO J550 
+
+J541:               ' (15) Counter is > LL
+    F1=NONSET
+    IF CURCOUNT > LL THEN F1=0
+    GOTO J550
+
+J542:               ' (16) Counter is <= LL
+    F1=NONSET
+    IF CURCOUNT <= LL THEN F1=0
+    GOTO J550
+
+J543:               ' (17) Item LL is NOT in orginal location
+    IF IA(LL) = I2(LL) THEN F1=0
+    GOTO J550
+
+J544:               ' (18) Item LL is in original location
+    IF IA(LL) <> I2(LL) THEN F1=0
+    GOTO J550
+
+J545:               ' (19) Current Counter = LL
+    F1=(CURCOUNT=LL)
+    GOTO J550
+
+
+J550:
+    F2=(F2 AND F1)
+    IF F2
+        GOTO DOLOOPY
+    ELSE 
+        GOTO DOLOOPX
+    ENDIF
+DOLOOPY:
+    NEXT Y
+
+    IP=0
+    FOR U=1 TO 4
+        KK=(U-1)/2+6
+
+        ON U GOTO J9000, J570, J580, J570, J580 
+
+J570:
+    IF X>CL THEN GOTO J960
+    AC=CA(X,KK) / 150: GOTO J590 
+J580:
+    IF X>CL THEN GOTO J960
+    AC=CA(X,KK) - ((CA(X,KK)/150)*150)
+J590:
+    IF AC>101  
+        GOTO J600 
+    ELSEIF AC=0 
+        GOTO J960 
+    ELSEIF AC<52 
+        Text$ = MS$(AC)
+        GOSUB PrintLine
+
+        WaitCLS = 1
+
+        GOTO J960
+    ELSE 
+        IF (AC-51) > 38
+            PRINT "UNKNOWN COMMAND ROUTINE=";AC-51
+            GOTO J600
+        ENDIF
+        
+        ON AC-51 GOTO J9000, C52, C53, C54, C55, C56, C57, C58, C59, C60, C61, C62, C63, C64, C65, C66, C67, C68, C69, C70, C71, C72, C73, C74, C75, C76, C77, C78, C79, C80, C81, C82, C83, J9000, C85, C86, C87, C88, C89
+J600:
+        Text$ = MS$(AC-50)
+        GOSUB PrintLine
+
+        WaitCLS = 1
+
+        GOTO J960 
+    ENDIF
+J610:                                           ' MOVE
+    L=DF
+    IF L THEN L = DF AND (IA(9) <> R) AND (IA(9) <> HELD)
+    IF L THEN PRINT "DANGEROUS TO MOVE IN THE DARK !"
+    WAIT(100)
+
+    IF NV(1)<1 THEN PRINT "GIVE ME A DIRECTION TOO.":GOTO J1040 
+    KK=RM(R,NV(1)-1)
+
+    IF KK<1 
+        IF L 
+            PRINT "I FELL DOWN AND BROKE MY NECK.":KK=RL:DF=0
+        ELSE 
+            Text$ = "I CAN'T GO IN THAT DIRECTION" 
+            GOSUB PrintLine
+            GOTO J1040 
+        ENDIF
+    ENDIF
+
+    IF NOT L 
+        if WaitCLS > 0 THEN WAIT(100):WaitCLS = 0
+        CLS 
+    ENDIF
+
+    R=KK:GOSUB WHEREAMI:GOTO J1040
+C52:                                           ' (52) GET
+    L=0
+    FOR Z=1 TO IL
+        IF IA(Z)=HELD THEN L=L+1
+    NEXT Z
+
+    IF L>=MX 
+        Text$ = Z$
+        GOSUB PrintLine
+        GOTO J970
+    ENDIF
+
+    GOSUB J1050
+    IA(P)=HELD
+    GOTO J960
+
+C53:                                           ' (53) DROP
+    GOSUB J1050
+    IA(P)=R
+    GOTO J960
+C54:                                           ' (54) MOVE ROOM
+    GOSUB J1050:
+    R=P
+    GOTO J960
+C55:                                           
+C59:                                            ' (59) Hide Item
+    GOSUB J1050
+    IA(P)=0
+    GOTO J960
+C56:                                           ' Set Dark 
+    DF=NONSET:GOTO J960
+C57:                                           ' (57) Unset Dark
+    DF=0:GOTO J960
+C58:                                           ' (58) 
+    GOSUB J1050
+C58B:                                          ' Set Bit Flag
+    SSF = SpecialFlags(P)
+    SpecialFlags(P) = 1
+    GOTO J960
+C60:                                           ' (60)
+    GOSUB J1050
+C60B:                                           ' Unset Bit Flag
+    SSF = SpecialFlags(P)
+    SpecialFlags(P) = 0
+    GOTO J960
+C61: 
+    PRINT "I'M DEAD...":R=RL:DF=0:GOTO C76
+C62: 
+    GOSUB J1050
+    L=P
+    GOSUB J1050
+    IA(L)=P
+    GOTO J960
+C63:                                           ' (63) game over message
+    INPUT "THE GAME IS OVER, ANOTHER?";K$
+    
+    IF LEFT$(K$,1)="N" OR LEFT$(K$,1)="n"
+        END 
+    ELSE 
+        FOR X=0 TO IL
+            IA(X)=I2(X)
+        NEXT X
+        GOTO SkipSave
+    ENDIF
+
+C64:                                           
+C76:                                            ' (76) show room data
+    IF WaitCLS > 0 THEN WAIT(100):WaitCLS = 0
+    CLS
+    GOSUB WHEREAMI
+    GOTO J960 
+
+C65:                                           ' Count Stored Treasure
+    L=0
+    FOR Z=1 TO IL
+        IF IA(Z)=TR 
+            IF LEFT$(IA$(Z),1)="*" THEN L=L+1
+        ENDIF
+    NEXT Z: 
+
+    TCL = GET("FG_COLOUR")
+
+    PRINT "I'VE STORED ";L;
+    
+    SET FG_COLOUR, 11
+        PRINT " TREASURES";
+    SET FG_COLOUR, TCL
+
+    PRINT ".  ON A SCALE OF 0 TO 100 THAT RATES AS ";
+
+    SET FG_COLOUR, 28
+        PRINT (L*100/TT)
+    SET FG_COLOUR, TCL
+
+    IF L=TT 
+        PRINT "WELL DONE.": GOTO C63
+    ELSE 
+        GOTO J960 
+    ENDIF
+
+C66:                                           ' (66) Inventory
+    SET FG_COLOUR, 28
+    PRINT "I'M CARRYING:"
+    SET FG_COLOUR, 58
+
+    K$="NOTHING"
+
+    FOR Z=0 TO IL
+        IF IA(Z)<>HELD 
+            GOTO C66B 
+        ELSE 
+            GOSUB STRIPSLASH
+        ENDIF
+        
+        Text$="   "+TP$
+        GOSUB PrintLine
+
+        K$=" "
+C66B:
+    NEXT Z 
+    PRINT K$:GOTO J960 
+
+C67: 
+    P=0:GOTO C58B
+
+C68: 
+    P=0:GOTO C60B
+
+C69:                                                       'Light Lamp
+    LX=LT:IA(9)=HELD:GOTO J960
+
+C70:                                                       ' (70) Clear Screen
+    If WaitCLS > 0 THEN WAIT(100):WaitCLS = 0
+
+    CLS
+    GOTO J960 
+
+C71:
+    PRINT "GAMES CANNOT BE SAVED AT MOMENT"
+    GOTO J960
+
+C72:                                           ' (72) SWAP ITEM
+    GOSUB J1050:
+    L=P:GOSUB J1050:
+    Z=IA(P)
+    IA(P)=IA(L):IA(L)=Z:GOTO J960               ' EG: Tides on WAIT
+
+C73:                                           ' (73)
+    DONEXT=X+1
+    NV(0) = 0
+    GOTO J960
+
+C74:                                           ' (74)Auto Pickup Item
+    Redraw=0
+    GOSUB J1050
+    IF IA(P)=R THEN Redraw=1
+    IA(P)=HELD
+    IF Redraw THEN GOSUB WHEREAMI
+    GOTO J960
+
+C75:                                           ' (75) SWap Items in Room
+    Redraw = 0
+
+    GOSUB J1050:IONE=P
+    GOSUB J1050:ITWO=P
+				
+    IF IA(IONE)=R THEN Redraw = 1
+
+    IA(IONE)=IA(ITWO)
+    
+    IF IA(ITWO)=R THEN Redraw = 1
+
+    IF Redraw > 0 THEN GOSUB WHEREAMI
+    
+    GOTO J960 
+
+C77:                                           ' (77) Decement current counter
+    IF CURCOUNT > 0 THEN CURCOUNT=CURCOUNT-1
+    GOTO J960
+
+C78:                                           ' (78) Display Current Counter
+    SET FG_COLOUR, 28
+    PRINT CURCOUNT;
+    SET FG_COLOUR, 58
+    
+    GOTO J960
+
+C79:                                           ' (79) Set Current Counter
+    GOSUB J1050
+    CURCOUNT = P
+    GOTO J960
+
+C80:                                           ' (80) Jump to save room and save old room
+    TEMP=R
+    R=SavedRoom
+    SavedRoom=TEMP
+    GOTO J960 
+
+C81:                                           ' (81) Select a counter. Current counter is swapped with backup counter
+    GOSUB J1050
+    TEMP = CURCOUNT
+    CURCOUNT=Counters(P)
+    Counters(P)=TEMP
+
+    GOTO J960
+
+C82:                                           ' (82) Add Value to Current Counter
+    GOSUB J1050
+    CURCOUNT = CURCOUNT + P
+    GOTO J960
+
+C83:                                           ' (83) Subtract Value from current counter
+    GOSUB J1050
+    IF P <= CURCOUNT
+        CURCOUNT = CURCOUNT-P
+    ELSE
+        CURCOUNT = -1
+    ENDIF
+    GOTO J960
+
+C85:                                           ' (85) Output Noun
+    TCL = GET("FG_COLOUR")
+    SET FG_COLOUR, 7
+        PRINT Noun$
+    SET FG_COLOUR, TCL
+    GOTO J960 
+
+C86:                                           ' (86) Print Carriage return
+    PRINT
+    GOTO J960
+
+C87:                                           ' (87) Swap current room with saved room
+    GOSUB J1050
+
+    TEMP=R
+    R=SavedRooms(P)
+    SavedRooms(P)=TEMP
+    GOTO J960
+
+C88:                                           ' (88) wait 2 seconds
+    WAIT(200)
+    GOTO J960
+
+C89:                                           ' (89) wait 5 seconds
+    WAIT(500)
+    GOTO J960
+
+J960: 
+    NEXT U
+J970:
+    IF (DONEXT > 0) AND (CA(X+1,0) = 0) THEN GOTO DOLOOPX
+    IF NV(0) <> 0 THEN GOTO J990
+DOLOOPX:
+    NEXT X
+
+
+J990:
+    IF NV(0)=0 THEN GOTO J1040
+    GOSUB J1060
+    IF F THEN PRINT "I DON'T UNDERSTAND YOUR COMMAND" :GOTO J1040 
+    IF F2=0 THEN PRINT "I CAN'T DO THAT YET" : GOTO J1040 
+J1040:
+    RETURN 
+
+J1050:
+    IP=IP+1
+    W=CA(X,IP)
+    P=W/20
+    M=W-(P*20)
+    IF M<>0 
+        GOTO J1050 
+    ELSE 
+        RETURN 
+    ENDIF
+
+J1060:
+    IF (NV(0) <> 10) AND (NV(0) <> 18) OR F3 > 0 THEN GOTO J1230 
+
+    IF NV(1)=0 THEN PRINT "WHAT?": GOTO J1180 
+    IF NV(0) <> 10 THEN GOTO J1110 
+    
+    L=0
+    FOR Z=0 TO IL
+        IF IA(Z)=HELD THEN L=L+1 
+    NEXT Z
+    IF L>=MX THEN PRINT Z$:GOTO J1180
+
+J1110:
+    KK=0
+    FOR X=0 TO IL                               ' Find Usable Item
+        IF RIGHT$(IA$(X),1)<>"/"                ' Can not be used
+            GOTO J1190 
+        ELSE 
+            LL=LEN(IA$(X))-1
+            TP$=MID$(IA$(X),0,LL)
+            FOR Y=2 TO LL:IF MID$(TP$,Y,1)<>"/" THEN NEXT Y: GOTO J1190
+        ENDIF
+
+    TP$=LEFT$(RIGHT$(TP$,LL-Y-1),LN)
+    IF RIGHT$(TP$,1)=" " THEN TP$=LEFT$(TP$,LN-1)
+    XX=NV(1)                                    ' Can't use array as ref to array
+    
+    LLL=LN                                      ' To adjust for shorter commands
+    FOR I=0 TO LN-1
+        IF ASC(MID$(TP$,I,1))=0 THEN LLL=I
+    NEXT I
+    TP$=LEFT$(TP$,LLL)
+
+    IF TP$<>NV$(XX*2+1) THEN GOTO J1190         ' Above adjustment needed to make comparison work
+
+    IF NV(0)=10 THEN GOTO J1160 
+
+    IF IA(X)<>HELD 
+        KK=1
+        GOTO J1190 
+    ELSE 
+        IA(X)=R
+        KK=3
+        GOTO J1170 
+    ENDIF
+
+J1160: 
+    IF IA(X)<>R 
+        KK=2 
+        GOTO J1190 
+    ELSE 
+        IA(X)=HELD
+        KK=3 
+    ENDIF
+J1170:
+    PRINT "OK "
+J1180: 
+    F=0: RETURN 
+
+J1190:          ' Drop or get item
+    NEXT X 
+
+    IF KK=1 
+        PRINT "I'M NOT CARRYING IT" 
+    ELSE 
+        IF KK=2 THEN PRINT "I DON'T SEE IT HERE"
+    ENDIF
+
+    IF KK=0 
+        IF NOT F3 THEN PRINT "ITS BEYOND MY POWER TO DO THAT":F=0
+    ENDIF
+
+    IF KK<>0 THEN F=0 
+
+J1230: 
+    RETURN 
+
+'********************************************************************************
+'*																				*
+'*                 ENHANCED PRINT ROUTINE FOR COLOUR AND SPACING                *
+'*																				*
+'********************************************************************************
+
+PrintLine:
+    TCL = GET("FG_COLOUR")
+
+    HON = 0
+    IF LEN(Text$) < 26
+        FOR II=0 TO LEN(Text$)
+            IF MID$(Text$, II, 1) = "~" 
+                IF HON = 0 
+                    SET FG_COLOUR, 7
+                    HON=1
+                ELSE
+                    SET FG_COLOUR, TCL
+                    HON=0
+                ENDIF
+            ELSEIF MID$(Text$, II, 1) = "*" 
+                IF HON = 0 
+                    SET FG_COLOUR, 11
+                    HON=1
+                ELSE
+                    SET FG_COLOUR, TCL
+                    HON=0
+                ENDIF
+            ELSE
+                PRINT MID$(Text$, II, 1);
+            ENDIF
+        NEXT II
+
+        IF NoLineBreak = 0 THEN PRINT " "
+
+        RETURN
+    ENDIF
+
+    TP = 0
+    TX$=Text$
+
+TXLoop:
+    TX$ = LEFT$(TX$, 25)
+    TL=25
+    WHILE RIGHT$(TX$,1)<>" "
+        TL = TL-1
+        TX$=LEFT$(TX$,TL)
+    WEND
+    
+    FOR II=0 TO LEN(TX$)
+        IF MID$(TX$, II, 1) = "~"
+            IF HON = 0 
+                SET FG_COLOUR, 7
+                HON=1
+            ELSE
+                SET FG_COLOUR, TCL
+                HON=0
+            ENDIF
+        ELSEIF MID$(TX$, II, 1) = "*" 
+            IF HON = 0 
+                SET FG_COLOUR, 11
+                HON=1
+            ELSE
+                SET FG_COLOUR, TCL
+                HON=0
+            ENDIF
+        ELSE
+            PRINT MID$(TX$, II, 1);
+        ENDIF
+    NEXT II
+
+    TX$ = RIGHT$(Text$, LEN(Text$)-(TP+TL))
+    
+    IF LEN(TX$) < 26
+        FOR II=0 TO LEN(TX$)
+            IF MID$(TX$, II, 1) = "~"
+                IF HON = 0 
+                    SET FG_COLOUR, 7
+                    HON=1
+                ELSE
+                    SET FG_COLOUR, TCL
+                    HON=0
+                ENDIF
+            ELSEIF MID$(TX$, II, 1) = "*" 
+                IF HON = 0 
+                    SET FG_COLOUR, 11
+                    HON=1
+                ELSE
+                    SET FG_COLOUR, TCL
+                    HON=0
+                ENDIF
+            ELSE
+                PRINT MID$(TX$, II, 1);
+            ENDIF
+        NEXT II
+
+        IF NoLineBreak = 0 THEN PRINT " "
+
+        RETURN
+    ENDIF
+
+    TP = TP+TL
+    GOTO TXLoop
+
+    RETURN
+
+'********************************************************************************
+'*																				*
+'*                          KEYBOARD CONTROL                                    *
+'*																				*
+'********************************************************************************
+
+WaitAnyKeyNoMessage:
+    jj = 255
+
+LOOPWaitAnyKeyNM:
+        j = GET("SERIAL_RAW")
+        IF jj = 255
+            if j<>255 THEN GOTO EndWaitAnyKeyNM
+        ENDIF
+        jj = j
+        GOTO LOOPWaitAnyKeyNM
+
+EndWaitAnyKeyNM:
+    RETURN
+
+
+WaitAnyKey:
+    SET FG_COLOUR, 58
+    PRINT:PRINT "Hit ";
+    SET FG_COLOUR, 28
+    PRINT "ANY KEY";
+    SET FG_COLOUR, 58
+    PRINT " to continue..."
+
+    jj = 255
+
+LOOPWaitAnyKey:
+        j = GET("SERIAL_RAW")
+        IF jj = 255
+            if j<>255 THEN GOTO EndWaitAnyKey
+        ENDIF
+        jj = j
+        GOTO LOOPWaitAnyKey
+
+EndWaitAnyKey:
+    RETURN
+
+
+WaitEnter:
+
+    PRINT:PRINT "Hit ";
+    SET FG_COLOUR, 28
+    PRINT "ENTER";
+    SET FG_COLOUR, 58
+    PRINT " to start"
+
+    jj = 255
+
+LOOPWaitEnter:
+        j = GET("SERIAL_RAW")
+        IF jj = 255
+            if j=10 THEN GOTO EndWaitEnter
+        ENDIF
+        jj = j
+    GOTO LOOPWaitEnter
+
+EndWaitEnter:
+
+    RETURN
+
+
+'********************************************************************************
+'*																				*
+'*                          DEBUGGING AID                                       *
+'*																				*
+'********************************************************************************
+
+J8000:
+    IF Debug=0
+        Debug=1
+        PRINT "Debug Mode is ON"
+    ELSE
+        Debug=0
+        PRINT "Debug Mode is OFF"
+    ENDIF
+    RETURN
+
+
+J9000:
+    PRINT "FALSE GOTO = ";AC-51
+    END
+
