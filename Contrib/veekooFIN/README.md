@@ -57,6 +57,7 @@ How to compile:
 cd gigatron-lcc/
 
 ./build/glcc -rom=v4 ../CODE/gfxbrot.c -o ../CODE/gfxbrot.gt1
+
 ./build/glcc ../CODE/gfxbrot.c -o ../CODE/gfxbrot.gt1
 
 
