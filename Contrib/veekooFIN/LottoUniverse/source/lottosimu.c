@@ -12,12 +12,13 @@ int readint(const char *prompt)
 
 void main()
 {
-  int b0[5],bb[5],i,ii,total,game,cash,sw,saldo,jp,it;
+  int b0[5],bb[5],i,ii,total,game,sw,it;
+  long cash,jp,saldo;
   int bt0[2],bbt[2];
   int totalbt,eit,egame;
   int sil; //printout silence mode
   int cup; //cupoung silence mode
-  int big; //big saldo annoucements mode
+  int big; //big saldo annoucements mode 0-10000
 
   cprintf("Eurojackpot simulation:\n"); 
   eit=readint("\nNbr of iterations:");
@@ -26,7 +27,7 @@ void main()
   cup=readint("Cupoung silence 0/1:");
   big=readint("Big saldo info 0/nbr:");
 
-  for(it=0;it<eit;it++) //iterations 1-100000
+  for(it=0;it<eit;it++) //iterations 1-10000
   {
     cash=0;
 
@@ -123,7 +124,7 @@ void main()
 
       if(total==5 && totalbt==2) {
       cash=cash+jp;
-      if(sil != 1) cprintf("\n%d euro win",jp);
+      if(sil != 1) cprintf("\n%ld euro win",jp);
       }
       if(total==5 && totalbt==1) {
       cash=cash+500000;
@@ -168,20 +169,20 @@ void main()
 
       saldo = cash - game * 2 -2;
 
-      if(sil != 1 && saldo > 100) cprintf("\nGame,win,100 euro saldo:%d+%d+%d",game,cash,saldo);
-      if(sil != 1 && saldo > 1000) cprintf("\nGame,win,1000 euro saldo:%d+%d+%d",game,cash,saldo);
-      if(sil != 1 && saldo > 10000) cprintf("\nGame,win,10000 euro saldo:%d+%d+%d",game,cash,saldo);
-      if(sil != 1 && saldo > 100000) cprintf("\nGame,win,100000 euro saldo:%d+%d+%d",game,cash,saldo);
-      if(sil != 1 && saldo > 1000000) cprintf("\nGame,win,1000000 euro saldo:%d+%d+%d",game,cash,saldo);
-      if(sil != 1 && saldo > 10000000) cprintf("\nGame,win,10000000 euro saldo:%d+%d+%d",game,cash,saldo);
+      if(sil != 1 && saldo > 100) cprintf("\nGame,win,100 euro saldo:%d+%ld+%ld",game,cash,saldo);
+      if(sil != 1 && saldo > 1000) cprintf("\nGame,win,1000 euro saldo:%d+%ld+%ld",game,cash,saldo);
+      if(sil != 1 && saldo > 10000) cprintf("\nGame,win,10000 euro saldo:%d+%ld+%ld",game,cash,saldo);
+      if(sil != 1 && saldo > 100000) cprintf("\nGame,win,100000 euro saldo:%d+%ld+%ld",game,cash,saldo);
+      if(sil != 1 && saldo > 1000000) cprintf("\nGame,win,1000000 euro saldo:%d+%ld+%ld",game,cash,saldo);
+      if(sil != 1 && saldo > 10000000) cprintf("\nGame,win,10000000 euro saldo:%d+%ld+%ld",game,cash,saldo);
     }
     if(big == 0) {
       cprintf("\nIteration,game,win,saldo:");
-      cprintf("\n%d+%d+%d+%d",it,game,cash,saldo);
+      cprintf("\n%d+%d+%ld+%ld",it,game,cash,saldo);
     }
     if(big > 0 && saldo > big) {
       cprintf("\nIteration,game,win,saldo:");
-      cprintf("\n%d+%d+%d+%d",it,game,cash,saldo);
+      cprintf("\n%d+%d+%ld+%ld",it,game,cash,saldo);
     }
   }
 }
