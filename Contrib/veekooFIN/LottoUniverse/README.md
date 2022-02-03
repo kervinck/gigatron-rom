@@ -19,3 +19,4 @@ Saldo warnings when wins big time.
 1 random rows/round(week)
 
 ---------------------------------------------------------------------------------------------------------------
+Some tips in devenv101.txt
