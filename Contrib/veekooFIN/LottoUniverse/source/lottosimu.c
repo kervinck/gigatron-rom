@@ -1,3 +1,9 @@
+/*----------------------------------------------------------------------+
+ |                                                                      |
+ |     lottosimu.c -- demonstrate lotto number simulation               |
+ |                    of Eurojackpot / quick and dirty                  |
+ |                                                                      |
+ +----------------------------------------------------------------------*/
 #include <stdlib.h>
 #include <string.h>
 #include <gigatron/console.h>
