@@ -42,10 +42,13 @@ cd gigatron-lcc
 make
 make test
 ---------------------------
+git clone https://github.com/kervinck/gigatron-rom
+cd gigatron-rom
+make dev.rom
+---------------------------
 Common build lines:
 ---------------------------
 cd gigatron-lcc
 ./build/glcc ../CODE/gfxbrot.c -o ../CODE/gfxbrot.gt1
 ./build/glcc -rom=v4 ../CODE/gfxbrot.c -o ../CODE/gfxbrot.gt1
 ./build/glcc -map=conx -rom=v4 ../CODE/gfxbrot.c -o ../CODE/gfxbrot.gt1
-
