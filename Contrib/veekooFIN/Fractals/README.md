@@ -42,20 +42,6 @@ Ascii mandelbrot uses floating point and takes 3 minutes to draw the screen.
 Ascii julia uses floating point and takes 3 minutes to draw the screen.
 
 ---------------------------------------------------------------------------------------------------------------
-Some tips
-
-Versions to install:
-
-bison-3.8.tar.gz
-
-make-4.3.tar.gz
-
-Python-3.8.12.tar.xz
-
-How to compile:
-
-cd gigatron-lcc/
-
-./build/glcc -rom=v4 ../CODE/gfxbrot.c -o ../CODE/gfxbrot.gt1
+Some tips in devenv101.txt
 
 
