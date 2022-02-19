@@ -86,6 +86,7 @@ task Packages -depends VirtualEnv {
             if (!$wheel) {
                 executeScript 'python.exe' @('setup.py', 'bdist_wheel')
             }
+            $wheel = Get-ChildItem 'dist' '*.whl' -ErrorAction SilentlyContinue
             executeScript 'pip.exe' @('install', $wheel.FullName)
         }
         finally {
