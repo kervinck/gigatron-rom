@@ -38,7 +38,7 @@ def test_low_byte_lookup(value):
 
     cycles = Emulator.run_to("low-byte return point")
 
-    assert int(math.floor((value ** 2) / 4)) & 0xFF == Emulator.AC
+    assert int(math.floor((value**2) / 4)) & 0xFF == Emulator.AC
     assert vars.cost_of_low_byte_table_entry == cycles
 
 
@@ -52,7 +52,7 @@ def test_high_byte_lookup(value):
 
     cycles = Emulator.run_to("high-byte action.store")
 
-    assert int(math.floor((value ** 2) / 4)) >> 8 == Emulator.AC
+    assert int(math.floor((value**2) / 4)) >> 8 == Emulator.AC
     assert vars.cost_of_high_byte_table_entry == cycles
 
 

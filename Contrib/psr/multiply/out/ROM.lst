@@ -7431,13 +7431,13 @@ sys_MultiplyBytes.oneMsbSetCase:
               153f 0200  nop              5513  nop() # 91
                                           5514
                                           5515
-                                          5516  label("SYS_KaratsubaPrepare_64")
+                                          5516  label("SYS_KaratsubaPrepare_54")
                                           5517  # Prepare arguments for SYS_MultiplyBytes.
                                           5518  # Arguments are in sysArgs[0:1] and vAC[0:1]
-                                          5519  # Result goes in sysArgs[0:1], and vAC contains zero if the result is going to be positive
+                                          5519  # Result goes in sysArgs[0:1], and vAC contains  zero if the result is going to be positive
                                           5520  #
                                           5521  # First calculate abs(sysArgs[0] - sysArgs[1]), remembering whether we had to negate.
-SYS_KaratsubaPrepare_64:
+SYS_KaratsubaPrepare_54:
               1540 0124  ld   [$24]       5522  ld([sysArgs])                   # 15
                                           5523  bmi("sysKaratsubaPrepare#18")   # 16
               1541 e846  blt  sysKaratsubaPrepare#18
@@ -7452,73 +7452,78 @@ SYS_KaratsubaPrepare_64:
 sysKaratsubaPrepare#18:
               1546 c224  st   [$24]       5531  st([sysArgs])                   # 18
               1547 2125  anda [$25]       5532  anda([sysArgs + 1])             # 19
-              1548 0200  nop              5533  nop()                           # 21
+              1548 0200  nop              5533  nop()                           # 20
                                           5534
                                           5535  label("sysKaratsubaPrepare#21")
 sysKaratsubaPrepare#21:
               1549 3080  anda $80,x       5536  anda(0x80,X)                    # 21 Store sign for later
               154a e84e  blt  $154e       5537  bmi(pc()+4)                     # 22 Invert if necessary
               154b 0124  ld   [$24]       5538  ld([sysArgs])                   # 23
-              154c fc4f  bra  $154f       5539  bra(pc() + 3)                   # 24
-              154d a001  suba $01         5540  suba(1)                         # 25
-              154e 60ff  xora $ff         5541  xora(0xff)                      # 24
-              154f 8001  adda $01         5542  adda(1)                         # 25
-              1550 c224  st   [$24]       5543  st([sysArgs])                   # 26
-                                          5544
-              1551 0500  ld   [x]         5545  ld([X])                         # 27 Store sign
-              1552 c21d  st   [$1d]       5546  st([vTmp])                      # 28
-                                          5547
-                                          5548  # Same dance, a second time, but for the other value
-              1553 0119  ld   [$19]       5549  ld([vAC + 1])                   # 29
-                                          5550  bmi("sysKaratsubaPrepare#32")   # 30
+                                          5539
+              154c fc50  bra  $1550       5540  bra(pc() + 4)                   # 24 No need to negate
+              154d 0200  nop              5541  nop()                           # 25
+                                          5542
+              154e 60ff  xora $ff         5543  xora(0xff)                      # 24 Need to negate
+              154f 8001  adda $01         5544  adda(1)                         # 25
+                                          5545
+              1550 c224  st   [$24]       5546  st([sysArgs])                   # 26
+              1551 0500  ld   [x]         5547  ld([X])                         # 27 Store sign
+              1552 c21d  st   [$1d]       5548  st([vTmp])                      # 28
+                                          5549
+                                          5550  # Same dance, a second time, but for the other value
+              1553 0119  ld   [$19]       5551  ld([vAC + 1])                   # 29
+                                          5552  bmi("sysKaratsubaPrepare#32")   # 30
               1554 e859  blt  sysKaratsubaPrepare#32
-              1555 a118  suba [$18]       5551  suba([vAC])                     # 31
-                                          5552
-              1556 c225  st   [$25]       5553  st([sysArgs + 1])               # 32
-                                          5554  bra("sysKaratsubaPrepare#35")   # 33
+              1555 a118  suba [$18]       5553  suba([vAC])                     # 31
+                                          5554
+              1556 c225  st   [$25]       5555  st([sysArgs + 1])               # 32
+                                          5556  bra("sysKaratsubaPrepare#35")   # 33
               1557 fc5c  bra  sysKaratsubaPrepare#35
-              1558 4118  ora  [$18]       5555  ora([vAC])                      # 34
-                                          5556
-                                          5557  label("sysKaratsubaPrepare#32")
+              1558 4118  ora  [$18]       5557  ora([vAC])                      # 34
+                                          5558
+                                          5559  label("sysKaratsubaPrepare#32")
 sysKaratsubaPrepare#32:
-              1559 c225  st   [$25]       5558  st([sysArgs + 1])               # 32
-              155a 2118  anda [$18]       5559  anda([vAC])                     # 33
-              155b 0200  nop              5560  nop()                           # 34
-                                          5561
-                                          5562  label("sysKaratsubaPrepare#35")
+              1559 c225  st   [$25]       5560  st([sysArgs + 1])               # 32
+              155a 2118  anda [$18]       5561  anda([vAC])                     # 33
+              155b 0200  nop              5562  nop()                           # 34
+                                          5563
+                                          5564  label("sysKaratsubaPrepare#35")
 sysKaratsubaPrepare#35:
-              155c 3080  anda $80,x       5563  anda(0x80,X)                    # 35 Store sign for later
-              155d e861  blt  $1561       5564  bmi(pc()+4)                     # 36 Invert if necessary
-              155e 0125  ld   [$25]       5565  ld([sysArgs + 1])               # 37
-              155f fc62  bra  $1562       5566  bra(pc() + 3)                   # 38
-              1560 a001  suba $01         5567  suba(1)                         # 39
-              1561 60ff  xora $ff         5568  xora(0xff)                      # 38
-              1562 8001  adda $01         5569  adda(1)                         # 39
-              1563 c225  st   [$25]       5570  st([sysArgs + 1])               # 40
+              155c 3080  anda $80,x       5565  anda(0x80,X)                    # 35 Store sign for later
+              155d e861  blt  $1561       5566  bmi(pc()+4)                     # 36 Invert if necessary
+              155e 0125  ld   [$25]       5567  ld([sysArgs + 1])               # 37
+                                          5568
+              155f fc63  bra  $1563       5569  bra(pc() + 4)                   # 38
+              1560 0200  nop              5570  nop()                           # 39
                                           5571
-                                          5572  # Store flag to say if result must be inverted
-              1564 011d  ld   [$1d]       5573  ld([vTmp])                      # 41
-              1565 6500  xora [x]         5574  xora([X])                       # 42
-              1566 c218  st   [$18]       5575  st([vAC])                       # 43
-              1567 c219  st   [$19]       5576  st([vAC + 1])                   # 44
-                                          5577
-              1568 0013  ld   $13         5578  ld(hi("SYS_MultiplyBytes_120")) # 45
-              1569 c023  st   $23,[$23]   5579  st(sysFn + 1)                   # 46
-              156a 00e3  ld   $e3         5580  ld("SYS_MultiplyBytes_120")     # 47
-              156b c022  st   $22,[$22]   5581  st(sysFn)                       # 48
-              156c 1403  ld   $03,y       5582  ld(hi('REENTER'), Y)            # 49
-              156d e0cb  jmp  y,$cb       5583  jmp(Y, 'REENTER')               # 50
-              156e 00e5  ld   $e5         5584  ld(-54/2)                       # 51
-                                          5585
-                                          5586
-                                          5587
-                                          5588
-                                          5589  #-----------------------------------------------------------------------
-                                          5590  #
-                                          5591  #  End of core
-                                          5592  #
-                                          5593  #-----------------------------------------------------------------------
-                                          5594  if __name__ == '__main__': disableListing()
+              1561 60ff  xora $ff         5572  xora(0xff)                      # 38
+              1562 8001  adda $01         5573  adda(1)                         # 39
+                                          5574
+              1563 c225  st   [$25]       5575  st([sysArgs + 1])               # 40
+                                          5576
+                                          5577  # Store flag to say if result must be inverted
+              1564 011d  ld   [$1d]       5578  ld([vTmp])                      # 41
+              1565 6500  xora [x]         5579  xora([X])                       # 42
+              1566 c218  st   [$18]       5580  st([vAC])                       # 43
+              1567 c219  st   [$19]       5581  st([vAC + 1])                   # 44
+                                          5582
+              1568 0013  ld   $13         5583  ld(hi("SYS_MultiplyBytes_120")) # 45
+              1569 c223  st   [$23]       5584  st([sysFn + 1])                 # 46
+              156a 00e3  ld   $e3         5585  ld("SYS_MultiplyBytes_120")     # 47
+              156b c222  st   [$22]       5586  st([sysFn])                     # 48
+              156c 1403  ld   $03,y       5587  ld(hi('REENTER'), Y)            # 49
+              156d e0cb  jmp  y,$cb       5588  jmp(Y, 'REENTER')               # 50
+              156e 00e5  ld   $e5         5589  ld(-54/2)                       # 51
+                                          5590
+                                          5591
+                                          5592
+                                          5593
+                                          5594  #-----------------------------------------------------------------------
+                                          5595  #
+                                          5596  #  End of core
+                                          5597  #
+                                          5598  #-----------------------------------------------------------------------
+                                          5599  if __name__ == '__main__': disableListing()
 sys_ReadRomDir:
               156f f075  beq  .sysDir#20
               1570 1024  ld   $24,x
