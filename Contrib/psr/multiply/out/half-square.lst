@@ -1,0 +1,112 @@
+* source: C:\Users\peter.russell\Documents\Personal\multiply\Contrib\psr\multiply\src\half-square.asm.py
+              address
+              |    encoding
+              |    |     instruction
+              |    |     |    operands
+              |    |     |    |
+              V    V     V    V
+              0000 dc00  st   $00,[y,x++] ;[x++] <- ⌊$0²/2⌋
+              0001 dc00  st   $00,[y,x++] ;[x++] <- ⌊$1²/2⌋
+              0002 dc02  st   $02,[y,x++] ;[x++] <- ⌊$2²/2⌋
+              0003 dc04  st   $04,[y,x++] ;[x++] <- ⌊$3²/2⌋
+              0004 dc08  st   $08,[y,x++] ;[x++] <- ⌊$4²/2⌋
+              0005 dc0c  st   $0c,[y,x++] ;[x++] <- ⌊$5²/2⌋
+              0006 dc12  st   $12,[y,x++] ;[x++] <- ⌊$6²/2⌋
+              0007 dc18  st   $18,[y,x++] ;[x++] <- ⌊$7²/2⌋
+              0008 dc20  st   $20,[y,x++] ;[x++] <- ⌊$8²/2⌋
+              0009 dc28  st   $28,[y,x++] ;[x++] <- ⌊$9²/2⌋
+              000a dc32  st   $32,[y,x++] ;[x++] <- ⌊$a²/2⌋
+              000b dc3c  st   $3c,[y,x++] ;[x++] <- ⌊$b²/2⌋
+              000c dc48  st   $48,[y,x++] ;[x++] <- ⌊$c²/2⌋
+              000d dc54  st   $54,[y,x++] ;[x++] <- ⌊$d²/2⌋
+              000e dc62  st   $62,[y,x++] ;[x++] <- ⌊$e²/2⌋
+              000f dc70  st   $70,[y,x++] ;[x++] <- ⌊$f²/2⌋
+              0010 0001  ld   $01         ;Right-shift by four lookup for $1x
+start:
+end:          0011 0200  nop
+              0012 0200  nop              ;14 fillers
+              0013 0200  nop
+              0014 0200  nop
+              * 14 times
+              0020 0002  ld   $02         ;Right-shift by four lookup for $2x
+              0021 0200  nop              ;15 fillers
+              0022 0200  nop
+              0023 0200  nop
+              * 15 times
+              0030 0003  ld   $03         ;Right-shift by four lookup for $3x
+              0031 0200  nop              ;15 fillers
+              0032 0200  nop
+              0033 0200  nop
+              * 15 times
+              0040 0004  ld   $04         ;Right-shift by four lookup for $4x
+              0041 0200  nop              ;15 fillers
+              0042 0200  nop
+              0043 0200  nop
+              * 15 times
+              0050 0005  ld   $05         ;Right-shift by four lookup for $5x
+              0051 0200  nop              ;15 fillers
+              0052 0200  nop
+              0053 0200  nop
+              * 15 times
+              0060 0006  ld   $06         ;Right-shift by four lookup for $6x
+              0061 0200  nop              ;15 fillers
+              0062 0200  nop
+              0063 0200  nop
+              * 15 times
+              0070 0007  ld   $07         ;Right-shift by four lookup for $7x
+              0071 0200  nop              ;15 fillers
+              0072 0200  nop
+              0073 0200  nop
+              * 15 times
+              0080 0008  ld   $08         ;Right-shift by four lookup for $8x
+              0081 0200  nop              ;15 fillers
+              0082 0200  nop
+              0083 0200  nop
+              * 15 times
+              0090 0009  ld   $09         ;Right-shift by four lookup for $9x
+              0091 0200  nop              ;15 fillers
+              0092 0200  nop
+              0093 0200  nop
+              * 15 times
+              00a0 000a  ld   $0a         ;Right-shift by four lookup for $ax
+              00a1 0200  nop              ;15 fillers
+              00a2 0200  nop
+              00a3 0200  nop
+              * 15 times
+              00b0 000b  ld   $0b         ;Right-shift by four lookup for $bx
+              00b1 0200  nop              ;15 fillers
+              00b2 0200  nop
+              00b3 0200  nop
+              * 15 times
+              00c0 000c  ld   $0c         ;Right-shift by four lookup for $cx
+              00c1 0200  nop              ;15 fillers
+              00c2 0200  nop
+              00c3 0200  nop
+              * 15 times
+              00d0 000d  ld   $0d         ;Right-shift by four lookup for $dx
+              00d1 0200  nop              ;15 fillers
+              00d2 0200  nop
+              00d3 0200  nop
+              * 15 times
+              00e0 000e  ld   $0e         ;Right-shift by four lookup for $ex
+              00e1 0200  nop              ;15 fillers
+              00e2 0200  nop
+              00e3 0200  nop
+              * 15 times
+              00f0 000f  ld   $0f         ;Right-shift by four lookup for $fx
+              00f1 dc70  st   $70,[y,x++] ;[x++] <- ⌊($-f)²/2⌋
+              00f2 dc62  st   $62,[y,x++] ;[x++] <- ⌊($-e)²/2⌋
+              00f3 dc54  st   $54,[y,x++] ;[x++] <- ⌊($-d)²/2⌋
+              00f4 dc48  st   $48,[y,x++] ;[x++] <- ⌊($-c)²/2⌋
+              00f5 dc3c  st   $3c,[y,x++] ;[x++] <- ⌊($-b)²/2⌋
+              00f6 dc32  st   $32,[y,x++] ;[x++] <- ⌊($-a)²/2⌋
+              00f7 dc28  st   $28,[y,x++] ;[x++] <- ⌊($-9)²/2⌋
+              00f8 dc20  st   $20,[y,x++] ;[x++] <- ⌊($-8)²/2⌋
+              00f9 dc18  st   $18,[y,x++] ;[x++] <- ⌊($-7)²/2⌋
+              00fa dc12  st   $12,[y,x++] ;[x++] <- ⌊($-6)²/2⌋
+              00fb dc0c  st   $0c,[y,x++] ;[x++] <- ⌊($-5)²/2⌋
+              00fc dc08  st   $08,[y,x++] ;[x++] <- ⌊($-4)²/2⌋
+              00fd dc04  st   $04,[y,x++] ;[x++] <- ⌊($-3)²/2⌋
+              00fe dc02  st   $02,[y,x++] ;[x++] <- ⌊($-2)²/2⌋
+              00ff dc00  st   $00,[y,x++] ;[x++] <- ⌊($-1)²/2⌋
+              0100
