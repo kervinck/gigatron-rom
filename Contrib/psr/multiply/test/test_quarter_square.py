@@ -11,7 +11,7 @@ import asm
 from gtemu import RAM, Emulator
 
 SRC_DIR = (pathlib.Path(__file__).parent / ".." / "src").resolve()
-SCRIPT = SRC_DIR / "multiplication.asm.py"
+SCRIPT = SRC_DIR / "quarter-square.asm.py"
 
 
 def setup_module():
