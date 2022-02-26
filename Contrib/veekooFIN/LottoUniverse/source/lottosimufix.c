@@ -172,6 +172,10 @@ void main()
       cash=cash+18;
       if(sil != 1) cprintf("\n18 euro win");
       }
+      if(total==3 && totalbt==0) {
+      cash=cash+15;
+      if(sil != 1) cprintf("\n15 euro win");
+      }   
       if(total==1 && totalbt==2) {
       cash=cash+10;
       if(sil != 1) cprintf("\n10 euro win");
