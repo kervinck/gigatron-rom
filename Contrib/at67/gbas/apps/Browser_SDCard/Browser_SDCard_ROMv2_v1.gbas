@@ -245,21 +245,15 @@ return
 
 getRomType:
     romType = get("ROM_TYPE")
-    if romType &<= &h40
-        NextByteIn = &h02E9                              'ROMv1
-        if romType &&= &h20 then NextByteIn_32 = &h0BB1  'ROMv2
-        if romType &&= &h28 then NextByteIn_32 = &h0BDF  'ROMv3
-        if romType &&= &h38 then NextByteIn_32 = &h8A31  'ROMv4
-        if romType &&= &h40 then NextByteIn_32 = &h5907  'ROMv5a
-    else
-        NextByteIn_32 = &h0b18                           'SYS_ReceiveSerial1
-        if romType &= &hf0
-            NextByteIn_32 = &h1300                       'SDCARD
-        elseif romType &= &hf8                           'DEVROM (v5a+)
-            if execAddr &&= &h5A70 then NextByteIn_32 = &h5907  '(v5a+, initial)
-            if execAddr &&= &h5A72 then NextByteIn_32 = &h5907  '(v5a+, with sys_Loader_vX)
-            if execAddr &&= &h5C72 then NextByteIn_32 = &h5B07  '(v5a+, last before SYS_ReceiveSerial1)
-        endif
+    NextByteIn_32 = &h0b18  'Default to SYS_ReceiveSerial1
+    if romType &&= &h20 then NextByteIn_32 = &h0BB1  'ROMv2
+    if romType &&= &h28 then NextByteIn_32 = &h0BDF  'ROMv3
+    if romType &&= &h38 then NextByteIn_32 = &h8A31  'ROMv4
+    if romType &&= &h40 then NextByteIn_32 = &h5907  'ROMv5a
+    if romType &&= &hf0 then NextByteIn_32 = &h1300  'SDCARD
+    if romType &&= &hf8                              'DEVROM
+       if execAddr.hi &&= &h5A then NextByteIn_32 = &h5907  '(DEVROM v5a+, initial)
+       if execAddr.hi &&= &h5C then NextByteIn_32 = &h5B07  '(DEVROM v5a+, last before SYS_ReceiveSerial1)
     endif
 return
 
@@ -267,6 +261,7 @@ return
 openSDCard:
     poke @commsCmd, CmdSDOpen
     len = peek(@pathName$)
+    commsSize = 1 + len + 1
     if len &> 0
         for i=1 &to len + 1
             poke @commsCmd + i, peek(@pathName$ + i)
@@ -274,7 +269,6 @@ openSDCard:
     else
         poke @commsCmd + 1, 0
     endif
-    commsSize = 1 + len + 1
     gosub sendCommsCmd
     
     'SDCard open can take a variable amount of time
@@ -302,7 +296,7 @@ return
 'repeat delay and auto repeat
 handleInput:
     k = get("SERIAL_RAW")
-    if k &<> kk
+    if k &&<> kk
         f = 0
         kk = k
         gosub k
@@ -351,13 +345,15 @@ return
 'execute files, list directories
 execOrList:
     entry = peek(runStrAddr - 1)
-    if entry &= EntryFile
-        execRtn = 0
-        gosub execApp
-    elseif entry &= EntryDir
+    if entry &&= EntryDir
         execRtn = 1
         pathName$ = string$(runStrAddr)
-    elseif entry &= EntryError
+    endif
+    if entry &&= EntryFile
+        execRtn = 0
+        gosub execApp
+    endif
+    if entry &= EntryError
         execRtn = 2
         pathName$ = ""
     endif
