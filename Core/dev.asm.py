@@ -2939,7 +2939,16 @@ xora(videoYline0)               #17 First line of vertical blank
 label('SYS_ExpanderControl_v4_40')
 ld(hi('sys_ExpanderControl'),Y) #15
 jmp(Y,'sys_ExpanderControl')    #16
-ld(hi(ctrlBits),Y)              #17
+ld(0b00001100)                  #17
+#    ^^^^^^^^
+#    |||||||`-- SCLK
+#    ||||||`--- Not connected
+#    |||||`---- /SS0
+#    ||||`----- /SS1
+#    |||`------ /SS2 or /CPOL
+#    ||`------- /SS3 or /ZPBANK
+#    |`-------- B0
+#    `--------- B1
 
 #-----------------------------------------------------------------------
 # Extension SYS_Run6502_v4_80
@@ -3713,7 +3722,7 @@ ld(-62/2)                       #59
 align(0x100)
 
 label('sys_ExpanderControl')
-ld(0b00001100)                      #18 bits 2 and 3
+ld(hi(ctrlBits),Y)                  #18
 anda([vAC])                         #19 check for special ctrl code space
 beq('sysEx#22')                     #20
 ld([vAC])                           #21 load low byte of ctrl code in delay slot
