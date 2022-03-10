@@ -8,37 +8,37 @@ gcl0x
 
 { No need for romType check because Reset.gcl gets hard-compiled in  }
 
-$1f8 CtrlBits=
-
 { CheckMemory }
 [def
   push
-
   \memSize, 1- 255& 1+ i=       {Number of pages as counted at boot}
 
   {
     Check for expander and 128K expanded memory
-
-    XXX We still need 100% reliable expander detection. Some notes:
     1. The expander completely blocks the RAM write of ctrl()
     2. An unexpanded system writes an uncontrolled Z-value in memory
        -- We therefore may need to hook a 2.2K to BUS7 for writing
-          a controlled bit value. That can give reliable detection.
-       -- We could maybe also do a read back for positive detection
+          a controlled bit value. This would give reliable detection
+          at the expense of a mainboard hardware change (not good)
+       -- The code below performs a test using two complementary
+          bit patterns. Because both floating bus instances occur in
+          similar context, it is very unlikely that they read
+          complementary patterns.
        -- SendOnesToCard writes all over memory if there's no card.
     3. gtemu.c writes arbitrary S.undef values that change slowly
-
-    XXX Moreover, it would be good if we can detect an interrupted
-        sector read and flush it
   }
 
-  \SYS_ExpanderControl_v4_40    {SYS function}
-  _sysFn=
+  {precond: $1f8 CtrlBits=                          }
+  {precond: \SYS_ExpanderControl_v4_40 _sysFn=      }
 
   $aa $7c.                      {I/O expander detection}
   $7c 40!!                      { Expanded: Disable SPI, set MOSI low, bank 1}
                                 { Unexpanded: Store undefined value in [$7c]}
-  $7c, $aa^ [if<>0              {Note: doesn't work if undefined value was $aa!}
+  $7c, $aa^ [if=0               {Note: doesn't work if undefined value was $aa!}
+    $55 $7c. $7c 40!!           {So try again with complementary pattern}
+    $7c, $55^ 
+  ]
+  [if<>0
     0 CtrlBits.                 {No expander board detected}
   else
     $8024 q=                    {sysArgs0 + 32K}
@@ -279,6 +279,9 @@ $47e {4: D-5} SetupChannel!
 }
 $814 Pos=
 [def `***`Gigatron` #0] PrintS!
+
+$1f8 CtrlBits=
+\SYS_ExpanderControl_v4_40 _sysFn=
 CheckMemory!
 [def `K`***` #10
   ``TTL`microcomputer
