@@ -1,3 +1,21 @@
+"""Implementation of multiplication that uses the following identity:
+
+a * b = (a² + b² - (a-b)²)/2
+
+We use this to implement multiplication of nibbles, and from that multiplication of bytes.
+
+We make use of a lookup table of ⌊n²/2⌋ for n in the range [-15,15],
+and calculate (⌊a²/2⌋ + ⌊b²/2⌋ - ⌊(a-b)²/2⌋ + (a & b & 1)) - The a & b & 1 term compensates
+for the fact that (⌊a²/2⌋ + ⌊b²/2⌋ - ⌊(a-b)²/2⌋) is off by one when both a and b are odd.
+We also have a right-shift by four table.
+
+Memory is used as follows:
+
+(0x1,0x2) = Result (would be vAC in a real sys function)
+(0x3) = very brief temporary storage (would be vTmp)
+(0x4, 0x5) = A, B - Operands, would be sysArgs[0:2] - untouched.
+(0x6..) = Variables. Would be sysArgs[2:] - but we try to leave the last value untouched.
+"""
 import sys
 from itertools import chain, count
 
@@ -5,9 +23,12 @@ import asm
 from asm import (
     AC,
     C,
+    X,
     Xpp,
     Y,
+    adda,
     align,
+    anda,
     bne,
     bra,
     define,
@@ -15,12 +36,15 @@ from asm import (
     fillers,
     label,
     ld,
+    ora,
     pc,
     st,
+    suba,
     writeRomFiles,
+    xora,
 )
 
-DEBUG = True
+DEBUG = False  # Set to True to get debugging output
 
 
 # I'm keen to avoid using too many variables.
@@ -189,7 +213,112 @@ align(0x100)
 tables.emit_next_entry()
 
 label("start")
+ld([vars.read("A")])
+anda(0x0F)
+st([vars.define("A-low", 0x1)])
+xora([vars.read("A")])
+right_shift()
+st([vars.define("A-high", 0x6)])
+ld([vars.read("B")])
+anda(0xF0)
+right_shift(emit_next_table_entry=True)
+st([vars.define("B-high", 0x3)])
 
+# Start product of high-nibbles
+ld(0, Y)
+ld(vars.reset_x(0x07), X)
+suba([vars.read("A-high")])
+lookup_and_store_half_square(AC, "A-high - B-high")
+ld([vars.read("B-high")])
+anda([vars.read("A-high")])
+anda(0x01)
+suba([vars.kill("⌊(A-high - B-high)²/2⌋")])
+st([vars.define("high-byte total", 0x02)])
+
+# A-low * B-high
+ld([vars.read("A-low")])
+suba([vars.read("B-high")])
+lookup_and_store_half_square(AC, "A-low - B-high", emit_next_table_entry=True)
+ld([vars.read("B-high")])
+lookup_and_store_half_square("B-high", kill=True)
+lookup_and_store_half_square("A-low", emit_next_table_entry=True)
+anda([vars.read("A")])
+anda(0x01)
+adda([vars.read("⌊A-low²/2⌋")])
+adda([vars.read("⌊B-high²/2⌋")])
+suba([vars.kill("⌊(A-low - B-high)²/2⌋")])
+st([vars.define("A-low * B-high", 0x03)])
+anda(0x0F)
+st([vars.define("low(A-low * B-high)", 0x07)])
+xora([vars.kill("A-low * B-high")])
+right_shift(emit_next_table_entry=True)
+adda([vars.kill("⌊B-high²/2⌋")])
+adda([vars.read("high-byte total")])
+st([vars.update("high-byte total")])
+
+ld(vars.reset_x(0x8), X)
+ld([vars.read("B")])
+anda(0x0F)
+st([vars.define("B-low", 0x03)])
+suba([vars.read("A-high")])
+print(vars)
+lookup_and_store_half_square(
+    AC, operand_name="B-low - A-high", emit_next_table_entry=True
+)
+lookup_and_store_half_square("B-low", kill=True)
+ld([vars.read("A-high")])
+ld(vars.reset_x(0x6), X)
+lookup_and_store_half_square("A-high", kill=True, emit_next_table_entry=True)
+anda([vars.read("B")])
+anda(0x01)
+adda([vars.read("⌊B-low²/2⌋")])
+adda([vars.read("⌊A-high²/2⌋")])
+suba([vars.kill("⌊(B-low - A-high)²/2⌋")])
+st([vars.define("B-low * A-high", 0x03)])
+anda(0x0F)
+st([vars.define("low(B-low * A-high)", 0x08)])
+xora([vars.kill("B-low * A-high")])
+right_shift(emit_next_table_entry=True)
+adda([vars.kill("⌊A-high²/2⌋")])
+adda([vars.read("high-byte total")])
+st([vars.update("high-byte total")])
+
+# Product of low-nibbles
+ld(vars.reset_x(6), X)
+ld([vars.read("B")])
+anda(0x0F)  # Because we lost B-low
+suba([vars.read("A-low")])
+lookup_and_store_half_square(
+    AC, operand_name="B-low - A-low", emit_next_table_entry=True
+)
+ld([vars.kill("A-low")])
+anda([vars.read("B")])
+anda(0x01)
+adda([vars.kill("⌊B-low²/2⌋")])
+adda([vars.kill("⌊A-low²/2⌋")])
+suba([vars.kill("⌊(B-low - A-low)²/2⌋")])
+st([vars.define("A-low * B-low", 0x3)])
+
+print(vars)
+# Final sum - 23 cycles
+anda(0xF)
+st([vars.define("result low nibble", 0x01)])
+xora([vars.kill("A-low * B-low")])
+right_shift(emit_next_table_entry=True)
+adda([vars.kill("low(A-low * B-high)")])
+adda([vars.kill("low(B-low * A-high)")])
+st([vars.define("temp", 0x3)])
+adda(AC)
+adda(AC)
+adda(AC)
+adda(AC)
+ora([vars.kill("result low nibble")])
+st([vars.define("low(result)", 0x01)])
+ld([vars.kill("temp")])
+anda(0xF0)
+right_shift(emit_next_table_entry=True)
+adda([vars.kill("high-byte total")])
+st([vars.define("high(result)", 0x2)])
 label("end")
 ld(AC, AC)
 tables.finish_tables()
