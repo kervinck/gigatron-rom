@@ -18,8 +18,25 @@ gcl0x
 
 { multiply-shift ((A*B)>>8) }
 {
-  Assumes that sysFn already holds SYS_MultiplyBytes_120
-  \SYS_MultiplyBytes_120 \sysFn:
+
+  Uses Karatsuba's algorithm, which only computes three partial products,
+  the product of the two high-bytes, the product of the two low-bytes, and
+  a product that turns out to be (in our case)
+  high-of-A * low-of-B 
+  + low-of-A * high-of-B 
+  - high-of-A * high-of-B
+  - low-of-A * low-of-B
+
+  In other words, we can produce 
+  high-of-A * low-of-B + low-of-A * high-of-B 
+  (the sum of the two partial products we didn't calculate)
+  by adding on the products we do. Nice.
+
+  The setup to find the multiplicands needed is a bit fiddly,
+  and would be slow in vCPU, so we use a SYS function to do it.
+  This leaves sysFn pointing to SYS_MultiplyBytes_120, so the whole thing is easy.
+
+
 }
 
 [def
@@ -29,20 +46,22 @@ gcl0x
  {0}A- [if>0 A= 1 sign=]
   0 B- [if>0 B= sign 1^ sign=]
 
-  {Multiply}
-  { multiply low bytes, right-shift by 8 and store in C }
+  { Karatsuba multiplication }
+  \SYS_KaratsubaPrepare_54 _sysFn=
+  A _sysArgs0=
+  B 54!! 
+  [if=0 120!! C=
+   else 120!! C= 0 C- C=]
+
+  { Find product of low bytes }
   <A, \sysArgs0.
   <B, \sysArgs1.
-  120!! \vACH, C=
-  { multiply low-byte of A by high-byte of B and add to C }
-  >B, \sysArgs1.
-  120!! C+ C=
+  120!! \sysArgs5: C+ C=
+  
   { multiply high-byte of A by high-byte of B, left-shift by 8 and add to C }
   >A, \sysArgs0.
-  120!! \vACH. 255| 255^ C+ C=
-  { multiply high-byte of A by low-byte of B, add C }
-  <B, \sysArgs1.
-  120!! C+ C=
+  >B, \sysArgs1.
+  98!! \sysArgs7. C+ _sysArgs6+ C=
 
   {Apply sign to return value }
   sign [if<>0 0 C- else C]
@@ -75,9 +94,9 @@ $0300:
     LastPixel [if=0
       {Check if we are inside one of the main bulbs for
        a quick bailout (Wikipedia)
-       (x+1)^ + y^2 < 1/16}
+       (x+1)^2 + y^2 < 1/16}
       Y0 A= B= MulShift8! YY=
-      X0 128+ A= B= MulShift8! YY+ 8- [if<0 0
+      256 X0+ A= B= MulShift8! YY+ 16- [if<0 0
       else
 
         {q*(q + x - 1/4) < 1/4*y^2, where q = (x - 1/4)^2 + y^2}

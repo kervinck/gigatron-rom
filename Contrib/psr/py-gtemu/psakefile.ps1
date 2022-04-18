@@ -6,7 +6,7 @@ $REPO_ROOT_PATH = Join-Path $PSScriptRoot '..\..\..' -Resolve
 $VENV_DIR = Join-Path $PSScriptRoot '.venv'
 $SCRIPT_DIR = Join-Path $VENV_DIR 'Scripts'
 
-$dirExcludes = '.venv', '.pytest_cache', 'install-test'
+$dirExcludes = '.venv', '.pytest_cache', 'install-test', '.pypy-venv', 'build', 'dist'
 $filesToFormat = @(get-childitem -Exclude $dirExcludes -Directory | ForEach-Object { get-childitem -path $_ -Recurse -Include '*.py' })
 $filesToFormat += @(get-childitem -Name '*.py')
 

@@ -1,4 +1,4 @@
-* source: C:\Users\peter.russell\Documents\Personal\multiply\Contrib\psr\multiply\src\multiplication.asm.py
+* source: C:\Users\peter.russell\Documents\Personal\multiply\Contrib\psr\multiply\src\quarter-square.asm.py
                                           36        enableListing()
                                           37
                                           38    # Inputs
@@ -23,7 +23,7 @@
                                           57    align(0x100, size=0x100)
                                           58    label("Quarter-squares lookup table")
                                           59    for i in range(32, 256):
-                                          60        val = math.floor(i ** 2 / 4)
+                                          60        val = math.floor(i**2 / 4)
               address
               |    encoding
               |    |     instruction
@@ -329,7 +329,7 @@ low-byte table entry:
                                           123   cost_of_low_byte_table_entry = 3
                                           124   C("0 = floor(0 ** 2 / 4) and floor(1 ** 2 / 4)")
                                           125   for i in range(2, 256):
-                                          126       val = math.floor(i ** 2 / 4)
+                                          126       val = math.floor(i**2 / 4)
                                           127       ld(val)
               0102 0001  ld   $01         ;$0001 = 1 = floor(2 ** 2 / 4)
               0103 0002  ld   $02         ;$0002 = 2 = floor(3 ** 2 / 4)
@@ -984,7 +984,7 @@ multiply 8x8: 0322 0101  ld   [$01]       253   ld([a])  # 1
               0328 c201  st   [$01]       264   st([a])  # 7; a = A
               0329 0049  ld   $49         265   ld(".after right-shift")
               032a c206  st   [$06]       266   st([continuation])
-              032b 0040  ld   $40         267   ld(2 ** 14 >> 8)  # 10; Write the high-byte for later addition.
+              032b 0040  ld   $40         267   ld(2**14 >> 8)  # 10; Write the high-byte for later addition.
               032c c204  st   [$04]       268   st([result + 1])
               032d 0102  ld   [$02]       269   ld([b])
               032e 207f  anda $7f         270   anda(0b0111_1111)

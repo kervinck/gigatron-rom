@@ -2,6 +2,7 @@
 """
 
 import itertools
+from contextlib import contextmanager
 
 import asm
 
@@ -70,8 +71,23 @@ def _to_address(address_or_symbol):
     return address
 
 
+# When stepping the vCPU where must we stop.
+# TODO: We should probably be loading these from asm.py
+_STEP_VCPU_BREAKPOINTS = frozenset(
+    [
+        0x02FF,  # ENTER
+        0x0301,  # NEXT
+    ]
+)
+
+
+# Maximum latency between vCPU instructions if nothing goes wrong.
+# TODO: Find the right value, needs to work if we're in slow (rendering all four lines) mode.
+_STEP_VCPU_MAX_CYCLES = 1000  # It should be possible to calculate a more precise value
+
+
 class _Emulator:
-    """Provides programatic control over the a Gigatron Emulator"""
+    """Provides programatic control over the Gigatron Emulator"""
 
     def __init__(self):
         self.reset()
@@ -207,6 +223,13 @@ class _Emulator:
         if self._print:
             print(self.state)
 
+    def _run_for(self, instructions):
+        for i in range(instructions):
+            self._step()
+            if self._last_pc in self.breakpoints:
+                return i + 1
+        return instructions
+
     def run_for(self, instructions):
         """Run the emulator for a fixed number of cycles
 
@@ -216,14 +239,16 @@ class _Emulator:
         Returns the number of cycles executed.
         """
         try:
-            for i in range(instructions):
-                self._step()
-                if self._last_pc in self.breakpoints:
-                    return i + 1
-            return instructions
+            self._run_for(instructions)
         finally:
             if self._print:
                 print(self.state)
+
+    def _run_to_breakpoint(self, max_instructions):
+        cycles = self._run_for(max_instructions)
+        if self._last_pc not in self.breakpoints:
+            raise ValueError("timeout")
+        return cycles
 
     def run_to(self, address, max_instructions=1000):
         """Run the emulator until it is about to execute the instruction at `address`
@@ -293,6 +318,31 @@ class _Emulator:
         if self._print:
             print(self.state)
 
+    @contextmanager
+    def additional_breakpoints(self, *additional_breakpoints):
+        """Returns a context manager which will add breakpoints on entry and restore them on completion
+
+        Additional_breakpoints can be a single collection or multiple arguments.
+
+        Note, this swaps out and restores the breakpoint set on exit.
+        To prevent breakpoints being added and lost when the context expires, a frozenset is used.
+        """
+        # This approach is basically meant to optimise for the vCPU step usecase
+        existing_breakpoints = self.breakpoints
+        try:
+            additional_breakpoints = frozenset(*additional_breakpoints)
+        except TypeError:
+            additional_breakpoints = frozenset(additional_breakpoints)
+        self.breakpoints = (
+            additional_breakpoints | existing_breakpoints
+            if existing_breakpoints
+            else additional_breakpoints
+        )
+        try:
+            yield
+        finally:
+            self.breakpoints = existing_breakpoints
+
     # vCPU related methods
     vPC = _make_zero_page_accessor("vPC", 0x16)
     vAC = _make_zero_page_accessor("vAC", 0x18)
@@ -319,36 +369,57 @@ class _Emulator:
         )
         return "\n".join([heading, separator, values])
 
-    def _step_vcpu(self):
-        breakpoints = {
-            0x02FF,
-            0x0301,
-        }  # ENTER and NEXT - I think we always go through one of these
-        new_breakpoints = breakpoints - self.breakpoints
-        self.breakpoints |= new_breakpoints
-        print_ = self._print
-        try:
-            self._print = False
-            if self.run_for(1000) == 1000:
-                if self.next_instruction not in breakpoints:
-                    raise ValueError("timeout")
-        finally:
-            self._print = print_
-            self.breakpoints -= new_breakpoints
-
     def step_vcpu(self):
-        self._step_vcpu()
-        if self._print:
-            print(self.vcpu_state)
+        """Run the emulator up to NEXT or ENTER.
 
-    def run_vcpu_to(self, address):
+        Returns the number of machine instructions exectuted.
+
+        Does stop at breakpoints if they are set.
+
+        The method name is slightly misleading.
+        It will always complete the currently executing instruction if there is one,
+        but it doesn't follow that it leaves us in a state where we're about to execute the next one.
+        We might instead be about to return to the display loop,
+        or the next instruction might be a SYS function which doesn't have time to execute.
+        It might therefore take several call to see a change in vPC.
+        """
+        try:
+            with self.additional_breakpoints(_STEP_VCPU_BREAKPOINTS):
+                return self._run_to_breakpoint(_STEP_VCPU_MAX_CYCLES)
+        finally:
+            if self._print:
+                print(self.vcpu_state)
+
+    def run_vcpu_to(self, address, *, always_run_some_code=True):
+        """Run the emulator until we are at NEXT or ENTER, before vPC is advanced to address.
+
+        Returns the number of machine instructions exectuted.
+
+        Does stop at breakpoints if they are set.
+
+        This will always run some code if always_run_some_code is True (the default),
+        even if the vPC is already in the desired state,
+        to allow repeated calls in a loop.
+        See the docstring for step_vcpu for further caveats.
+        """
         # Before we run the instruction at 0x200, vPC should be 0x2fe,
         # Because only the low byte is incremented
         target_vpc = address & 0xFF00 | (address - 2) & 0xFF
-        while self.vPC != target_vpc:
-            self._step_vcpu()
-        if self._print:
-            print(self.vcpu_state)
+        cycles = 0
+        try:
+            with self.additional_breakpoints(_STEP_VCPU_BREAKPOINTS):
+                while always_run_some_code and self.vPC == target_vpc:
+                    cycles += self._run_to_breakpoint(_STEP_VCPU_MAX_CYCLES)
+                    if self._last_pc not in _STEP_VCPU_BREAKPOINTS:
+                        return cycles
+                while self.vPC != target_vpc:
+                    cycles += self._run_to_breakpoint(_STEP_VCPU_MAX_CYCLES)
+                    if self._last_pc not in _STEP_VCPU_BREAKPOINTS:
+                        return cycles
+                return cycles
+        finally:
+            if self._print:
+                print(self.vcpu_state)
 
     def send_byte(self, value):
         """Send a byte through the input port"""

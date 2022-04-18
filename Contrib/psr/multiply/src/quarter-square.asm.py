@@ -57,7 +57,7 @@ high_byte_action = zpByte()
 align(0x100, size=0x100)
 label("Quarter-squares lookup table")
 for i in range(32, 256):
-    val = math.floor(i ** 2 / 4)
+    val = math.floor(i**2 / 4)
     ld(hi(val))
     C(f"${val:04x} = {val} = floor({i} ** 2 / 4); ${val:04x} >> 8 = ${val >> 8:02x}")
 
@@ -123,7 +123,7 @@ ld(0)  # 3
 cost_of_low_byte_table_entry = 3
 C("0 = floor(0 ** 2 / 4) and floor(1 ** 2 / 4)")
 for i in range(2, 256):
-    val = math.floor(i ** 2 / 4)
+    val = math.floor(i**2 / 4)
     ld(val)
     C(f"${val:04x} = {val} = floor({i} ** 2 / 4)")
 
@@ -264,7 +264,7 @@ cost_of_8bit_multiply__both_msbs_low = cost_of_7bit_multiply + 6
 st([a])  # 7; a = A
 ld(".after right-shift")
 st([continuation])
-ld(2 ** 14 >> 8)  # 10; Write the high-byte for later addition.
+ld(2**14 >> 8)  # 10; Write the high-byte for later addition.
 st([result + 1])
 ld([b])
 anda(0b0111_1111)

@@ -1,0 +1,209 @@
+* source: C:\Users\peter.russell\Documents\Personal\multiply\Contrib\psr\multiply\src\half-square.asm.py
+              address
+              |    encoding
+              |    |     instruction
+              |    |     |    operands
+              |    |     |    |
+              V    V     V    V
+              0000 dc00  st   $00,[y,x++] ;[x++] <- ⌊$0²/2⌋
+              0001 dc00  st   $00,[y,x++] ;[x++] <- ⌊$1²/2⌋
+              0002 dc02  st   $02,[y,x++] ;[x++] <- ⌊$2²/2⌋
+              0003 dc04  st   $04,[y,x++] ;[x++] <- ⌊$3²/2⌋
+              0004 dc08  st   $08,[y,x++] ;[x++] <- ⌊$4²/2⌋
+              0005 dc0c  st   $0c,[y,x++] ;[x++] <- ⌊$5²/2⌋
+              0006 dc12  st   $12,[y,x++] ;[x++] <- ⌊$6²/2⌋
+              0007 dc18  st   $18,[y,x++] ;[x++] <- ⌊$7²/2⌋
+              0008 dc20  st   $20,[y,x++] ;[x++] <- ⌊$8²/2⌋
+              0009 dc28  st   $28,[y,x++] ;[x++] <- ⌊$9²/2⌋
+              000a dc32  st   $32,[y,x++] ;[x++] <- ⌊$a²/2⌋
+              000b dc3c  st   $3c,[y,x++] ;[x++] <- ⌊$b²/2⌋
+              000c dc48  st   $48,[y,x++] ;[x++] <- ⌊$c²/2⌋
+              000d dc54  st   $54,[y,x++] ;[x++] <- ⌊$d²/2⌋
+              000e dc62  st   $62,[y,x++] ;[x++] <- ⌊$e²/2⌋
+              000f dc70  st   $70,[y,x++] ;[x++] <- ⌊$f²/2⌋
+              0010 0001  ld   $01         ;Right-shift by four lookup for $1x
+start:        0011 0104  ld   [$04]       ;(A)
+              0012 200f  anda $0f
+              0013 c201  st   [$01]       ;[$01] <- A-low.
+              0014 6104  xora [$04]       ;(A)
+              0015 ee00  bne  ac          ;ac >>= 4
+              0016 fc18  bra  .multiply.1
+              0017 0000  ld   $00
+.multiply.1:  0018 c206  st   [$06]       ;[$06] <- A-high.
+              0019 0105  ld   [$05]       ;(B)
+              001a 20f0  anda $f0
+              001b ee00  bne  ac          ;ac >>= 4
+              001c fc21  bra  .multiply.2
+              001d 0000  ld   $00
+              001e 0200  nop              ;2 fillers
+              001f 0200  nop
+              0020 0002  ld   $02         ;Right-shift by four lookup for $2x
+.multiply.2:  0021 c203  st   [$03]       ;[$03] <- B-high.
+              0022 1400  ld   $00,y
+              0023 1007  ld   $07,x
+              0024 a106  suba [$06]       ;(A-high)
+              0025 fe00  bra  ac          ;[$07] <- ⌊(A-high - B-high)²/2⌋; x <- 8
+              0026 fc27  bra  .multiply.3
+.multiply.3:  0027 0103  ld   [$03]       ;(B-high)
+              0028 2106  anda [$06]       ;(A-high)
+              0029 2001  anda $01
+              002a a107  suba [$07]       ;(⌊(A-high - B-high)²/2⌋)
+              002b c202  st   [$02]       ;[$02] <- high-byte total.
+              002c 0101  ld   [$01]       ;(A-low)
+              002d a103  suba [$03]       ;(B-high)
+              002e fe00  bra  ac          ;[$08] <- ⌊(A-low - B-high)²/2⌋; x <- 9
+              002f fc31  bra  .multiply.4
+              0030 0003  ld   $03         ;Right-shift by four lookup for $3x
+.multiply.4:  0031 0103  ld   [$03]       ;(B-high)
+              0032 fd03  bra  [$03]       ;[$09] <- ⌊B-high²/2⌋; x <- 10
+              0033 fc34  bra  .multiply.5
+.multiply.5:  0034 fd01  bra  [$01]       ;[$0a] <- ⌊A-low²/2⌋; x <- 11
+              0035 fc41  bra  .multiply.6
+              0036 0200  nop              ;10 fillers
+              0037 0200  nop
+              0038 0200  nop
+              * 10 times
+              0040 0004  ld   $04         ;Right-shift by four lookup for $4x
+.multiply.6:  0041 2104  anda [$04]       ;(A)
+              0042 2001  anda $01
+              0043 810a  adda [$0a]       ;(⌊A-low²/2⌋)
+              0044 8109  adda [$09]       ;(⌊B-high²/2⌋)
+              0045 a108  suba [$08]       ;(⌊(A-low - B-high)²/2⌋)
+              0046 c203  st   [$03]       ;[$03] <- A-low * B-high.
+              0047 200f  anda $0f
+              0048 c207  st   [$07]       ;[$07] <- low(A-low * B-high).
+              0049 6103  xora [$03]       ;(A-low * B-high)
+              004a ee00  bne  ac          ;ac >>= 4
+              004b fc51  bra  .multiply.7
+              004c 0000  ld   $00
+              004d 0200  nop              ;3 fillers
+              004e 0200  nop
+              004f 0200  nop
+              0050 0005  ld   $05         ;Right-shift by four lookup for $5x
+.multiply.7:  0051 8109  adda [$09]       ;(⌊B-high²/2⌋)
+              0052 8102  adda [$02]       ;(high-byte total)
+              0053 c202  st   [$02]       ;Update high-byte total
+              0054 1008  ld   $08,x
+              0055 0105  ld   [$05]       ;(B)
+              0056 200f  anda $0f
+              0057 c203  st   [$03]       ;[$03] <- B-low.
+              0058 a106  suba [$06]       ;(A-high)
+              0059 fe00  bra  ac          ;[$08] <- ⌊(B-low - A-high)²/2⌋; x <- 9
+              005a fc61  bra  .multiply.8
+              005b 0200  nop              ;5 fillers
+              005c 0200  nop
+              005d 0200  nop
+              * 5 times
+              0060 0006  ld   $06         ;Right-shift by four lookup for $6x
+.multiply.8:  0061 fd03  bra  [$03]       ;[$09] <- ⌊B-low²/2⌋; x <- 10
+              0062 fc63  bra  .multiply.9
+.multiply.9:  0063 0106  ld   [$06]       ;(A-high)
+              0064 1006  ld   $06,x
+              0065 fd06  bra  [$06]       ;[$06] <- ⌊A-high²/2⌋; x <- 7
+              0066 fc71  bra  .multiply.10
+              0067 0200  nop              ;9 fillers
+              0068 0200  nop
+              0069 0200  nop
+              * 9 times
+              0070 0007  ld   $07         ;Right-shift by four lookup for $7x
+.multiply.10: 0071 2105  anda [$05]       ;(B)
+              0072 2001  anda $01
+              0073 8109  adda [$09]       ;(⌊B-low²/2⌋)
+              0074 8106  adda [$06]       ;(⌊A-high²/2⌋)
+              0075 a108  suba [$08]       ;(⌊(B-low - A-high)²/2⌋)
+              0076 c203  st   [$03]       ;[$03] <- B-low * A-high.
+              0077 200f  anda $0f
+              0078 c208  st   [$08]       ;[$08] <- low(B-low * A-high).
+              0079 6103  xora [$03]       ;(B-low * A-high)
+              007a ee00  bne  ac          ;ac >>= 4
+              007b fc81  bra  .multiply.11
+              007c 0000  ld   $00
+              007d 0200  nop              ;3 fillers
+              007e 0200  nop
+              007f 0200  nop
+              0080 0008  ld   $08         ;Right-shift by four lookup for $8x
+.multiply.11: 0081 8106  adda [$06]       ;(⌊A-high²/2⌋)
+              0082 8102  adda [$02]       ;(high-byte total)
+              0083 c202  st   [$02]       ;Update high-byte total
+              0084 1006  ld   $06,x
+              0085 0105  ld   [$05]       ;(B)
+              0086 200f  anda $0f
+              0087 a101  suba [$01]       ;(A-low)
+              0088 fe00  bra  ac          ;[$06] <- ⌊(B-low - A-low)²/2⌋; x <- 7
+              0089 fc91  bra  .multiply.12
+              008a 0200  nop              ;6 fillers
+              008b 0200  nop
+              008c 0200  nop
+              * 6 times
+              0090 0009  ld   $09         ;Right-shift by four lookup for $9x
+.multiply.12: 0091 0101  ld   [$01]       ;(A-low)
+              0092 2105  anda [$05]       ;(B)
+              0093 2001  anda $01
+              0094 8109  adda [$09]       ;(⌊B-low²/2⌋)
+              0095 810a  adda [$0a]       ;(⌊A-low²/2⌋)
+              0096 a106  suba [$06]       ;(⌊(B-low - A-low)²/2⌋)
+              0097 c203  st   [$03]       ;[$03] <- A-low * B-low.
+              0098 200f  anda $0f
+              0099 c201  st   [$01]       ;[$01] <- result low nibble.
+              009a 6103  xora [$03]       ;(A-low * B-low)
+              009b ee00  bne  ac          ;ac >>= 4
+              009c fca1  bra  .multiply.13
+              009d 0000  ld   $00
+              009e 0200  nop              ;2 fillers
+              009f 0200  nop
+              00a0 000a  ld   $0a         ;Right-shift by four lookup for $ax
+.multiply.13: 00a1 8107  adda [$07]       ;(low(A-low * B-high))
+              00a2 8108  adda [$08]       ;(low(B-low * A-high))
+              00a3 c203  st   [$03]       ;[$03] <- temp.
+              00a4 8200  adda ac
+              00a5 8200  adda ac
+              00a6 8200  adda ac
+              00a7 8200  adda ac
+              00a8 4101  ora  [$01]       ;(result low nibble)
+              00a9 c201  st   [$01]       ;[$01] <- low(result).
+              00aa 0103  ld   [$03]       ;(temp)
+              00ab 20f0  anda $f0
+              00ac ee00  bne  ac          ;ac >>= 4
+              00ad fcb1  bra  .multiply.14
+              00ae 0000  ld   $00
+              00af 0200  nop              ;filler
+              00b0 000b  ld   $0b         ;Right-shift by four lookup for $bx
+.multiply.14: 00b1 8102  adda [$02]       ;(high-byte total)
+              00b2 c202  st   [$02]       ;[$02] <- high(result).
+end:          00b3 0200  nop
+              00b4 0200  nop              ;12 fillers
+              00b5 0200  nop
+              00b6 0200  nop
+              * 12 times
+              00c0 000c  ld   $0c         ;Right-shift by four lookup for $cx
+              00c1 0200  nop              ;15 fillers
+              00c2 0200  nop
+              00c3 0200  nop
+              * 15 times
+              00d0 000d  ld   $0d         ;Right-shift by four lookup for $dx
+              00d1 0200  nop              ;15 fillers
+              00d2 0200  nop
+              00d3 0200  nop
+              * 15 times
+              00e0 000e  ld   $0e         ;Right-shift by four lookup for $ex
+              00e1 0200  nop              ;15 fillers
+              00e2 0200  nop
+              00e3 0200  nop
+              * 15 times
+              00f0 000f  ld   $0f         ;Right-shift by four lookup for $fx
+              00f1 dc70  st   $70,[y,x++] ;[x++] <- ⌊($-f)²/2⌋
+              00f2 dc62  st   $62,[y,x++] ;[x++] <- ⌊($-e)²/2⌋
+              00f3 dc54  st   $54,[y,x++] ;[x++] <- ⌊($-d)²/2⌋
+              00f4 dc48  st   $48,[y,x++] ;[x++] <- ⌊($-c)²/2⌋
+              00f5 dc3c  st   $3c,[y,x++] ;[x++] <- ⌊($-b)²/2⌋
+              00f6 dc32  st   $32,[y,x++] ;[x++] <- ⌊($-a)²/2⌋
+              00f7 dc28  st   $28,[y,x++] ;[x++] <- ⌊($-9)²/2⌋
+              00f8 dc20  st   $20,[y,x++] ;[x++] <- ⌊($-8)²/2⌋
+              00f9 dc18  st   $18,[y,x++] ;[x++] <- ⌊($-7)²/2⌋
+              00fa dc12  st   $12,[y,x++] ;[x++] <- ⌊($-6)²/2⌋
+              00fb dc0c  st   $0c,[y,x++] ;[x++] <- ⌊($-5)²/2⌋
+              00fc dc08  st   $08,[y,x++] ;[x++] <- ⌊($-4)²/2⌋
+              00fd dc04  st   $04,[y,x++] ;[x++] <- ⌊($-3)²/2⌋
+              00fe dc02  st   $02,[y,x++] ;[x++] <- ⌊($-2)²/2⌋
+              00ff dc00  st   $00,[y,x++] ;[x++] <- ⌊($-1)²/2⌋
+              0100

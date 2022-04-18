@@ -11,3 +11,4 @@ _gtemu*.pyd
 /py_gtemu.egg-info/
 /dist/
 /.eggs/
+/.pypy-venv/
