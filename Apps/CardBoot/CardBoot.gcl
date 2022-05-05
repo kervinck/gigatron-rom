@@ -374,10 +374,13 @@ $1e8 i= [do $7b i. i 2+ i= $1f0 i^ if<>0loop]
 
   [def #$51 #0 #0 #0 #0 #0]     {CMD17}
   p= q=
-  >SectorH, <q++ q. {\PrintByte!}            {Put SectorL,H in argument, big-endian order}
-  <SectorH, <q++ q. {\PrintByte!}
-  >SectorL, <q++ q. {\PrintByte!}
-  <SectorL, <q++ q. {\PrintByte!}
+  SectorL ValueL=
+  SectorH ValueH=
+  CardType 2- [if<=0 \SectorToByte!]  {Version 1.X cards do byte addressing}
+  >ValueH, <q++ q.                    {Put SectorL,H in argument, big-endian order}
+  <ValueH, <q++ q.
+  >ValueL, <q++ q.
+  <ValueL, <q++ q.
   p \SendCommandToCard!
 
   \WaitForCardReply!
@@ -658,7 +661,6 @@ ret]
   }
   push
   \EnableCard!
-  CardType 2- [if<=0 \SectorToByte!]    {Version 1.X cards do byte addressing}
   \CMD17!                               {Request block of data}
   \sysArgs6, $fe^ 
   [if=0
