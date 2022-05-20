@@ -8,50 +8,23 @@ gcl0x
 
 { No need for romType check because Reset.gcl gets hard-compiled in  }
 
+_ledTimer=$2d
+
+$1f8 CtrlBits=
+
+
 { CheckMemory }
 [def
   push
-  \memSize, 1- 255& 1+ i=       {Number of pages as counted at boot}
 
-  {
-    Check for expander and 128K expanded memory
-    1. The expander completely blocks the RAM write of ctrl()
-    2. An unexpanded system writes an uncontrolled Z-value in memory
-       -- We therefore may need to hook a 2.2K to BUS7 for writing
-          a controlled bit value. This would give reliable detection
-          at the expense of a mainboard hardware change (not good)
-       -- The code below performs a test using two complementary
-          bit patterns. Because both floating bus instances occur in
-          similar context, it is very unlikely that they read
-          complementary patterns.
-       -- SendOnesToCard writes all over memory if there's no card.
-    3. gtemu.c writes arbitrary S.undef values that change slowly
-  }
+  { Check for expander and expanded memory }
 
-  {precond: $1f8 CtrlBits=                          }
-  {precond: \SYS_ExpanderControl_v4_40 _sysFn=      }
-
-  $aa $7c.                      {I/O expander detection}
-  $7c 40!!                      { Expanded: Disable SPI, set MOSI low, bank 1}
-                                { Unexpanded: Store undefined value in [$7c]}
-  $7c, $aa^ [if=0               {Note: doesn't work if undefined value was $aa!}
-    $55 $7c. $7c 40!!           {So try again with complementary pattern}
-    $7c, $55^ 
-  ]
-  [if<>0
-    0 CtrlBits.                 {No expander board detected}
-  else
-    $8024 q=                    {sysArgs0 + 32K}
-    $bc 40!!                    {Switch to bank 2}
-    q, 255^ q.                  {Invert value from memory}
-    _sysArgs0=                  {Copy result in sysArgs}
-    255^ q.                     {Invert memory value again}
-    _sysArgs0^                  {Compare with inverted copy}
-    [if<>0                      {If different then we have an A16 and 128K}
-      $31 Char= PrintChar!      {'1'}
-      112 i=]                   {28*4 to give '28' below}
-    $807c 40!!                  {Set MOSI high, bank 1}
-  ]
+  \SYS_ExpanderControl_v4_40 _sysFn=
+  \memSize, 1- 255& 1+ i=           {Number of pages as counted at boot}
+  $8024 q=                          {sysArgs0 + 32K}
+  CheckExpander! [if<>0             {return $0 for 64k, $1c31 for 128k, $0c35 for 512k}
+    Char= PrintChar!            {Print '1' or '5'}
+    >Char, 2<< i=  ]            {Obtain two low digits of memory size}
 
   { Convert memory page count to K in two decimals }
 
@@ -207,7 +180,7 @@ gcl0x
     \sysArgs6, if<>0            {Break on zeroes from pull-down R1}
 
     1^ [if=0                    {Only 1 means success}
-      \Boot _sysArgs0=          {Load Boot from ROM and execute}
+      FindBoot! _sysArgs0=      {Load Boot from ROM and execute}
       $200 _vLR=
       \SYS_Exec_88 _sysFn= 88!!]
 
@@ -232,6 +205,69 @@ gcl0x
 +-----------------------------------------------------------------------}
 *=$0400
 
+{ FindProg }
+[def
+  q=
+  \SYS_ReadRomDir_v5_80 _sysFn=
+  0 [do 80!! p=
+    q deek _sysArgs0^ [if=0
+     2 q+ deek _sysArgs2^ [if=0
+       4 q+ deek _sysArgs4^ [if=0
+         6 q+ deek _sysArgs6^ [if=0 p ret]]]]
+    p loop]
+    ret
+] FindProg=
+
+[def [def `Main #0 #0 #0 #0 ] push FindProg! pop ret
+] FindMain=
+
+[def [def `Boot #0 #0 #0 #0 ] push FindProg! pop ret
+] FindBoot=
+
+{ CheckExpander }
+[def
+  {prereqs: q=$8024 _sysFn=\SYS_ExpanderControl_v4_40}
+
+  $aa $7c. $7c 40!!             {Expanded: Disable SPI, bank 1}
+                                {Original 32k: undefined value in [$7c] }
+  $7c, $aa^ [if=0               {Note: doesn't work if undefined value was $aa!}
+    $55 $7c. $7c 40!!           {Try again with complementary pattern}
+    $7c, $55^ ]
+  [if<>0
+    0 CtrlBits. ret]            { Undefined value in [$7c] -> no expander }
+  $3c 40!!                      {Expanded: Disable SPI, bank 0}
+  _sysArgs0 255^ q.             {Invert value from memory}
+  _sysArgs0^ [if<>0             {If different, setting bank 0 did not work}
+    0 CtrlBits. ret]            {-> no expander board}
+
+  {Expander present: test for 128K}
+  $bc 40!!                      {Expanded: Disable SPI, bank 2}
+  _sysArgs0 255^ q.             {Invert value from memory}
+  _sysArgs0^ [if=0              {If equal, no A16, and thererefore 64K max}
+    $807c 40!! 0 ret]           {Expanded: Disable SPI, MOSI high, bank 1}
+  $1c31 i=                      {At least 128K}
+
+  {A16 present: test for 512k}
+  $a, $fc& $fc^ [if=0           {If patched 512k rom is present}
+    $fcf0 40!! $aa q.           { write $aa into bank 15}
+    $5cf0 40!! $55 q.           { write $55 into bank 5}
+    $fcf0 40!!                  { back to bank 15 }
+    q, $aa^ [if=0               { read and compare with $aa }
+    $0c35 i=]                   { found 512k }
+    $00f0 40!! ]                { restore new banking register to default}
+
+  $807c 40!!                    {Disable SPI, MOSI high, bank 1}
+  i ret                         {Return 0 for 32/64K, $1c31 for 128K, $0c35 for 512k}
+] CheckExpander=
+
+
+
+
+{-----------------------------------------------------------------------+
+|}>\vLR++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+*=$0500
+
 { Resetting waveform tables after video/audio/vCPU have started }
 \SYS_ResetWaveforms_v4_50 \sysFn: 0 50!!
 \SYS_ShuffleNoise_v4_46   \sysFn: 0 46!! 46!! 46!! 46!!
@@ -239,8 +275,8 @@ gcl0x
 { Setup a G-major chord with 4 channels, but don't play it yet }
 $158 {1: G-3} SetupChannel!
 $270 {2: G-4} SetupChannel!
-$378 {3: B-4} SetupChannel!
-$47e {4: D-5} SetupChannel!
+$360 {3: B-3} SetupChannel! {was: $378 {3: B-4} SetupChannel!}
+$466 {4: D-4} SetupChannel! {was: $47e {4: D-5} SetupChannel!}
 
 { Setup video }
 [
@@ -273,15 +309,9 @@ $47e {4: D-5} SetupChannel!
   |   *** Gigatron ??K ***   |
   | TTL microcomputer ROM vX |
 
-  +--------------------------+
-  |  *** Gigatron 128K ***   | <-- TODO Try 1 char less indent for 128K...
-  | TTL microcomputer ROM vX |
 }
 $814 Pos=
 [def `***`Gigatron` #0] PrintS!
-
-$1f8 CtrlBits=
-\SYS_ExpanderControl_v4_40 _sysFn=
 CheckMemory!
 [def `K`***` #10
   ``TTL`microcomputer
@@ -290,13 +320,18 @@ PrintS!
 
 { Change into default video mode }
 \SYS_SetMode_v2_80 _sysFn=      {!!! Not in ROM v1 !!!}
-1 80!!                          {Mode 1 -> "ABC-"}
+
+$a, $fc& $fc^ [if=0             { Test for 512k rom }
+  2    { yes: Mode 2 -> "A-C-" }
+ else
+  1    { no:  Mode 1 -> "ABC-"}
+] 80!!
 
 { Try booting from memory card if there is an expansion card and at least 64K }
 CtrlBits, [if<>0 \memSize, [if=0 CheckCard!]]
 
 { Load and start ROM program }
-\Main _sysArgs0= $200 _vLR= \SYS_Exec_88 _sysFn= 88!!
+FindMain! _sysArgs0= $200 _vLR= \SYS_Exec_88 _sysFn= 88!!
 
 {-----------------------------------------------------------------------+
 |                                                                       |
