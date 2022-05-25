@@ -199,8 +199,8 @@ namespace Spi {
         fclose((FILE*)fd);
         type = NONE;
         fd = 0;
-      } else if (filelen % (512 * 1024)) {
-        fprintf(stderr, "Spi::SDCard: file size should be a multiple of 512K: %s\n", filename.c_str());
+      } else if (filelen % (256 * 1024)) {
+        fprintf(stderr, "Spi::SDCard: file size should be a multiple of 256K: %s\n", filename.c_str());
         fclose((FILE*)fd);
         type = NONE;
         fd = 0;

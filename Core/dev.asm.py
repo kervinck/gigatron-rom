@@ -860,17 +860,34 @@ ld(hi('REENTER'),Y)             #15 slot 0xe0
 jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
-ld(hi('REENTER'),Y)             #15 slot 0xe3
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
+#-----------------------------------------------------------------------
+# Extension SYS_ScanMemoryExt_DEVROM_50
+#-----------------------------------------------------------------------
+
+# SYS function for searching a byte in a 0 to 256 bytes string located
+# in a different bank. Doesn't cross page boundaries. Returns a
+# pointer to the target if found or zero. Temporarily deselects SPI
+# devices.
+#
+# sysArgs[0:1]            Start address
+# sysArgs[2], sysArgs[3]  Bytes to locate in the string
+# vACL                    Length of the string (0 means 256)
+# vACH                    Bit 6 and 7 contain the bank number
+
+label('SYS_ScanMemoryExt_DEVROM_50')
+ld(hi('sys_ScanMemoryExt'),Y)   #15 slot 0xe3
+jmp(Y,'sys_ScanMemoryExt')      #16
+ld([vAC+1])                     #17
+
 
 #-----------------------------------------------------------------------
 # Extension SYS_ScanMemory_DEVROM_50
 #-----------------------------------------------------------------------
 
-# SYS function for searching a byte in a 0 to 256 bytes string
-# Returns a pointer to the target if found or zero.
-# Doesn't cross page boundaries.
+# SYS function for searching a byte in a 0 to 256 bytes string.
+# Returns a pointer to the target if found or zero.  Doesn't cross
+# page boundaries.
+
 #
 # sysArgs[0:1]            Start address
 # sysArgs[2], sysArgs[3]  Bytes to locate in the string
@@ -913,12 +930,13 @@ ld([vAC])                        # 17
 #
 # Doesn't cross page boundaries.
 # Overwrites sysArgs[4:7], vLR, and vTmp.
-# Returns -1 in vAC if no expansion card is present.
+# Temporarily deselect all SPI devices.
+# Should not call without expansion board
 
 label('SYS_CopyMemoryExt_DEVROM_100')
 ld(hi('sys_CopyMemoryExt'),Y)    # 15 slot 0xec
 jmp(Y, 'sys_CopyMemoryExt')      # 16
-ld(hi(ctrlBits), Y)              # 17
+ld([vAC+1])                      # 17
 
 #-----------------------------------------------------------------------
 # Extension SYS_ReadRomDir_v5_80
@@ -2921,7 +2939,16 @@ xora(videoYline0)               #17 First line of vertical blank
 label('SYS_ExpanderControl_v4_40')
 ld(hi('sys_ExpanderControl'),Y) #15
 jmp(Y,'sys_ExpanderControl')    #16
-ld(hi(ctrlBits),Y)              #17
+ld(0b00001100)                  #17
+#    ^^^^^^^^
+#    |||||||`-- SCLK
+#    ||||||`--- Not connected
+#    |||||`---- /SS0
+#    ||||`----- /SS1
+#    |||`------ /SS2 or /CPOL
+#    ||`------- /SS3 or /ZPBANK
+#    |`-------- B0
+#    `--------- B1
 
 #-----------------------------------------------------------------------
 # Extension SYS_Run6502_v4_80
@@ -3694,15 +3721,15 @@ ld(-62/2)                       #59
 
 align(0x100)
 
-label('sys_ExpanderControl')   
-ld(0b00001100)                      #18 bits 2 and 3
+label('sys_ExpanderControl')
+ld(hi(ctrlBits),Y)                  #18
 anda([vAC])                         #19 check for special ctrl code space
 beq('sysEx#22')                     #20
 ld([vAC])                           #21 load low byte of ctrl code in delay slot
 anda(0xfc)                          #22 sanitize normal ctrl code
 st([Y,ctrlBits])                    #23 store in ctrlBits
 st([vTmp])                          #24 store in vTmp
-bra('sysEx#27')                     #25 jump to issuing normal ctrl code 
+bra('sysEx#27')                     #25 jump to issuing normal ctrl code
 ld([vAC+1],Y)                       #26 load high byte of ctrl code in delay slot
 label('sysEx#22')
 anda(0xfc,X)                        #22 * special ctrl code
@@ -5415,7 +5442,7 @@ ld(-44/2)                       #42
 
 #-----------------------------------------------------------------------
 #
-#  $1300 ROM page 19/20: CopyMemory/CopyMemoryExt/ScanMemory
+#  $1300 ROM page 19/20: CopyMemory[Ext]/ScanMemory[Ext]
 #
 #-----------------------------------------------------------------------
 
@@ -5529,127 +5556,108 @@ ld(-26/2)                            #23
 
 label('sys_CopyMemoryExt')
 
-ld([Y,ctrlBits])                     #18
-bne('.sysCme#21')                    #19
-st([vTmp])                           #20
-ld(255)                              #21 no expansion present
-st([vAC])                            #22
-st([vAC+1])                          #23
-ld(hi('NEXTY'),Y)                    #24
-jmp(Y,'NEXTY')                       #25
-ld(-28/2)                            #26
+adda(AC)                             #18
+adda(AC)                             #19
+ora(0x3c)                            #20
+st([vTmp])                           #21 [vTmp] = src ctrl value
+ld([vAC+1])                          #22
+anda(0xfc)                           #23
+ora(0x3c)                            #24
+st([vLR])                            #25 [vLR] = dest ctrl value
 
-label('.sysCme#21')
-ld([vAC+1])                          #21
-adda([vAC+1])                        #22
-st([vLR])                            #23
-adda([vLR])                          #24
-xora([vTmp])                         #25
-anda(0xc3)                           #26 Sanitize [$1f8] as well
-xora([vTmp])                         #27
-st([vTmp])                           #28 [vTmp] = source ctrl value
-xora([vAC+1])                        #29
-anda(0xc0)                           #30
-xora([vTmp])                         #31
-st([vLR])                            #32 [vLR] = destination ctrl value (nonono)
+label('.sysCme#26')
+ld([vAC])                            #26
+ble('.sysCme#29')                    #27   goto burst5
+suba(5)                              #28
+bge('.sysCme#31')                    #29   goto burst5
+ld([sysArgs+3],Y)                    #30
+adda(4)                              #31
 
-ld([vAC])                            #33
-label('.sysCme#34')
-ble('.sysCme#36')                    #34   goto burst5
-suba(5)                              #35
-bge('.sysCme#38')                    #36   goto burst5
-ld([sysArgs+3],Y)                    #37
-adda(4)                              #38
-
-st([vAC])                            #39   single
-ld([vTmp],X)                         #40
-ctrl(X)                              #41
-ld([sysArgs+2],X)                    #42
-ld([Y,X])                            #43
-ld([vLR],X)                          #44
+st([vAC])                            #32   single
+ld([vTmp],X)                         #33
+ctrl(X)                              #34
+ld([sysArgs+2],X)                    #35
+ld([Y,X])                            #36
+ld([vLR],X)                          #37
+ctrl(X)                              #38
+ld([sysArgs+1],Y)                    #39
+ld([sysArgs+0],X)                    #40
+st([Y,X])                            #41
+ld(hi(ctrlBits), Y)                  #42
+ld([Y,ctrlBits])                     #43
+ld(AC,X)                             #44
 ctrl(X)                              #45
-ld([sysArgs+1],Y)                    #46
-ld([sysArgs+0],X)                    #47
-st([Y,X])                            #48
-ld(hi(ctrlBits), Y)                  #49
-ld([Y,ctrlBits])                     #50
-ld(AC,X)                             #51
-ctrl(X)                              #52
-ld([sysArgs+0])                      #53
-adda(1)                              #54
-st([sysArgs+0])                      #55
-ld([sysArgs+2])                      #56
-adda(1)                              #57
-st([sysArgs+2])                      #58
-ld([vAC])                            #59
-beq(pc()+3)                          #60
-bra(pc()+3)                          #61
-ld(-2)                               #62
-ld(0)                                #62!
-adda([vPC])                          #63
-st([vPC])                            #64
-ld(hi('REENTER'),Y)                  #65
-jmp(Y,'REENTER')                     #66
-ld(-70/2)                            #67
+ld([sysArgs+0])                      #46
+adda(1)                              #47
+st([sysArgs+0])                      #48
+ld([sysArgs+2])                      #49
+adda(1)                              #50
+st([sysArgs+2])                      #51
+ld([vAC])                            #52  done?
+beq(pc()+3)                          #53
+bra(pc()+3)                          #54
+ld(-2)                               #55  restart
+ld(0)                                #55! finished
+adda([vPC])                          #56
+st([vPC])                            #57
+ld(hi('NEXTY'),Y)                    #58
+jmp(Y,'NEXTY')                       #59
+ld(-62/2)                            #60
 
-label('.sysCme#36')
-nop()                                #36   burst5
-ld([sysArgs+3],Y)                    #37
-label('.sysCme#38')
-st([vAC])                            #38   burst5
-ld([vTmp],X)                         #39
-ctrl(X)                              #40
-ld([sysArgs+2],X)                    #41
+label('.sysCme#29')
+nop()                                #29   burst5
+ld([sysArgs+3],Y)                    #30
+label('.sysCme#31')
+st([vAC])                            #31   burst5
+ld([vTmp],X)                         #32
+ctrl(X)                              #33
+ld([sysArgs+2],X)                    #34
 for i in range(5):
-  ld([Y,X])                            #42+i*3
-  st([vLR+1 if i<1 else sysArgs+3+i])  #43+i*3
-  st([Y,Xpp]) if i<4 else None         #44+i*3 if i<5
-ld([vLR],X)                          #56
-ctrl(X)                              #57
-ld([sysArgs+1],Y)                    #58
-ld([sysArgs+0],X)                    #59
+  ld([Y,X])                            #35+i*3
+  st([vLR+1 if i<1 else sysArgs+3+i])  #36+i*3
+  st([Y,Xpp]) if i<4 else None         #37+i*3 if i<4
+ld([vLR],X)                          #49
+ctrl(X)                              #50
+ld([sysArgs+1],Y)                    #51
+ld([sysArgs+0],X)                    #52
 for i in range(5):
-  ld([vLR+1 if i<1 else sysArgs+3+i])  #60+i*2
-  st([Y,Xpp])                          #61+i*2
-ld([sysArgs+0])                      #70
-adda(5)                              #71
-st([sysArgs+0])                      #72
-ld([sysArgs+2])                      #73
-adda(5)                              #74
-st([sysArgs+2])                      #75
+  ld([vLR+1 if i<1 else sysArgs+3+i])  #53+i*2
+  st([Y,Xpp])                          #54+i*2
+ld([sysArgs+0])                      #63
+adda(5)                              #64
+st([sysArgs+0])                      #65
+ld([sysArgs+2])                      #66
+adda(5)                              #67
+st([sysArgs+2])                      #68
 
-ld([vAC])                            #76
-bne('.sysCme#79')                    #77
-ld(hi(ctrlBits), Y)                  #78
-ld([Y,ctrlBits])                     #79
-anda(0xfc,X)                         #80
-ctrl(X)                              #81
-ld([vTmp])                           #82 ALWAYS LOAD AFTER CTRL
-ld(hi('REENTER'),Y)                  #83
-jmp(Y,'REENTER')                     #84
-ld(-88/2)                            #85
+ld([vAC])                            #69
+bne('.sysCme#72')                    #70
+ld(hi(ctrlBits), Y)                  #71  we're done!
+ld([Y,ctrlBits])                     #72
+anda(0xfc,X)                         #73
+ctrl(X)                              #74
+ld([vTmp])                           #75  always read after ctrl
+ld(hi('NEXTY'),Y)                    #76
+jmp(Y,'NEXTY')                       #77
+ld(-80/2)                            #78
 
-label('.sysCme#79')
-nop()                                #79
-ld(-52/2)                            #80
-adda([vTicks])                       #29 = 81 - 52
-st([vTicks])                         #30
-adda(min(0,maxTicks-(46+52)/2))      #31  note use of maxTicks
-bge('.sysCme#34')                    #32
-ld([vAC])                            #33
-ld(-2)                               #34  notime
-adda([vPC])                          #35
-st([vPC])                            #36
-ld(hi(ctrlBits), Y)                  #37
-ld([Y,ctrlBits])                     #38
-anda(0xfc,X)                         #39
-ctrl(X)                              #40
-ld([vTmp])                           #41 ALWAYS LOAD AFTER CTRL
-ld(hi('NEXTY'),Y)                    #42
-jmp(Y,'NEXTY')                       #43
-ld(-46/2)                            #44  max: 46 + 52 = 98 cycles
-
-
+label('.sysCme#72')
+ld(-52/2)                            #72
+adda([vTicks])                       #21 = 72 - 52
+st([vTicks])                         #22
+adda(min(0,maxTicks-(40+52)/2))      #23
+bge('.sysCme#26')                    #24  enough time for another loop
+ld(-2)                               #25
+adda([vPC])                          #26  restart
+st([vPC])                            #27
+ld(hi(ctrlBits), Y)                  #28
+ld([Y,ctrlBits])                     #29
+anda(0xfc,X)                         #30
+ctrl(X)                              #31
+ld([vTmp])                           #32 always read after ctrl
+ld(hi('REENTER'),Y)                  #33
+jmp(Y,'REENTER')                     #34
+ld(-38/2)                            #35 max: 38 + 52 = 90 cycles
 
 align(0x100, size=0x100)
 
@@ -5701,6 +5709,70 @@ st([vAC+1])                          #28
 ld(hi('REENTER'),Y)                  #29
 jmp(Y,'REENTER')                     #30
 ld(-34/2)                            #31
+
+
+# SYS_ScanMemoryExt_DEVROM_50 implementation
+
+label('sys_ScanMemoryExt')
+ora(0x3c,X)                          #18
+ctrl(X)                              #19
+ld([sysArgs+1],Y)                    #20
+ld([sysArgs+0],X)                    #21
+ld([Y,X])                            #22
+nop()                                #23
+label('.sysSmx#24')
+xora([sysArgs+2])                    #24
+beq('.sysSmx#27')                    #25
+ld([Y,X])                            #26
+xora([sysArgs+3])                    #27
+beq('.sysSmx#30')                    #28
+ld([sysArgs+0])                      #29
+adda(1);                             #30
+st([sysArgs+0],X)                    #31
+ld([vAC])                            #32
+suba(1)                              #33
+beq('.sysSmx#36')                    #34 return zero
+st([vAC])                            #35
+ld(-18/2)                            #18 = 36 - 18
+adda([vTicks])                       #19
+st([vTicks])                         #20
+adda(min(0,maxTicks -(30+18)/2))     #21
+bge('.sysSmx#24')                    #22
+ld([Y,X])                            #23
+ld([vPC])                            #24
+suba(2)                              #25 restart
+st([vPC])                            #26
+ld(hi(ctrlBits),Y)                   #27 restore and return
+ld([Y,ctrlBits])                     #28
+anda(0xfc,X)                         #29
+ctrl(X)                              #30
+ld([vTmp])                           #31
+ld(hi('NEXTY'),Y)                    #32
+jmp(Y,'NEXTY')                       #33
+ld(-36/2)                            #34
+
+label('.sysSmx#27')
+nop()                                #27 success
+nop()                                #28
+ld([sysArgs+0])                      #29
+label('.sysSmx#30')
+st([vAC])                            #30 success
+ld([sysArgs+1])                      #31
+nop()                                #32
+nop()                                #33
+nop()                                #34
+nop()                                #35
+label('.sysSmx#36')
+st([vAC+1])                          #36
+ld(hi(ctrlBits),Y)                   #37 restore and return
+ld([Y,ctrlBits])                     #38
+anda(0xfc,X)                         #39
+ctrl(X)                              #40
+ld([vTmp])                           #41
+ld(hi('NEXTY'),Y)                    #42
+jmp(Y,'NEXTY')                       #43
+ld(-46/2)                            #44
+
 
 
 #-----------------------------------------------------------------------
