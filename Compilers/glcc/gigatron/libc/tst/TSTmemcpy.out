@@ -1,0 +1,7 @@
+Trying memcpy(dbuffer+255,sbuffer+256,257)
+Trying memcpy(dbuffer+34,sbuffer+0,12)
+Trying memcpy(dbuffer+34,sbuffer+65,12)
+Trying memcpy(dbuffer+84,sbuffer+63,255)
+Trying memcpy(dbuffer+34,sbuffer+63,256)
+Trying memcpy(dbuffer+128,sbuffer+256,257)
+Trying memcpy(dbuffer+256,sbuffer+63,757)

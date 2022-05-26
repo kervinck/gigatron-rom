@@ -1,0 +1,4 @@
+tst/stdarg.c:26: warning: implicit declaration of function `printf'
+tst/stdarg.c:30: warning: implicit declaration of function `printf'
+tst/stdarg.c:49: warning: implicit declaration of function `printf'
+tst/stdarg.c:51: warning: missing return value

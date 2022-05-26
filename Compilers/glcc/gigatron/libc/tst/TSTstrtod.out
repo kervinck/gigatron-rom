@@ -1,0 +1,37 @@
+strtod("23") = 23 (0x0.b8000000*2^5), delta=+2 errno=0
+strtod("-245.3") = -245.3 (0x0.f54ccccd*2^8), delta=+6 errno=0
+strtod("0") = 0 (0x0.00000000*2^0), delta=+1 errno=0
+strtod(".0") = 0 (0x0.00000000*2^0), delta=+2 errno=0
+strtod(".") = 0 (0x0.00000000*2^0), delta=+0 errno=0
+strtod("1") = 1 (0x0.80000000*2^1), delta=+1 errno=0
+strtod("429.4967295") = 429.496729 (0x0.d6bf94d5*2^9), delta=+11 errno=0
+strtod("429496.7296") = 429496.73 (0x0.d1b71759*2^19), delta=+11 errno=0
+strtod("-0377") = -377 (0x0.bc800000*2^9), delta=+5 errno=0
+strtod("+3000000000e10") = 3e+19 (0x0.d02ab487*2^65), delta=+14 errno=0
+strtod("-3000000000e10") = -3e+19 (0x0.d02ab487*2^65), delta=+14 errno=0
+strtod(" 17e499 overflow") = 1.70141183e+38 (0x0.ffffffff*2^127), delta=+7 errno=2
+strtod(" 17e-499 underflow (should set errno but doesn't)") = 0 (0x0.00000000*2^0), delta=+8 errno=0
+strtod("83928038989809890809") = 8.3928039e+19 (0x0.9197895a*2^67), delta=+20 errno=0
+strtod("0.00000000000000000000000000000000000000001e30") = 1e-11 (0x0.afebff0c*2^-36), delta=+46 errno=0
+strtod("-100000000000000000000000000000000000000000e-30") = -1e+11 (0x0.ba43b740*2^37), delta=+47 errno=0
+strtod("  -9999999999.999") = -1e+10 (0x0.9502f900*2^34), delta=+17 errno=0
+strtod("  23z") = 23 (0x0.b8000000*2^5), delta=+4 errno=0
+strtod("  23e+") = 23 (0x0.b8000000*2^5), delta=+4 errno=0
+strtod("4294967291") = 4.29496729e+09 (0x0.fffffffb*2^32), delta=+10 errno=0
+strtod("4294967292") = 4.29496729e+09 (0x0.fffffffc*2^32), delta=+10 errno=0
+strtod("4294967293") = 4.29496729e+09 (0x0.fffffffd*2^32), delta=+10 errno=0
+strtod("4294967294") = 4.29496729e+09 (0x0.fffffffe*2^32), delta=+10 errno=0
+strtod("4294967295") = 4.2949673e+09 (0x0.ffffffff*2^32), delta=+10 errno=0
+strtod("4294967296") = 4.2949673e+09 (0x0.80000000*2^33), delta=+10 errno=0
+strtod("4294967297") = 4.2949673e+09 (0x0.80000001*2^33), delta=+10 errno=0
+strtod("4294967298") = 4.2949673e+09 (0x0.80000001*2^33), delta=+10 errno=0
+strtod("4294967299") = 4.2949673e+09 (0x0.80000002*2^33), delta=+10 errno=0
+strtod("4294967300") = 4.2949673e+09 (0x0.80000002*2^33), delta=+10 errno=0
+strtod("1.701411835e+38") = 1.70141183e+38 (0x0.ffffffff*2^127), delta=+15 errno=2
+strtod("1.701411834209e+38") = 1.70141183e+38 (0x0.ffffffff*2^127), delta=+18 errno=0
+strtod("1.701411834e+38") = 1.70141183e+38 (0x0.ffffffff*2^127), delta=+15 errno=0
+strtod("2.938735877056e-39") = 0 (0x0.00000000*2^0), delta=+18 errno=0
+strtod("2.9387358771e-39") = 2.93873588e-39 (0x0.80000000*2^-127), delta=+16 errno=0
+strtod("4.6566128729e-10") = 4.65661287e-10 (0x0.80000000*2^-30), delta=+16 errno=0
+strtod("4.656612873077e-10") = 4.65661288e-10 (0x0.80000001*2^-30), delta=+18 errno=0
+strtod("   asdf") = 0 (0x0.00000000*2^0), delta=+0 errno=0

@@ -1,0 +1,48 @@
+----
+dtoa(0,buffer,'e',6) -> [0.000000e+00] (%.6e)
+dtoa(0,buffer,'f',6) -> [0.000000] (%.6f)
+dtoa(0,buffer,'g',6) -> [0] (%.6g)
+----
+dtoa(1,buffer,'e',4) -> [1.0000e+00] (%.4e)
+dtoa(1,buffer,'f',4) -> [1.0000] (%.4f)
+dtoa(1,buffer,'g',4) -> [1] (%.4g)
+----
+dtoa(-37.2,buffer,'e',4) -> [-3.7200e+01] (%.4e)
+dtoa(-37.2,buffer,'f',4) -> [-37.2000] (%.4f)
+dtoa(-37.2,buffer,'g',4) -> [-37.2] (%.4g)
+----
+dtoa(pi,buffer,'e',4) -> [3.1416e+00] (%.4e)
+dtoa(pi,buffer,'f',4) -> [3.1416] (%.4f)
+dtoa(pi,buffer,'g',4) -> [3.142] (%.4g)
+----
+dtoa(pi,buffer,'e',12) -> [3.141592654000e+00] (%.12e)
+dtoa(pi,buffer,'f',12) -> [3.141592654000] (%.12f)
+dtoa(pi,buffer,'g',12) -> [3.141592654] (%.12g)
+----
+dtoa(pi*1e6,buffer,'e',3) -> [3.142e+06] (%.3e)
+dtoa(pi*1e6,buffer,'f',3) -> [3141592.654] (%.3f)
+dtoa(pi*1e6,buffer,'g',3) -> [3.14e+06] (%.3g)
+----
+dtoa(pi*1e-6,buffer,'e',3) -> [3.142e-06] (%.3e)
+dtoa(pi*1e-6,buffer,'f',3) -> [0.000] (%.3f)
+dtoa(pi*1e-6,buffer,'g',3) -> [3.14e-06] (%.3g)
+----
+dtoa(pi*1e-4,buffer,'e',6) -> [3.141593e-04] (%.6e)
+dtoa(pi*1e-4,buffer,'f',6) -> [0.000314] (%.6f)
+dtoa(pi*1e-4,buffer,'g',6) -> [0.000314159] (%.6g)
+----
+dtoa(ulong_max,buffer,'e',2) -> [4.29e+09] (%.2e)
+dtoa(ulong_max,buffer,'f',2) -> [4294967295.00] (%.2f)
+dtoa(ulong_max,buffer,'g',2) -> [4.3e+09] (%.2g)
+----
+dtoa(1e-12,buffer,'e',8) -> [1.00000000e-12] (%.8e)
+dtoa(1e-12,buffer,'f',8) -> [0.00000000] (%.8f)
+dtoa(1e-12,buffer,'g',8) -> [1e-12] (%.8g)
+----
+dtoa(1e-38,buffer,'e',8) -> [1.00000000e-38] (%.8e)
+dtoa(1e-38,buffer,'f',8) -> [0.00000000] (%.8f)
+dtoa(1e-38,buffer,'g',8) -> [1e-38] (%.8g)
+----
+dtoa(1e+38,buffer,'e',8) -> [1.00000000e+38] (%.8e)
+dtoa(1e+38,buffer,'f',8) -> [100000000000000000000000000000000000000.00000000] (%.8f)
+dtoa(1e+38,buffer,'g',8) -> [1e+38] (%.8g)

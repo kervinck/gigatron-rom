@@ -1,0 +1,6 @@
+tst/array.c:12: warning: implicit declaration of function `f'
+tst/array.c:18: warning: implicit declaration of function `g'
+tst/array.c:27: warning: implicit declaration of function `printf'
+tst/array.c:33: warning: missing return value
+tst/array.c:42: warning: implicit declaration of function `printf'
+tst/array.c:48: warning: missing return value

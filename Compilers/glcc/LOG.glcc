@@ -1,0 +1,41 @@
+
+- Option -mapdir
+- New codespec options ORG and PLACE
+- Speed up linker relaxation
+- Library: SYS_ScanMemoryExt, SYS_OsCall
+- Library: Fixed printf corner cases
+
+GLCC_RELEASE_1.4
+
+- Added option -V to report glcc version from git tags
+- Added option --frags to repor final memory map
+- Added macro _GLCC_VER
+- Library: Fixed fopen with "r+" argument
+- Library: folded _exitm into _start
+- Library: setjmp also saves vSP
+- Library: SYS_SetMode, SYS_ReadRomDir, SYS_Exec
+- Library: Added missing memcmp
+- Library: More compact printf and console.
+- Library: Added cprintf
+
+GLCC_RELEASE_1.3
+
+- Added support for compilation with CMake on Unix and Windows
+- Deprecated cmd directory for Windows install. Instead we install cmd files in bin.
+- More aggressive allocation of function arguments to registers.
+- More freedom to allocate long and float vars to registers.
+- Imported popular lcc changes: cpp improvements
+- Imported popular lcc changes: multiplication simplification, error diagnosis.
+- Fixed LCC allocator alignment constraint.
+- Added support for SYS_ScanMemory from dev.rom
+- Doc improvements
+
+GLCC_RELEASE_1.2
+
+- Reenginered exception handling for lower footprint
+- Improved preralloc to optimize cross-subtrees leading to better and safer code
+- Fixed preralloc bug identified by axelb
+
+GLCC_RELEASE_1.1
+
+- ...

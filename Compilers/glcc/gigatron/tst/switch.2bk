@@ -1,0 +1,19 @@
+tst/switch.c:6: warning: implicit declaration of function `printf'
+tst/switch.c:6: warning: implicit declaration of function `backslash'
+tst/switch.c:7: warning: implicit declaration of function `f'
+tst/switch.c:8: warning: implicit declaration of function `g'
+tst/switch.c:9: warning: implicit declaration of function `h'
+tst/switch.c:10: warning: overflow in converting constant expression from `long int' to `int'
+tst/switch.c:11: warning: implicit declaration of function `big'
+tst/switch.c:12: warning: implicit declaration of function `limit'
+tst/switch.c:38: warning: implicit declaration of function `printf'
+tst/switch.c:55: warning: missing return value
+tst/switch.c:60: warning: implicit declaration of function `printf'
+tst/switch.c:73: warning: missing return value
+tst/switch.c:79: warning: implicit declaration of function `printf'
+tst/switch.c:97: warning: missing return value
+tst/switch.c:104: warning: implicit declaration of function `printf'
+tst/switch.c:112: warning: missing return value
+tst/switch.c:121: warning: implicit declaration of function `printf'
+tst/switch.c:130: warning: implicit declaration of function `printf'
+tst/switch.c:137: warning: missing return value

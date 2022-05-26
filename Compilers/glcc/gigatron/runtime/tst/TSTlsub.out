@@ -1,0 +1,168 @@
+
+00000000 - 00000000 = 00000000	00000000 - 00000000 = 00000000	00000000- 00000000 = 00000000
+00000000 - 00000001 = ffffffff	00000000 - 00000001 = ffffffff	00000000- 00000001 = ffffffff
+00000000 - 01001001 = feffefff	00000000 - 00000002 = fffffffe	00000000- 01001001 = feffefff
+00000000 - 10801080 = ef7fef80	00000000 - 00000003 = fffffffd	00000000- 10801080 = ef7fef80
+00000000 - 000000ff = ffffff01	00000000 - 00000004 = fffffffc	00000000- 000000ff = ffffff01
+00000000 - 0000ffff = ffff0001	00000000 - 00000005 = fffffffb	00000000- 0000ffff = ffff0001
+00000000 - 00ffffff = ff000001	00000000 - 00000006 = fffffffa	00000000- 00ffffff = ff000001
+00000000 - ffffffff = 00000001	00000000 - 00000007 = fffffff9	00000000- ffffffff = 00000001
+00000000 - 12345678 = edcba988	00000000 - 00000008 = fffffff8	00000000- 12345678 = edcba988
+00000000 - abcdeabc = 54321544	00000000 - 00000009 = fffffff7	00000000- abcdeabc = 54321544
+00000000 - 0aa0aa0a = f55f55f6	00000000 - 0000000a = fffffff6	00000000- 0aa0aa0a = f55f55f6
+00000000 - aa0aa0aa = 55f55f56	00000000 - 0000000b = fffffff5	00000000- aa0aa0aa = 55f55f56
+- 00000000 = 00000000
+
+00000001 - 00000000 = 00000001	00000001 - 00000000 = 00000001	ffffffff- 00000000 = ffffffff
+00000001 - 00000001 = 00000000	00000001 - 00000001 = 00000000	ffffffff- 00000001 = fffffffe
+00000001 - 01001001 = fefff000	00000001 - 00000002 = ffffffff	ffffffff- 01001001 = feffeffe
+00000001 - 10801080 = ef7fef81	00000001 - 00000003 = fffffffe	ffffffff- 10801080 = ef7fef7f
+00000001 - 000000ff = ffffff02	00000001 - 00000004 = fffffffd	ffffffff- 000000ff = ffffff00
+00000001 - 0000ffff = ffff0002	00000001 - 00000005 = fffffffc	ffffffff- 0000ffff = ffff0000
+00000001 - 00ffffff = ff000002	00000001 - 00000006 = fffffffb	ffffffff- 00ffffff = ff000000
+00000001 - ffffffff = 00000002	00000001 - 00000007 = fffffffa	ffffffff- ffffffff = 00000000
+00000001 - 12345678 = edcba989	00000001 - 00000008 = fffffff9	ffffffff- 12345678 = edcba987
+00000001 - abcdeabc = 54321545	00000001 - 00000009 = fffffff8	ffffffff- abcdeabc = 54321543
+00000001 - 0aa0aa0a = f55f55f7	00000001 - 0000000a = fffffff7	ffffffff- 0aa0aa0a = f55f55f5
+00000001 - aa0aa0aa = 55f55f57	00000001 - 0000000b = fffffff6	ffffffff- aa0aa0aa = 55f55f55
+- 00000001 = ffffffff
+
+01001001 - 00000000 = 01001001	01001001 - 00000000 = 01001001	fffffffe- 00000000 = fffffffe
+01001001 - 00000001 = 01001000	01001001 - 00000001 = 01001000	fffffffe- 00000001 = fffffffd
+01001001 - 01001001 = 00000000	01001001 - 00000002 = 01000fff	fffffffe- 01001001 = feffeffd
+01001001 - 10801080 = f07fff81	01001001 - 00000003 = 01000ffe	fffffffe- 10801080 = ef7fef7e
+01001001 - 000000ff = 01000f02	01001001 - 00000004 = 01000ffd	fffffffe- 000000ff = fffffeff
+01001001 - 0000ffff = 00ff1002	01001001 - 00000005 = 01000ffc	fffffffe- 0000ffff = fffeffff
+01001001 - 00ffffff = 00001002	01001001 - 00000006 = 01000ffb	fffffffe- 00ffffff = feffffff
+01001001 - ffffffff = 01001002	01001001 - 00000007 = 01000ffa	fffffffe- ffffffff = ffffffff
+01001001 - 12345678 = eecbb989	01001001 - 00000008 = 01000ff9	fffffffe- 12345678 = edcba986
+01001001 - abcdeabc = 55322545	01001001 - 00000009 = 01000ff8	fffffffe- abcdeabc = 54321542
+01001001 - 0aa0aa0a = f65f65f7	01001001 - 0000000a = 01000ff7	fffffffe- 0aa0aa0a = f55f55f4
+01001001 - aa0aa0aa = 56f56f57	01001001 - 0000000b = 01000ff6	fffffffe- aa0aa0aa = 55f55f54
+- 01001001 = feffefff
+
+10801080 - 00000000 = 10801080	10801080 - 00000000 = 10801080	fffffffd- 00000000 = fffffffd
+10801080 - 00000001 = 1080107f	10801080 - 00000001 = 1080107f	fffffffd- 00000001 = fffffffc
+10801080 - 01001001 = 0f80007f	10801080 - 00000002 = 1080107e	fffffffd- 01001001 = feffeffc
+10801080 - 10801080 = 00000000	10801080 - 00000003 = 1080107d	fffffffd- 10801080 = ef7fef7d
+10801080 - 000000ff = 10800f81	10801080 - 00000004 = 1080107c	fffffffd- 000000ff = fffffefe
+10801080 - 0000ffff = 107f1081	10801080 - 00000005 = 1080107b	fffffffd- 0000ffff = fffefffe
+10801080 - 00ffffff = 0f801081	10801080 - 00000006 = 1080107a	fffffffd- 00ffffff = fefffffe
+10801080 - ffffffff = 10801081	10801080 - 00000007 = 10801079	fffffffd- ffffffff = fffffffe
+10801080 - 12345678 = fe4bba08	10801080 - 00000008 = 10801078	fffffffd- 12345678 = edcba985
+10801080 - abcdeabc = 64b225c4	10801080 - 00000009 = 10801077	fffffffd- abcdeabc = 54321541
+10801080 - 0aa0aa0a = 05df6676	10801080 - 0000000a = 10801076	fffffffd- 0aa0aa0a = f55f55f3
+10801080 - aa0aa0aa = 66756fd6	10801080 - 0000000b = 10801075	fffffffd- aa0aa0aa = 55f55f53
+- 10801080 = ef7fef80
+
+000000ff - 00000000 = 000000ff	000000ff - 00000000 = 000000ff	fffffffc- 00000000 = fffffffc
+000000ff - 00000001 = 000000fe	000000ff - 00000001 = 000000fe	fffffffc- 00000001 = fffffffb
+000000ff - 01001001 = fefff0fe	000000ff - 00000002 = 000000fd	fffffffc- 01001001 = feffeffb
+000000ff - 10801080 = ef7ff07f	000000ff - 00000003 = 000000fc	fffffffc- 10801080 = ef7fef7c
+000000ff - 000000ff = 00000000	000000ff - 00000004 = 000000fb	fffffffc- 000000ff = fffffefd
+000000ff - 0000ffff = ffff0100	000000ff - 00000005 = 000000fa	fffffffc- 0000ffff = fffefffd
+000000ff - 00ffffff = ff000100	000000ff - 00000006 = 000000f9	fffffffc- 00ffffff = fefffffd
+000000ff - ffffffff = 00000100	000000ff - 00000007 = 000000f8	fffffffc- ffffffff = fffffffd
+000000ff - 12345678 = edcbaa87	000000ff - 00000008 = 000000f7	fffffffc- 12345678 = edcba984
+000000ff - abcdeabc = 54321643	000000ff - 00000009 = 000000f6	fffffffc- abcdeabc = 54321540
+000000ff - 0aa0aa0a = f55f56f5	000000ff - 0000000a = 000000f5	fffffffc- 0aa0aa0a = f55f55f2
+000000ff - aa0aa0aa = 55f56055	000000ff - 0000000b = 000000f4	fffffffc- aa0aa0aa = 55f55f52
+- 000000ff = ffffff01
+
+0000ffff - 00000000 = 0000ffff	0000ffff - 00000000 = 0000ffff	fffffffb- 00000000 = fffffffb
+0000ffff - 00000001 = 0000fffe	0000ffff - 00000001 = 0000fffe	fffffffb- 00000001 = fffffffa
+0000ffff - 01001001 = ff00effe	0000ffff - 00000002 = 0000fffd	fffffffb- 01001001 = feffeffa
+0000ffff - 10801080 = ef80ef7f	0000ffff - 00000003 = 0000fffc	fffffffb- 10801080 = ef7fef7b
+0000ffff - 000000ff = 0000ff00	0000ffff - 00000004 = 0000fffb	fffffffb- 000000ff = fffffefc
+0000ffff - 0000ffff = 00000000	0000ffff - 00000005 = 0000fffa	fffffffb- 0000ffff = fffefffc
+0000ffff - 00ffffff = ff010000	0000ffff - 00000006 = 0000fff9	fffffffb- 00ffffff = fefffffc
+0000ffff - ffffffff = 00010000	0000ffff - 00000007 = 0000fff8	fffffffb- ffffffff = fffffffc
+0000ffff - 12345678 = edcca987	0000ffff - 00000008 = 0000fff7	fffffffb- 12345678 = edcba983
+0000ffff - abcdeabc = 54331543	0000ffff - 00000009 = 0000fff6	fffffffb- abcdeabc = 5432153f
+0000ffff - 0aa0aa0a = f56055f5	0000ffff - 0000000a = 0000fff5	fffffffb- 0aa0aa0a = f55f55f1
+0000ffff - aa0aa0aa = 55f65f55	0000ffff - 0000000b = 0000fff4	fffffffb- aa0aa0aa = 55f55f51
+- 0000ffff = ffff0001
+
+00ffffff - 00000000 = 00ffffff	00ffffff - 00000000 = 00ffffff	fffffffa- 00000000 = fffffffa
+00ffffff - 00000001 = 00fffffe	00ffffff - 00000001 = 00fffffe	fffffffa- 00000001 = fffffff9
+00ffffff - 01001001 = ffffeffe	00ffffff - 00000002 = 00fffffd	fffffffa- 01001001 = feffeff9
+00ffffff - 10801080 = f07fef7f	00ffffff - 00000003 = 00fffffc	fffffffa- 10801080 = ef7fef7a
+00ffffff - 000000ff = 00ffff00	00ffffff - 00000004 = 00fffffb	fffffffa- 000000ff = fffffefb
+00ffffff - 0000ffff = 00ff0000	00ffffff - 00000005 = 00fffffa	fffffffa- 0000ffff = fffefffb
+00ffffff - 00ffffff = 00000000	00ffffff - 00000006 = 00fffff9	fffffffa- 00ffffff = fefffffb
+00ffffff - ffffffff = 01000000	00ffffff - 00000007 = 00fffff8	fffffffa- ffffffff = fffffffb
+00ffffff - 12345678 = eecba987	00ffffff - 00000008 = 00fffff7	fffffffa- 12345678 = edcba982
+00ffffff - abcdeabc = 55321543	00ffffff - 00000009 = 00fffff6	fffffffa- abcdeabc = 5432153e
+00ffffff - 0aa0aa0a = f65f55f5	00ffffff - 0000000a = 00fffff5	fffffffa- 0aa0aa0a = f55f55f0
+00ffffff - aa0aa0aa = 56f55f55	00ffffff - 0000000b = 00fffff4	fffffffa- aa0aa0aa = 55f55f50
+- 00ffffff = ff000001
+
+ffffffff - 00000000 = ffffffff	ffffffff - 00000000 = ffffffff	fffffff9- 00000000 = fffffff9
+ffffffff - 00000001 = fffffffe	ffffffff - 00000001 = fffffffe	fffffff9- 00000001 = fffffff8
+ffffffff - 01001001 = feffeffe	ffffffff - 00000002 = fffffffd	fffffff9- 01001001 = feffeff8
+ffffffff - 10801080 = ef7fef7f	ffffffff - 00000003 = fffffffc	fffffff9- 10801080 = ef7fef79
+ffffffff - 000000ff = ffffff00	ffffffff - 00000004 = fffffffb	fffffff9- 000000ff = fffffefa
+ffffffff - 0000ffff = ffff0000	ffffffff - 00000005 = fffffffa	fffffff9- 0000ffff = fffefffa
+ffffffff - 00ffffff = ff000000	ffffffff - 00000006 = fffffff9	fffffff9- 00ffffff = fefffffa
+ffffffff - ffffffff = 00000000	ffffffff - 00000007 = fffffff8	fffffff9- ffffffff = fffffffa
+ffffffff - 12345678 = edcba987	ffffffff - 00000008 = fffffff7	fffffff9- 12345678 = edcba981
+ffffffff - abcdeabc = 54321543	ffffffff - 00000009 = fffffff6	fffffff9- abcdeabc = 5432153d
+ffffffff - 0aa0aa0a = f55f55f5	ffffffff - 0000000a = fffffff5	fffffff9- 0aa0aa0a = f55f55ef
+ffffffff - aa0aa0aa = 55f55f55	ffffffff - 0000000b = fffffff4	fffffff9- aa0aa0aa = 55f55f4f
+- ffffffff = 00000001
+
+12345678 - 00000000 = 12345678	12345678 - 00000000 = 12345678	fffffff8- 00000000 = fffffff8
+12345678 - 00000001 = 12345677	12345678 - 00000001 = 12345677	fffffff8- 00000001 = fffffff7
+12345678 - 01001001 = 11344677	12345678 - 00000002 = 12345676	fffffff8- 01001001 = feffeff7
+12345678 - 10801080 = 01b445f8	12345678 - 00000003 = 12345675	fffffff8- 10801080 = ef7fef78
+12345678 - 000000ff = 12345579	12345678 - 00000004 = 12345674	fffffff8- 000000ff = fffffef9
+12345678 - 0000ffff = 12335679	12345678 - 00000005 = 12345673	fffffff8- 0000ffff = fffefff9
+12345678 - 00ffffff = 11345679	12345678 - 00000006 = 12345672	fffffff8- 00ffffff = fefffff9
+12345678 - ffffffff = 12345679	12345678 - 00000007 = 12345671	fffffff8- ffffffff = fffffff9
+12345678 - 12345678 = 00000000	12345678 - 00000008 = 12345670	fffffff8- 12345678 = edcba980
+12345678 - abcdeabc = 66666bbc	12345678 - 00000009 = 1234566f	fffffff8- abcdeabc = 5432153c
+12345678 - 0aa0aa0a = 0793ac6e	12345678 - 0000000a = 1234566e	fffffff8- 0aa0aa0a = f55f55ee
+12345678 - aa0aa0aa = 6829b5ce	12345678 - 0000000b = 1234566d	fffffff8- aa0aa0aa = 55f55f4e
+- 12345678 = edcba988
+
+abcdeabc - 00000000 = abcdeabc	abcdeabc - 00000000 = abcdeabc	fffffff7- 00000000 = fffffff7
+abcdeabc - 00000001 = abcdeabb	abcdeabc - 00000001 = abcdeabb	fffffff7- 00000001 = fffffff6
+abcdeabc - 01001001 = aacddabb	abcdeabc - 00000002 = abcdeaba	fffffff7- 01001001 = feffeff6
+abcdeabc - 10801080 = 9b4dda3c	abcdeabc - 00000003 = abcdeab9	fffffff7- 10801080 = ef7fef77
+abcdeabc - 000000ff = abcde9bd	abcdeabc - 00000004 = abcdeab8	fffffff7- 000000ff = fffffef8
+abcdeabc - 0000ffff = abcceabd	abcdeabc - 00000005 = abcdeab7	fffffff7- 0000ffff = fffefff8
+abcdeabc - 00ffffff = aacdeabd	abcdeabc - 00000006 = abcdeab6	fffffff7- 00ffffff = fefffff8
+abcdeabc - ffffffff = abcdeabd	abcdeabc - 00000007 = abcdeab5	fffffff7- ffffffff = fffffff8
+abcdeabc - 12345678 = 99999444	abcdeabc - 00000008 = abcdeab4	fffffff7- 12345678 = edcba97f
+abcdeabc - abcdeabc = 00000000	abcdeabc - 00000009 = abcdeab3	fffffff7- abcdeabc = 5432153b
+abcdeabc - 0aa0aa0a = a12d40b2	abcdeabc - 0000000a = abcdeab2	fffffff7- 0aa0aa0a = f55f55ed
+abcdeabc - aa0aa0aa = 01c34a12	abcdeabc - 0000000b = abcdeab1	fffffff7- aa0aa0aa = 55f55f4d
+- abcdeabc = 54321544
+
+0aa0aa0a - 00000000 = 0aa0aa0a	0aa0aa0a - 00000000 = 0aa0aa0a	fffffff6- 00000000 = fffffff6
+0aa0aa0a - 00000001 = 0aa0aa09	0aa0aa0a - 00000001 = 0aa0aa09	fffffff6- 00000001 = fffffff5
+0aa0aa0a - 01001001 = 09a09a09	0aa0aa0a - 00000002 = 0aa0aa08	fffffff6- 01001001 = feffeff5
+0aa0aa0a - 10801080 = fa20998a	0aa0aa0a - 00000003 = 0aa0aa07	fffffff6- 10801080 = ef7fef76
+0aa0aa0a - 000000ff = 0aa0a90b	0aa0aa0a - 00000004 = 0aa0aa06	fffffff6- 000000ff = fffffef7
+0aa0aa0a - 0000ffff = 0a9faa0b	0aa0aa0a - 00000005 = 0aa0aa05	fffffff6- 0000ffff = fffefff7
+0aa0aa0a - 00ffffff = 09a0aa0b	0aa0aa0a - 00000006 = 0aa0aa04	fffffff6- 00ffffff = fefffff7
+0aa0aa0a - ffffffff = 0aa0aa0b	0aa0aa0a - 00000007 = 0aa0aa03	fffffff6- ffffffff = fffffff7
+0aa0aa0a - 12345678 = f86c5392	0aa0aa0a - 00000008 = 0aa0aa02	fffffff6- 12345678 = edcba97e
+0aa0aa0a - abcdeabc = 5ed2bf4e	0aa0aa0a - 00000009 = 0aa0aa01	fffffff6- abcdeabc = 5432153a
+0aa0aa0a - 0aa0aa0a = 00000000	0aa0aa0a - 0000000a = 0aa0aa00	fffffff6- 0aa0aa0a = f55f55ec
+0aa0aa0a - aa0aa0aa = 60960960	0aa0aa0a - 0000000b = 0aa0a9ff	fffffff6- aa0aa0aa = 55f55f4c
+- 0aa0aa0a = f55f55f6
+
+aa0aa0aa - 00000000 = aa0aa0aa	aa0aa0aa - 00000000 = aa0aa0aa	fffffff5- 00000000 = fffffff5
+aa0aa0aa - 00000001 = aa0aa0a9	aa0aa0aa - 00000001 = aa0aa0a9	fffffff5- 00000001 = fffffff4
+aa0aa0aa - 01001001 = a90a90a9	aa0aa0aa - 00000002 = aa0aa0a8	fffffff5- 01001001 = feffeff4
+aa0aa0aa - 10801080 = 998a902a	aa0aa0aa - 00000003 = aa0aa0a7	fffffff5- 10801080 = ef7fef75
+aa0aa0aa - 000000ff = aa0a9fab	aa0aa0aa - 00000004 = aa0aa0a6	fffffff5- 000000ff = fffffef6
+aa0aa0aa - 0000ffff = aa09a0ab	aa0aa0aa - 00000005 = aa0aa0a5	fffffff5- 0000ffff = fffefff6
+aa0aa0aa - 00ffffff = a90aa0ab	aa0aa0aa - 00000006 = aa0aa0a4	fffffff5- 00ffffff = fefffff6
+aa0aa0aa - ffffffff = aa0aa0ab	aa0aa0aa - 00000007 = aa0aa0a3	fffffff5- ffffffff = fffffff6
+aa0aa0aa - 12345678 = 97d64a32	aa0aa0aa - 00000008 = aa0aa0a2	fffffff5- 12345678 = edcba97d
+aa0aa0aa - abcdeabc = fe3cb5ee	aa0aa0aa - 00000009 = aa0aa0a1	fffffff5- abcdeabc = 54321539
+aa0aa0aa - 0aa0aa0a = 9f69f6a0	aa0aa0aa - 0000000a = aa0aa0a0	fffffff5- 0aa0aa0a = f55f55eb
+aa0aa0aa - aa0aa0aa = 00000000	aa0aa0aa - 0000000b = aa0aa09f	fffffff5- aa0aa0aa = 55f55f4b
+- aa0aa0aa = 55f55f56

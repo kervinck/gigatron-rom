@@ -1,0 +1,1 @@
+tst/limits.c:4: warning: implicit declaration of function `printf'

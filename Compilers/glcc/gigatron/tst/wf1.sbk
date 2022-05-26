@@ -1,0 +1,285 @@
+#VCPUv5
+
+# ======== ('CODE', 'main', code0)
+def code0():
+	label('main');
+	_PROLOGUE(28,6,0x0); # save=None
+	_SP(-22+28);STW(R22);
+	LDI(0);DOKE(R22);
+	_LDI('next');STW(R22);
+	LDI(0);DOKE(R22);
+	_BRA('.3');
+	label('.2');
+	_SP(-20+28);STW(R8);
+	_MOVW(R8,[SP,2]);
+	_SP(-22+28);STW(R9);
+	_MOVW(R9,[SP,4]);
+	CALLI('lookup');STW(R22);
+	DEEK();ADDI(1);DOKE(R22);
+	label('.3');
+	_SP(-20+28);STW(R8);
+	_MOVW(R8,[SP,2]);
+	CALLI('getword');
+	_BNE('.2');
+	_SP(-22+28);DEEK();STW(R8);
+	_MOVW(R8,[SP,2]);
+	CALLI('tprint');
+	LDI(0);
+	label('.1');
+	_EPILOGUE(28,6,0x0,saveAC=True);
+# ======== ('CODE', 'err', code1)
+def code1():
+	label('err');
+	_PROLOGUE(8,6,0x80); # save=R7
+	LDW(R8);STW(R7);
+	_LDI('.6');STW(R8);
+	_MOVW(R8,[SP,2]);
+	LDW(R7);STW(R9);
+	_MOVW(R9,[SP,4]);
+	CALLI('printf');
+	LDI(1);STW(R8);
+	_MOVW(R8,[SP,2]);
+	CALLI('exit');
+	LDI(0);
+	label('.5');
+	_EPILOGUE(8,6,0x80,saveAC=True);
+# ======== ('CODE', 'getword', code2)
+def code2():
+	label('getword');
+	_PROLOGUE(12,4,0xe0); # save=R5-7
+	LDW(R8);STW(R7);
+	label('.8');
+	label('.9');
+	CALLI('getchar');STW(R22);
+	STW(R6);
+	_LDI(-1);XORW(R22);_BEQ('.11');
+	LDW(R6);STW(R8);
+	_MOVW(R8,[SP,2]);
+	CALLI('isletter');
+	_BEQ('.8');
+	label('.11');
+	LDW(R7);STW(R5);
+	_BRA('.15');
+	label('.12');
+	LDW(R5);STW(R22);
+	LDI(1);ADDW(R22);STW(R5);
+	LD(R6);POKE(R22);
+	label('.13');
+	CALLI('getchar');
+	STW(R6);
+	label('.15');
+	LDW(R6);STW(R8);
+	_MOVW(R8,[SP,2]);
+	CALLI('isletter');
+	STW(R6);
+	_BNE('.12');
+	LDI(0);POKE(R5);
+	LDW(R5);_CMPWU(R7);_BLE('.16');
+	LDI(1);
+	_BRA('.7');
+	label('.16');
+	LDI(0);
+	label('.7');
+	_EPILOGUE(12,4,0xe0,saveAC=True);
+# ======== ('CODE', 'isletter', code3)
+def code3():
+	label('isletter');
+	PUSH();
+	LDW(R8);_CMPIS(65);_BLT('.19');
+	LDW(R8);_CMPIS(90);_BGT('.19');
+	LDI(32);ADDW(R8);STW(R8);
+	label('.19');
+	LDW(R8);_CMPIS(97);_BLT('.21');
+	LDW(R8);_CMPIS(122);_BGT('.21');
+	LDW(R8);
+	_BRA('.18');
+	label('.21');
+	LDI(0);
+	label('.18');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'lookup', code4)
+def code4():
+	label('lookup');
+	_PROLOGUE(12,6,0xc0); # save=R6-7
+	LDW(R8);STW(R7);
+	LDW(R9);STW(R6);
+	LDW(R6);DEEK();_BEQ('.24');
+	LDW(R7);STW(R8);
+	_MOVW(R8,[SP,2]);
+	LDW(R6);DEEK();ADDI(6);DEEK();STW(R9);
+	_MOVW(R9,[SP,4]);
+	CALLI('strcmp');STW(R22);
+	_SP(-2+12);STW(R21);
+	LDW(R22);DOKE(R21);
+	_SP(-2+12);DEEK();_BGE('.26');
+	LDW(R7);STW(R8);
+	LDW(R6);DEEK();ADDI(2);STW(R9);
+	CALLI('lookup');
+	
+	_BRA('.23');
+	label('.26');
+	_SP(-2+12);DEEK();_BLE('.28');
+	LDW(R7);STW(R8);
+	LDW(R6);DEEK();ADDI(4);STW(R9);
+	CALLI('lookup');
+	
+	_BRA('.23');
+	label('.28');
+	LDW(R6);DEEK();
+	_BRA('.23');
+	label('.24');
+	_LDI(2000);STW(R22);
+	_LDI('next');DEEK();_CMPWS(R22);_BLT('.30');
+	_LDI('.32');STW(R8);
+	CALLI('err');
+	label('.30');
+	_LDI('words');STW(R22);
+	_LDI('next');DEEK();_SHLI(3);ADDW(R22);STW(R22);
+	LDI(0);DOKE(R22);
+	_LDI('next');DEEK();_SHLI(3);STW(R22);
+	_LDI(v('words')+4);ADDW(R22);STW(R21);
+	LDI(0);DOKE(R21);
+	_LDI(v('words')+2);ADDW(R22);STW(R22);
+	LDI(0);DOKE(R22);
+	LDW(R7);STW(R8);
+	_MOVW(R8,[SP,2]);
+	CALLI('strlen');STW(R22);
+	LDI(1);ADDW(R22);STW(R8);
+	_MOVW(R8,[SP,2]);
+	CALLI('malloc');STW(R22);
+	_LDI(v('words')+6);STW(R21);
+	_LDI('next');DEEK();_SHLI(3);ADDW(R21);STW(R21);
+	LDW(R22);DOKE(R21);
+	_LDI(v('words')+6);STW(R22);
+	_LDI('next');DEEK();_SHLI(3);ADDW(R22);DEEK();_BNE('.36');
+	_LDI('.39');STW(R8);
+	CALLI('err');
+	label('.36');
+	_LDI(v('words')+6);STW(R22);
+	_LDI('next');DEEK();_SHLI(3);ADDW(R22);DEEK();STW(R8);
+	_MOVW(R8,[SP,2]);
+	LDW(R7);STW(R9);
+	_MOVW(R9,[SP,4]);
+	CALLI('strcpy');
+	_LDI('next');STW(R22);
+	DEEK();STW(R21);
+	LDI(1);ADDW(R21);DOKE(R22);
+	_LDI('words');STW(R22);
+	LDW(R21);_SHLI(3);ADDW(R22);STW(R22);
+	DOKE(R6);
+	LDW(R22);
+	label('.23');
+	_EPILOGUE(12,6,0xc0,saveAC=True);
+# ======== ('CODE', 'tprint', code5)
+def code5():
+	label('tprint');
+	_PROLOGUE(12,8,0x80); # save=R7
+	LDW(R8);STW(R7);
+	LDW(R7);_BEQ('.42');
+	LDI(2);ADDW(R7);DEEK();STW(R8);
+	CALLI('tprint');
+	_LDI('.44');STW(R8);
+	_MOVW(R8,[SP,2]);
+	LDW(R7);DEEK();STW(R9);
+	_MOVW(R9,[SP,4]);
+	LDI(6);ADDW(R7);DEEK();STW(R10);
+	_MOVW(R10,[SP,6]);
+	CALLI('printf');
+	LDI(4);ADDW(R7);DEEK();STW(R8);
+	CALLI('tprint');
+	label('.42');
+	LDI(0);
+	label('.41');
+	_EPILOGUE(12,8,0x80,saveAC=True);
+# ======== ('CODE', 'strcmp', code6)
+def code6():
+	label('strcmp');
+	PUSH();
+	_BRA('.47');
+	label('.46');
+	LDW(R8);STW(R22);
+	LDI(1);ADDW(R22);STW(R8);
+	LDW(R22);PEEK();_BNE('.49');
+	LDI(0);
+	_BRA('.45');
+	label('.49');
+	LDI(1);ADDW(R9);STW(R9);
+	label('.47');
+	LDW(R9);PEEK();STW(R22);
+	LDW(R8);PEEK();XORW(R22);_BEQ('.46');
+	LDW(R8);PEEK();_BNE('.51');
+	_LDI(-1);
+	_BRA('.45');
+	label('.51');
+	LDW(R9);PEEK();_BNE('.53');
+	LDI(1);
+	_BRA('.45');
+	label('.53');
+	LDW(R9);PEEK();STW(R22);
+	LDW(R8);PEEK();SUBW(R22);
+	label('.45');
+	tryhop(2);POP();RET()
+# ======== ('COMMON', 'next', code7, 2, 2)
+def code7():
+	align(2);
+	label('next');
+	space(2);
+# ======== ('COMMON', 'words', code8, 16000, 2)
+def code8():
+	align(2);
+	label('words');
+	space(16000);
+# ======== ('DATA', '.44', code9, 0, 1)
+def code9():
+	label('.44');
+	bytes(37,100,9,37,115,10,0);
+# ======== ('DATA', '.39', code10, 0, 1)
+def code10():
+	label('.39');
+	bytes(111,117,116,32,111,102,32,119);
+	bytes(111,114,100,32,115,116,111,114);
+	bytes(97,103,101,0);
+# ======== ('DATA', '.32', code11, 0, 1)
+def code11():
+	label('.32');
+	bytes(111,117,116,32,111,102,32,110);
+	bytes(111,100,101,32,115,116,111,114);
+	bytes(97,103,101,0);
+# ======== ('DATA', '.6', code12, 0, 1)
+def code12():
+	label('.6');
+	bytes(63,32,37,115,10,0);
+# ======== (epilog)
+code=[
+	('EXPORT', 'main'),
+	('CODE', 'main', code0),
+	('EXPORT', 'err'),
+	('CODE', 'err', code1),
+	('EXPORT', 'getword'),
+	('CODE', 'getword', code2),
+	('EXPORT', 'isletter'),
+	('CODE', 'isletter', code3),
+	('EXPORT', 'lookup'),
+	('CODE', 'lookup', code4),
+	('EXPORT', 'tprint'),
+	('CODE', 'tprint', code5),
+	('EXPORT', 'strcmp'),
+	('CODE', 'strcmp', code6),
+	('IMPORT', 'strcpy'),
+	('IMPORT', 'strlen'),
+	('IMPORT', 'malloc'),
+	('IMPORT', 'getchar'),
+	('IMPORT', 'exit'),
+	('IMPORT', 'printf'),
+	('COMMON', 'next', code7, 2, 2),
+	('COMMON', 'words', code8, 16000, 2),
+	('DATA', '.44', code9, 0, 1),
+	('DATA', '.39', code10, 0, 1),
+	('DATA', '.32', code11, 0, 1),
+	('DATA', '.6', code12, 0, 1) ]
+module(code=code, name='tst/wf1.c', cpu=5);
+
+# Local Variables:
+# mode: python
+# indent-tabs-mode: t
+# End:

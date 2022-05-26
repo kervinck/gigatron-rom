@@ -1,0 +1,85 @@
+[23]
+	strtoul: 23 (17), delta=+2 errno=0
+	strtol:  23 (17), delta=+2 errno=0
+	atol:    23 (17)
+	atoi:    23 (17)
+[-245]
+	strtoul: 4294967051 (ffffff0b), delta=+4 errno=0
+	strtol:  -245 (ffffff0b), delta=+4 errno=0
+	atol:    -245 (ffffff0b)
+	atoi:    -245 (ff0b)
+[0x7fff]
+	strtoul: 32767 (7fff), delta=+6 errno=0
+	strtol:  32767 (7fff), delta=+6 errno=0
+	atol:    0 (0)
+	atoi:    0 (0)
+[0x7FFF]
+	strtoul: 32767 (7fff), delta=+6 errno=0
+	strtol:  32767 (7fff), delta=+6 errno=0
+	atol:    0 (0)
+	atoi:    0 (0)
+[0x7fff894]
+	strtoul: 134215828 (7fff894), delta=+9 errno=0
+	strtol:  134215828 (7fff894), delta=+9 errno=0
+	atol:    0 (0)
+	atoi:    0 (0)
+[0x7fff8941]
+	strtoul: 2147453249 (7fff8941), delta=+10 errno=0
+	strtol:  2147453249 (7fff8941), delta=+10 errno=0
+	atol:    0 (0)
+	atoi:    0 (0)
+[0x7fff89410]
+	strtoul: 4294967295 (ffffffff), delta=+11 errno=2
+	strtol:  2147483647 (7fffffff), delta=+11 errno=2
+	atol:    0 (0)
+	atoi:    0 (0)
+[4294967295]
+	strtoul: 4294967295 (ffffffff), delta=+10 errno=0
+	strtol:  2147483647 (7fffffff), delta=+10 errno=2
+	atol:    -1 (ffffffff)
+	atoi:    -1 (ffff)
+[4294967296]
+	strtoul: 4294967295 (ffffffff), delta=+10 errno=2
+	strtol:  2147483647 (7fffffff), delta=+10 errno=2
+	atol:    0 (0)
+	atoi:    0 (0)
+[0377]
+	strtoul: 255 (ff), delta=+4 errno=0
+	strtol:  255 (ff), delta=+4 errno=0
+	atol:    377 (179)
+	atoi:    377 (179)
+[+3000000000e10]
+	strtoul: 3000000000 (b2d05e00), delta=+11 errno=0
+	strtol:  2147483647 (7fffffff), delta=+11 errno=2
+	atol:    -1294967296 (b2d05e00)
+	atoi:    24064 (5e00)
+[-3000000000e10]
+	strtoul: 1294967296 (4d2fa200), delta=+11 errno=0
+	strtol:  -2147483648 (80000000), delta=+11 errno=2
+	atol:    1294967296 (4d2fa200)
+	atoi:    -24064 (a200)
+[83928038989809890809]
+	strtoul: 4294967295 (ffffffff), delta=+20 errno=2
+	strtol:  2147483647 (7fffffff), delta=+20 errno=2
+	atol:    -1698646535 (9ac0b5f9)
+	atoi:    -18951 (b5f9)
+[0x1000000000000000fffff abcd]
+	strtoul: 4294967295 (ffffffff), delta=+23 errno=2
+	strtol:  2147483647 (7fffffff), delta=+23 errno=2
+	atol:    0 (0)
+	atoi:    0 (0)
+[  -9999999999999]
+	strtoul: 4294967295 (ffffffff), delta=+16 errno=2
+	strtol:  -2147483648 (80000000), delta=+16 errno=2
+	atol:    -1316134911 (b18d6001)
+	atoi:    24577 (6001)
+[  23z]
+	strtoul: 23 (17), delta=+4 errno=0
+	strtol:  23 (17), delta=+4 errno=0
+	atol:    23 (17)
+	atoi:    23 (17)
+[   asdf]
+	strtoul: 0 (0), delta=+0 errno=0
+	strtol:  0 (0), delta=+0 errno=0
+	atol:    0 (0)
+	atoi:    0 (0)

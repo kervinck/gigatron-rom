@@ -1,0 +1,2 @@
+tst/cf.c:18: warning: implicit declaration of function `getchar'
+tst/cf.c:22: warning: implicit declaration of function `printf'

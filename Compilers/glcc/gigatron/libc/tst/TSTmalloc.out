@@ -1,0 +1,565 @@
+Testing with 4 blocks
+- Allocated 15 bytes at ptr0
+- Allocated 7 bytes at ptr1
+- Allocated 291 bytes at ptr2
+- Allocated 4 bytes at ptr3
+- Freeing ptr1 (size 7)
+- Freeing ptr0 (size 15)
+- Freeing ptr3 (size 4)
+- Freeing ptr2 (size 291)
+Testing with 6 blocks
+- Allocated 1820 bytes at ptr0
+- Allocated 77 bytes at ptr1
+- Allocated 16 bytes at ptr2
+- Allocated 4 bytes at ptr3
+- Allocated 50 bytes at ptr4
+- Allocated 541 bytes at ptr5
+- Freeing ptr5 (size 541)
+- Freeing ptr2 (size 16)
+- Freeing ptr4 (size 50)
+- Freeing ptr3 (size 4)
+- Freeing ptr1 (size 77)
+- Freeing ptr0 (size 1820)
+Testing with 9 blocks
+- Allocated 53 bytes at ptr0
+- Allocated 15 bytes at ptr1
+- Allocated 4 bytes at ptr2
+- Allocated 17 bytes at ptr3
+- Allocated 6 bytes at ptr4
+- Allocated 13 bytes at ptr5
+- Allocated 104 bytes at ptr6
+- Allocated 9 bytes at ptr7
+- Allocated 6 bytes at ptr8
+- Freeing ptr6 (size 104)
+- Freeing ptr2 (size 4)
+- Freeing ptr5 (size 13)
+- Freeing ptr4 (size 6)
+- Freeing ptr8 (size 6)
+- Freeing ptr3 (size 17)
+- Freeing ptr0 (size 53)
+- Freeing ptr1 (size 15)
+- Freeing ptr7 (size 9)
+Testing with 13 blocks
+- Allocated 5 bytes at ptr0
+- Allocated 4 bytes at ptr1
+- Allocated 18 bytes at ptr2
+- Allocated 541 bytes at ptr3
+- Allocated 4 bytes at ptr4
+- Allocated 1337 bytes at ptr5
+- Allocated 11 bytes at ptr6
+- Allocated 4 bytes at ptr7
+- Allocated 60 bytes at ptr8
+- Allocated 5 bytes at ptr9
+- Allocated 11 bytes at ptr10
+- Allocated 32 bytes at ptr11
+- Allocated 5 bytes at ptr12
+- Freeing ptr5 (size 1337)
+- Freeing ptr11 (size 32)
+- Freeing ptr10 (size 11)
+- Freeing ptr9 (size 5)
+- Freeing ptr3 (size 541)
+- Freeing ptr0 (size 5)
+- Freeing ptr8 (size 60)
+- Freeing ptr12 (size 5)
+- Freeing ptr1 (size 4)
+- Freeing ptr4 (size 4)
+- Freeing ptr7 (size 4)
+- Freeing ptr2 (size 18)
+- Freeing ptr6 (size 11)
+Testing with 19 blocks
+- Allocated 4 bytes at ptr0
+- Allocated 13 bytes at ptr1
+- Allocated 72 bytes at ptr2
+- Allocated 96 bytes at ptr3
+- Allocated 5 bytes at ptr4
+- Allocated 455 bytes at ptr5
+- Allocated 27 bytes at ptr6
+- Allocated 4 bytes at ptr7
+- Allocated 4 bytes at ptr8
+- Allocated 12 bytes at ptr9
+- Allocated 50 bytes at ptr10
+- Allocated 14 bytes at ptr11
+- Allocated 11 bytes at ptr12
+- Allocated 104 bytes at ptr13
+- Allocated 4 bytes at ptr14
+- Allocated 8 bytes at ptr15
+- Allocated 6 bytes at ptr16
+- Allocated 8 bytes at ptr17
+- Allocated 104 bytes at ptr18
+- Freeing ptr0 (size 4)
+- Freeing ptr11 (size 14)
+- Freeing ptr9 (size 12)
+- Freeing ptr10 (size 50)
+- Freeing ptr15 (size 8)
+- Freeing ptr2 (size 72)
+- Freeing ptr1 (size 13)
+- Freeing ptr5 (size 455)
+- Freeing ptr4 (size 5)
+- Freeing ptr6 (size 27)
+- Freeing ptr8 (size 4)
+- Freeing ptr16 (size 6)
+- Freeing ptr17 (size 8)
+- Freeing ptr14 (size 4)
+- Freeing ptr13 (size 104)
+- Freeing ptr3 (size 96)
+- Freeing ptr7 (size 4)
+- Freeing ptr12 (size 11)
+- Freeing ptr18 (size 104)
+Testing with 28 blocks
+- Allocated 17 bytes at ptr0
+- Allocated 5 bytes at ptr1
+- Allocated 5 bytes at ptr2
+- Allocated 72 bytes at ptr3
+- Allocated 23 bytes at ptr4
+- Allocated 18 bytes at ptr5
+- Allocated 11 bytes at ptr6
+- Allocated 26 bytes at ptr7
+- Allocated 16383 bytes at ptr8
+- Allocated 22 bytes at ptr9
+- Allocated 4 bytes at ptr10
+- Allocated 10 bytes at ptr11
+- Allocated 6 bytes at ptr12
+- Allocated 9 bytes at ptr13
+- Allocated 5 bytes at ptr14
+- Allocated 6 bytes at ptr15
+- Allocated 7 bytes at ptr16
+- Allocated 16 bytes at ptr17
+- Allocated 24 bytes at ptr18
+- Allocated 5 bytes at ptr19
+- Allocated 8 bytes at ptr20
+- Allocated 43 bytes at ptr21
+- Allocated 72 bytes at ptr22
+- Allocated 5 bytes at ptr23
+- Allocated 6 bytes at ptr24
+- Allocated 5 bytes at ptr25
+- Allocated 9 bytes at ptr26
+- Allocated 13 bytes at ptr27
+- Freeing ptr19 (size 5)
+- Freeing ptr12 (size 6)
+- Freeing ptr13 (size 9)
+- Freeing ptr7 (size 26)
+- Freeing ptr26 (size 9)
+- Freeing ptr22 (size 72)
+- Freeing ptr2 (size 5)
+- Freeing ptr14 (size 5)
+- Freeing ptr0 (size 17)
+- Freeing ptr27 (size 13)
+- Freeing ptr21 (size 43)
+- Freeing ptr16 (size 7)
+- Freeing ptr11 (size 10)
+- Freeing ptr23 (size 5)
+- Freeing ptr6 (size 11)
+- Freeing ptr4 (size 23)
+- Freeing ptr1 (size 5)
+- Freeing ptr18 (size 24)
+- Freeing ptr10 (size 4)
+- Freeing ptr8 (size 16383)
+- Freeing ptr5 (size 18)
+- Freeing ptr17 (size 16)
+- Freeing ptr24 (size 6)
+- Freeing ptr25 (size 5)
+- Freeing ptr3 (size 72)
+- Freeing ptr20 (size 8)
+- Freeing ptr15 (size 6)
+- Freeing ptr9 (size 22)
+Testing with 42 blocks
+- Allocated 9 bytes at ptr0
+- Allocated 96 bytes at ptr1
+- Allocated 7 bytes at ptr2
+- Allocated 5 bytes at ptr3
+- Allocated 181 bytes at ptr4
+- Allocated 148 bytes at ptr5
+- Allocated 7 bytes at ptr6
+- Allocated 7 bytes at ptr7
+- Allocated 15 bytes at ptr8
+- Allocated 16383 bytes at ptr9
+- Allocated 27 bytes at ptr10
+- Allocated 83 bytes at ptr11
+- Allocated 4 bytes at ptr12
+- Allocated 6 bytes at ptr13
+- Allocated 5 bytes at ptr14
+- Allocated 83 bytes at ptr15
+- Allocated 6 bytes at ptr16
+- Allocated 16 bytes at ptr17
+- Allocated 18 bytes at ptr18
+- Allocated 5 bytes at ptr19
+- Allocated 809 bytes at ptr20
+- Allocated 5 bytes at ptr21
+- Allocated 72 bytes at ptr22
+- Allocated 148 bytes at ptr23
+- Allocated 18 bytes at ptr24
+- Allocated 24 bytes at ptr25
+- Allocated 4 bytes at ptr26
+- Allocated 11 bytes at ptr27
+- Allocated 27 bytes at ptr28
+- Allocated 11 bytes at ptr29
+- Allocated 5 bytes at ptr30
+- Allocated 30 bytes at ptr31
+- Allocated 655 bytes at ptr32
+- Allocated 541 bytes at ptr33
+- Allocated 77 bytes at ptr34
+- Allocated 8 bytes at ptr35
+- Allocated 18 bytes at ptr36
+- Allocated 7 bytes at ptr37
+- Allocated 14 bytes at ptr38
+- Allocated 17 bytes at ptr39
+- Allocated 20 bytes at ptr40
+- Allocated 4 bytes at ptr41
+- Freeing ptr22 (size 72)
+- Freeing ptr26 (size 4)
+- Freeing ptr41 (size 4)
+- Freeing ptr17 (size 16)
+- Freeing ptr31 (size 30)
+- Freeing ptr16 (size 6)
+- Freeing ptr37 (size 7)
+- Freeing ptr20 (size 809)
+- Freeing ptr5 (size 148)
+- Freeing ptr23 (size 148)
+- Freeing ptr9 (size 16383)
+- Freeing ptr14 (size 5)
+- Freeing ptr4 (size 181)
+- Freeing ptr18 (size 18)
+- Freeing ptr33 (size 541)
+- Freeing ptr11 (size 83)
+- Freeing ptr12 (size 4)
+- Freeing ptr39 (size 17)
+- Freeing ptr38 (size 14)
+- Freeing ptr6 (size 7)
+- Freeing ptr40 (size 20)
+- Freeing ptr34 (size 77)
+- Freeing ptr10 (size 27)
+- Freeing ptr28 (size 27)
+- Freeing ptr15 (size 83)
+- Freeing ptr0 (size 9)
+- Freeing ptr7 (size 7)
+- Freeing ptr13 (size 6)
+- Freeing ptr25 (size 24)
+- Freeing ptr1 (size 96)
+- Freeing ptr35 (size 8)
+- Freeing ptr3 (size 5)
+- Freeing ptr19 (size 5)
+- Freeing ptr21 (size 5)
+- Freeing ptr24 (size 18)
+- Freeing ptr32 (size 655)
+- Freeing ptr36 (size 18)
+- Freeing ptr29 (size 11)
+- Freeing ptr8 (size 15)
+- Freeing ptr2 (size 7)
+- Freeing ptr30 (size 5)
+- Freeing ptr27 (size 11)
+Testing with 63 blocks
+- Allocated 334 bytes at ptr0
+- Allocated 5 bytes at ptr1
+- Allocated 6 bytes at ptr2
+- Allocated 33 bytes at ptr3
+- Allocated 5 bytes at ptr4
+- Allocated 37 bytes at ptr5
+- Allocated 8 bytes at ptr6
+- Allocated 4 bytes at ptr7
+- Allocated 148 bytes at ptr8
+- Allocated 53 bytes at ptr9
+- Allocated 24 bytes at ptr10
+- Allocated 14 bytes at ptr11
+- Allocated 7 bytes at ptr12
+- Allocated 7 bytes at ptr13
+- Allocated 455 bytes at ptr14
+- Allocated 15 bytes at ptr15
+- Allocated 29 bytes at ptr16
+- Allocated 37 bytes at ptr17
+- Allocated 29 bytes at ptr18
+- Allocated 6 bytes at ptr19
+- Allocated 4 bytes at ptr20
+- Allocated 809 bytes at ptr21
+- Allocated 4 bytes at ptr22
+- Allocated 163 bytes at ptr23
+- Allocated 77 bytes at ptr24
+- Allocated 89 bytes at ptr25
+- Allocated 291 bytes at ptr26
+- Allocated 7 bytes at ptr27
+- Allocated 53 bytes at ptr28
+- Allocated 10 bytes at ptr29
+- Allocated 37 bytes at ptr30
+- Allocated 4 bytes at ptr31
+- Allocated 15 bytes at ptr32
+- Allocated 9 bytes at ptr33
+- Allocated 5 bytes at ptr34
+- Allocated 10 bytes at ptr35
+- Allocated 4095 bytes at ptr36
+- Allocated 96 bytes at ptr37
+- Allocated 7281 bytes at ptr38
+- Allocated 77 bytes at ptr39
+- Allocated 15 bytes at ptr40
+- Allocated 83 bytes at ptr41
+- Allocated 10 bytes at ptr42
+- Allocated 8 bytes at ptr43
+- Allocated 9 bytes at ptr44
+- Allocated 7 bytes at ptr45
+- Allocated 45 bytes at ptr46
+- Allocated 37 bytes at ptr47
+- Allocated 541 bytes at ptr48
+- Allocated 18 bytes at ptr49
+- Allocated 291 bytes at ptr50
+- Allocated 45 bytes at ptr51
+- Allocated 7 bytes at ptr52
+- Allocated 8 bytes at ptr53
+- Allocated 7 bytes at ptr54
+- Allocated 202 bytes at ptr55
+- Allocated 8 bytes at ptr56
+- Allocated 5 bytes at ptr57
+- Allocated 16383 bytes at ptr58
+- Allocated 123 bytes at ptr59
+- Allocated 6 bytes at ptr60
+- Allocated 5 bytes at ptr61
+- Allocated 56 bytes at ptr62
+- Freeing ptr41 (size 83)
+- Freeing ptr14 (size 455)
+- Freeing ptr16 (size 29)
+- Freeing ptr33 (size 9)
+- Freeing ptr58 (size 16383)
+- Freeing ptr4 (size 5)
+- Freeing ptr57 (size 5)
+- Freeing ptr61 (size 5)
+- Freeing ptr34 (size 5)
+- Freeing ptr26 (size 291)
+- Freeing ptr62 (size 56)
+- Freeing ptr60 (size 6)
+- Freeing ptr39 (size 77)
+- Freeing ptr45 (size 7)
+- Freeing ptr30 (size 37)
+- Freeing ptr6 (size 8)
+- Freeing ptr32 (size 15)
+- Freeing ptr40 (size 15)
+- Freeing ptr37 (size 96)
+- Freeing ptr19 (size 6)
+- Freeing ptr17 (size 37)
+- Freeing ptr47 (size 37)
+- Freeing ptr51 (size 45)
+- Freeing ptr49 (size 18)
+- Freeing ptr20 (size 4)
+- Freeing ptr42 (size 10)
+- Freeing ptr35 (size 10)
+- Freeing ptr9 (size 53)
+- Freeing ptr11 (size 14)
+- Freeing ptr59 (size 123)
+- Freeing ptr24 (size 77)
+- Freeing ptr44 (size 9)
+- Freeing ptr48 (size 541)
+- Freeing ptr22 (size 4)
+- Freeing ptr2 (size 6)
+- Freeing ptr31 (size 4)
+- Freeing ptr7 (size 4)
+- Freeing ptr29 (size 10)
+- Freeing ptr25 (size 89)
+- Freeing ptr46 (size 45)
+- Freeing ptr52 (size 7)
+- Freeing ptr23 (size 163)
+- Freeing ptr53 (size 8)
+- Freeing ptr36 (size 4095)
+- Freeing ptr18 (size 29)
+- Freeing ptr0 (size 334)
+- Freeing ptr12 (size 7)
+- Freeing ptr54 (size 7)
+- Freeing ptr50 (size 291)
+- Freeing ptr21 (size 809)
+- Freeing ptr55 (size 202)
+- Freeing ptr28 (size 53)
+- Freeing ptr13 (size 7)
+- Freeing ptr38 (size 7281)
+- Freeing ptr5 (size 37)
+- Freeing ptr8 (size 148)
+- Freeing ptr1 (size 5)
+- Freeing ptr43 (size 8)
+- Freeing ptr27 (size 7)
+- Freeing ptr3 (size 33)
+- Freeing ptr56 (size 8)
+- Freeing ptr15 (size 15)
+- Freeing ptr10 (size 24)
+Testing with 94 blocks
+- Allocated 9 bytes at ptr0
+- Allocated 334 bytes at ptr1
+- Allocated 5 bytes at ptr2
+- Allocated 89 bytes at ptr3
+- Allocated 7281 bytes at ptr4
+- Allocated 4 bytes at ptr5
+- Allocated 5 bytes at ptr6
+- Allocated 16383 bytes at ptr7
+- Allocated 5 bytes at ptr8
+- Allocated 5 bytes at ptr9
+- Allocated 11 bytes at ptr10
+- Allocated 14 bytes at ptr11
+- Allocated 9 bytes at ptr12
+- Allocated 14 bytes at ptr13
+- Allocated 8 bytes at ptr14
+- Allocated 27 bytes at ptr15
+- Allocated 26 bytes at ptr16
+- Allocated 5 bytes at ptr17
+- Allocated 13 bytes at ptr18
+- Allocated 12 bytes at ptr19
+- Allocated 35 bytes at ptr20
+- Allocated 1023 bytes at ptr21
+- Allocated 9 bytes at ptr22
+- Allocated 17 bytes at ptr23
+- Allocated 8 bytes at ptr24
+- Allocated 32 bytes at ptr25
+- Allocated 20 bytes at ptr26
+- Allocated 4 bytes at ptr27
+- Allocated 6 bytes at ptr28
+- Allocated 15 bytes at ptr29
+- Allocated 6 bytes at ptr30
+- Allocated 7 bytes at ptr31
+- Allocated 9 bytes at ptr32
+- Allocated 135 bytes at ptr33
+- Allocated 50 bytes at ptr34
+- Allocated 4 bytes at ptr35
+- Allocated 83 bytes at ptr36
+- Allocated 226 bytes at ptr37
+- Allocated 56 bytes at ptr38
+- Allocated 7 bytes at ptr39
+- Allocated 6 bytes at ptr40
+- Allocated 226 bytes at ptr41
+- Allocated 4 bytes at ptr42
+- Allocated 1023 bytes at ptr43
+- Allocated 18 bytes at ptr44
+- Allocated 32 bytes at ptr45
+- Allocated 13 bytes at ptr46
+- Allocated 12 bytes at ptr47
+- Allocated 14 bytes at ptr48
+- Allocated 2621 bytes at ptr49
+- Allocated 334 bytes at ptr50
+- Allocated 60 bytes at ptr51
+- Allocated 13 bytes at ptr52
+- Allocated 4 bytes at ptr53
+- Allocated 19 bytes at ptr54
+- Allocated 9 bytes at ptr55
+- Allocated 27 bytes at ptr56
+- Allocated 7281 bytes at ptr57
+- Allocated 9 bytes at ptr58
+- Allocated 4 bytes at ptr59
+- Allocated 15 bytes at ptr60
+- Allocated 22 bytes at ptr61
+- Allocated 148 bytes at ptr62
+- Allocated 809 bytes at ptr63
+- Allocated 4 bytes at ptr64
+- Allocated 1337 bytes at ptr65
+- Allocated 14 bytes at ptr66
+- Allocated 12 bytes at ptr67
+- Allocated 13 bytes at ptr68
+- Allocated 10 bytes at ptr69
+- Allocated 19 bytes at ptr70
+- Allocated 7 bytes at ptr71
+- Allocated 77 bytes at ptr72
+- Allocated 655 bytes at ptr73
+- Allocated 13 bytes at ptr74
+- Allocated 9 bytes at ptr75
+- Allocated 6 bytes at ptr76
+- Allocated 20 bytes at ptr77
+- Allocated 135 bytes at ptr78
+- Allocated 455 bytes at ptr79
+- Allocated 22 bytes at ptr80
+- Allocated 4095 bytes at ptr81
+- Allocated 50 bytes at ptr82
+- Allocated 6 bytes at ptr83
+- Allocated 10 bytes at ptr84
+- Allocated 7 bytes at ptr85
+- Allocated 5 bytes at ptr86
+- Allocated 7 bytes at ptr87
+- Allocated 10 bytes at ptr88
+- Allocated 7 bytes at ptr89
+- Allocated 5 bytes at ptr90
+- Allocated 5 bytes at ptr91
+- Allocated 7 bytes at ptr92
+- Allocated 27 bytes at ptr93
+- Freeing ptr5 (size 4)
+- Freeing ptr72 (size 77)
+- Freeing ptr86 (size 5)
+- Freeing ptr10 (size 11)
+- Freeing ptr43 (size 1023)
+- Freeing ptr75 (size 9)
+- Freeing ptr80 (size 22)
+- Freeing ptr21 (size 1023)
+- Freeing ptr67 (size 12)
+- Freeing ptr13 (size 14)
+- Freeing ptr7 (size 16383)
+- Freeing ptr56 (size 27)
+- Freeing ptr31 (size 7)
+- Freeing ptr16 (size 26)
+- Freeing ptr66 (size 14)
+- Freeing ptr24 (size 8)
+- Freeing ptr90 (size 5)
+- Freeing ptr42 (size 4)
+- Freeing ptr32 (size 9)
+- Freeing ptr85 (size 7)
+- Freeing ptr0 (size 9)
+- Freeing ptr19 (size 12)
+- Freeing ptr89 (size 7)
+- Freeing ptr6 (size 5)
+- Freeing ptr47 (size 12)
+- Freeing ptr69 (size 10)
+- Freeing ptr58 (size 9)
+- Freeing ptr71 (size 7)
+- Freeing ptr38 (size 56)
+- Freeing ptr40 (size 6)
+- Freeing ptr8 (size 5)
+- Freeing ptr41 (size 226)
+- Freeing ptr53 (size 4)
+- Freeing ptr91 (size 5)
+- Freeing ptr83 (size 6)
+- Freeing ptr59 (size 4)
+- Freeing ptr68 (size 13)
+- Freeing ptr76 (size 6)
+- Freeing ptr92 (size 7)
+- Freeing ptr45 (size 32)
+- Freeing ptr65 (size 1337)
+- Freeing ptr25 (size 32)
+- Freeing ptr51 (size 60)
+- Freeing ptr79 (size 455)
+- Freeing ptr27 (size 4)
+- Freeing ptr74 (size 13)
+- Freeing ptr77 (size 20)
+- Freeing ptr17 (size 5)
+- Freeing ptr46 (size 13)
+- Freeing ptr62 (size 148)
+- Freeing ptr12 (size 9)
+- Freeing ptr34 (size 50)
+- Freeing ptr63 (size 809)
+- Freeing ptr36 (size 83)
+- Freeing ptr64 (size 4)
+- Freeing ptr20 (size 35)
+- Freeing ptr50 (size 334)
+- Freeing ptr11 (size 14)
+- Freeing ptr88 (size 10)
+- Freeing ptr61 (size 22)
+- Freeing ptr93 (size 27)
+- Freeing ptr14 (size 8)
+- Freeing ptr37 (size 226)
+- Freeing ptr87 (size 7)
+- Freeing ptr48 (size 14)
+- Freeing ptr49 (size 2621)
+- Freeing ptr39 (size 7)
+- Freeing ptr29 (size 15)
+- Freeing ptr23 (size 17)
+- Freeing ptr15 (size 27)
+- Freeing ptr4 (size 7281)
+- Freeing ptr84 (size 10)
+- Freeing ptr70 (size 19)
+- Freeing ptr73 (size 655)
+- Freeing ptr1 (size 334)
+- Freeing ptr82 (size 50)
+- Freeing ptr22 (size 9)
+- Freeing ptr57 (size 7281)
+- Freeing ptr35 (size 4)
+- Freeing ptr55 (size 9)
+- Freeing ptr44 (size 18)
+- Freeing ptr3 (size 89)
+- Freeing ptr33 (size 135)
+- Freeing ptr52 (size 13)
+- Freeing ptr78 (size 135)
+- Freeing ptr18 (size 13)
+- Freeing ptr26 (size 20)
+- Freeing ptr54 (size 19)
+- Freeing ptr9 (size 5)
+- Freeing ptr30 (size 6)
+- Freeing ptr60 (size 15)
+- Freeing ptr81 (size 4095)
+- Freeing ptr2 (size 5)
+- Freeing ptr28 (size 6)

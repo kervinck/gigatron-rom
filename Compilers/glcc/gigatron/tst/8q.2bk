@@ -1,0 +1,3 @@
+tst/8q.c:30: warning: missing return value
+tst/8q.c:37: warning: implicit declaration of function `printf'
+tst/8q.c:39: warning: missing return value
