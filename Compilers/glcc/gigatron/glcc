@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+
+#   Copyright (c) 2021, LB3361
+#
+#    Redistribution and use in source and binary forms, with or
+#    without modification, are permitted provided that the following
+#    conditions are met:
+#
+#    1.  Redistributions of source code must retain the above copyright
+#        notice, this list of conditions and the following disclaimer.
+#
+#    2. Redistributions in binary form must reproduce the above
+#       copyright notice, this list of conditions and the following
+#       disclaimer in the documentation and/or other materials
+#       provided with the distribution.
+#
+#    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+#    CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+#    INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#    MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+#    DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
+#    BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+#    EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+#    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+#    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+#    ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+#    OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+#    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+#    POSSIBILITY OF SUCH DAMAGE.
+
+from __future__ import print_function
+import sys
+import re
+import glccver
+
+if sys.version_info < (3, 6):
+    print('glcc: fatal error: python 3.6 or higher is required.')
+    sys.exit(1)
+
+import os, sys, json, tempfile
+import os.path as path
+
+# compute vernum
+vernum = None
+if re.match('^GLCC_RELEASE_[0-9]*', glccver.ver):
+    vlist = re.findall('([0-9]+)', glccver.ver)
+    if len(vlist) >= 2:
+        vernum = 100000 * int(vlist[0]) + 1000 * int(vlist[1])
+    if len(vlist) >= 3:
+        vernum += int(vlist[2])
+
+# locate progdir
+progname = path.realpath(__file__)
+progdir = path.dirname(progname)
+
+# find lcc
+lccname = path.join(progdir, "lcc")
+if not os.access(lccname, os.X_OK):
+   lccname = path.join(progdir, "lcc.exe")
+if not os.access(lccname, os.X_OK):
+   print("glcc: fatal error: cannot find executable lcc in %s" % progdir, file=sys.stderr)
+   sys.exit(1)
+
+# read rom data
+roms = {}
+rominfo = {}
+romfile = path.join(progdir, 'roms.json')
+if os.access(romfile, os.R_OK):
+    with open(romfile) as file:
+        roms = json.load(file)
+else:
+    printf("glcc: cannot access rom file %s" % romfile, file = sys.stderr)
+
+# collect arguments minus -cpu, -rom, -map
+hascpu = False
+hasrom = False
+hasmap = False
+hasv = False
+usage = False
+argv = []
+for arg in sys.argv:
+    opt = arg
+    if opt.startswith('--'):
+        opt = opt[1:]
+    if opt.startswith('-cpu='):
+        hascpu = arg.split('=')[1]
+    elif opt.startswith('-rom='):
+        hasrom = arg.split('=')[1]
+    elif opt.startswith('-map='):
+        hasmap = arg.split('=')[1]
+    elif opt == '-v':
+        hasv = True
+    argv.append(arg)
+if len(argv) < 2:
+    usage = True
+
+# set defaults cpu according to rom
+if hasrom and hasrom in roms:
+    rominfo = roms[hasrom]
+    if not hascpu:
+        hascpu = rominfo['cpu']
+        argv.insert(1, "-cpu=%s" % hascpu)
+if vernum:
+    argv.append("-D_GLCC_VER=%d" % vernum)
+
+if usage:
+    print("Usage: glcc {...options_or_files...}", file=sys.stderr)
+    print("  Besides the lcc options listed later, glcc recognizes", file=sys.stderr)
+    print("  -map=MAP  to select a memory map (default 32k)", file=sys.stderr)
+    print("  -rom=ROM  to select a rom (default v5a)", file=sys.stderr)
+    print("  -rom=CPU  to select a target cpu (default to rom's)", file=sys.stderr)
+    print("  -info     gives information about the selected map, cpu, and rom", file=sys.stderr)
+    print("  -V        reports the glcc version", file=sys.stderr)
+    print("In addition, many of the glink options can be passed to glcc (glink --help)")
+    print("", file=sys.stderr)
+    os.spawnv(os.P_WAIT, lccname, [ path.basename(lccname) ] )
+    sys.exit(1)
+
+# spawn lcc
+if hasv:
+    argv[0] = lccname
+    print(*argv, file=sys.stderr)
+
+argv[0] = path.basename(lccname)
+os.putenv("LCCDIR", progdir)
+os.execv(lccname, argv)
+
+# Local Variables:
+# mode: python
+# indent-tabs-mode: ()
+# End:

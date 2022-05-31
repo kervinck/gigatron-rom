@@ -1,0 +1,12 @@
+tst/wf1.c:19: warning: implicit declaration of function `getword'
+tst/wf1.c:21: warning: implicit declaration of function `tprint'
+tst/wf1.c:27: warning: implicit declaration of function `printf'
+tst/wf1.c:28: warning: implicit declaration of function `exit'
+tst/wf1.c:29: warning: missing return value
+tst/wf1.c:36: warning: implicit declaration of function `getchar'
+tst/wf1.c:36: warning: implicit declaration of function `isletter'
+tst/wf1.c:61: warning: implicit declaration of function `strcmp'
+tst/wf1.c:73: warning: implicit declaration of function `strlen'
+tst/wf1.c:76: warning: implicit declaration of function `strcpy'
+tst/wf1.c:84: warning: implicit declaration of function `printf'
+tst/wf1.c:87: warning: missing return value

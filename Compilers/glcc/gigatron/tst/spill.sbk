@@ -1,0 +1,208 @@
+#VCPUv5
+
+# ======== ('CODE', 'main', code0)
+def code0():
+	label('main');
+	PUSH();
+	LDI(0);
+	label('.1');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'f', code1)
+def code1():
+	label('f');
+	_PROLOGUE(8,2,0x80); # save=R7
+	LDW(R8);STW(R7);
+	CALLI('f');STW(R22);
+	STW(T3);_MOVW(R22,[SP,-2+8]);LDW(T3) #genspill
+	CALLI('f');STW(R21);
+	_SP(-2+8);DEEK();ADDW(R21);STW(R7);
+	LDI(0);
+	label('.2');
+	_EPILOGUE(8,2,0x80,saveAC=True);
+# ======== ('CODE', 'f2', code2)
+def code2():
+	label('f2');
+	_PROLOGUE(8,2,0xc0); # save=R6-7
+	LDW(R8);STW(R7);
+	CALLI('f');STW(R22);
+	STW(T3);_MOVW(R22,[SP,-2+8]);LDW(T3) #genspill
+	LDW(R7);_BEQ('.5');
+	CALLI('f');
+	STW(R6);
+	_BRA('.6');
+	label('.5');
+	LDI(1);STW(R6);
+	label('.6');
+	_SP(-2+8);DEEK();ADDW(R6);STW(R7);
+	LDI(0);
+	label('.3');
+	_EPILOGUE(8,2,0xc0,saveAC=True);
+# ======== ('CODE', 'f3', code3)
+def code3():
+	label('f3');
+	_PROLOGUE(32,2,0xff); # save=R0-7
+	LDW(R8);STW(R7);
+	LDW(R9);STW(R6);
+	LDI(0);STW(R5);
+	LDI(0);STW(R4);
+	LDI(0);STW(R3);
+	LDI(0);STW(R2);
+	LDI(0);STW(R1);
+	LDI(0);STW(R0);
+	_SP(-2+32);STW(R22);
+	LDI(0);DOKE(R22);
+	_SP(-4+32);STW(R22);
+	LDI(0);DOKE(R22);
+	_SP(-6+32);STW(R22);
+	LDI(0);DOKE(R22);
+	_SP(-8+32);STW(R22);
+	LDI(0);DOKE(R22);
+	LDW(R6);STW(R22);
+	STW(T3);_MOVW(R22,[SP,-12+32]);LDW(T3) #genspill
+	LDI(2);ADDW(R22);STW(R6);
+	LDW(R7);_BEQ('.9');
+	CALLI('f');STW(R21);
+	_SP(-10+32);STW(R22);
+	LDW(R21);DOKE(R22);
+	_BRA('.10');
+	label('.9');
+	_SP(-10+32);STW(R22);
+	LDI(0);DOKE(R22);
+	label('.10');
+	_SP(-10+32);DEEK();STW(T1);_MOVW([SP,-12+32],T3);LDW(T1);DOKE(T3);
+	LDI(0);
+	label('.7');
+	_EPILOGUE(32,2,0xff,saveAC=True);
+# ======== ('CODE', 'f4', code4)
+def code4():
+	label('f4');
+	_PROLOGUE(12,2,0x0); # save=None
+	LDI(0);STW(R19);
+	LDI(0);STW(R18);
+	LDI(0);STW(R17);
+	LDI(0);STW(R16);
+	LDI(0);STW(R15);
+	LDI(0);STW(R14);
+	_LDI('i');DEEK();STW(R22);
+	LDW(R22);LSLW();LSLW();ADDW(R22);STW(R21);
+	_LDI('a');ADDW(R21);_MOVF([vAC],F10);
+	STW(T3);_MOVF(F10,[SP,-5+12]);LDW(T3) #genspill
+	_LDI('b');ADDW(R21);_MOVF([vAC],F10);
+	STW(T3);_MOVF(F10,[SP,-10+12]);LDW(T3) #genspill
+	_MOVF('.15',F10);
+	_MOVF([SP,-5+12],FAC);_SP(-10+12);_FADD();LDI(F10);_FCMP();_BEQ('.13');
+	LDW(R22);_BEQ('.13');
+	_MOVF([SP,-5+12],FAC);_SP(-10+12);_FSUB();LDI(F10);_FCMP();_BEQ('.13');
+	LDI(1);STW(R13);
+	_BRA('.14');
+	label('.13');
+	LDI(0);STW(R13);
+	label('.14');
+	_LDI('i');STW(R22);
+	LDW(R13);DOKE(R22);
+	LDI(0);
+	label('.11');
+	_EPILOGUE(12,2,0x0,saveAC=True);
+# ======== ('CODE', 'f5', code5)
+def code5():
+	label('f5');
+	PUSH();
+	_LDI('k');DEEK();STW(R22);
+	_LDI('m');DEEK();STW(R21);
+	_LDI('A');DEEK();STW(R20);
+	LDW(R22);_MUL(R21);STW(T3);LSLW();LSLW();ADDW(T3);ADDW(R20);STW(R19);
+	_LDI('j');DEEK();STW(R18);
+	_MUL(R21);STW(T3);LSLW();LSLW();ADDW(T3);ADDW(R20);STW(R21);
+	_LDI('n');DEEK();STW(R20);
+	_LDI('B');DEEK();STW(R17);
+	LDW(R22);_MUL(R20);STW(T3);LSLW();LSLW();ADDW(T3);ADDW(R17);STW(R22);
+	LDW(R18);_MUL(R20);STW(T3);LSLW();LSLW();ADDW(T3);ADDW(R17);STW(R20);
+	LDW(R22);_MOVF([vAC],FAC);LDW(R20);_FMUL();_MOVF(FAC,F16);
+	LDW(R19);_MOVF([vAC],FAC);LDW(R21);_FMUL();LDI(F16);_FADD();_MOVF(FAC,'x');
+	LDW(R22);_MOVF([vAC],FAC);LDW(R21);_FMUL();_MOVF(FAC,F16);
+	LDW(R19);_MOVF([vAC],FAC);LDW(R20);_FMUL();LDI(F16);_FSUB();_MOVF(FAC,'x');
+	LDI(0);
+	label('.16');
+	tryhop(2);POP();RET()
+# ======== ('COMMON', 'x', code6, 5, 1)
+def code6():
+	label('x');
+	space(5);
+# ======== ('COMMON', 'B', code7, 2, 2)
+def code7():
+	align(2);
+	label('B');
+	space(2);
+# ======== ('COMMON', 'A', code8, 2, 2)
+def code8():
+	align(2);
+	label('A');
+	space(2);
+# ======== ('COMMON', 'n', code9, 2, 2)
+def code9():
+	align(2);
+	label('n');
+	space(2);
+# ======== ('COMMON', 'm', code10, 2, 2)
+def code10():
+	align(2);
+	label('m');
+	space(2);
+# ======== ('COMMON', 'k', code11, 2, 2)
+def code11():
+	align(2);
+	label('k');
+	space(2);
+# ======== ('COMMON', 'j', code12, 2, 2)
+def code12():
+	align(2);
+	label('j');
+	space(2);
+# ======== ('COMMON', 'i', code13, 2, 2)
+def code13():
+	align(2);
+	label('i');
+	space(2);
+# ======== ('COMMON', 'b', code14, 50, 1)
+def code14():
+	label('b');
+	space(50);
+# ======== ('COMMON', 'a', code15, 50, 1)
+def code15():
+	label('a');
+	space(50);
+# ======== ('DATA', '.15', code16, 0, 1)
+def code16():
+	label('.15');
+	bytes(0,0,0,0,0); # 0
+# ======== (epilog)
+code=[
+	('EXPORT', 'main'),
+	('CODE', 'main', code0),
+	('EXPORT', 'f'),
+	('CODE', 'f', code1),
+	('EXPORT', 'f2'),
+	('CODE', 'f2', code2),
+	('EXPORT', 'f3'),
+	('CODE', 'f3', code3),
+	('EXPORT', 'f4'),
+	('CODE', 'f4', code4),
+	('EXPORT', 'f5'),
+	('CODE', 'f5', code5),
+	('COMMON', 'x', code6, 5, 1),
+	('COMMON', 'B', code7, 2, 2),
+	('COMMON', 'A', code8, 2, 2),
+	('COMMON', 'n', code9, 2, 2),
+	('COMMON', 'm', code10, 2, 2),
+	('COMMON', 'k', code11, 2, 2),
+	('COMMON', 'j', code12, 2, 2),
+	('COMMON', 'i', code13, 2, 2),
+	('COMMON', 'b', code14, 50, 1),
+	('COMMON', 'a', code15, 50, 1),
+	('DATA', '.15', code16, 0, 1) ]
+module(code=code, name='tst/spill.c', cpu=5);
+
+# Local Variables:
+# mode: python
+# indent-tabs-mode: t
+# End:

@@ -1,0 +1,49 @@
+#!/bin/sh
+
+### Script to finish the mingw installation
+###
+### The following variables must be defined:
+###
+### PREFIX
+### INSTALL
+### bindir
+### libdir
+
+# determine relative path from bindir/cmddir to libdir
+
+relpath() {
+    back=
+    comm="$1"/
+    while [ "${2#$comm}" = "${2}" ] ; do
+	back="../$back"
+	comm=`dirname "$comm"`/
+    done
+    echo "$back${2#$comm}"
+}
+
+bin_to_lib=`relpath "${bindir}" "${libdir}"`
+cmd_to_lib=`relpath "${bindir}" "${libdir}" | sed -e 's:/:\\\\:g'`
+
+# create and populate bin/cmd directory
+
+${INSTALL} -d "${bindir}" || true
+echo '@py -3 "%~dp0\\'"$cmd_to_lib"'\\%~n0" %*' > "${bindir}/glcc.cmd"
+echo '@py -3 "%~dp0\\'"$cmd_to_lib"'\\%~n0" %*' > "${bindir}/glink.cmd"
+echo '@"%~dp0\\'"$cmd_to_lib"'\\gtsim.exe" %*'  > "${bindir}/gtsim.cmd"
+
+# add useful programs to the bin directory
+
+maybecopy() {
+    if [ -r "$1" ] ; then
+	${INSTALL} "$1" "$2"
+    else
+	echo "Warning: cannot install '$1' as/into '$2'"
+    fi
+}
+
+maybecopy "/mingw32/bin/mingw32-make.exe" "${bindir}/make.exe"
+
+# copy stuff directory
+
+test -d "${PREFIX}/stuff" && rm -rf "${PREFIX}/stuff"
+test -d "stuff" && cp -r "stuff" "${PREFIX}"

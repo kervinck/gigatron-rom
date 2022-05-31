@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+
+from __future__ import print_function
+import sys
+import re
+import bisect
+
+if len(sys.argv) != 3:
+    print('usage: gtprof <prof> <frags>', file=sys.stderr)
+    print('  <prof> is the file produced by gtsim option -prof', file=sys.stderr)
+    print('  <frags> is the output of glcc option --frags', file=sys.stderr)
+    sys.exit(1)
+
+prof = None
+frags = None
+    
+with open(sys.argv[1],'r') as f:
+    gb = {}
+    exec(f.read(), gb)
+    prof = gb['prof']
+    keys = sorted(prof.keys())
+    nkeys = len(keys)
+
+with open(sys.argv[2],'r') as f:
+    frags = f.readlines()
+
+ftimes = {}
+fspec = re.compile(r"^\s*([0-9a-f]+)-([0-9a-f]+).*CODE+\s+(\S+)\s+(?:[0-9/()]*)\s*(\S*)")
+
+for line in frags:
+    match = fspec.match(line)
+    if match:
+        saddr = int(match.group(1),16)
+        eaddr = int(match.group(2),16)
+        sk = bisect.bisect_left(keys, saddr)
+        stime = 0 if sk == 0 else prof[keys[sk-1]] if sk else None
+        ek = bisect.bisect_right(keys, eaddr)
+        etime = prof[keys[ek-1]] if ek else None
+        if stime != None and etime != None:
+            name = '%-30s%s' % (match.group(3), match.group(4))
+            if etime > stime:
+                if not name in ftimes:
+                    ftimes[name] = 0
+                ftimes[name] += etime-stime
+
+
+total = 0
+for frag in sorted(ftimes.keys()):
+    time = ftimes[frag]
+    total += time
+    print('%12d\t%s' % (time, frag))
+print('%12d\tTOTAL' % total)
+
+diff = prof[keys[-1]] - total
+if diff != 0:
+    print('ERROR: %d cycles were unaccounted for!' % diff, file=sys.stderr)
+
+# Local Variables:
+# mode: python
+# indent-tabs-mode: ()
+# End:

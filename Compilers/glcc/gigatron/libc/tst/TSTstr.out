@@ -1,0 +1,33 @@
+str1=[The quick brown fox jumps over the lazy dog] len=43
+str2=[012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012A45678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567BB01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567A9012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678] len=489
+strlen(str1+3)=40
+strlen(str2+255)=234
+strchr(str1,'o')=str1+12
+strchr(str2,'A')=str2+123
+strchr(str2,'B')=str2+258
+strchr(str2,'C')=0
+strrchr(str1,'o')=str1+41
+strrchr(str2,'A')=str2+358
+strrchr(str2,'B')=str2+259
+strrchr(str2,'C')=0
+strcpy(str3, str1)="The quick brown fox jumps over the lazy dog"
+strcat(str3, str1)="The quick brown fox jumps over the lazy dogThe quick brown fox jumps over the lazy dog"
+strncat(str3, str2, 17)="The quick brown fox jumps over the lazy dogThe quick brown fox jumps over the lazy dog01234567890123456"
+strncpy(str3, str2, 67)="0123456789012345678901234567890123456789012345678901234567890123456s over the lazy dog01234567890123456"
+strncpy(str3, str1, 67)="The quick brown fox jumps over the lazy dog"
+strncpy(str3, str1, 67)+50=""
+strcat(str3, strerror(ENOENT))="The quick brown fox jumps over the lazy dogNo such file or directory"
+strstr(str1,"brown")="brown fox jumps over the lazy dog"
+strstr(str1,"brownfox")="(null)"
+strtok1: "The" (+0)
+strtok1: "quick" (+4)
+strtok1: "brown" (+10)
+strtok1: "fox" (+16)
+strtok1: "jumps" (+20)
+strtok1: "over" (+26)
+strtok1: "the" (+31)
+strtok1: "lazy" (+35)
+strtok1: "dog" (+40)
+strtok2: "A" (+123)
+strtok2: "BB" (+258)
+strtok2: "A" (+358)

@@ -1,0 +1,14 @@
+tst/sort.c:6: warning: implicit declaration of function `sort'
+tst/sort.c:8: warning: implicit declaration of function `putd'
+tst/sort.c:9: warning: implicit declaration of function `putchar'
+tst/sort.c:17: warning: implicit declaration of function `putchar'
+tst/sort.c:22: warning: implicit declaration of function `putchar'
+tst/sort.c:23: warning: missing return value
+tst/sort.c:29: warning: implicit declaration of function `quick'
+tst/sort.c:30: warning: missing return value
+tst/sort.c:37: warning: missing return value
+tst/sort.c:41: warning: missing return value
+tst/sort.c:53: warning: implicit declaration of function `exchange'
+tst/sort.c:55: warning: implicit declaration of function `exchange'
+tst/sort.c:63: warning: implicit declaration of function `printf'
+tst/sort.c:65: warning: missing return value

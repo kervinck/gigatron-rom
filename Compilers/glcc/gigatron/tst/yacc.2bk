@@ -1,0 +1,7 @@
+tst/yacc.c:50: warning: implicit declaration of function `yylook'
+tst/yacc.c:53: warning: implicit declaration of function `yywrap'
+tst/yacc.c:293: warning: implicit declaration of function `yyback'
+tst/yacc.c:345: warning: missing return value
+tst/yacc.c:349: warning: missing return value
+tst/yacc.c:353: warning: implicit declaration of function `yyparse'
+tst/yacc.c:360: warning: missing return value

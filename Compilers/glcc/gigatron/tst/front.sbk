@@ -1,0 +1,300 @@
+#VCPUv5
+
+# ======== ('CODE', 'main', code0)
+def code0():
+	label('main');
+	_PROLOGUE(4,4,0x0); # save=None
+	LDI(0);STW(R8);
+	_MOVW(R8,[SP,2]);
+	CALLI('exit');
+	LDI(0);
+	label('.1');
+	_EPILOGUE(4,4,0x0,saveAC=True);
+# ======== ('CODE', 'nested', code1)
+def code1():
+	label('nested');
+	PUSH();
+	LDW(R8);_CMPIS(4);_BGE('.6');
+	LDW(R9);XORI(114);_BEQ('.9');
+	label('.6');
+	LDW(R8);XORI(1);_BNE('.8');
+	LDW(R9);XORI(104);_BEQ('.9');
+	LDW(R9);XORI(105);_BEQ('.9');
+	label('.8');
+	LDW(R8);XORI(2);_BNE('.3');
+	LDW(R9);XORI(111);_BEQ('.9');
+	LDW(R9);XORI(121);_BNE('.3');
+	label('.9');
+	LDW(R9);STW(R8);
+	label('.3');
+	LDI(0);
+	label('.2');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 's', code2)
+def code2():
+	label('s');
+	PUSH();
+	label('.10');
+	tryhop(2);POP();RET()
+# ======== ('DATA', 'Dy', code3, 4, 2)
+def code3():
+	align(2);
+	label('Dy');
+	words(0); # 0
+	space(2);
+# ======== ('DATA', 'Dz', code4, 4, 2)
+def code4():
+	align(2);
+	label('Dz');
+	words(1); # 1
+	space(2);
+# ======== ('CODE', 'Dfunc', code5)
+def code5():
+	label('Dfunc');
+	_PROLOGUE(4,2,0x0); # save=None
+	_EPILOGUE(4,2,0x0,saveAC=True);
+# ======== ('CODE', 'f', code6)
+def code6():
+	label('f');
+	PUSH();
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'f1', code7)
+def code7():
+	label('f1');
+	PUSH();
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'f2', code8)
+def code8():
+	label('f2');
+	_PROLOGUE(8,2,0xc0); # save=R6-7
+	_EPILOGUE(8,2,0xc0,saveAC=True);
+# ======== ('CODE', 'g', code9)
+def code9():
+	label('g');
+	_PROLOGUE(4,2,0x80); # save=R7
+	_EPILOGUE(4,2,0x80,saveAC=True);
+# ======== ('CODE', 'h', code10)
+def code10():
+	label('h');
+	_PROLOGUE(4,2,0x80); # save=R7
+	_EPILOGUE(4,2,0x80,saveAC=True);
+# ======== ('CODE', 'h1', code11)
+def code11():
+	label('h1');
+	_PROLOGUE(8,2,0xc0); # save=R6-7
+	_EPILOGUE(8,2,0xc0,saveAC=True);
+# ======== ('CODE', 'h2', code12)
+def code12():
+	label('h2');
+	PUSH();
+	tryhop(2);POP();RET()
+# ======== ('DATA', '.21', code13, 2, 2)
+def code13():
+	align(2);
+	label('.21');
+	words(1); # 1
+# ======== ('CODE', 'set1', code14)
+def code14():
+	label('set1');
+	PUSH();
+	tryhop(2);POP();RET()
+# ======== ('DATA', '.23', code15, 2, 2)
+def code15():
+	align(2);
+	label('.23');
+	words(2); # 2
+# ======== ('CODE', 'set2', code16)
+def code16():
+	label('set2');
+	PUSH();
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'goo', code17)
+def code17():
+	label('goo');
+	PUSH();
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'sss', code18)
+def code18():
+	label('sss');
+	PUSH();
+	tryhop(2);POP();RET()
+# ======== ('BSS', '.27', code19, 5, 1)
+def code19():
+	label('.27');
+	space(5);
+# ======== ('CODE', 'rrr', code20)
+def code20():
+	label('rrr');
+	PUSH();
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'setstatic', code21)
+def code21():
+	label('setstatic');
+	PUSH();
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'gx1', code22)
+def code22():
+	label('gx1');
+	_PROLOGUE(4,2,0x0); # save=None
+	_EPILOGUE(4,2,0x0,saveAC=True);
+# ======== ('CODE', 'ff1', code23)
+def code23():
+	label('ff1');
+	PUSH();
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'gg1', code24)
+def code24():
+	label('gg1');
+	PUSH();
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'hh1', code25)
+def code25():
+	label('hh1');
+	PUSH();
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'cmp', code26)
+def code26():
+	label('cmp');
+	_PROLOGUE(8,2,0xc0); # save=R6-7
+	_EPILOGUE(8,2,0xc0,saveAC=True);
+# ======== ('CODE', 'sort', code27)
+def code27():
+	label('sort');
+	_PROLOGUE(4,2,0x0); # save=None
+	_EPILOGUE(4,2,0x0,saveAC=True);
+# ======== ('CODE', 'onearg', code28)
+def code28():
+	label('onearg');
+	_PROLOGUE(4,2,0x0); # save=None
+	_EPILOGUE(4,2,0x0,saveAC=True);
+# ======== ('COMMON', 'ss4', code29, 2, 2)
+def code29():
+	align(2);
+	label('ss4');
+	space(2);
+# ======== ('BSS', 'ss2', code30, 2, 2)
+def code30():
+	align(2);
+	label('ss2');
+	space(2);
+# ======== ('BSS', 'ss5', code31, 2, 2)
+def code31():
+	align(2);
+	label('ss5');
+	space(2);
+# ======== ('COMMON', 'ss3', code32, 2, 2)
+def code32():
+	align(2);
+	label('ss3');
+	space(2);
+# ======== ('BSS', 'ss1', code33, 2, 2)
+def code33():
+	align(2);
+	label('ss1');
+	space(2);
+# ======== ('BSS', 'yy', code34, 2, 2)
+def code34():
+	align(2);
+	label('yy');
+	space(2);
+# ======== ('COMMON', 'z', code35, 2, 2)
+def code35():
+	align(2);
+	label('z');
+	space(2);
+# ======== ('COMMON', 'y', code36, 2, 2)
+def code36():
+	align(2);
+	label('y');
+	space(2);
+# ======== ('COMMON', 'x', code37, 2, 2)
+def code37():
+	align(2);
+	label('x');
+	space(2);
+# ======== ('COMMON', 'b', code38, 2, 2)
+def code38():
+	align(2);
+	label('b');
+	space(2);
+# ======== ('COMMON', 'a', code39, 2, 2)
+def code39():
+	align(2);
+	label('a');
+	space(2);
+# ======== (epilog)
+code=[
+	('EXPORT', 'main'),
+	('CODE', 'main', code0),
+	('EXPORT', 'nested'),
+	('CODE', 'nested', code1),
+	('EXPORT', 's'),
+	('CODE', 's', code2),
+	('EXPORT', 'Dy'),
+	('DATA', 'Dy', code3, 4, 2),
+	('EXPORT', 'Dz'),
+	('DATA', 'Dz', code4, 4, 2),
+	('EXPORT', 'Dfunc'),
+	('CODE', 'Dfunc', code5),
+	('EXPORT', 'f'),
+	('CODE', 'f', code6),
+	('EXPORT', 'f1'),
+	('CODE', 'f1', code7),
+	('EXPORT', 'f2'),
+	('CODE', 'f2', code8),
+	('EXPORT', 'g'),
+	('CODE', 'g', code9),
+	('EXPORT', 'h'),
+	('CODE', 'h', code10),
+	('EXPORT', 'h1'),
+	('CODE', 'h1', code11),
+	('EXPORT', 'h2'),
+	('CODE', 'h2', code12),
+	('DATA', '.21', code13, 2, 2),
+	('EXPORT', 'set1'),
+	('CODE', 'set1', code14),
+	('DATA', '.23', code15, 2, 2),
+	('EXPORT', 'set2'),
+	('CODE', 'set2', code16),
+	('CODE', 'goo', code17),
+	('EXPORT', 'sss'),
+	('CODE', 'sss', code18),
+	('BSS', '.27', code19, 5, 1),
+	('EXPORT', 'rrr'),
+	('CODE', 'rrr', code20),
+	('EXPORT', 'setstatic'),
+	('CODE', 'setstatic', code21),
+	('EXPORT', 'gx1'),
+	('CODE', 'gx1', code22),
+	('EXPORT', 'ff1'),
+	('CODE', 'ff1', code23),
+	('EXPORT', 'gg1'),
+	('CODE', 'gg1', code24),
+	('EXPORT', 'hh1'),
+	('CODE', 'hh1', code25),
+	('EXPORT', 'cmp'),
+	('CODE', 'cmp', code26),
+	('EXPORT', 'sort'),
+	('CODE', 'sort', code27),
+	('EXPORT', 'onearg'),
+	('CODE', 'onearg', code28),
+	('IMPORT', 'exit'),
+	('IMPORT', 'qsort'),
+	('IMPORT', 'strcmp'),
+	('COMMON', 'ss4', code29, 2, 2),
+	('BSS', 'ss2', code30, 2, 2),
+	('BSS', 'ss5', code31, 2, 2),
+	('COMMON', 'ss3', code32, 2, 2),
+	('BSS', 'ss1', code33, 2, 2),
+	('BSS', 'yy', code34, 2, 2),
+	('COMMON', 'z', code35, 2, 2),
+	('COMMON', 'y', code36, 2, 2),
+	('COMMON', 'x', code37, 2, 2),
+	('COMMON', 'b', code38, 2, 2),
+	('COMMON', 'a', code39, 2, 2) ]
+module(code=code, name='tst/front.c', cpu=5);
+
+# Local Variables:
+# mode: python
+# indent-tabs-mode: t
+# End:

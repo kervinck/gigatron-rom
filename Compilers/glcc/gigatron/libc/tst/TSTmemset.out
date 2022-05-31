@@ -1,0 +1,6 @@
+Trying memset(buffer+34,0,12)
+Trying memset(buffer+34,65,12)
+Trying memset(buffer+34,63,255)
+Trying memset(buffer+34,63,256)
+Trying memset(buffer+128,63,257)
+Trying memset(buffer+256,63,757)

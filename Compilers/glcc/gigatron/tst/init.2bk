@@ -1,0 +1,10 @@
+tst/init.c:22: warning: implicit declaration of function `printf'
+tst/init.c:25: warning: implicit declaration of function `f'
+tst/init.c:26: warning: implicit declaration of function `g'
+tst/init.c:35: warning: implicit declaration of function `printf'
+tst/init.c:36: warning: missing return value
+tst/init.c:45: warning: implicit declaration of function `printf'
+tst/init.c:48: warning: implicit declaration of function `h'
+tst/init.c:49: warning: missing return value
+tst/init.c:56: warning: implicit declaration of function `printf'
+tst/init.c:59: warning: missing return value
