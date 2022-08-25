@@ -1,0 +1,146 @@
+%!
+
+<< /PageSize [842 595] >> setpagedevice
+
+gsave
+
+% Find out if the device space is rotated compared to user space.
+% This turns out to be important!
+% We assume if we have a non-zero in index one, then we're rotated by 90 degrees
+6 array currentmatrix 1 get 0 ne dup
+    { 160 } { 120 } ifelse /YDivisions exch def
+    { 120 } { 160 } ifelse /XDivisions exch def
+
+
+0 0 itransform % Device origin
+480 add exch 640 add exch % rough grid size 
+transform % to device space
+
+round cvi YDivisions idiv 
+    dup /DeviceHPitch exch def 
+    YDivisions mul /DeviceGridHeight exch def
+round cvi XDivisions idiv 
+    dup /DeviceVPitch exch def 
+    XDivisions mul /DeviceGridWidth exch def
+
+DeviceGridWidth DeviceGridHeight itransform 0 0 itransform
+exch 3 1 roll
+sub /UserGridHeight exch def
+sub /UserGridWidth exch def
+
+842 UserGridWidth sub 2 div
+595 UserGridHeight sub 2 div
+2 copy
+/UserGridBottomLeftY exch def
+/UserGridBottomLeftX exch def
+transform
+round cvi /DeviceGridBottomLeftY exch def
+round cvi /DeviceGridBottomLeftX exch def
+
+
+[ 1 0 0 1 DeviceGridBottomLeftX DeviceGridBottomLeftY ] setmatrix
+
+0 setlinewidth
+
+% Should return something like [[2Pitch/5 Pitch/5 Pitch/5 Pitch/5] Pitch/5]
+% Element 0 (Representing the corners) is made to be bigger, and the other values are made to fit
+% I think this will do something broadly sensible for grid pitches > 2 device units
+% The intent is something like +  -  +   -  + with the corners intersecting the lines coming the other way
+% but it will fall back to +  + if there's no space for a middle stroke, and will just dash lines otherwise.
+/MakeDashPattern {
+    [ exch abs dup % ([ pitch pitch)
+    [ exch % Bring line pitch (gap to fill) to top of stack. We'll keep it at the top as we go
+        dup 5 div ceiling cvi 2 mul % corners - if pitch is =< 2, this will be weird
+        dup neg % ( [ pitch [ pitch corners -corners )
+        3 2 roll add  % Bring gap to fill to the top, and update ( [ pitch [ corners gap)
+        % Gap may be =<0 
+        dup 0 gt { % if 
+            % Leave a copy of the gap, in case we aren't able to split it
+            dup  % ( ... corners biggap biggap)
+            % If gap is bigish we'll definitely want a centre stroke even if it's an even number
+            % so we reserve up to a third of the gap before dividing by two to get space width.
+            dup dup 3 div floor cvi sub 2 idiv  % (... corners biggap biggap space)
+            dup 0 le { % if
+                % If we can't split the gap, use the whole gap as space
+                pop pop
+            } { % else
+                % Make a second copy of the space
+                dup % ( ... corners biggap biggap space space)
+                % Bring the gap to the top, and update, the new value is the centre stroke width
+                dup -2 mul 4 3 roll add % (... corners biggap space space centre)
+                dup 0 eq { % if
+                    % Failed to split
+                    pop pop pop % (... corners biggap)
+                } { % else
+                    % Manipulate stack so that the extra gap goes away, and centre is in the right place
+                    exch 4 3 roll  % (... corners space centre space biggap)
+                    pop % (... corners space centre space)
+                } ifelse
+            } ifelse
+        } { % else
+            pop
+        } ifelse
+    ] %( [ pitch [spacing] )
+     exch 5 div ceiling cvi ]
+} def
+
+/HMinorTickDash DeviceVPitch MakeDashPattern def
+/VMinorTickDash DeviceHPitch MakeDashPattern def
+
+
+% Draw horizontal ticks
+1 1 YDivisions 1 sub { % for
+    dup 8 mod 0 eq { [] 0 } { HMinorTickDash 0 get HMinorTickDash 1 get } ifelse setdash
+    DeviceHPitch mul 0 exch moveto
+    DeviceGridWidth 0 rlineto stroke
+} for
+
+% Draw vertical ticks
+1 1 XDivisions 1 sub { % for
+    dup 8 mod 0 eq { [] 0 } { VMinorTickDash 0 get VMinorTickDash 1 get } ifelse setdash
+    DeviceVPitch mul 0 moveto
+    0 DeviceGridHeight rlineto stroke
+} for
+
+grestore
+
+1 setlinewidth 0 setgray
+1 setlinejoin
+
+UserGridBottomLeftX UserGridBottomLeftY translate
+0.5 0.5 moveto
+0 UserGridHeight 1 add rlineto
+UserGridWidth 1 add 0 rlineto
+0 -1 UserGridHeight sub rlineto
+closepath stroke
+
+/UserPixelHeight UserGridHeight 120 div def
+/UserPixelWidth UserGridWidth 160 div def
+
+/Courier findfont
+6 scalefont
+setfont
+
+0 8 112 {
+    dup -24 exch % x
+    UserGridHeight exch 1 add UserPixelHeight mul sub
+    moveto
+
+    8 add ($00xx) dup 3 2 roll
+    16 2 string cvrs
+    dup length 3 exch sub exch putinterval
+    show
+} for
+
+-10
+0 8 152 {
+    2 copy UserPixelWidth mul exch moveto
+
+    ($xx00) dup 3 2 roll
+    16 2 string cvrs
+    dup length 5 exch sub exch putinterval
+    show
+} for
+pop
+
+showpage
