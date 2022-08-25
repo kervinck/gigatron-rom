@@ -2,7 +2,6 @@
 #include <errno.h>
 
 /* This is the generic version of fp->_vec->filbuf.
-   It is similar to cons_filbuf but:
    - can use arbitrary buffer or arbitrary size.
    - can allocate a buffer when none is provided,
      but only if malloc is otherwise linked.

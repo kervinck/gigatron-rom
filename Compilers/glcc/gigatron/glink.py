@@ -70,6 +70,7 @@ map_modules = None
 map_libraries = None
 map_segments = None
 map_describe = None
+map_place = None
 
 zpsize = 0
 
@@ -229,6 +230,11 @@ class Module:
         self.symrefs = {}
         self.symdefs = {}
         self.sympass = {}
+        # overlay can define map_place to insert placement directives
+        if map_place:
+            for tp in map_place(self.name) or []:
+                if tp[0] == 'PLACE':
+                    code.append(tp)
         # process code list
         for tp in code:
             if tp[0] == 'EXPORT':
@@ -242,14 +248,17 @@ class Module:
             elif tp[0] == 'DATA' or tp[0] == 'BSS' or tp[0] == 'COMMON':
                 self.code.append(Fragment(*tp))         # ('DATA|BSS|COMMON', "name", func, size, align)
             elif tp[0] == 'ORG' or tp[0] == 'PLACE':
-                matches = [f for f in self.code if f.name == tp[1]]
-                if len(matches) != 1:
+                matches = self.code
+                if tp[1] != '*':
+                    matches = [f for f in self.code if f.name == tp[1]]
+                if len(matches) < 1:
                     error(f"Cannot locate fragment for {tp}")
-                elif matches[0].amin:
-                    error(f"Conflicting placement constraints {tp}")
-                else:                                   # ('ORG', addr)
-                    matches[0].amin = tp[2]             # ('PLACE', minaddr, maxaddr)
-                    matches[0].amax = tp[3] if len(tp) > 3 else None
+                for match in matches:
+                    if match.amin:
+                        error(f"Conflicting placement constraints {tp}")
+                    else:                                # ('ORG', "name|*", addr)
+                        match.amin = tp[2]               # ('PLACE', "name|*", minaddr, maxaddr)
+                        match.amax = tp[3] if len(tp) > 3 else None
             elif tp[0] != 'NOP':
                 error(f"Unrecognized fragment specification {tp}")
     def __repr__(self):
@@ -2540,8 +2549,8 @@ def process_magic_heap(s, head_module, head_addr):
     for s in segment_list:
         if s.flags & 0x4:
             continue
-        a0 = (s.pc + 1) & ~0x1
-        a1 = s.eaddr &  ~0x1
+        a0 = (s.pc + 3) & ~0x3
+        a1 = s.eaddr &  ~0x3
         if a1 - a0 >= max(24, args.mhss or 24):
             s.pc = a0 + 4
             if not s.buffer:
