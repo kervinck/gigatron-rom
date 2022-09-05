@@ -31,7 +31,7 @@ FILE *freopen(register const char *fname, register const char *mode, register FI
 	register int oflag, nflag;
 	if (! (oflag = nflag = fp->_flag))
 		nflag = _IOFBF;
-	nflag = _sflags(oflag, mode);
+	nflag = _sflags(nflag, mode);
 	if (! (nflag && fname)) {
 		errno = EINVAL;
 		return 0;

@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <math.h>
 
+/* uncomment to bypass gtsim printf */
+/* #define printf(...) fprintf(stdout,__VA_ARGS__) /**/
+
 int main()
 {
 	const char *s = "pi";

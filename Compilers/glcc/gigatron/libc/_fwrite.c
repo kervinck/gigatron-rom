@@ -7,9 +7,6 @@ size_t _fwrite(register FILE *fp, register const char *buf, register size_t sz)
 		memcpy(fp->_ptr, buf, sz);
 		fp->_ptr += sz;
 		fp->_cnt -= sz;
-		if ((fp->_flag & _IOLBF) == _IOLBF)
-			if (memchr(buf, '\n', sz))
-				_fflush(fp);
 		return sz;
 	} else {
 		register int n;

@@ -121,7 +121,7 @@ void free(register void *ptr)
 	register head_t *b;
 	register int size;	
 	if (ptr) {
-		size = __chk_block_header(b = (head_t*)((char*)ptr - 6)); 
+		size = __chk_block_header(b = (head_t*)((char*)ptr - 8));
 		if (! (b->size = size)) {
 #if DEBUG
 			malloc_map();
@@ -143,13 +143,13 @@ void *malloc(register size_t sz)
 	register head_t *b;
 	if (sz < 4)
 		sz = 4;
-	if ((sz = (((sz + 7) | 1) ^ 1)) < 0x8000u)
+	if ((sz = (((sz + 8 + 3) | 3) ^ 3)) < 0x8000u)
 		if (b = find_block(sz)) {
 #if DEBUG
 			printf("After malloc() sz=%d blk=%04x\n", sz, b);
 			malloc_map();
 #endif
-			return (char*)b + 6;
+			return (char*)b + 8;
 		}
 	return 0;
 }

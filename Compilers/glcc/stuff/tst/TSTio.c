@@ -15,8 +15,18 @@ int main()
 			fputs("Read [", stdout);
 			putchar(isprint(c) ? c : '?');
 			fputs("]\n", stdout);
-			if (c == 'q')
+			if (c == 'U') {
+				fputs("Read unbuffered\n", stdout);
+				setvbuf(stdin, NULL, _IONBF, 0);
+			}
+			if (c == 'B') {
+				fputs("Read buffered\n", stdout);
+				setvbuf(stdin, NULL, _IOLBF, 0);
+			}
+			if (c == 'Q') {
+				fputs("Quitting\n", stdout);
 				break;
+			}
 			if (isdigit(c))
 				ungetc('#', stdin);
 			if (c == '0')

@@ -10,9 +10,7 @@ int _schkwrite(register FILE *fp)
 		return EOF;
 	if (! (flag & _IOWRIT))
 		return EPERM;
-	if ((flag & _IOFBF) && ! fp->_v->flsbuf)
-		return ENOTSUP;
-	if (! fp->_v->write)
+	if (! (fp->_v->flsbuf && fp->_v->write))
 		return ENOTSUP;
 	return 0;
 }
@@ -24,9 +22,7 @@ int _schkread(register FILE *fp)
 		return EOF;
 	if (! (flag & _IOREAD))
 		return EPERM;
-	if ((flag & _IOFBF) && ! fp->_v->filbuf)
-		return ENOTSUP;
-	if (! fp->_v->read)
+	if (! (fp->_v->filbuf && fp->_v->read))
 		return ENOTSUP;
 	return 0;
 }
@@ -75,20 +71,21 @@ int _fflush(register FILE *fp)
 {
 	register int flag;
 	flag = fp->_flag;
-	if ((flag & (_IOFBF|_IOWRIT)) == (_IOFBF|_IOWRIT))
+	if ((flag & (_IOFBF|_IOWRIT)) == (_IOFBF|_IOWRIT)) {
 		_flsbuf(EOF, fp);
-	else
+		return _fcheck(fp);
+	} else {
 		fp->_cnt = 0;
-	return _fcheck(fp);
+		return 0;
+	}
 }
 
 int _fclose(register FILE *fp)
 {
 	register int r = 0;
-	_fflush(fp);
-	if (ferror(fp))
+	if (_fflush(fp))
 		r = -1;
-	if (fp->_v->close && (*fp->_v->close)(fp) < 0)
+	if (fp->_v && fp->_v->close && (*fp->_v->close)(fp) < 0)
 		r = -1;
 	return r;
 }
