@@ -83,8 +83,7 @@ gcl0x
 
         Memory usage
         ------------
-        $58a0 $71ff             Code not needed for GT1 reading
-        $72a0 $7bff             GT1 reading core (mostly)
+        $58a0 $7bff             Cardboot code
         $7c00 $7cff             Page filled with $FF for SpiExchangeBytes
         $7d00 $7eff             Sector buffer
         $7f00 $7fff             Cluster list
@@ -444,6 +443,12 @@ $1e8 i= [do $7b i. i 2+ i= $1f0 i^ if<>0loop]
   ret
 ]
 
+{ \FAT32String }
+[def _FAT32String=*
+  `FAT32``` #0
+]
+  
+
 {-----------------------------------------------------------------------+
 |} >_vLR++ [ret] {      RAM page $5e                                    |
 +-----------------------------------------------------------------------}
@@ -468,6 +473,23 @@ $1e8 i= [do $7b i. i 2+ i= $1f0 i^ if<>0loop]
     i 1- if>0loop]
   ret
 ] 
+
+
+{ \CheckBootBlock }
+[def _CheckBootBlock=*
+  {
+    Return 0 for potential MBR, 1 for potential FAT32 boot block
+  }
+  \FAT32String q=
+  $52 Address+ i=
+  [do
+     q, <q++ k= [if=0 1 ret]
+     i, <i++ k^ if=0loop]
+  $1fe Address+ deek k=
+  $aa55 k^
+  ret
+]
+
 
 {-----------------------------------------------------------------------+
 |} >_vLR++ [ret] {      RAM page $5f                                    |
@@ -554,17 +576,18 @@ $1e8 i= [do $7b i. i 2+ i= $1f0 i^ if<>0loop]
   {
     Reads the first block of the partition. Mind that, despite it's name,
     this block doesn't hold the volume label: that is stored in the root
-    directory instead.
+    directory instead. (LB) In fact this routine just checks that
+    we have a good looking FAT32 boot block with an 
+    appropriate logical sector size.
   }
   push
-
   \ReadSector!                   {SectorL,H as set by ReadMBR}
-
-  [def `Vol.ID` #0] \PrintText!
-  $00b Address+ deek k=         {Confirm expected sector length}
-  \PrintWord!                   {Print as little-endian word}
-  512 k^ \PrintResult!
-
+  [def `FAT32` #0] \PrintText!   {Check FAT32 block}
+  \CheckBootBlock! 1^
+  [if=0
+    $00b Address+ deek k= 512 k^ {Confirm expected sector length}
+  ]
+  \PrintResult!
   pop ret
 ]
 
@@ -584,16 +607,14 @@ $1e8 i= [do $7b i. i 2+ i= $1f0 i^ if<>0loop]
   0 SectorL= SectorH=           {First sector on device}
   \ReadSector!                  {Read MBR}
   [def `MBR` #0] \PrintText!
-  $1fe Address+ deek k=         {Fetch signature}
-  $aa55 k^                      {Check signature}
+  \CheckBootBlock!              {Return 0 if potential MBR}
   [if=0
     $1c6 Address+ deek SectorL= {Primary partition's first sector on disk}
     $1c8 Address+ deek SectorH=
     $1c2 Address+ peek k=       {Filesystem type code}
-    \PrintByte!
-    $0b k^ [if<>0 $07^]         {Accepts $0b and $0c}
-                                {XXX In case of $0b: check for CHS vs LBA ???}
   ]
+  \PrintByte!
+  $0b k^ [if<>0 $07^]           {Accepts $0b and $0c}
   pop ret
 ]
 
@@ -677,6 +698,7 @@ ret]
   ]
   pop ret
 ]
+
 
 
 {-----------------------------------------------------------------------+
@@ -1317,7 +1339,7 @@ ret]
 { \NextSector }
 [def _NextSector=*
   push
-  <SectorL++                    {To next sector}
+  1 SectorL+ SectorL=           {To next sector}
   $200 FilePosL+ ClusterMask&
   [if=0
     List 4+ List= deek ValueL=  {Get next cluster from ClusterList}
@@ -1348,7 +1370,7 @@ ret]
   \LoadData! 
   [if>0
      1 \IncFilePos!
-     Ptr, <Ptr++ 
+     Ptr,
    else 
      -1]
   pop ret
