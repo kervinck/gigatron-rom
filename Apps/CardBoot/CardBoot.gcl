@@ -1331,6 +1331,13 @@ ret]
   call                          {Run...}
 ] 
 
+{ \IncSector }
+[def _IncSector=*
+  1 SectorL+ SectorL=           {To next sector}
+  [if=0 1 SectorH+ SectorH=]
+  ret
+]
+
 {-----------------------------------------------------------------------+
 |} >_vLR++ [ret] {      RAM page $75                                    |
 +-----------------------------------------------------------------------}
@@ -1339,7 +1346,7 @@ ret]
 { \NextSector }
 [def _NextSector=*
   push
-  1 SectorL+ SectorL=           {To next sector}
+  \IncSector!                   {Next sector}
   $200 FilePosL+ ClusterMask&
   [if=0
     List 4+ List= deek ValueL=  {Get next cluster from ClusterList}
