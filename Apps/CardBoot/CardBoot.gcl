@@ -443,44 +443,41 @@ $1e8 i= [do $7b i. i 2+ i= $1f0 i^ if<>0loop]
   ret
 ]
 
-{ \FAT32String }
-[def _FAT32String=*
-  `FAT32``` #0
-]
-  
 
 {-----------------------------------------------------------------------+
 |} >_vLR++ [ret] {      RAM page $5e                                    |
 +-----------------------------------------------------------------------}
 *=$5ea0
 
-{ \UpdateCrc16 }
-[def _UpdateCrc16=*
-  {
-    Update checksum for 1 byte in vACL.
-    One caveat with SDC/MMC checksums is that reading all-zeroes
-    still results in a valid check.
-  }
-  #\XORW #>Checksum             {Inline assembly: XOR with Checksum's high byte}
-  >Checksum.
-  8 [do i=                      {Loop for 8 bits}
-    Checksum [if<0              {If bit 15 is 1}
-      Checksum+ Checksum=       {Shift left}
-      $1021 Checksum^           {Apply CRC16-CCITT polynomial}
-    else                        {Else bit 15 is 0}
-      Checksum+]                {Shift left}
-    Checksum=                   {And store result}
-    i 1- if>0loop]
-  ret
-] 
+{ \UpdateCrc16 -- COMMENTED OUT
 
+  [def _UpdateCrc16=*
+    {
+      Update checksum for 1 byte in vACL.
+      One caveat with SDC/MMC checksums is that reading all-zeroes
+      still results in a valid check.
+      This is no longer used.
+    }
+    #\XORW #>Checksum             {Inline assembly: XOR with Checksum's high byte}
+    >Checksum.
+    8 [do i=                      {Loop for 8 bits}
+      Checksum [if<0              {If bit 15 is 1}
+        Checksum+ Checksum=       {Shift left}
+        $1021 Checksum^           {Apply CRC16-CCITT polynomial}
+      else                        {Else bit 15 is 0}
+        Checksum+]                {Shift left}
+      Checksum=                   {And store result}
+      i 1- if>0loop]
+    ret
+  ] 
+}
 
 { \CheckBootBlock }
 [def _CheckBootBlock=*
   {
     Return 0 for potential MBR, 1 for potential FAT32 boot block
   }
-  \FAT32String q=
+  [def   `FAT32``` #0 ] q=
   $52 Address+ i=
   [do
      q, <q++ k= [if=0 1 ret]
@@ -790,24 +787,18 @@ ret]
 +-----------------------------------------------------------------------}
 *=$66a0
 
-{ \SectorToByte }
-[def _SectorToByte=*
+{ \SectorToByte, \ShiftLeft }
+[def
+   _SectorToByte=*
   {
     Multiply 32-bit ValueL,H by 512 (clobbers OffsetL,H)
-    XXX Figure out what to do with this! This CAN'T be correct any longer
   }
   push
-  0        <OffsetL.            {First shift left by one byte}
-  <ValueL, >OffsetL.
-  >ValueL, <OffsetH.
-  <ValueH, >OffsetH.
-  OffsetL ValueL=               {Then double once}
-  OffsetH ValueH= \AddOffset!
-  pop ret
-] 
+  <ValueH, >ValueH.            {First shift left by one byte}
+  >ValueL, <ValueH.
+  <ValueL, >ValueL.
+  0        <ValueL.
 
-{ \ShiftLeft \AddSmallOffset \AddOffset }
-[def
   _ShiftLeft=*
   {
     Shift left ValueL,H by 1 bit (clobbers OffsetL,H)
@@ -818,7 +809,10 @@ ret]
   \AddOffset!
   OffsetH                       {Return old high word}
   pop ret
+] 
 
+{ \AddSmallOffset \AddOffset }
+[def
   _AddSmallOffset=*
   {
     Add 16-bit OffsetL to 32-bit ValueL,H and store result there
@@ -1242,7 +1236,7 @@ ret]
 { ResetScreen }
 [def _ResetScreen=*
    {  
-      Reset screen with blue color and regular videoTable
+      Reset screen with vAC color and regular videoTable
       Still save the top two lines
    }
    push \sysArgs1.
