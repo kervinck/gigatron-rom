@@ -609,6 +609,8 @@ $1e8 i= [do $7b i. i 2+ i= $1f0 i^ if<>0loop]
     $1c6 Address+ deek SectorL= {Primary partition's first sector on disk}
     $1c8 Address+ deek SectorH=
     $1c2 Address+ peek k=       {Filesystem type code}
+   else
+    $ff                         {FF when not a MBR}
   ]
   \PrintByte!
   $0b k^ [if<>0 $07^]           {Accepts $0b and $0c}
