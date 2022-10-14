@@ -1,20 +1,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <signal.h>
+#include <gigatron/libc.h>
 
-int _assert(char *e, char *f, unsigned int l)
+int _assertfail(const char *msg)
 {
-#if NOT_YET_IMPLEMENTED
-	if (e && f)
-		fprintf(stderr,"Assertion failed (%s:%d): %s\n", f, l, e);
-#endif
-	extern int _exitm(int,const char*);
-	return _exitm(10, "Assertion failed");
+	_raisem(SIGABRT, msg);
 }
 
 #undef assert
 
 void assert(int e)
 {
-	if (!e) _assert(0,0,0);
+	if (!e) _assertfail(0);
 }

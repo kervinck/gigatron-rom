@@ -19,7 +19,7 @@ def scope():
             ST(R17);LDW(R17);SYS(cycs)
     else:
         def m_prepScanMemoryExt():
-            _LDI(0x1f8);PEEK();STW(R16);_BNE('.ok')        # R16: copy of 1f8
+            LDWI(0x1f8);PEEK();STW(R16);_BNE('.ok')        # R16: copy of 1f8
             LDI(0);tryhop(2);POP();RET();label('.ok')
             LDW(R8);ORI(0x3c);ANDI(0xfc);STW(R17)          # R17: target ctrl word
             _LDI('SYS_ExpanderControl_v4_40');STW('sysFn')

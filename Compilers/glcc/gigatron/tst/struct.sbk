@@ -108,7 +108,7 @@ def code6():
 	label('odd');
 	_PROLOGUE(12,6,0x0); # save=None
 	_SP(-3+12);STW(T2);_MOVM([SP,2+12],[T2],3,1);
-	_LDI('.56');STW(R8);
+	LDWI('.56');STW(R8);
 	_MOVW(R8,[SP,2]);
 	_SP(-3+12);STW(R9);
 	_MOVW(R9,[SP,4]);
@@ -179,7 +179,7 @@ def code10():
 	_SP(-14+68);ADDW(R22);DEEK();STW(R10);
 	_MOVW(R10,[SP,6]);
 	CALLI('makepoint');
-	_LDI('.65');STW(R8);
+	LDWI('.65');STW(R8);
 	_MOVW(R8,[SP,2]);
 	_SP(-16+68);STW(R22);
 	LDW(R7);_SHLI(2);ADDW(R22);DEEK();STW(R9);
@@ -191,11 +191,11 @@ def code10():
 	_SP(6);STW(T2);_MOVM([SP,-24+68],[T2],8,2);
 	CALLI('ptinrect');
 	_BNE('.68');
-	_LDI('.70');STW(R8);
+	LDWI('.70');STW(R8);
 	_MOVW(R8,[SP,2]);
 	CALLI('printf');
 	label('.68');
-	_LDI('.71');STW(R8);
+	LDWI('.71');STW(R8);
 	_MOVW(R8,[SP,2]);
 	_SP(-24+68);DEEK();STW(R9);
 	_MOVW(R9,[SP,4]);

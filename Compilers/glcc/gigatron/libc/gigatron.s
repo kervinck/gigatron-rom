@@ -90,7 +90,6 @@ def scope():
     def code0():
         nohop()
         label('SYS_ExpanderControl')
-        # _LDI(0x1f8);PEEK();BEQ('.ret')
         _LDI('SYS_ExpanderControl_v4_40');STW('sysFn')
         LDW(R8);SYS(40)
         label('.ret')

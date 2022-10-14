@@ -215,8 +215,8 @@ def scope():
             LD(AM+2);POKE(T3);INCW(T3)
             _BRA('.fst2')
         else:
-            _LDI('.inc');CALL(vAC);
-            _LDI('.poke');STW('sysArgs6')
+            LDWI('.inc');CALL(vAC);
+            LDWI('.poke');STW('sysArgs6')
             LD(AS);ORI(0x7f);ANDW(AM+4);CALL('sysArgs6')
             LD(AM+3);CALL('sysArgs6')
             LD(AM+2);CALL('sysArgs6')
@@ -425,8 +425,8 @@ def scope():
             INCL(AM+1)
         else:
             LDI(0xff);XORW(AM+4);ST(AM+4)
-            _LDI(0xffff);XORW(AM+2);STW(AM+2)
-            _LDI(0xffff);XORW(AM);ADDI(1);STW(AM);BNE('.ret')
+            LDWI(0xffff);XORW(AM+2);STW(AM+2)
+            LDWI(0xffff);XORW(AM);ADDI(1);STW(AM);BNE('.ret')
             LDI(1);ADDW(AM+2);STW(AM+2);BNE('.ret')
             INC(AM+4)
         label('.ret')

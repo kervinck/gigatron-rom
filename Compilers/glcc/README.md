@@ -426,7 +426,7 @@ But it plays!
 The code generator uses two block of respectively 16 and 48 bytes in page zero.
 
   *  The first block is dedicated to runtime routines that implement
-	 long and float arithmetic. It is located at fixed addres `0xc0-0xcf`
+	 long and float arithmetic. It is located at fixed addresses `0xc0-0xcf`
 	 because it is expected that runtime support will be progressively
 	 supported by ROM features. The long accumulator `LAC` occupies
 	 addresses `0xc4-0xc7`. The float accumulator `FAC` overlaps `LAC` and
@@ -453,12 +453,11 @@ leaf functions keep arguments passed in registers where they are
 because these registers are no longer needed for further calls.  In
 the same vein, nonleaf functions allocate callee-saved registers for
 local variables, whereas leaf functions use callee-saved registers in
-last resord and often avoid having to construct a stack-frame
-alltogether.  Leaf functions that do not need to allocate space on the
+last resort, often avoiding the construction of a stack-frame.
+Leaf functions that do not need to allocate space on the
 stack can use a register to save VLR and become entirely frameless.
 Sometimes one can help this by using `register` when declaring local
-variables. I have to find a way to make lcc more aggressive in that
-respect.
+variables.
 
 Saving `vLR` allows us to use `CALLI` as a long jump
 without fearing to erase the function return address.

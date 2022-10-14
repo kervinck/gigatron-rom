@@ -49,7 +49,7 @@ def code1():
     nohop()
     label('_callchain')
     DEEK(); STW(R7); LDW(vLR); STW(R6)
-    _LDI(0xBEEF);XORW(R7);_BEQ('.callchaindone')
+    LDWI(0xBEEF);XORW(R7);_BEQ('.callchaindone')
     LDW(R7);_BRA('.callchaintst')
     label('.callchainloop')
     DEEK();CALL(vAC)

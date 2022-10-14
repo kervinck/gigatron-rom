@@ -303,12 +303,6 @@ reg: LOADP2(reg)  "\t%{#alsoVAC}%{src!=vAC:LDW(%0);}%{dst!=vAC:STW(%c);}\n" 40
 reg: LOADI4(reg)  "\t%{#mov0}_MOVL(%0,%c);\n" 120
 reg: LOADU4(reg)  "\t%{#mov0}_MOVL(%0,%c);\n" 120
 reg: LOADF5(reg)  "\t%{#mov0}_MOVF(%0,%c);\n" 150
-# -- these were missing, really
-reg: LOADI1(conBs) "\t%{#alsoVAC}LDI(%0);%{dst!=vAC:ST(%c);}\n" 36
-reg: LOADU1(conB)  "\t%{#alsoVAC}LDI(%0);%{dst!=vAC:ST(%c);}\n" 36
-reg: LOADI2(con)   "\t%{#alsoVAC}_LDI(%0);%{dst!=vAC:STW(%c);}\n" 41
-reg: LOADU2(con)   "\t%{#alsoVAC}_LDI(%0);%{dst!=vAC:STW(%c);}\n" 41
-reg: LOADP2(con)   "\t%{#alsoVAC}_LDI(%0);%{dst!=vAC:STW(%c);}\n" 41
 
 # -- constants
 # These non terminal represent constants in the tree grammar
@@ -374,21 +368,21 @@ zddr: conB "%0"
 stmt: reg  ""
 stmt: ac   "\t%0\n"
 reg:  ac   "\t%{#alsoVAC}%0%{dst!=vAC:STW(%c);}\n" 20
-ac:  reg   "%{src!=vAC:LDW(%0);}" 20
-ac:  reg   "%{src!=vAC:LDW(%0);}" 20
+ac0: eac0  "%0"
 ac:  ac0   "%0"
 ac:  eac   "%0" 
-ac0: eac0  "%0"
-ac0: conB  "LDI(%0);" 16
-ac:  con   "_LDI(%0);" 21
-ac:  zddr  "LDI(%0);" 16
-ac:  addr  "_LDI(%0);" 21
+eac:  reg   "%{src!=vAC:LDW(%0);}" 20
+eac:  reg   "%{src!=vAC:LDW(%0);}" 20
+eac0: conB  "LDI(%0);" 16
+eac:  con   "LDWI(%0);" 21
+eac:  conBn  "_LDI(%0);" 20
+eac:  zddr  "LDI(%0);" 16
+eac:  addr  "LDWI(%0);" 21
 eac:  reg  "%{src!=vAC:LDW(%0);}" 20
 eac:  eac0 "%0"
 eac0: zddr "LDI(%0);" 16
-eac:  addr "_LDI(%0);" 21
+eac:  addr "LDWI(%0);" 21
 eac:  lddr "_SP(%0);"  41
-
 
 # Loads
 eac:  INDIRI2(eac) "%0DEEK();" 21
@@ -1752,6 +1746,9 @@ static void function(Symbol f, Symbol caller[], Symbol callee[], int ncalls)
   maxoffset = (maxoffset + 1) & ~0x1;
   framesize = maxargoffset + sizesave + maxoffset;
   assert(framesize >= 2);
+  if (framesize > 32768)
+    error("%s() framesize (%d) too large for a gigatron\n",
+          f->name, framesize);
   /* can we make a frameless leaf function */
   if (ncalls == 0 && framesize == 2 && (tmask[IREG] & ~usedmask[IREG]))
     framesize = 0;

@@ -1343,6 +1343,10 @@ def _SP(n):
 @vasm
 def _LDI(d):
     '''Emit LDI or LDWI depending on the size of d.'''
+    # Warning. In rare cases, using _LDI instead of LDWI can lead to
+    # infinite relaxation loops when the argument d is an expression
+    # than can construct a small address that depends on a yet unknown
+    # data label.
     d = v(d)
     if is_zeropage(d):
         LDI(d)

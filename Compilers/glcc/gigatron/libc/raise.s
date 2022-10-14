@@ -7,7 +7,7 @@ def scope():
         LDI(0);STW(R9)
         label('_raisem')                     # void _raisem(int signo, const char *msg);
         LDW(R8);ANDI(0xf8);BEQ('.raise1');
-        _LDI(0xffff);RET()
+        _LDI(-1);RET()
         label('.raise1')
         LDW(R9);STW(T3)
         LDW(R8)
@@ -35,7 +35,7 @@ def scope():
     def code1():
         nohop()
         label('_raise_sets_code')
-        _LDI('_raise_code');STW(T2)
+        LDWI('_raise_code');STW(T2)
         LDLW(-2);DOKE(T2)
         LDW(SP);DEEK();STW(vLR);RET()
         align(2);

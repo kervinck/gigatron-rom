@@ -3,7 +3,7 @@ def scope():
     def code_write():
         nohop()
         label('_sim_write');
-        _LDI('errno');STW('sysArgs0')
+        LDWI('errno');STW('sysArgs0')
         _LDI(0xff02);STW('sysFn')
         SYS(36)
         RET()
@@ -11,7 +11,7 @@ def scope():
     def code_read():
         nohop()
         label('_sim_read');
-        _LDI('errno');STW('sysArgs0')
+        LDWI('errno');STW('sysArgs0')
         _LDI(0xff03);STW('sysFn')
         SYS(36)
         RET()
@@ -19,7 +19,7 @@ def scope():
     def code_lseek():
         nohop()
         label('_sim_lseek');
-        _LDI('errno');STW('sysArgs0')
+        LDWI('errno');STW('sysArgs0')
         _LDI(0xff04);STW('sysFn')
         SYS(36)
         RET()
@@ -27,7 +27,7 @@ def scope():
     def code_close():
         nohop()
         label('_sim_close');
-        _LDI('errno');STW('sysArgs0')
+        LDWI('errno');STW('sysArgs0')
         _LDI(0xff05);STW('sysFn')
         SYS(36)
         RET()
