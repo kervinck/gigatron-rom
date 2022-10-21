@@ -32,7 +32,7 @@ def code0():
     label('_exitvsp', pc()+1)
     LDI(0);ST(vSP)         # .exitvsp is LDI's argument!
     label('_exitm_msgfunc', pc()+1)
-    LDWI(0);BEQ('.halt')   # _exitm_msgfunc is LDWI's argument here
+    LDWI(0);_BEQ('.halt')  # _exitm_msgfunc is LDWI's argument here
     CALL(vAC)              # arguments in R8 and R9 are already correct
     # If _exitm_msgfunc is zero or returns
     # we just Flash a pixel with a position indicative of the return code

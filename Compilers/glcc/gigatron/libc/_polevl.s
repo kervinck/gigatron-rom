@@ -22,7 +22,7 @@ def scope():
         if args.cpu >= 6:
             DBNE(R12,'.polevl1')
         else:
-            LD(R12);SUBI(1);ST(R12);BNE('.polevl1')
+            LD(R12);SUBI(1);ST(R12);_BNE('.polevl1')
         tryhop(2);POP();RET()
 
     module(name='_polevl.s',

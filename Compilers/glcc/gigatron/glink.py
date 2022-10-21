@@ -2757,8 +2757,8 @@ def glink(argv):
         parser.add_argument('--long-function-segment-size', dest='lfss',
                             metavar='SIZE', type=int, action='store',
                             help='minimal segment size for functions split across segments.')
-        parser.add_argument('--use-jcc-only', action='store_true', dest='jcconly', default=True,
-                            help='replace all Bcc instructions by the new cpu6 Jcc instruction')
+        parser.add_argument('--prefer-bcc', action='store_false', dest='jcconly', default=True,
+                            help='use Bcc instructions instead of short Jcc instructions (cpu>=6)')
         parser.add_argument('--no-runtime-bss-initialization', action='store_true',
                             help='cause all bss segments to go as zeroes in the gt1 file')
         parser.add_argument('--minimal-heap-segment-size', dest='mhss',

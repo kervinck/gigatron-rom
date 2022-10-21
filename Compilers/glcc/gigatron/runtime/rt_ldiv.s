@@ -36,7 +36,7 @@ def scope():
                 label('.ldw3');LSLW();STW(T2)
             
             if args.cpu >= 6:
-                LDI(T0);CMPLPU();BLT('.ldiv1')
+                LDI(T0);CMPLPU();_BLT('.ldiv1')
                 LDI(T0);SUBLP();INC(T2)
             else:
                 _CALLJ('__@lcmpu_t0t1');_BLT('.ldiv1')
@@ -164,7 +164,7 @@ def scope():
         else:
             _CALLJ('__@lneg_t0t1')
         label('.lms1')
-        LD(B2);ANDI(0x01);BEQ('.lms2')
+        LD(B2);ANDI(0x01);_BEQ('.lms2')
         if args.cpu >= 6:
             NEGL(LAC)
         else:

@@ -1,7 +1,21 @@
 
+- Added placement overrides in map files
+- Runtime: faster long addition and subtraction
+- Library: slightly simplified stdio (less buffering)
+
+
+GLCC_RELEASE_1.5
+
 - Option -mapdir
 - New codespec options ORG and PLACE
 - Speed up linker relaxation
+- Configurable register addresses
+- Longs are not aligned on four-byte boundaries
+- Updated cpu6 support for new snapshot of ROMvX0.
+- Added support for ROMvX0 native longs
+- Added map 512k supporting the Gigatron 512k
+- Runtime: Simplified floating point addition
+- Library: added minimal printf function mincprintf
 - Library: SYS_ScanMemoryExt, SYS_OsCall
 - Library: Fixed printf corner cases
 

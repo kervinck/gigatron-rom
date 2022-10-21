@@ -10,7 +10,7 @@ def scope():
             NROL(4,LAC)
             RET()
         else:
-            LDW(LAC);BLT('.l1')
+            LDW(LAC);_BLT('.l1')
             LSLW();STW(LAC);LDW(LAC+2);LSLW();STW(LAC+2);RET()
             label('.l1')
             LSLW();STW(LAC);LDW(LAC+2);LSLW();ORI(1);STW(LAC+2)
@@ -29,7 +29,7 @@ def scope():
             NROL(4,T0)
             RET()
         else:
-            LDW(T0);BLT('.lsl1')
+            LDW(T0);_BLT('.lsl1')
             LSLW();STW(T0);LDW(T0+2);LSLW();STW(T0+2);RET()
             label('.lsl1')
             LSLW();STW(T0);LDW(T0+2);LSLW();ORI(1);STW(T0+2)

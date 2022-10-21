@@ -83,7 +83,7 @@ def scope():
             SYS(48)
         RET()
         label('_@_shrs1')
-        BGE('_@_shru1')
+        _BGE('_@_shru1')
         if args.cpu >= 6:
             LSRV(vAC);ORWI(0x8000)
         else:

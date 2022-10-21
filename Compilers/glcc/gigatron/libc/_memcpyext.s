@@ -11,7 +11,7 @@ def scope():
         cycs = int(str(info['cycs']),0)
         def m_prepCopyMemoryExt():
             LDWI(addr);STW('sysFn');
-            LDWI(0x1f8);PEEK();BNE('.ok')
+            LDWI(0x1f8);PEEK();_BNE('.ok')
             LDI(0);tryhop(2);POP();RET();label('.ok')
         def m_reduceCopyMemoryExt():
             pass
@@ -48,7 +48,7 @@ def scope():
             if args.cpu <= 5:
                 LDW('sysArgs2');PEEK();POKE(R19)
                 INC(R19);INC('sysArgs2')
-                LD('sysArgs5');SUBI(1);ST('sysArgs5');BNE('.loop1')
+                LD('sysArgs5');SUBI(1);ST('sysArgs5');_BNE('.loop1')
             else:
                 PEEKp('sysArgs2');POKEp(R19)
                 DBNE('sysArgs5','.loop1')
@@ -58,7 +58,7 @@ def scope():
             if args.cpu <= 5:
                 LDW(R19);PEEK();POKE('sysArgs0')
                 INC(R19);INC('sysArgs0')
-                LD('sysArgs4');SUBI(1);ST('sysArgs4');BNE('.loop2')
+                LD('sysArgs4');SUBI(1);ST('sysArgs4');_BNE('.loop2')
             else:
                 PEEKp(R19);POKEp('sysArgs0')
                 DBNE('sysArgs4','.loop2')

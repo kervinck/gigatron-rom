@@ -426,8 +426,8 @@ def scope():
         else:
             LDI(0xff);XORW(AM+4);ST(AM+4)
             LDWI(0xffff);XORW(AM+2);STW(AM+2)
-            LDWI(0xffff);XORW(AM);ADDI(1);STW(AM);BNE('.ret')
-            LDI(1);ADDW(AM+2);STW(AM+2);BNE('.ret')
+            LDWI(0xffff);XORW(AM);ADDI(1);STW(AM);_BNE('.ret')
+            LDI(1);ADDW(AM+2);STW(AM+2);_BNE('.ret')
             INC(AM+4)
         label('.ret')
         RET()
@@ -517,12 +517,12 @@ def scope():
         tryhop(2);POP();RET()
         label('_@_ftou')
         PUSH()
-        LD(AS);ANDI(128);BNE('.ovf')
+        LD(AS);ANDI(128);_BNE('.ovf')
         LD(AE);SUBI(160);_BGT('.ovf')
         label('.ok')
         XORI(255);ANDI(255);INC(vAC)
         _CALLI('__@amshra')
-        LD(AS);ANDI(128);BEQ('.ret')
+        LD(AS);ANDI(128);_BEQ('.ret')
         _LNEG()
         label('.ret')
         tryhop(2);POP();RET()
@@ -542,17 +542,21 @@ def scope():
         if args.cpu >= 6:
             LDI(BM+1);ADDLP() # four high bytes of AM/BM
             LD(BM);_BEQ('.a1')
-            ADDBA(AM);ST(AM);LD(vACH);BEQ('.a1')
+            ADDBA(AM);ST(AM);LD(vACH);_BEQ('.a1')
             INCL(AM+1);label('.a1')
         else:
-            LD(AM);ADDW(BM);ST(AM);LD(vACH)
-            BNE('.a1');LD(BM+1);BEQ('.a1');LDWI(0x100);label('.a1')
-            ADDW(AM+1);ST(AM+1);LD(vACH)
-            BNE('.a2');LD(AM+2);BEQ('.a2');LDWI(0x100);label('.a2')
-            ADDW(BM+2);ST(AM+2);LD(vACH)
-            BNE('.a3');LD(BM+3);BEQ('.a3');LDWI(0x100);label('.a3')
-            ADDW(AM+3);ST(AM+3);LD(vACH)
-            ADDW(BM+4);ST(AM+4)
+            LD(BM);_BEQ('.a0')
+            ADDW(AM);ST(AM);LD(vACH);SUBW(AM+1);LD(vACL)
+            label('.a0')
+            PUSH()
+            ADDW(BM+1);STW(vLR);ADDW(AM+1);STW(AM+1);_BLT('.a1')
+            SUBW(vLR);ORW(BM+1);BRA('.a2')
+            label('.a1')
+            SUBW(vLR);ANDW(BM+1)
+            label('.a2')
+            POP()
+            LD(vACH);ANDI(128);PEEK()
+            ADDW(BM+3);ADDW(AM+3);STW(AM+3)
         RET()
 
     module(name='rt_amaddbm.s',
@@ -724,7 +728,7 @@ def scope():
         LDI(0);ST(BM+4)
         LDI(1)
         label('.loop')
-        ST(T3H);ANDW(T3L);BEQ('.skip')
+        ST(T3H);ANDW(T3L);_BEQ('.skip')
         _CALLJ('__@amaddbm')
         label('.skip')
         if args.cpu >= 6:
@@ -806,14 +810,13 @@ def scope():
         # subtract BM<<8 from AM
         nohop()
         label('__@amsubbm32_')
-        # alternating pattern
-        LD(AM+1);SUBW(BM);ST(AM+1);LD(vACH)
-        BNE('.a1');LD(BM+1);XORI(255);BEQ('.a1');LDWI(0x100);label('.a1')
-        ADDW(AM+2);ST(AM+2);LD(vACH)
-        BNE('.a2');LD(AM+3);BEQ('.a2');LDWI(0x100);label('.a2')
-        SUBI(1);SUBW(BM+2);ST(AM+3);LD(vACH)
-        BNE('.a3');LD(BM+3);XORI(255);BEQ('.a3');LDWI(0x100);label('.a3')
-        ADDW(AM+4);ST(AM+4)
+        LDW(AM+1);_BLT('.a1')
+        SUBW(BM);STW(AM+1);ORW(BM);BRA('.a2')
+        label('.a1')
+        SUBW(BM);STW(AM+1);ANDW(BM)
+        label('.a2')
+        LD(vACH);ANDI(128);PEEK();XORI(1);SUBI(1)
+        ADDW(AM+3);SUBW(BM+2);STW(AM+3)
         RET()
         
     module(name='rt_amsubbm32.s',
@@ -1097,8 +1100,8 @@ def scope():
         label('_@_fscalb')
         PUSH();STW(T3)
         _CALLJ('__@fsavevsp')
-        LD(AE);ADDW(T3);BLE('.fscal1')
-        ST(AE);LD(vACH);BEQ('.fscal0')
+        LD(AE);ADDW(T3);_BLE('.fscal1')
+        ST(AE);LD(vACH);_BEQ('.fscal0')
         _CALLJ('__@foverflow')
         label('.fscal1')
         _CALLJ('_@_clrfac')
@@ -1129,7 +1132,7 @@ def scope():
                   ('CODE', '__@fmask', code_fmask) ] )
 
     def code_frndz():
-        '''_@_frndz: Make FAC, rounding it towards zero'''
+        '''_@_frndz: Make FAC integer, rounding towards zero'''
         label('_@_frndz')
         PUSH()
         _CALLJ('__@fmask')

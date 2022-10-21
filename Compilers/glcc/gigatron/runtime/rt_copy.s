@@ -85,7 +85,7 @@ def scope():
         else:
             LDI(1);ADDW(T2);STW(T2)
             LDI(1);ADDW(T0);STW(T0)
-        XORW(T1);BNE('_@_bcopy_')
+        XORW(T1);_BNE('_@_bcopy_')
         RET()
 
     module(name='rt_bcopy.s',
@@ -107,7 +107,7 @@ def scope():
         else:
             LDI(2);ADDW(T2);STW(T2)
             LDI(2);ADDW(T0);STW(T0)
-        XORW(T1);BNE('_@_wcopy_')
+        XORW(T1);_BNE('_@_wcopy_')
         RET()
 
     module(name='rt_wcopy.s',

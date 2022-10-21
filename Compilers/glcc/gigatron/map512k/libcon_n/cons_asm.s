@@ -10,7 +10,7 @@ def scope():
         nohop()
         ## save current bank
         label('_cons_save_current_bank')
-        LD(videoModeB);ANDI(0xfc);XORI(0xfc);BNE('.cscb1')
+        LD(videoModeB);ANDI(0xfc);XORI(0xfc);_BNE('.cscb1')
         LDWI('.savx');STW(R22);LD(videoModeC);POKE(R22)
         label('.cscb1')
         RET()
@@ -24,12 +24,12 @@ def scope():
         RET()
         ## set extended banking code for address in vAC
         label('_cons_set_bank_even')
-        BGE('.wbb1')
+        _BGE('.wbb1')
         LDWI(0xF8F0);BRA('.wbb3')
         label('.wbb1')
         LDWI(0xE8F0);BRA('.wbb3')
         label('_cons_set_bank_odd')
-        BGE('.wbb2')
+        _BGE('.wbb2')
         LDWI(0xD8F0);BRA('.wbb3')
         label('.wbb2')
         LDWI(0xC8F0);BRA('.wbb3')

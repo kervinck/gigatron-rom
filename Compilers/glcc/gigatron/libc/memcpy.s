@@ -71,10 +71,10 @@ def scope_vcpu():
         # takes length in sysArgs4 (not vAC)
         label('_memcpy0')
         # single byte
-        LD('sysArgs4');ANDI(1);BEQ('.cpy2')
+        LD('sysArgs4');ANDI(1);_BEQ('.cpy2')
         _PEEKV('sysArgs2');POKE('sysArgs0')
         INC('sysArgs2');INC('sysArgs0')
-        LD('sysArgs4');ANDI(0xfe);ST('sysArgs4');BEQ('.cpydone')
+        LD('sysArgs4');ANDI(0xfe);ST('sysArgs4');_BEQ('.cpydone')
         # even length
         label('.cpy2')
         if args.cpu <= 5:
@@ -82,7 +82,7 @@ def scope_vcpu():
            LDW('sysArgs2');DEEK();DOKE('sysArgs0')
            INC('sysArgs2');INC('sysArgs0')
            INC('sysArgs2');INC('sysArgs0')
-           LD('sysArgs4');SUBI(2);ST('sysArgs4');BNE('.cpy2loop')
+           LD('sysArgs4');SUBI(2);ST('sysArgs4');_BNE('.cpy2loop')
         else:
            label('.cpy2loop')
            DEEKp('sysArgs2'); DOKEp('sysArgs0')

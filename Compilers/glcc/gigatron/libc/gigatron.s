@@ -47,7 +47,7 @@ def scope():
         label('SYS_Exec')
         _LDI('SYS_Exec_88');STW('sysFn')
         LDW(R8);STW('sysArgs0')
-        LDW(R9);BEQ('.se1');STW(vLR)
+        LDW(R9);_BEQ('.se1');STW(vLR)
         label('.se1')
         SYS(88);RET()
 
@@ -123,23 +123,6 @@ def scope():
                  ('CODE', 'SYS_SpiExchangeBytes', code0) ])
 
 
-    # int SYS_OsCall(unsigned char n);
-    #    Notes: This only exists in the exp ROM. */
-    if 'has_SYS_OsCall' in rominfo:
-        info = rominfo['has_SYS_OsCall']
-        addr = int(str(info['addr']),0)
-        cycs = int(str(info['cycs']),0)
-        def code0():
-            nohop()
-            label('SYS_OsCall')
-            PUSH()
-            _LDI(addr);STW('sysFn')
-            LD(R8);SYS(cycs)
-            tryhop(2);POP();RET()
-
-        module(name='sys_oscall.s',
-               code=[('EXPORT', 'SYS_OsCall'),
-                     ('CODE', 'SYS_OsCall', code0) ])
     
 # execute    
 scope()
