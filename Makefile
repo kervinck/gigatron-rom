@@ -38,7 +38,7 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		Snake=Apps/Snake/Snake_v3.gcl\
 		SYS_Racer_v1.py\
 		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
-		Racer=Apps/Racer/Racer_v2.gcl\
+		Racer=Apps/Racer/Racer.gcl\
 		Mandelbrot=Apps/Mandelbrot/Mandelbrot.gcl\
 		SYS_Loader_vX.py\
 		Pictures=Apps/Pictures/Pictures_v3.gcl\

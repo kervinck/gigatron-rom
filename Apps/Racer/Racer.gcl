@@ -1,0 +1,664 @@
+
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Racer game                                                      |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x
+
+{
+Ideas for after ROMv1:
+XXX Less drift or lower max speed
+XXX Make time red in last 30 seconds
+XXX Readability of GET READY and GAME OVER messages
+XXX Obstacles? Other cars / bicycles?
+XXX Freeze time display for the first 2 seconds after completing a lap
+XXX Increase minimum speed when completing a lap
+XXX Car crash sequence when hitting curb? Easy to make it scatter...
+XXX Add breaking sound
+XXX Add tire screech sound
+XXX Move car forward when going faster
+XXX Finish line?
+XXX Background music score?
+XXX Crash sound effect?
+XXX Sprite acceleration?
+XXX Image compression?
+
+ Many ideas here come from Lou's Pseudo 3d page at
+ http://www.extentofthejam.com/pseudo/
+}
+
+{-----------------------------------------------------------------------+
+|       ROM type check >= v2                                            |
++-----------------------------------------------------------------------}
+
+\romType, \romTypeValue_ROMv2-
+[if<0 do _frameCount _vPCH: loop]
+
+{-----------------------------------------------------------------------+
+|       Setup                                                           |
++-----------------------------------------------------------------------}
+
+{
+  QPrintChar -- Pos Color Char
+
+  Draw a 5x8 character on screen with the built-in font.
+  `Char' must be in the 32-127 range (this is not checked)
+}
+[def
+  {Map ASCII code to offset in font table}
+  82- [if<0 50+ i= \font32up
+       else     i= \font82up] fontData= {Select low or high page}
+  i 2<< i+             {Multiply by 5}
+  fontData+ fontData=  {Add to page address to reach bitmap data for Char}
+
+  {Draw 6 vertical slices: 5 using font data, the last with all-zeros}
+  BgColor \sysArgs0.
+  Color   \sysArgs1.
+  Pos     \sysArgs4:
+  \SYS_VDrawBits_134 \sysFn:
+  $fb i= [do
+    fontData 0? <fontData++ \sysArgs2. 134!!
+    <\sysArgs4++
+    <i++ i if<>0loop]
+  Pos ret
+] QPrintChar=
+
+{ ControlRaceCar }
+[def _ControlRaceCar=*
+  {Update time with actual elapsed frames}
+  \frameCount, LastFrame- 255& \sysArgs7. Time+ [if<0 $7fff] Time=
+  \frameCount, LastFrame=
+
+  {Car drift and horizon shift are proportional to speed}
+  >Speed, [do if>0 i=
+    CarX DriftX- CarX=
+    HorizonX HorizonDX+ HorizonX=
+    i 1- loop]
+
+  {Steering}
+  0 Steer=
+  \buttonState, \buttonRight& [if=0  $200 CarX+ CarX= +1 Steer=]
+  \buttonState, \buttonLeft&  [if=0 -$200 CarX+ CarX= -1 Steer=]
+
+  {Speed control}
+  { \buttonA | \buttonUp == 136 }
+  \buttonState, 136& 136^ [if<>0 {Accelerating}
+    Speed $10+ Speed= {At 15 fps $10 means ~1s to reach the next speed level}
+    $5ff Speed- [if<0 $5ff Speed=]
+   else
+    -$108 Speed+ [if>=0 Speed 8- Speed=] {Slowly drop to very low speed}
+  ]
+  { \buttonB | \buttonDown == 68 }
+  \buttonState, 68& 68^ [if<>0 Speed $40- [if<0 0] Speed=] {Braking}
+  ret
+]
+
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 3                                      |
++-----------------------------------------------------------------------}
+*=$0300
+
+[def `Gigatron #0 ] GigatronText=
+
+{ Wait -- Wait Delay number of frames (range 1..255) }
+[def
+  \frameCount, Delay+ 255& tmp=
+  [do \frameCount, tmp- if<>0loop]
+  ret
+] Wait=
+
+{
+  DrawPixels -- Write a single line of pixels on two correspinding
+                road scanlines (light and dark). Remove previous
+                pixels, if any.
+                XXX This is probably better done as a SYS call
+}
+[def
+  {Setup page reference for write pointers}
+  Video, 254&  >p. 1| >q. <Video++
+
+  {Find segment to clear from position p[0] to position q[0]}
+  0 <p. <q.
+  p, i= q, i- i=        {i = q[0] - p[0]}
+  p, <p. <q.            {p,q = p+p[0], q+p[0]}
+
+  {Clear previous object}
+  {XXX Only clear pixels outside new area?}
+  [do
+    21 p. q.            {Clear pixel on both lines}
+    <p++ <q++
+    i 1- i=
+    if>0loop]
+
+  {Set low bytes of p and q, to turn them into pixel write pointers}
+  Sprite s=             {Pixel read pointer}
+  0 <p.                 {First let p point to start of page}
+  Video, X+ X= s, X+    {First byte in pixel data is offset}
+  p.                    {Remember starting point}
+  <p. <q.               {Set low bytes}
+
+  {Draw actual pixels}
+  <s++
+  [do
+     p, 21^ Collision+ Collision=
+     s,
+     p. <p++
+     q. <q++
+     <s++ s, if<>0loop]
+
+  {Remember end point for later removal}
+  0 <q. <p, q.
+
+  Video 3+ Video=
+  ret
+] DrawPixels=
+
+{ PlayEngineSound }
+[def
+
+  {High key is Speed[7:14]}
+  $01fd {keyH} p= Speed Speed+ \vACH,
+  p. >p++ p. >p++ p. >p++ p. {Sound channel 1-4}
+
+  {Low key is Speed[0:6]}
+  $01fc {keyL} p= Speed 127&
+  p. >p++ p. >p++ p. >p++ p. {Sound channel 1-4}
+
+  10 \soundTimer. {Keep sound on a bit longer}
+
+  ret
+] PlayEngineSound=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+*=$0400
+
+[def
+  push
+  $2080 Pos=
+
+  \SYS_SetMemory_v2_54 \sysFn:  {For use in SetupSegment}
+
+  0 Width= {Half road width}
+  [do
+    Width 1+ Width=
+
+    {Even lines are dark}
+    63 {White}        CurbColor=
+    12 {Bright Green} GrassColor=
+    SetupSegment!
+    >Pos++
+
+    {Odd lines are bright}
+    3 {Bright Red}    CurbColor=
+    8 {Green}         GrassColor=
+    SetupSegment!
+    >Pos++
+
+    Pos if>=0loop]
+
+  {Setup undo infomation for last lines (for car sprite)}
+  $7400 [do #\POKE #\vAC >\vAC++ if>0loop] {Inline vCPU assembly}
+
+  pop ret
+] SetupRoad=
+
+[def
+  {Draw side road segment of 2*Width pixels}
+  Width 1<< \sysArgs0.          {Road width}
+  Pos Width- p= \sysArgs2:      {Start point for left curb and road}
+  21 \sysArgs1. 54!!            {Dark grey and call SYS_SetMemory_v2_54}
+
+  {Draw grass}
+  128 Width- 1<< \sysArgs0.     {All remaining pixels become grass}
+  Pos Width+ q= \sysArgs2:      {Start point for right curb and grass}
+  GrassColor \sysArgs1. 54!!    {Green and call SYS_SetMemory_v2_54}
+
+  {Draw curbs of Width/8 pixels inwards}
+  Width [do 8- if>0 tmp=
+      q 1- q=
+      CurbColor p. q.
+      <p++
+      tmp loop]
+
+  ret
+] SetupSegment=
+
+{
+  PrintTime -- Render elapsed time (in frams) as M:SS.s -- Value Radix
+              Skip unchanged digits
+}
+[def
+  push
+  {Note we have 3599 instead of 3600. Assuming a 6.25MHz clock, 200 cycles per
+   scanline and 521 scanlines per frame, the Gigatron runs at 59.98 frames per
+   second and that is ~3599 frames per minute. With this single correction the
+   overall timekeeping error is within the tolerances of the crystal itself.}
+  3599 Radix= ExtractDigit!
+       {\sysArgs7, $30+ Char= {Show frame speed for debugging}}
+       Prev3 Char^ [if<>0 Char Prev3= QPrintChar! else Pos] 12+ Pos=
+   600 Radix= ExtractDigit!
+       Prev2 Char^ [if<>0 Char Prev2= QPrintChar! else Pos]  6+ Pos=
+    60 Radix= ExtractDigit!
+       Prev1 Char^ [if<>0 Char Prev1= QPrintChar! else Pos] 12+ Pos=
+     6 Radix= ExtractDigit! QPrintChar!
+  pop ret
+] PrintTime=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+*=$0500
+
+{ ExtractDigit -- Value Radix }
+[def
+  $30 Char=
+  Value Radix- [if>=0
+    [do
+      Value=
+      <Char++
+      Radix-
+      if>=0loop]
+  ]
+  Char
+  ret
+] ExtractDigit=
+
+{
+  PrintText(Text,Pos)
+
+  Draw a zero-terminated text string to the screen.
+  There is no check for running off screen.
+}
+[def
+  push
+  Text=
+  [do
+    Text, Char= {Next character to be printed}
+    if<>0       {Zero termination}
+      <Text++   {Advance text pointer}
+      QPrintChar! 6+ Pos=
+      loop]
+  pop ret
+] PrintText=
+
+{ DrawRoad }
+[def
+  $74d0 p=                      {array[48], in display memory but out of view}
+  0 X=
+  DX0 DX=
+
+  NextTurn Distance- tmp=
+  tmp+ tmp=
+  \invTable tmp+ 53? tmp=       {59 .. 11}
+
+  {Debug marker}
+  {tmp+ 10+ >z. 192 <z. NextDDX z. >z++ z.}
+
+  {Road curvature for bottom segment}
+  197 tmp+ i=                   {(byte)-47 .. (byte)-1}
+  [do
+    >X, p. <p++
+    DX DDX+ DX=
+    X+ X=
+    <i++ i if<>0loop]
+
+  {Road curvature for top segment}
+  [do
+    >X, p. <p++
+    DX NextDDX+ DX=
+    X+ X=
+    <p, if<>0loop]
+
+  {Update video table low bytes for road}
+
+  {Prepare SYS call}
+  $01ed           \sysArgs0: {"p"}
+  $74d1           \sysArgs2: {"q"}
+ {$74d0} 1-  peek \sysArgs4: {"X"}
+
+  >HorizonX, tmp=                    {Pivot 12px from bottom (front of car)}
+  $74d5 peek 48+ tmp- tmp=
+
+  {Update DX0 based on overall curvature in bottom part of screen}
+  $74d4 peek DX0=
+  $74ec peek DX0- 255& 128^ 128- DX0=
+
+  $0111 s=                           {Video table: start of sky}
+
+  {Sync with video loop}
+  [do \videoY, 1& if=0loop]
+
+  {Set top of horizon}
+  >HorizonX, s.
+
+  {Copy to video table. This is most timing-critical for a smooth road update}
+  \SYS_RacerUpdateVideoX_40 \sysFn: 40!!
+  {This SYS call self-repeats for a total of 47 times and is equivalent to:
+    [do
+      q, X- p. p 4- p=
+      q, X= <q++
+      <q, if<>0loop]
+  }
+  \sysArgs0; s= {$0131 bottom of sky (horizon)}
+  \sysArgs4; X=
+
+  {Set bottom of sky}
+  tmp X- s.
+
+  ret
+] DrawRoad=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 6                                      |
++-----------------------------------------------------------------------}
+*=$0600
+
+{ Play a single game until the end }
+[def
+  push
+
+  {Run game loop}
+  0 Collision=
+  Prev3= Prev2= Prev1=
+  [do
+    AdvanceCar!
+
+    {See if we have reached the finish}
+    Distance
+    [if<0
+      Time BestTime- [if<0 Time BestTime=]
+
+      15 {Yellow} PrintBestTime!
+
+      {New lap}
+      0 Time= Random=
+      $7400 Distance= NextTurn=
+    ]
+
+    {See if we have reached the next turn}
+    {Distance} NextTurn-
+    [if>0
+      Random NextTurn+ 109^ Random=     {Circuit formula}
+      31& 40+ NextTurn+ NextTurn=       {40..71 units until next turn}
+      >Random, 3& 1+ i= i+ i+ 1<< i=    {Bending magnitude 6,12,18,24}
+      NextDDX DDX=                      {Shift to next segment}
+     {DDX} [if<0  i+                    {Adjust bending of road}
+      else [if>0  i-
+      else {if=0} Random [if>=0 i else 0 i-]
+      ]]
+      NextDDX=
+    ]
+
+    {Draw bending of the road}
+    DrawRoad!
+
+    {Drift and horizon movement}
+    DDX 3<< HorizonDX= 1<< DriftX=
+
+    {Car "physics" and driver input}
+    \ControlRaceCar!
+
+    {Update pitch of engine sound}
+    PlayEngineSound!
+
+    {Draw race car}
+    DrawRaceCar!
+
+    {Update the perspective illusion}
+    DrawGrass!
+
+    {Force end of game after 5m00s}
+    -17995 Time+ [if>0 Collision=]
+
+    {Draw current time}
+    Time Value= $801 Pos= 63 Color= PrintTime!
+
+    Collision if=0loop]
+  pop ret
+] PlayGame=
+
+{
+  Car sprite. Black is 0 but also the teminator, therfore use 64 for black.
+  XXX Reduce footprint by bringing all lines under one 'def'
+}
+[def #2         #64 #64 #64 #40 #60 #60 #40 #64 #64 #64         #0] Car0=
+[def #3             #40 #20 #20 #63 #63 #20 #20 #40             #0] Car1=
+[def #2         #40 #20 #20 #20 #40 #40 #20 #20 #20 #40         #0] Car2=
+
+{-----------------------------------------------------------------------+
+|}$08a0 \vLR: ret{      RAM page 8                                      |
++-----------------------------------------------------------------------}
+*=$08a0
+
+[def #0 #64 #64 #64 #64 #40 #20 #20 #20 #20 #40 #64 #64 #64 #64 #0] Car3=
+[def #0 #64 #64 #64 #64 #21 #21 #21 #21 #21 #21 #64 #64 #64 #64 #0] Car4=
+
+[def
+  {Update video table high bytes for road width and color scheme}
+  {We do this part last because any timing delays here don't really
+   cause visible problems.}
+
+  {Original version}
+{
+  $0130 p=              {Video table top of road, at horizon}
+  $20 SegmentY=         {Start with smallest segment}
+  \invTable q=
+  [do
+    q 21?               {Y to Z depth mapping for perspective. The offset
+                         of 21 reduces aliasing effects near the horizon.}
+    Distance+ 4&        {Vertical scrolling Distance}
+    [if<>0 1] tmp=
+    SegmentY 254& tmp+ p.
+    <p++ <p++
+    <SegmentY++
+    <q++
+    <p, 240^ if<>0loop]
+}
+
+  {Accelerated version}
+  $012e \sysArgs0: {"p"}
+  $20   \sysArgs2. {"SegmentY"}
+  \invTable q=
+  \SYS_RacerUpdateVideoY_40 \sysFn:
+  [do
+    q 8?
+    Distance+ \sysArgs3. 40!!
+    <q++
+    if<>0loop]
+
+  ret
+] DrawGrass=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 9                                      |
++-----------------------------------------------------------------------}
+*=$09a0
+
+[def
+  {Clear progress indicator in title bar}
+  $0bf7 Indicator=
+  $0c6b Tracking=
+  [do 0 {Black} Tracking. <Tracking++ <Tracking, $76^ if<>0loop]
+  ret
+] SetupIndicator=
+
+[def
+  {Update progress indicator}
+  0 Tracking.
+  >Distance, Indicator+ Tracking= 60 Tracking.
+
+  {Advance car along track}
+  >Speed, Distance+ Distance=
+
+  ret
+] AdvanceCar=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 10                                     |
++-----------------------------------------------------------------------}
+*=$0aa0
+
+[def
+  push
+  $01d9 peek 255^ X=
+  >CarX, X+ X=
+  $01d8 Video=
+  Car0 Sprite= DrawPixels!
+  Car1 Sprite= DrawPixels!
+  X Steer- X=
+  Car2 Sprite= DrawPixels!
+  Car3 Sprite= DrawPixels!
+  Car4 Sprite= DrawPixels!
+  pop ret
+] DrawRaceCar=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 12                                     |
++-----------------------------------------------------------------------}
+*=$0ba0
+
+{
+  Intro
+}
+[def
+  push
+
+  {Display welcome tekst}
+  48 BgColor=
+
+  BgColor \sysArgs0. \sysArgs1.
+  $800    \sysArgs4:
+  \SYS_VDrawBits_134 \sysFn:
+  [do
+    134!!
+    <\sysArgs4++
+    \sysArgs4, 160^ if<>0loop]
+
+  63 Color=
+
+  $807 Pos= $3a QPrintChar!
+   18+ Pos= $2e QPrintChar!
+   31+ Pos= GigatronText PrintText!
+  60 Delay= Wait!
+
+  pop ret
+] Intro=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 13                                     |
++-----------------------------------------------------------------------}
+*=$0ca0
+
+{ PrintBestTime }
+[def
+  Color=
+  BestTime Value=
+  1+ [if<0 ret] {No best time set yet}
+  push
+  $87c Pos=
+  3599 Radix= ExtractDigit! QPrintChar! 6+ Pos=
+                        $3a QPrintChar! 6+ Pos=
+   600 Radix= ExtractDigit! QPrintChar! 6+ Pos=
+    60 Radix= ExtractDigit! QPrintChar! 6+ Pos=
+                        $2e QPrintChar! 6+ Pos=
+     6 Radix= ExtractDigit! QPrintChar!
+  pop ret
+] PrintBestTime=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 14                                     |
++-----------------------------------------------------------------------}
+*=$0da0
+
+[def
+  push
+
+  {"GAME OVER" message}
+  $1435 Pos=
+  [def
+    `GAME`OVER #0 {GAME OVER}
+  ] PrintText!
+
+  $111 s=
+  $20+ t=
+  1 Delay=
+  s, 128& [if=0 +1 else -1] i= {Scroll direction}
+  [do Wait!
+    t, i- t.
+    s, i+ s.
+    255& if<>0loop]
+
+  30 Delay= Wait!
+
+  pop ret
+] GameOver=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 15                                     |
++-----------------------------------------------------------------------}
+*=$0ea0
+
+{ SetupHorizon }
+[def
+  push
+
+  \zippedRacerHorizon p= $1000 q=
+  [def <p, 250^ [if<>0 1 else 6] p+ p= ret] tmp= {"next p"}
+  [do
+    p 0? \sysArgs0. tmp!
+      0? \sysArgs1. tmp!
+      0? \sysArgs2. tmp! \SYS_Unpack_56 \sysFn: 56!!
+      q \sysArgs4: 4+ q= \SYS_Draw4_30  \sysFn: 30!!
+    >q, $20^ if<>0loop]
+
+  pop ret
+] SetupHorizon=
+
+{-----------------------------------------------------------------------+
+|}>_vLR++ ret{          RAM page 16                                     |
++-----------------------------------------------------------------------}
+*=$0fa0
+
+{-----------------------------------------------------------------------+
+|       Run                                                             |
++-----------------------------------------------------------------------}
+
+Intro!
+
+{ Main loop }
+[do
+  {Setup new game}
+  $7400 Distance= NextTurn=
+
+  $7fff BestTime=
+  0 Time= Value= HorizonX= DriftX= Speed=
+  Random= DX0= DDX= NextDDX= DrawRoad!
+  DrawGrass!
+  SetupHorizon!
+  $1435 Pos=
+  [def
+   `GET`READY #0 {GET READY}
+  ] PrintText!
+  SetupRoad!
+  SetupHorizon! {To delete the GET READY message}
+  SetupIndicator!
+
+  $7900 CarX=
+
+  {Play game until finished}
+  \frameCount, LastFrame=
+  PlayGame!
+  GameOver!
+  63 {White} PrintBestTime!
+
+ loop]
+
+{-----------------------------------------------------------------------+
+|       End                                                             |
++-----------------------------------------------------------------------}
+
