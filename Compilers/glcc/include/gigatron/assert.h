@@ -9,6 +9,8 @@ void assert(int);
 #ifdef NDEBUG
 #define assert(ignore) ((void)0)
 #else
-extern int _assert(char *, char *, unsigned);
-#define assert(e) ((void)((e)||_assert(#e, __FILE__, __LINE__)))
+extern int _assertfail(const char *);
+#define _assertfail2(e,f,l) _assertfail(f ":" #l ": Assertion " e " failed.")
+#define _assertfail1(e,f,l) _assertfail2(e, f, l)
+#define assert(e) ((void)((e)||_assertfail1(#e, __FILE__, __LINE__)))
 #endif /* NDEBUG */

@@ -35,6 +35,13 @@ int main() {
     int iter, count;
     unsigned int ticks = 0;
     printf("10 iterations\n\n");
+#ifdef MODE
+# if MODE == 4
+    videoTop_v5 = 238;
+# else
+    SYS_SetMode(MODE);
+# endif
+#endif
     frameCount = 0;
     for (iter = 1; iter <= 10; iter ++) {
         memset(flags, 1, sizepl);
@@ -42,6 +49,13 @@ int main() {
         ticks += frameCount;
         frameCount = 0;
     }
+#ifdef MODE
+# if MODE == 4
+    videoTop_v5 = 0;
+# else
+    SYS_SetMode(-1);
+# endif
+#endif
     printf("%d primes\n", count);
     printf("%d %d/60 seconds\n", ticks/60, ticks%60);
     return 0;

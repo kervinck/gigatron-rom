@@ -83,11 +83,11 @@ def code4():
 	LDI(0);STW(R16);
 	LDI(0);STW(R15);
 	LDI(0);STW(R14);
-	_LDI('i');DEEK();STW(R22);
+	LDWI('i');DEEK();STW(R22);
 	LDW(R22);LSLW();LSLW();ADDW(R22);STW(R21);
-	_LDI('a');ADDW(R21);_MOVF([vAC],F10);
+	LDWI('a');ADDW(R21);_MOVF([vAC],F10);
 	STW(T3);_MOVF(F10,[SP,-5+12]);LDW(T3) #genspill
-	_LDI('b');ADDW(R21);_MOVF([vAC],F10);
+	LDWI('b');ADDW(R21);_MOVF([vAC],F10);
 	STW(T3);_MOVF(F10,[SP,-10+12]);LDW(T3) #genspill
 	_MOVF('.15',F10);
 	_MOVF([SP,-5+12],FAC);_SP(-10+12);_FADD();LDI(F10);_FCMP();_BEQ('.13');
@@ -98,7 +98,7 @@ def code4():
 	label('.13');
 	LDI(0);STW(R13);
 	label('.14');
-	_LDI('i');STW(R22);
+	LDWI('i');STW(R22);
 	LDW(R13);DOKE(R22);
 	LDI(0);
 	label('.11');
@@ -107,14 +107,14 @@ def code4():
 def code5():
 	label('f5');
 	PUSH();
-	_LDI('k');DEEK();STW(R22);
-	_LDI('m');DEEK();STW(R21);
-	_LDI('A');DEEK();STW(R20);
+	LDWI('k');DEEK();STW(R22);
+	LDWI('m');DEEK();STW(R21);
+	LDWI('A');DEEK();STW(R20);
 	LDW(R22);_MUL(R21);STW(T3);LSLW();LSLW();ADDW(T3);ADDW(R20);STW(R19);
-	_LDI('j');DEEK();STW(R18);
+	LDWI('j');DEEK();STW(R18);
 	_MUL(R21);STW(T3);LSLW();LSLW();ADDW(T3);ADDW(R20);STW(R21);
-	_LDI('n');DEEK();STW(R20);
-	_LDI('B');DEEK();STW(R17);
+	LDWI('n');DEEK();STW(R20);
+	LDWI('B');DEEK();STW(R17);
 	LDW(R22);_MUL(R20);STW(T3);LSLW();LSLW();ADDW(T3);ADDW(R17);STW(R22);
 	LDW(R18);_MUL(R20);STW(T3);LSLW();LSLW();ADDW(T3);ADDW(R17);STW(R20);
 	LDW(R22);_MOVF([vAC],FAC);LDW(R20);_FMUL();_MOVF(FAC,F16);

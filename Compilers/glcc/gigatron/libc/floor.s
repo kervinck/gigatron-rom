@@ -9,7 +9,7 @@ def scope():
         _CALLJ('_@_frndz')
         LDW(R11)
         _MOVF(FAC, [vAC])
-        _FNEG();_LDI(F8);_FADD()
+        _FNEG();LDI(F8);_FADD()
         POP();RET()
 
     module(name='modf.s',
@@ -17,9 +17,6 @@ def scope():
                   ('IMPORT', '_@_frndz'),
                   ('CODE', 'modf', code0) ] )
 
-    SIGN = 0x81   # sign byte
-    EXP = 0x82    # exponent
-    
     def code0():
         nohop()
         label('floor')
@@ -27,7 +24,7 @@ def scope():
         _MOVF(F8, FAC)
         _CALLJ('_@_frndz')
         LDI(F8);_FCMP();_BLE('.ret')
-        _LDI('_fone');_FSUB()
+        LDWI('_fone');_FSUB()
         label('.ret')
         POP();RET()
     
@@ -44,7 +41,7 @@ def scope():
         _MOVF(F8, FAC)
         _CALLJ('_@_frndz')
         LDI(F8);_FCMP();_BGE('.ret')
-        _LDI('_fone');_FADD()
+        LDWI('_fone');_FADD()
         label('.ret')
         POP();RET()
     

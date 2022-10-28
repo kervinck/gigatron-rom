@@ -18,7 +18,7 @@ def code0():
 def code1():
 	label('main');
 	_PROLOGUE(8,6,0x80); # save=R7
-	_LDI('in');STW(R8);
+	LDWI('in');STW(R8);
 	_MOVW(R8,[SP,2]);
 	LDI(10);STW(R9);
 	_MOVW(R9,[SP,4]);
@@ -26,7 +26,7 @@ def code1():
 	LDI(0);STW(R7);
 	_BRA('.5');
 	label('.2');
-	_LDI('in');STW(R22);
+	LDWI('in');STW(R22);
 	LDW(R7);LSLW();ADDW(R22);DEEK();STW(R8);
 	_MOVW(R8,[SP,2]);
 	CALLI('putd');
@@ -67,7 +67,7 @@ def code3():
 	_PROLOGUE(12,8,0xc0); # save=R6-7
 	LDW(R8);STW(R7);
 	LDW(R9);STW(R6);
-	_LDI('xx');STW(R22);
+	LDWI('xx');STW(R22);
 	LDW(R7);DOKE(R22);
 	LDW(R7);STW(R8);
 	_MOVW(R8,[SP,2]);
@@ -158,9 +158,9 @@ def code6():
 	_PROLOGUE(16,8,0xc0); # save=R6-7
 	LDW(R8);STW(R7);
 	LDW(R9);STW(R6);
-	_LDI('.28');STW(R8);
+	LDWI('.28');STW(R8);
 	_MOVW(R8,[SP,2]);
-	_LDI('xx');DEEK();STW(R22);
+	LDWI('xx');DEEK();STW(R22);
 	LDI(2);STW(R21);
 	LDW(R7);SUBW(R22);_DIVS(R21);STW(R9);
 	_MOVW(R9,[SP,4]);

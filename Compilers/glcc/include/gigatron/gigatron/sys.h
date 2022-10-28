@@ -46,6 +46,13 @@ typedef struct channel_s {
 # define word unsigned int
 #endif
 
+/* Using macro definitions like this is not very
+ * good because it prevents us from declaring local
+ * variables with the same name. Best would be 
+ * to augment LCC with a way to declare placed
+ * global variables (another project).
+ */
+
 #define zeroConst             (*(byte*)(0x0000)) // byte zeroConst;
 #define memSize               (*(byte*)(0x0001)) // byte memSize;
 #define entropy      ( (volatile byte*)(0x0006)) // byte entropy[3];
@@ -152,13 +159,6 @@ int SYS_ExpanderControl(unsigned int ctrl);
 void SYS_SpiExchangeBytes(void *dst, void *src, void *srcend);
 #define has_SYS_SpiExchangeBytes() \
 	(((romType & 0xfc) >= romTypeValue_ROMv5) && (ctrlBits_v5 != 0))
-
-
-/* -- SYS_OsCall --
-   Notes: This only exists in the exp ROM. */
-int SYS_OsCall(unsigned char n);
-#define has_SYS_OsCall() \
-	(((romType & 0xfc) > romTypeValue_ROMv5) && (ctrlBits_v5 != 0))
 
 
 

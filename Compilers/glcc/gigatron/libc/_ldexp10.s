@@ -11,7 +11,7 @@ def scope():
     def code_ldexp10n():
         label('.neg0')
         LDW(R11);ADDI(bigstep);_BGE('.neg2')
-        STW(R11);_LDI(bigcst);_FDIV()
+        STW(R11);LDWI(bigcst);_FDIV()
         _FSGN();_BNE('.neg0')
         tryhop(2);POP();RET()
         label('.neg2')
@@ -32,7 +32,7 @@ def scope():
         _CALLJ('.neg0') # no return
         label('.pos0')
         LDW(R11);SUBI(bigstep);_BLE('.pos2')
-        STW(R11);_LDI(bigcst);_FMUL()
+        STW(R11);LDWI(bigcst);_FMUL()
         _BRA('.pos0')
         label('.posf')
         PUSH();LDW(R11)

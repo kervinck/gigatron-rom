@@ -6,8 +6,8 @@ def scope():
         label('raise')                       # void raise(int signo);
         LDI(0);STW(R9)
         label('_raisem')                     # void _raisem(int signo, const char *msg);
-        LDW(R8);ANDI(0xf8);BEQ('.raise1');
-        _LDI(0xffff);RET()
+        LDW(R8);ANDI(0xf8);_BEQ('.raise1');
+        _LDI(-1);RET()
         label('.raise1')
         LDW(R9);STW(T3)
         LDW(R8)
@@ -15,7 +15,7 @@ def scope():
         STLW(-2);
         label('_raise_disposition', pc()+1)
         LDWI(0)
-        BEQ('.raise2')
+        _BEQ('.raise2')
         STW(T2);
         LDW(vLR);DOKE(SP);LDLW(-2);CALL(T2)  # dispatcher (no return)
         label('.raise2')
@@ -35,7 +35,7 @@ def scope():
     def code1():
         nohop()
         label('_raise_sets_code')
-        _LDI('_raise_code');STW(T2)
+        LDWI('_raise_code');STW(T2)
         LDLW(-2);DOKE(T2)
         LDW(SP);DEEK();STW(vLR);RET()
         align(2);

@@ -23,16 +23,16 @@ Their function is best understood by looking how they are called
 by VCPU pseudo-instuctions defined inside `glink.py`.
 
 As explained in the main [`README.md`](../../README.md) file, these functions
-operate entirely using the `[0x81-0x8f]` block of zero page memory and 
+operate entirely using the `[0xc0-0xcf]` block of zero page memory and 
 they only use the normal VCPU stack.
 
-The only runtime function that is not defined here are
+The only runtime functions that are not defined here are
 `_@_raise_ferr`, `_@_raise_fovf`, and `_@_raise_zdiv` which are used
 to raise exceptions for respectively floating point errors, floating
 point overflow, and integer division by zero. If the exception is
 resumed, these functions do not return, but pop the return address of
-the calling function and jump there. These functions are defined
-in file `_suppport.s` in the C library.
+the calling function and jump there. These functions are defined in
+file `_suppport.s` in the C library.
 
 Symbols named `__@xxxx` are private to the runtime.
 

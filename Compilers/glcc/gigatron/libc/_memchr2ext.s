@@ -19,7 +19,7 @@ def scope():
             ST(R17);LDW(R17);SYS(cycs)
     else:
         def m_prepScanMemoryExt():
-            _LDI(0x1f8);PEEK();STW(R16);_BNE('.ok')        # R16: copy of 1f8
+            LDWI(0x1f8);PEEK();STW(R16);_BNE('.ok')        # R16: copy of 1f8
             LDI(0);tryhop(2);POP();RET();label('.ok')
             LDW(R8);ORI(0x3c);ANDI(0xfc);STW(R17)          # R17: target ctrl word
             _LDI('SYS_ExpanderControl_v4_40');STW('sysFn')
@@ -39,10 +39,10 @@ def scope():
                 label('.scanloop')
                 LDW('sysArgs0');PEEK()
                 ST(vACH);XORW('sysArgs2');STW(T3)
-                LD(T3);BEQ('.scanok')
-                LD(T3+1);BEQ('.scanok')
+                LD(T3);_BEQ('.scanok')
+                LD(T3+1);_BEQ('.scanok')
                 INC('sysArgs0');INC('sysArgs4')
-                LD('sysArgs4');BNE('.scanloop')
+                LD('sysArgs4');_BNE('.scanloop')
                 LDW(R16);SYS(40)
                 LDI(0);RET()
                 label('.scanok')
@@ -52,8 +52,8 @@ def scope():
                 label('.scanloop')
                 PEEKp('sysArgs0')
                 ST(vACH);XORW('sysArgs2');STW(T3)
-                LD(T3);BEQ('.scanok')
-                LD(T3+1);BEQ('.scanok')
+                LD(T3);_BEQ('.scanok')
+                LD(T3+1);_BEQ('.scanok')
                 DBNE('sysArgs4','.scanloop')
                 LDW(R16);SYS(40)
                 LDI(0);RET()

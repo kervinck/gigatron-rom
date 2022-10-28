@@ -11,7 +11,7 @@ def scope():
         cycs = int(str(info['cycs']),0)
         def m_prepCopyMemoryExt():
             LDWI(addr);STW('sysFn');
-            _LDI(0x1f8);PEEK();BNE('.ok')
+            LDWI(0x1f8);PEEK();_BNE('.ok')
             LDI(0);tryhop(2);POP();RET();label('.ok')
         def m_reduceCopyMemoryExt():
             pass
@@ -26,7 +26,7 @@ def scope():
     else:
 
         def m_prepCopyMemoryExt():
-            _LDI(0x1f8);PEEK();STW(R16);_BNE('.ok')        # R16: copy of 1f8
+            LDWI(0x1f8);PEEK();STW(R16);_BNE('.ok')        # R16: copy of 1f8
             LDI(0);tryhop(2);POP();RET();label('.ok')
             LDW(R8);ORI(0x3c);ANDI(0xfc);STW(R17)          # R17: destination ctrl word
             LDW(R8);LSLW();LSLW();ORI(0x3c);STW(R18)       # R18: source ctrl word
@@ -42,23 +42,23 @@ def scope():
             label('.memcpyextb')
             space(32)
             label('_memcpyext0')
-            _LDI('.memcpyextb');STW(R19)
+            LDWI('.memcpyextb');STW(R19)
             LDW(R18);SYS(40)
             label('.loop1')
             if args.cpu <= 5:
                 LDW('sysArgs2');PEEK();POKE(R19)
                 INC(R19);INC('sysArgs2')
-                LD('sysArgs5');SUBI(1);ST('sysArgs5');BNE('.loop1')
+                LD('sysArgs5');SUBI(1);ST('sysArgs5');_BNE('.loop1')
             else:
                 PEEKp('sysArgs2');POKEp(R19)
                 DBNE('sysArgs5','.loop1')
             LDW(R17);SYS(40)
-            _LDI('.memcpyextb');STW(R19)
+            LDWI('.memcpyextb');STW(R19)
             label('.loop2')
             if args.cpu <= 5:
                 LDW(R19);PEEK();POKE('sysArgs0')
                 INC(R19);INC('sysArgs0')
-                LD('sysArgs4');SUBI(1);ST('sysArgs4');BNE('.loop2')
+                LD('sysArgs4');SUBI(1);ST('sysArgs4');_BNE('.loop2')
             else:
                 PEEKp(R19);POKEp('sysArgs0')
                 DBNE('sysArgs4','.loop2')

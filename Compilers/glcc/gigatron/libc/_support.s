@@ -55,7 +55,7 @@ def scope():
         label('_foverflow')
         PUSH();_MOVF(F8,FAC);
         label('_@_raise_fovf')
-        _LDI('errno');STW(T2);LDI(2);POKE(T2);  # set errno=ERANGE on overflow.
+        LDWI('errno');STW(T2);LDI(2);POKE(T2);  # set errno=ERANGE on overflow.
         LDWI('.msg');STW(T3)
         LDWI(0x204)
         _CALLI('__@raisem')
