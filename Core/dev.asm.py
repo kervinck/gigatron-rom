@@ -120,12 +120,12 @@
 #  DONE Apple-1: Include Mastermind and 15-Puzzle
 #  DONE Apple-1: Include mini-assembler
 #  DONE Apple-1: Intercept cassette interface = menu
-#  NO  Reduce the Pictures application ROM footprint #120
+#  XXX  Reduce the Pictures application ROM footprint #120
 #  DONE Mandelbrot: Faster Mandelbrot using qwertyface's square trick
 #  PART Main: Better startup chime, eg. sequence the 4 notes and then decay
-#  NO   Main: Some startup logo as intro, eg. gigatron letters from the box
+#  XXX  Main: Some startup logo as intro, eg. gigatron letters from the box
 #  DONE Racer: Control speed with up/down (better for TypeC controllers)
-#  NO   Racer: Make noise when crashing
+#  DONE Racer: Make noise when crashing
 #  NO   Loader: make noise while loading (only channel 1 is safe to use)
 #  NO   Faster SYS_Exec_88, with start address (GT1)?
 #  DONE Let SYS_Exec_88 clear channelMask when loading into live channels
