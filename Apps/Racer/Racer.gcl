@@ -87,10 +87,10 @@ XXX Image compression?
     Speed $10+ Speed= {At 15 fps $10 means ~1s to reach the next speed level}
     $5ff Speed- [if<0 $5ff Speed=]
    else
-    -$108 Speed+ [if>=0 Speed 8- Speed=] {Slowly drop to very low speed}
+    Speed $40- [if>=0 Speed 8- Speed=] {Slowly drop to a halt}
   ]
   { \buttonB | \buttonDown == 68 }
-  \buttonState, 68& 68^ [if<>0 Speed $40- [if<0 0] Speed=] {Braking}
+  \buttonState, 68& 68^ [if<>0 Speed $40- [if<=0 0] Speed=] {Braking}
   ret
 ]
 
@@ -158,23 +158,13 @@ XXX Image compression?
 { PlayEngineSound }
 [def
 _PlayEngineSound=*
-  {Volume}
-  $01fa p= $72 p:
-
-  {Original pitch was
-     {Low key is Speed[0:6]}
-     $01fc {keyL} p= Speed 127& p.
-     {High key is Speed[7:14]}
-     $01fd {keyH} p= Speed Speed+ \vACH, p.}
-
-  {Low key is Speed[1:7]}
-  \SYS_LSRW1_48 _sysFn=
-  $01fc {keyL} p= <Speed, 48!! p.
-  {High key is Speed[8:15]}
-  $01fd {keyH} p= >Speed, p.
+  push \SetEngineSoundMod! pop
+  \SYS_LSRW1_48 _sysFn=   
+  $1fc p= <Speed, 48!! p. {keyL=Speed[1:7]}
+  <p++ >Speed, p.         {KeyH=Speed[8:15]}
 
 _CopyChannel0=*
-  $1fa p= p; >p++ p: >p++ p: >p++ p. { channel 3: volume only }
+  $1fa p= p; >p++ p: >p++ p: >p++ 255& p: { channel 3 always noise }
   $1fc p= p; >p++ p: >p++ p: >p++ p:
   10 \soundTimer.
   ret
@@ -295,7 +285,7 @@ _CopyChannel0=*
 ] PrintText=
 
 { DrawRoad }
-[def
+[def _DrawRoad=*
   $74d0 p=                      {array[48], in display memory but out of view}
   0 X=
   DX0 DX=
@@ -359,7 +349,17 @@ _CopyChannel0=*
   tmp X- s.
 
   ret
-] DrawRoad=
+]
+
+[def _SetEngineSoundMod=*
+  $1fa p=
+  \buttonState, 136& 136^
+  [if<>0 $250 else $70] p:
+  ret
+]
+
+
+
 
 {-----------------------------------------------------------------------+
 |}>_vLR++ ret{          RAM page 6                                      |
@@ -403,7 +403,7 @@ _CopyChannel0=*
     ]
 
     {Draw bending of the road}
-    DrawRoad!
+    \DrawRoad!
 
     {Drift and horizon movement}
     DDX 3<< HorizonDX= 1<< DriftX=
@@ -421,7 +421,7 @@ _CopyChannel0=*
     DrawGrass!
 
     {Force end of game after 5m00s}
-    -17995 Time+ [if>0 Collision=]
+    -17995 Time+ [if>0 pop ret]
 
     {Draw current time}
     Time Value= $801 Pos= 63 Color= PrintTime!
@@ -510,9 +510,9 @@ _CopyChannel0=*
 [def _PlayCrashSound=*
   push
   1 Delay=
-  111 [do i= \PlayCrashSoundHelper!
+  64 [do i= \PlayCrashSoundHelper!
          \CopyChannel0! Wait!
-         i 3- if<>0loop]
+         i 2- if<>0loop]
   0 \soundTimer.
   pop ret
 ]
@@ -539,7 +539,7 @@ _CopyChannel0=*
 _PlayCrashSoundHelper=*
   {This is here because there was space}
   $1fc p= $17f _entropy& p:
-  $1fa p= 63 i- [if<0 16] 64+ p: 
+  $1fa p= 63 i- [if<0 0] 64+ p: 
   ret
 
 ] DrawRaceCar=
@@ -613,7 +613,8 @@ _PlayCrashSoundHelper=*
     `GAME`OVER #0 {GAME OVER}
   ] PrintText!
 
-  1 Delay= \PlayCrashSound!
+  1 Delay=
+  Collision [if<>0 \PlayCrashSound!]
 
   $111 s= $20+ t=
   s, 128& [if=0 +1 else -1] i= {Scroll direction}
@@ -666,7 +667,7 @@ Intro!
 
   $7fff BestTime=
   0 Time= Value= HorizonX= DriftX= Speed=
-  Random= DX0= DDX= NextDDX= DrawRoad!
+  Random= DX0= DDX= NextDDX= \DrawRoad!
   DrawGrass!
   SetupHorizon!
   $1435 Pos=
