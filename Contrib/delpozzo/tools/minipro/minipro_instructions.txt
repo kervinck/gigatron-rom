@@ -1,0 +1,11 @@
+--------------------
+  Read
+--------------------
+minipro -p "M27C1024@DIP40" -r /path/to/rom.hex -f ihex
+
+--------------------
+  Write/Burn
+--------------------
+minipro -p "M27C1024@DIP40" -w /path/to/dev.rom
+		-or-
+minipro -p "M27C1024@DIP40" -w /path/to/dev.hex -f ihex
