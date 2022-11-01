@@ -73,3 +73,10 @@ Modification of the original which adds support for the Arduino Mega. Sends GT1 
 
 ### gigatron-gimp-palette.gpl
 Gigatron Color Palette for GIMP
+
+### minipro
+Usage examples and udev rules for minipro.
+
+## ROM
+Custom Gigatron ROM files (SD and non-SD versions).
+See [Makefile.custom](rom/Makefile.custom) for included apps.
