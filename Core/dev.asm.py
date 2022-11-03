@@ -100,7 +100,7 @@
 #  DONE Fix possible video timing error in Loader #100
 #  DONE Fix zero page usage in Bricks and Tetronis #41
 #  DONE Add CALLI instruction to vCPU
-#  XXX  Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
+#  DONE Add CMPHS/CMPHU instructions to vCPU XXX Still needs testing
 #  DONE Main: add Apple1 to main menu
 #  DONE Replace egg with something new
 #  DONE Split interface.json and interface-dev.json
@@ -122,14 +122,14 @@
 #  DONE Apple-1: Intercept cassette interface = menu
 #  XXX  Reduce the Pictures application ROM footprint #120
 #  DONE Mandelbrot: Faster Mandelbrot using qwertyface's square trick
-#  XXX  Main: Better startup chime, eg. sequence the 4 notes and then decay
+#  PART Main: Better startup chime, eg. sequence the 4 notes and then decay
 #  XXX  Main: Some startup logo as intro, eg. gigatron letters from the box
-#  XXX  Racer: Control speed with up/down (better for TypeC controllers)
-#  XXX  Racer: Make noise when crashing
-#  XXX  Loader: make noise while loading (only channel 1 is safe to use)
-#  XXX  Faster SYS_Exec_88, with start address (GT1)?
+#  DONE Racer: Control speed with up/down (better for TypeC controllers)
+#  DONE Racer: Make noise when crashing
+#  NO   Loader: make noise while loading (only channel 1 is safe to use)
+#  NO   Faster SYS_Exec_88, with start address (GT1)?
 #  DONE Let SYS_Exec_88 clear channelMask when loading into live channels
-#  XXX  Investigate: Babelfish sometimes freezes during power-on?
+#  UNK  Investigate: Babelfish sometimes freezes during power-on?
 #
 #  Ideas for ROM v6+
 #  XXX  ROM functions: SYS_PrintString, control codes, SYS_DrawChar, SYS_Newline
