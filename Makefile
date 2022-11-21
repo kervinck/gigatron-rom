@@ -48,7 +48,7 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		TicTac=Apps/TicTac/LoadTicTac_v1.gcl\
 		TicTacGtb=Apps/TicTac/TicTac_v2.gtb\
 		WozMon=Apps/WozMon/WozMon_v2.gcl\
-		Apple1=Apps/Apple-1/Apple-1_v2.gt1\
+		Apple1=Apps/Apple-1/Apple-1.gt1\
 		MSBASIC=Apps/MSBASIC/MSBASIC_v1.gt1\
 		Loader=Apps/Loader/Loader_v4.gcl\
 		Credits=Apps/Credits/Credits_v3.gcl\
