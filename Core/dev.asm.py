@@ -340,8 +340,33 @@ ledTimer        = zpByte() # Number of ticks until next LED change
 ledState_v2     = zpByte() # Current LED state
 ledTempo        = zpByte() # Next value for ledTimer after LED state change
 
-# All bytes above, except 0x80, are free for temporary/scratch/stacks etc
+
+# Management of free space in page zero (userVars)
+# * Programs that only use the features of ROMvx can
+#   safely use all bytes above userVars_vx except 0x80.
+# * Programs that use some but not all features of ROMvx
+#   may exceptionally use bytes between userVars
+#   and userVars_vx if they avoid using ROM features
+#   that need them. This is considerably riskier.
 userVars        = zpByte(0)
+userVars_v4     = zpByte(0)
+
+# Saved vCPU context during vIRQ
+# Code that uses vCPU interrupts should not use these locations.
+vIrqSave        = zpByte(6)
+
+# Start of safely usable bytes under ROMv5 and derivatives
+userVars_v5     = zpByte(0)
+
+# [0x80]
+# Constant 0x01. 
+zpReset(0x80)
+oneConst        = zpByte(1)
+userVars2       = zpByte(0)
+
+# Warning: One should avoid using SYS_ExpanderControl
+# under ROMv4 overwrites becauses it overwrites 0x81.
+
 
 #-----------------------------------------------------------------------
 #
@@ -355,6 +380,7 @@ videoTable      = 0x0100 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
 vReset          = 0x01f0
 vIRQ_v5         = 0x01f6
 ctrlBits        = 0x01f8
+ctrlBits_v5     = ctrlBits
 videoTop_v5     = 0x01f9 # Number of skip lines
 
 # Highest bytes are for sound channel variables
@@ -2336,35 +2362,44 @@ ld(hi('NEXTY'),Y)               #16
 jmp(Y,'NEXTY')                  #17
 ld(-20/2)                       #18
 
+
 # Interrupt handler:
-#       ST   $xx        -> optionally store vCpuSelect
 #       ... IRQ payload ...
-# either:
 #       LDWI $400
-#       LUP  0          -> vRTI and don't switch interpreter (immediate resume)
-# or:
-#       LDWI $400
-#       LUP  $xx        -> vRTI and switch interpreter type as stored in [$xx]
-fillers(until=251-11)
-label('vRTI#15')
-ld([0x30])                      #15 Continue with vCPU in the same timeslice (faster)
-st([vPC])                       #16
-ld([0x31])                      #17
-st([vPC+1])                     #18
-ld([0x32])                      #19
-st([vAC])                       #20
-ld([0x33])                      #21
-st([vAC+1])                     #22
-ld(hi('REENTER'),Y)             #23
-jmp(Y,'REENTER')                #24
-ld(-28/2)                       #25
+#       LUP  $xx  ==> vRTI
+fillers(until=251-17)
+
+label('vRTI#18')
+ld(-32//2-v6502_adjust)         #18
+adda([vTicks])                  #19
+bge('vRTI#22')                  #20
+st([vTmp])                      #21
+ld([vIrqSave+2])                #22
+st([vAC])                       #23
+ld([vIrqSave+3])                #24
+st([vAC+1])                     #25
+ld([vIrqSave+4])                #26
+st([vCpuSelect])                #27
+ld([vTicks])                    #0
+ld(hi('RESYNC'),Y)              #1
+jmp(Y,'RESYNC')                 #2
+adda(maxTicks-28//2)            #3
+
+
+label('vRTI#22')
+ld(hi('vRTI#25'),Y)             #22
+jmp(Y,'vRTI#25')                #23
+ld([vIrqSave+2])                #24
+
 # vRTI entry point
 assert(pc()&255 == 251)         # The landing offset 251 for LUP trampoline is fixed
-beq('vRTI#15')                  #13 vRTI sequence
-adda(1,X)                       #14
-ld(hi('vRTI#18'),Y)             #15 Switch and wait for end of timeslice (slower)
-jmp(Y,'vRTI#18')                #16
-st([vTmp])                      #17
+ld([vIrqSave+0])                #13
+st([vPC])                       #14
+ld([vIrqSave+1])                #15
+bra('vRTI#18')                  #16
+st([vPC+1])                     #17
+
+
 
 #-----------------------------------------------------------------------
 #
@@ -5143,44 +5178,36 @@ runVcpu(186-82-extra,           #82 Application cycles (scan line 0)
     returnTo='vBlankFirst#186')
 
 label('vBlankFirst#82')
-st([0x30])                      #82 Save vPC
+st([vIrqSave+0])                #82 Save vPC
 ld([vPC+1])                     #83
-st([0x31])                      #84
+st([vIrqSave+1])                #84
 ld([vAC])                       #85 Save vAC
-st([0x32])                      #86
+st([vIrqSave+2])                #86
 ld([vAC+1])                     #87
-st([0x33])                      #88
+st([vIrqSave+3])                #88
 ld([Y,vIRQ_v5])                 #89 Set vPC to vIRQ
 suba(2)                         #90
 st([vPC])                       #91
 ld([Y,vIRQ_v5+1])               #92
 st([vPC+1])                     #93
-ld([vCpuSelect])                #94 Handler must save this if needed
-st([vAC+1])                     #95
-ld(0)                           #96
-st([vAC])                       #97
-ld(hi('ENTER'))                 #98 Set vCpuSelect to ENTER (=regular vCPU)
-st([vCpuSelect])                #99
-runVcpu(186-100-extra,          #100 Application cycles (scan line 0)
+ld([vCpuSelect])                #94 Save vCpuSelect
+st([vIrqSave+4])                #95
+ld(hi('ENTER'))                 #96 Set vCpuSelect to ENTER (=regular vCPU)
+st([vCpuSelect])                #97
+runVcpu(186-98-extra,           #98 Application cycles (scan line 0)
     '---D line 0 timeout with irq',
     returnTo='vBlankFirst#186')
 
-# vIRQ sequence WITH interpreter switch
-label('vRTI#18')
-ld([X])                         #18
-st([vCpuSelect])                #19
-ld([0x30])                      #20
-st([vPC])                       #21
-ld([0x31])                      #22
-st([vPC+1])                     #23
-ld([0x32])                      #24
+# vRTI immediate resume
+label('vRTI#25')
 st([vAC])                       #25
-ld([0x33])                      #26
+ld([vIrqSave+3])                #26
 st([vAC+1])                     #27
-nop()                           #0
-ld(hi('RESYNC'),Y)              #1
-jmp(Y,'RESYNC')                 #2
-ld([vTicks])                    #3
+ld([vIrqSave+4])                #28
+st([vCpuSelect],Y)              #29
+jmp(Y,'ENTER')                  #30
+ld([vTmp])                      #31-32=-1
+
 
 # Entered last line of vertical blank (line 40)
 label('vBlankLast#34')
@@ -5817,8 +5844,11 @@ define('ledTimer',   ledTimer)
 define('ledState_v2',ledState_v2)
 define('ledTempo',   ledTempo)
 define('userVars',   userVars)
+define('userVars_v4',userVars_v4)
+define('userVars_v5',userVars_v5)
 define('videoTable', videoTable)
 define('vIRQ_v5',    vIRQ_v5)
+define('ctrlBits_v5',ctrlBits_v5)
 define('videoTop_v5',videoTop_v5)
 define('userCode',   userCode)
 define('soundTable', soundTable)
