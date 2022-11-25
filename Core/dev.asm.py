@@ -340,8 +340,33 @@ ledTimer        = zpByte() # Number of ticks until next LED change
 ledState_v2     = zpByte() # Current LED state
 ledTempo        = zpByte() # Next value for ledTimer after LED state change
 
-# All bytes above, except 0x80, are free for temporary/scratch/stacks etc
+
+# Management of free space in page zero (userVars)
+# * Programs that only use the features of ROMvx can
+#   safely use all bytes above userVars_vx except 0x80.
+# * Programs that use some but not all features of ROMvx
+#   may exceptionally use bytes between userVars
+#   and userVars_vx if they avoid using ROM features
+#   that need them. This is considerably riskier.
 userVars        = zpByte(0)
+userVars_v4     = zpByte(0)
+
+# Saved vCPU context during vIRQ
+# Code that uses vCPU interrupts should not use these locations.
+vIrqSave        = zpByte(6)
+
+# Start of safely usable bytes under ROMv5 and derivatives
+userVars_v5     = zpByte(0)
+
+# [0x80]
+# Constant 0x01. 
+zpReset(0x80)
+oneConst        = zpByte(1)
+userVars2       = zpByte(0)
+
+# Warning: One should avoid using SYS_ExpanderControl
+# under ROMv4 overwrites becauses it overwrites 0x81.
+
 
 #-----------------------------------------------------------------------
 #
@@ -355,6 +380,7 @@ videoTable      = 0x0100 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
 vReset          = 0x01f0
 vIRQ_v5         = 0x01f6
 ctrlBits        = 0x01f8
+ctrlBits_v5     = ctrlBits
 videoTop_v5     = 0x01f9 # Number of skip lines
 
 # Highest bytes are for sound channel variables
@@ -746,13 +772,44 @@ ld(hi('REENTER'),Y)             #15 slot 0x9b
 jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
-ld(hi('REENTER'),Y)             #15 slot 0x9e
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
+#-----------------------------------------------------------------------
+# Extension SYS_Multiply_s16_DEVROM_88: 16 bit multiplication
+#-----------------------------------------------------------------------
+#
+# Computes C = C + A * B where A,B,C are 16 bits integers.
+# Returns 16 bits result in vAC as well
+#
+#       sysArgs[0:1]    Multiplicand A (in)
+#       sysArgs[2:3]    Multiplicand B (in)
+#       sysArgs[4:5]    C (inout)
+#       sysArgs[6:7]    Must be set to 1 (in)
 
-ld(hi('REENTER'),Y)             #15 slot 0xa1
-jmp(Y,'REENTER')                #16
-ld(-20/2)                       #17
+label('SYS_Multiply_s16_DEVROM_66')
+ld(hi('sys_Multiply_s16'),Y)    #15 slot 0x9e
+jmp(Y,'sys_Multiply_s16')       #16
+ld([sysArgs+6])                 #17 load mask.lo
+
+#-----------------------------------------------------------------------
+# Extension SYS_Divide_s16_DEVROM_80: 15 bit division
+#-----------------------------------------------------------------------
+#
+# Computes the Euclidean division of 0<=A<=32767 and 0<B<=32767.
+# An external wrapper is needed to handle signed division or
+# to handle unsigned division with full range.
+#
+#       sysArgs[0:1]    Dividend A (in) Quotient (out)
+#       sysArgs[2:3]    Divisor B (in)
+#       sysArgs[4:5]    Must be set to 0 (in) Remainder (out)
+#       sysArgs[6:7]    Must be set to 1 (in)
+
+label('SYS_Divide_s16_DEVROM_80')
+ld(hi('sys_Divide_s16'),Y)      #15 slot 0xa1
+jmp(Y,'sys_Divide_s16')         #16
+ld([sysArgs+4])                 #17
+
+#-----------------------------------------------------------------------
+# More placeholders for future SYS functions
+#-----------------------------------------------------------------------
 
 ld(hi('REENTER'),Y)             #15 slot 0xa4
 jmp(Y,'REENTER')                #16
@@ -887,7 +944,6 @@ ld([vAC+1])                     #17
 # SYS function for searching a byte in a 0 to 256 bytes string.
 # Returns a pointer to the target if found or zero.  Doesn't cross
 # page boundaries.
-
 #
 # sysArgs[0:1]            Start address
 # sysArgs[2], sysArgs[3]  Bytes to locate in the string
@@ -2336,35 +2392,44 @@ ld(hi('NEXTY'),Y)               #16
 jmp(Y,'NEXTY')                  #17
 ld(-20/2)                       #18
 
+
 # Interrupt handler:
-#       ST   $xx        -> optionally store vCpuSelect
 #       ... IRQ payload ...
-# either:
 #       LDWI $400
-#       LUP  0          -> vRTI and don't switch interpreter (immediate resume)
-# or:
-#       LDWI $400
-#       LUP  $xx        -> vRTI and switch interpreter type as stored in [$xx]
-fillers(until=251-11)
-label('vRTI#15')
-ld([0x30])                      #15 Continue with vCPU in the same timeslice (faster)
-st([vPC])                       #16
-ld([0x31])                      #17
-st([vPC+1])                     #18
-ld([0x32])                      #19
-st([vAC])                       #20
-ld([0x33])                      #21
-st([vAC+1])                     #22
-ld(hi('REENTER'),Y)             #23
-jmp(Y,'REENTER')                #24
-ld(-28/2)                       #25
+#       LUP  $xx  ==> vRTI
+fillers(until=251-17)
+
+label('vRTI#18')
+ld(-32//2-v6502_adjust)         #18
+adda([vTicks])                  #19
+bge('vRTI#22')                  #20
+st([vTmp])                      #21
+ld([vIrqSave+2])                #22
+st([vAC])                       #23
+ld([vIrqSave+3])                #24
+st([vAC+1])                     #25
+ld([vIrqSave+4])                #26
+st([vCpuSelect])                #27
+ld([vTicks])                    #0
+ld(hi('RESYNC'),Y)              #1
+jmp(Y,'RESYNC')                 #2
+adda(maxTicks-28//2)            #3
+
+
+label('vRTI#22')
+ld(hi('vRTI#25'),Y)             #22
+jmp(Y,'vRTI#25')                #23
+ld([vIrqSave+2])                #24
+
 # vRTI entry point
 assert(pc()&255 == 251)         # The landing offset 251 for LUP trampoline is fixed
-beq('vRTI#15')                  #13 vRTI sequence
-adda(1,X)                       #14
-ld(hi('vRTI#18'),Y)             #15 Switch and wait for end of timeslice (slower)
-jmp(Y,'vRTI#18')                #16
-st([vTmp])                      #17
+ld([vIrqSave+0])                #13
+st([vPC])                       #14
+ld([vIrqSave+1])                #15
+bra('vRTI#18')                  #16
+st([vPC+1])                     #17
+
+
 
 #-----------------------------------------------------------------------
 #
@@ -5143,44 +5208,36 @@ runVcpu(186-82-extra,           #82 Application cycles (scan line 0)
     returnTo='vBlankFirst#186')
 
 label('vBlankFirst#82')
-st([0x30])                      #82 Save vPC
+st([vIrqSave+0])                #82 Save vPC
 ld([vPC+1])                     #83
-st([0x31])                      #84
+st([vIrqSave+1])                #84
 ld([vAC])                       #85 Save vAC
-st([0x32])                      #86
+st([vIrqSave+2])                #86
 ld([vAC+1])                     #87
-st([0x33])                      #88
+st([vIrqSave+3])                #88
 ld([Y,vIRQ_v5])                 #89 Set vPC to vIRQ
 suba(2)                         #90
 st([vPC])                       #91
 ld([Y,vIRQ_v5+1])               #92
 st([vPC+1])                     #93
-ld([vCpuSelect])                #94 Handler must save this if needed
-st([vAC+1])                     #95
-ld(0)                           #96
-st([vAC])                       #97
-ld(hi('ENTER'))                 #98 Set vCpuSelect to ENTER (=regular vCPU)
-st([vCpuSelect])                #99
-runVcpu(186-100-extra,          #100 Application cycles (scan line 0)
+ld([vCpuSelect])                #94 Save vCpuSelect
+st([vIrqSave+4])                #95
+ld(hi('ENTER'))                 #96 Set vCpuSelect to ENTER (=regular vCPU)
+st([vCpuSelect])                #97
+runVcpu(186-98-extra,           #98 Application cycles (scan line 0)
     '---D line 0 timeout with irq',
     returnTo='vBlankFirst#186')
 
-# vIRQ sequence WITH interpreter switch
-label('vRTI#18')
-ld([X])                         #18
-st([vCpuSelect])                #19
-ld([0x30])                      #20
-st([vPC])                       #21
-ld([0x31])                      #22
-st([vPC+1])                     #23
-ld([0x32])                      #24
+# vRTI immediate resume
+label('vRTI#25')
 st([vAC])                       #25
-ld([0x33])                      #26
+ld([vIrqSave+3])                #26
 st([vAC+1])                     #27
-nop()                           #0
-ld(hi('RESYNC'),Y)              #1
-jmp(Y,'RESYNC')                 #2
-ld([vTicks])                    #3
+ld([vIrqSave+4])                #28
+st([vCpuSelect],Y)              #29
+jmp(Y,'ENTER')                  #30
+ld([vTmp])                      #31-32=-1
+
 
 # Entered last line of vertical blank (line 40)
 label('vBlankLast#34')
@@ -5442,7 +5499,7 @@ ld(-44/2)                       #42
 
 #-----------------------------------------------------------------------
 #
-#  $1300 ROM page 19/20: CopyMemory[Ext]/ScanMemory[Ext]
+#  $1300 ROM page 19/20: SYS calls
 #
 #-----------------------------------------------------------------------
 
@@ -5552,6 +5609,7 @@ ld(hi('REENTER'),Y)                  #21
 jmp(Y,'REENTER')                     #22
 ld(-26/2)                            #23
 
+#-----------------------------------------------------------------------
 # SYS_CopyMemoryExt_DEVROM_100 implementation
 
 label('sys_CopyMemoryExt')
@@ -5661,6 +5719,7 @@ ld(-38/2)                            #35 max: 38 + 52 = 90 cycles
 
 align(0x100, size=0x100)
 
+#-----------------------------------------------------------------------
 # SYS_ScanMemory_DEVROM_50 implementation
 
 label('sys_ScanMemory')
@@ -5711,6 +5770,7 @@ jmp(Y,'REENTER')                     #30
 ld(-34/2)                            #31
 
 
+#-----------------------------------------------------------------------
 # SYS_ScanMemoryExt_DEVROM_50 implementation
 
 label('sys_ScanMemoryExt')
@@ -5774,6 +5834,164 @@ jmp(Y,'NEXTY')                       #43
 ld(-46/2)                            #44
 
 
+#-----------------------------------------------------------------------
+# sys_Multiply_s16, sum:s16 = x:s16 * y:s16
+# x:args0:1 y:args2:3 sum:args4:5 mask:args6:7
+
+label('sys_Multiply_s16')
+anda([sysArgs+2])               #18,
+st([vAC])                       #19, AC.lo = mask.lo AND y.lo
+ld([sysArgs+7])                 #20, load mask.hio
+anda([sysArgs+3])               #21,
+st([vAC+1])                     #22, AC.hi = mask.hi AND y.hi
+ora([vAC])                      #23,
+beq('.sys_ms16_26')             #24, AC = 0 then skip
+ld([sysArgs+4])                 #25, load sum.lo
+adda([sysArgs+0])               #26, load x.lo
+st([sysArgs+4])                 #27, sum.lo = sum.lo + x.lo
+blt('.sys_ms16_30')             #28, check for carry
+suba([sysArgs+0])               #29, get original sum.lo back
+bra('.sys_ms16_32')             #30,
+ora([sysArgs+0])                #31, carry in bit 7
+
+label('.sys_ms16_26')
+bra('.sys_ms16_28')             #26,
+ld(-56/2)                       #27, no accumulate sys ticks
+
+label('.sys_ms16_30')
+anda([sysArgs+0])               #30, carry in bit 7
+nop()                           #31,
+
+label('.sys_ms16_32')
+anda(0x80,X)                    #32,
+ld([X])                         #33, move carry to bit 0
+adda([sysArgs+5])               #34,
+adda([sysArgs+1])               #35,
+st([sysArgs+5])                 #36, sum.hi = sum.hi + x.hi
+ld(-66/2)                       #37, accumulate sys ticks
+
+label('.sys_ms16_28')
+st([vTmp])                      #28,#38,
+ld([sysArgs+0])                 #29,#39, AC = x.lo
+anda(0x80,X)                    #30,#40, X = AC & 0x80
+adda([sysArgs+0])               #31,#41, AC = x.lo <<1
+st([sysArgs+0])                 #32,#42, x.lo = AC
+ld([X])                         #33,#43, AC = X >>7
+adda([sysArgs+1])               #34,#44,
+adda([sysArgs+1])               #35,#45,
+st([sysArgs+1])                 #36,#46, x.hi = x.hi <<1 + AC
+ld([sysArgs+6])                 #37,#47, AC = mask.lo
+anda(0x80,X)                    #38,#48, X = AC & 0x80
+adda([sysArgs+6])               #39,#49, AC = mask.lo <<1
+st([sysArgs+6])                 #40,#50, mask.lo = AC
+ld([X])                         #41,#51, AC = X >>7
+adda([sysArgs+7])               #42,#52,
+adda([sysArgs+7])               #43,#53,
+st([sysArgs+7])                 #44,#54, mask.hi = mask.hi <<1 + AC
+ora([sysArgs+6])                #45,#55,
+beq('.sys_ms16_48')             #46,#56, if mask = 0
+ld([sysArgs+4])                 #47,#57
+ld([vPC])                       #48,#58,
+suba(2)                         #49,#59,
+st([vPC])                       #50,#60, restart SYS function
+ld(hi('REENTER'),Y)             #51,#61,
+jmp(Y,'REENTER')                #52,#62,
+ld([vTmp])                      #53,#63,
+
+label('.sys_ms16_48')
+st([vAC])                       #48,#58,
+ld([sysArgs+5])                 #49,#59,
+st([vAC+1])                     #50,#60,
+ld(hi('REENTER'),Y)             #51,#61,
+jmp(Y,'REENTER')                #52,#62,
+ld([vTmp])                      #53,#63,
+
+#-----------------------------------------------------------------------
+# sys_Divide_s16, x:s16 = x:s16 / y:s16, rem:s16 = x:s16 % y:s16
+# x:args0:1 y:args2:3 rem:args4:5 mask:args6:7
+
+label('sys_Divide_s16')
+anda(0x80,X)                    #18, X = AC & 0x80
+adda([sysArgs+4])               #19, AC = rem.lo <<1
+st([sysArgs+4])                 #20, rem.lo = AC
+ld([X])                         #21, AC = X >>7
+adda([sysArgs+5])               #22,
+adda([sysArgs+5])               #23,
+st([sysArgs+5])                 #24, rem.hi = rem.hi <<1 + AC
+ld([sysArgs+1])                 #25,
+anda(0x80)                      #26, sign of x
+beq('.sys_ds16_29')             #27, if x >= 0
+ld([sysArgs+4])                 #28,
+adda(1)                         #29,
+bra('.sys_ds16_32')             #30,
+st([sysArgs+4])                 #31, rem.lo++
+
+label('.sys_ds16_29')
+nop()                           #29
+nop()                           #30
+nop()                           #31
+label('.sys_ds16_32')
+ld([sysArgs+0])                 #32, AC = x.lo
+anda(0x80,X)                    #33, X = AC & 0x80
+adda([sysArgs+0])               #34, AC = x.lo <<1
+st([sysArgs+0])                 #35, x.lo = AC
+ld([X])                         #36, AC = X >>7
+adda([sysArgs+1])               #37,
+adda([sysArgs+1])               #38,
+st([sysArgs+1])                 #39, x.hi = x.hi <<1 + AC
+ld([sysArgs+4])                 #40, load rem.lo
+blt('.sys_ds16_43')             #41, check for borrow
+suba([sysArgs+2])               #42,
+st([vAC])                       #43, vAC.lo = rem.lo - y.lo
+bra('.sys_ds16_46')             #44,
+ora([sysArgs+2])                #45,
+
+label('.sys_ds16_43')
+st([vAC])                       #43,
+anda([sysArgs+2])               #44,
+nop()                           #45,
+label('.sys_ds16_46')
+anda(0x80,X)                    #46, move borrow to bit 0
+ld([sysArgs+5])                 #47, load rem.hi
+suba([X])                       #48,
+suba([sysArgs+3])               #49,
+st([vAC+1])                     #50, vAC.hi = rem.hi - y.hi
+blt('.sys_ds16_53')             #51,
+ld(-72/2)                       #52
+ld([vAC])                       #53,
+st([sysArgs+4])                 #54,
+ld([vAC+1])                     #55,
+st([sysArgs+5])                 #56, rem = vAC
+ld([sysArgs+0])                 #57,
+adda(1)                         #58,
+st([sysArgs+0])                 #59, x.lo++
+ld(-80/2)                       #60,
+
+label('.sys_ds16_53')
+st([vTmp])                      #53, #61,
+ld([sysArgs+6])                 #54, #62, AC = mask.lo
+anda(0x80,X)                    #55, #63, X = AC & 0x80
+adda([sysArgs+6])               #56, #64, AC = mask.lo <<1
+st([sysArgs+6])                 #57, #65, mask.lo = AC
+ld([X])                         #58, #66, AC = X >>7
+adda([sysArgs+7])               #59, #67,
+adda([sysArgs+7])               #60, #68,
+st([sysArgs+7])                 #61, #69, mask.hi = mask.hi <<1 + AC
+ora([sysArgs+6])                #62, #70,
+bne('.sys_ds16_65')             #63, #71,
+ld([vPC])                       #64, #72,
+nop()                           #65, #73,
+nop()                           #66, #74,
+ld(hi('REENTER'),Y)             #67, #75,
+jmp(Y,'REENTER')                #68, #76,
+ld([vTmp])                      #69, #77,
+label('.sys_ds16_65')
+suba(2)                         #65, #73,
+st([vPC])                       #66, #74, restart SYS function
+ld(hi('REENTER'),Y)             #67, #75,
+jmp(Y,'REENTER')                #68, #76,
+ld([vTmp])                      #69, #77,
+
 
 #-----------------------------------------------------------------------
 #
@@ -5817,8 +6035,11 @@ define('ledTimer',   ledTimer)
 define('ledState_v2',ledState_v2)
 define('ledTempo',   ledTempo)
 define('userVars',   userVars)
+define('userVars_v4',userVars_v4)
+define('userVars_v5',userVars_v5)
 define('videoTable', videoTable)
 define('vIRQ_v5',    vIRQ_v5)
+define('ctrlBits_v5',ctrlBits_v5)
 define('videoTop_v5',videoTop_v5)
 define('userCode',   userCode)
 define('soundTable', soundTable)

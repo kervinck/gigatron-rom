@@ -1,8 +1,8 @@
 gcl0x
 
-zpReset=$34                     {Relocate variables because vIRQ uses $30..$33}
+zpReset=$36                     {Relocate variables because vIRQ uses $30..$35}
 
-\vIRQ_DEVROM p=
+\vIRQ_v5 p=
 [def                            {Interrupt handler}
   $901 p= peek 1+ p.            {Flash second pixel}
   226 \frameCount.              {256-30: next interrupt after .5 second}

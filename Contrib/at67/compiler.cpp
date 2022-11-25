@@ -246,20 +246,22 @@ namespace Compiler
         return numLabels;
     }
 
-    // Vertical blank interrupt uses 0x30-0x33 for context save/restore, (vPC and vAC)
+    // Vertical blank interrupt uses 0x30-0x35 for context save/restore, (vPC,vAC,vCpuSelect)
     bool moveVblankVars(void)
     {
         if(_codeRomType < Cpu::ROMv5a) return false;
 
-        if(_userVarsAddr < USER_VAR_START + Int16*2)
+        if(_userVarsAddr < USER_VAR_START + Int16*3)
         {
-            _userVarStart = USER_VAR_START + Int16*2;
+            _userVarStart = USER_VAR_START + Int16*3;
             _userVarsAddr = _userVarStart;
         }
 
         for(int i=0; i<int(_integerVars.size()); i++)
         {
-            if(_integerVars[i]._address == USER_VAR_START  ||  _integerVars[i]._address == USER_VAR_START + Int16)
+            if(_integerVars[i]._address == USER_VAR_START  ||
+               _integerVars[i]._address == USER_VAR_START + Int16 ||
+              _integerVars[i]._address == USER_VAR_START + 2*Int16 )
             {
                 //emitVcpuAsm("LDW", Expression::wordToHexString(_integerVars[i]._address), false);
                 //emitVcpuAsm("STW", Expression::wordToHexString(_userVarsAddr), false);

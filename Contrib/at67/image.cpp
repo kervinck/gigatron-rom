@@ -71,7 +71,7 @@ namespace Image
         if(Cpu::getHostEndianness() == Cpu::BigEndian) _hostIsBigEndian = true;
     }
 
-    bool getFileSize(const std::string& filename, std::ifstream::streampos& fileSize)
+    bool getFileSize(const std::string& filename, std::streampos& fileSize)
     {
         std::ifstream infile(filename, std::ios::binary | std::ios::in);
         if(!infile.is_open()) return false;
@@ -93,7 +93,7 @@ namespace Image
             return false;
         }
 
-        std::ifstream::streampos fileSize = 0;
+        std::streampos fileSize = 0;
         if(!getFileSize(filename, fileSize))
         {
             fprintf(stderr, "Image::loadGtRgbFile() : couldn't get file size of '%s'\n", filename.c_str());

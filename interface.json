@@ -39,6 +39,8 @@
  "ledState_v2"          : "0x002e",
  "ledTempo"             : "0x002f",
  "userVars"             : "0x0030",
+ "userVars_v4"          : "0x0030",
+ "userVars_v5"          : "0x0036",
  "oneConst"             : "0x0080",
  "userVars2"            : "0x0081",
 
@@ -52,6 +54,7 @@
  "videoTable"           : "0x0100",
  "vReset"               : "0x01f0",
  "vIRQ_v5"              : "0x01f6",
+ "ctrlBits_v5"          : "0x01f8",
  "videoTop_v5"          : "0x01f9",
  "userCode"             : "0x0200",
  "soundTable"           : "0x0700",
