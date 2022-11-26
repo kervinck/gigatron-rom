@@ -2403,23 +2403,22 @@ label('vRTI#18')
 ld(-32//2-v6502_adjust)         #18
 adda([vTicks])                  #19
 bge('vRTI#22')                  #20
-st([vTmp])                      #21
-ld([vIrqSave+2])                #22
-st([vAC])                       #23
-ld([vIrqSave+3])                #24
-st([vAC+1])                     #25
-ld([vIrqSave+4])                #26
-st([vCpuSelect])                #27
-ld([vTicks])                    #0
+ld([vIrqSave+2])                #21
+st([vAC])                       #22
+ld([vIrqSave+3])                #23
+st([vAC+1])                     #24
+ld([vIrqSave+4])                #25
+st([vCpuSelect])                #26
+ld([vTicks])                    #27
+adda(maxTicks-28//2)            #28-28=0
 ld(hi('RESYNC'),Y)              #1
 jmp(Y,'RESYNC')                 #2
-adda(maxTicks-28//2)            #3
-
+nop()                           #3
 
 label('vRTI#22')
 ld(hi('vRTI#25'),Y)             #22
 jmp(Y,'vRTI#25')                #23
-ld([vIrqSave+2])                #24
+st([vAC])                       #24
 
 # vRTI entry point
 assert(pc()&255 == 251)         # The landing offset 251 for LUP trampoline is fixed
@@ -5230,13 +5229,13 @@ runVcpu(186-98-extra,           #98 Application cycles (scan line 0)
 
 # vRTI immediate resume
 label('vRTI#25')
-st([vAC])                       #25
-ld([vIrqSave+3])                #26
-st([vAC+1])                     #27
-ld([vIrqSave+4])                #28
-st([vCpuSelect],Y)              #29
+ld([vIrqSave+3])                #25
+st([vAC+1])                     #26
+ld([vIrqSave+4])                #27
+st([vCpuSelect],Y)              #28
+ld(-32//2)                      #29
 jmp(Y,'ENTER')                  #30
-ld([vTmp])                      #31-32=-1
+adda([vTicks])                  #31-32=-1
 
 
 # Entered last line of vertical blank (line 40)
