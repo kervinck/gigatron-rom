@@ -1,5 +1,5 @@
 {
-    "SYS_Multiply_s16_DEVROM_88"      : "0x9e",
+    "SYS_Multiply_s16_DEVROM_66"      : "0x9e",
     "SYS_Divide_s16_DEVROM_80"        : "0xa1",
     "SYS_ScanMemory_DEVROM_50"        : "0xe6",
     "SYS_CopyMemory_DEVROM_80"        : "0xe9",

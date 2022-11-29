@@ -773,7 +773,7 @@ jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_Multiply_s16_DEVROM_88: 16 bit multiplication
+# Extension SYS_Multiply_s16_DEVROM_66: 16 bit multiplication
 #-----------------------------------------------------------------------
 #
 # Computes C = C + A * B where A,B,C are 16 bits integers.
