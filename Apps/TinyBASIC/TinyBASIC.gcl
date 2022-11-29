@@ -964,7 +964,7 @@ _Statements5=*                  {Borrow a few bytes here for RUN}
 { Calculate vAC * Value, result in vAC }
 [def
   _sysArgs0= 
-  \SYS_Multiply_s16_DEVROM_88 _sysFn=
+  \SYS_Multiply_s16_DEVROM_66 _sysFn=
   Value _sysArgs2=
   0 _sysArgs4= 
   _sysArgs6 tmp=
