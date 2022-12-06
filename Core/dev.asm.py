@@ -783,6 +783,8 @@ ld(-20/2)                       #17
 #       sysArgs[2:3]    Multiplicand B (in)
 #       sysArgs[4:5]    C (inout)
 #       sysArgs[6:7]    Must be set to 1 (in)
+#
+# Credits: at67
 
 label('SYS_Multiply_s16_DEVROM_66')
 ld(hi('sys_Multiply_s16'),Y)    #15 slot 0x9e
@@ -801,6 +803,8 @@ ld([sysArgs+6])                 #17 load mask.lo
 #       sysArgs[2:3]    Divisor B (in)
 #       sysArgs[4:5]    Must be set to 0 (in) Remainder (out)
 #       sysArgs[6:7]    Must be set to 1 (in)
+#
+# Credits: at67
 
 label('SYS_Divide_s16_DEVROM_80')
 ld(hi('sys_Divide_s16'),Y)      #15 slot 0xa1
@@ -5836,6 +5840,8 @@ ld(-46/2)                            #44
 #-----------------------------------------------------------------------
 # sys_Multiply_s16, sum:s16 = x:s16 * y:s16
 # x:args0:1 y:args2:3 sum:args4:5 mask:args6:7
+#
+# Written by at67 for early ROMvX0.
 
 label('sys_Multiply_s16')
 anda([sysArgs+2])               #18,
@@ -5905,9 +5911,13 @@ ld(hi('REENTER'),Y)             #51,#61,
 jmp(Y,'REENTER')                #52,#62,
 ld([vTmp])                      #53,#63,
 
+
 #-----------------------------------------------------------------------
 # sys_Divide_s16, x:s16 = x:s16 / y:s16, rem:s16 = x:s16 % y:s16
 # x:args0:1 y:args2:3 rem:args4:5 mask:args6:7
+#
+# Written by at67 for early ROMvX0.
+
 
 label('sys_Divide_s16')
 anda(0x80,X)                    #18, X = AC & 0x80
