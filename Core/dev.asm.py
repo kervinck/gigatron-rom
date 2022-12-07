@@ -127,8 +127,8 @@
 #  DONE Racer: Control speed with up/down (better for TypeC controllers)
 #  DONE Racer: Make noise when crashing
 #  NO   Loader: make noise while loading (only channel 1 is safe to use)
-#  NO   Faster SYS_Exec_88, with start address (GT1)?
-#  DONE Let SYS_Exec_88 clear channelMask when loading into live channels
+#  XXX  Faster SYS_Exec_88, with start address (GT1)?
+#  XXX  Let SYS_Exec_88 clear channelMask when loading into live channels
 #  UNK  Investigate: Babelfish sometimes freezes during power-on?
 #
 #  Ideas for ROM v6+
