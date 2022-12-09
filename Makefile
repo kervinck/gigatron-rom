@@ -51,7 +51,7 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		Apple1=Apps/Apple-1/Apple-1.gt1\
 		MSBASIC=Apps/MSBASIC/MSBASIC_v1.gt1\
 		Loader=Apps/Loader/Loader_v4.gcl\
-		Credits=Apps/Credits/Credits_v3.gcl\
+		Credits=Apps/Credits/Credits.gt1\
 		Egg=Apps/Horizon/Horizon_dev_c.gt1\
 		Boot=Apps/CardBoot/CardBoot.gt1\
 		Main=Apps/MainMenu/MainMenu.gcl\
