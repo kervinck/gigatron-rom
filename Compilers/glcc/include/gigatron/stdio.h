@@ -1,51 +1,6 @@
 #ifndef __STDIO
 #define __STDIO
 
-#define _IOFBF   0x40  /* fully buffered */
-#define _IOLBF   0xC0  /* line buffered. */
-#define _IONBF   0x80  /* not buffered   */
-#define _IOMYBUF 0x20  /* own buffer     */
-#define _IOSTR   0x10  /* sprintf/scanf  */
-#define	_IOEOF   0x08  /* eof flag       */
-#define	_IOERR   0x04  /* error flag     */
-#define _IORW    0x03  /* r+,w+,a+       */
-#define _IOREAD  0x01  /* r              */
-#define _IOWRIT  0x02  /* w,a            */
-#define _IOBUFMASK 0xE0
-#define _IOMODMASK 0x03
-
-#define BUFSIZ 80
-#define EOF    (-1)
-
-extern struct _iobuf {
-	int  _cnt;
-	char *_ptr;
-	int  _flag;
-	int  _file;
-	char _buf[4];
-	struct _sbuf *_base;
-	struct _svec *_v;
-} _iob[];
-
-#define FILE struct _iobuf
-#define FILENAME_MAX 256
-#define FOPEN_MAX 10
-
-#if !defined(_FPOS_T) && !defined(_FPOS_T_) && !defined(_FPOS_T_DEFINED)
-#define _FPOS_T
-#define _FPOS_T_
-#define _FPOS_T_DEFINED
-typedef long fpos_t;
-#endif
-
-#define L_tmpnam 25
-#ifndef NULL
-#define NULL ((void*)0)
-#endif
-#define SEEK_CUR 1
-#define SEEK_END 2
-#define SEEK_SET 0
-
 #if !defined(_SIZE_T) && !defined(_SIZE_T_) && !defined(_SIZE_T_DEFINED)
 #define _SIZE_T
 #define _SIZE_T_
@@ -59,10 +14,55 @@ typedef unsigned int size_t;
 typedef char *__va_list;
 #endif
 
+#if !defined(_FPOS_T) && !defined(_FPOS_T_) && !defined(_FPOS_T_DEFINED)
+#define _FPOS_T
+#define _FPOS_T_
+#define _FPOS_T_DEFINED
+typedef long fpos_t;
+#endif
+
+#ifndef NULL
+#define NULL ((void*)0)
+#endif
+
+#define _IOFBF   0x40  /* buffered       (needed by c89) */
+#define _IONBF   0x80  /* not buffered   (needed by c89) */
+#define _IOLBF   0xC0  /* line buffered. (needed by c89) */
+#define _IOUNGET 0x10  /* pending ungetc */
+#define	_IOEOF   0x08  /* eof flag       */
+#define	_IOERR   0x04  /* error flag     */
+#define _IORW    0x03  /* r+,w+,a+       */
+#define _IOREAD  0x01  /* r              */
+#define _IOWRIT  0x02  /* w,a            */
+
+#define FILE         struct _iobuf
+#define FILENAME_MAX 256
+#define FOPEN_MAX    10
+#define BUFSIZ       512     /* nop */
+#define EOF          (-1)    /* eof */
+#define L_tmpnam     25
+#define SEEK_CUR     1
+#define SEEK_END     2
+#define SEEK_SET     0
+#define TMP_MAX      17576
+
+extern struct _iobuf {
+	char _flag;		/* flag */
+	char _unget;	        /* ungetc buffer */
+	struct _iovec *_v;	/* vtable */
+	void *_x;		/* more data */
+} _iob[];
+
+struct _iovec {
+	int  (*read)(FILE *fp, char *buf, size_t cnt);
+	int  (*write)(FILE *fp, const char *buf, size_t cnt);
+	int  (*flush)(FILE *fp, int close);
+	long (*lseek)(FILE *fp, long off, int whence);
+};
+
 #define stderr (&_iob[2])
 #define stdin  (&_iob[0])
 #define stdout (&_iob[1])
-#define TMP_MAX 17576
 
 extern int remove(const char *);
 extern int rename(const char *, const char *);
@@ -106,15 +106,12 @@ extern int feof(FILE *);
 extern int ferror(FILE *);
 extern void perror(const char *);
 
-#define getc(p) (--(p)->_cnt < 0 ? _filbuf(p) : (int) *(p)->_ptr++)
-#define putc(x, p) (--(p)->_cnt < 0 ? _flsbuf((char)(x),p) : (int)(*(p)->_ptr++=(char)(x)))
-#define getchar() (getc(stdin))
-#define putchar(x) (putc(x,stdout))
-#define ferror(p) ((p)->_flag & _IOERR)
-#define feof(p) ((p)->_flag & _IOEOF)
-#define clearerr(p) ((p)->_flag &= (_IOERR|_IOEOF)^0xff)
-
-extern int _filbuf(FILE *);
-extern int _flsbuf(int, FILE *);
+#define getc(p)     (fgetc(p))
+#define putc(x,p)   (fputc(x,p))
+#define getchar()   (fgetc(stdin))
+#define putchar(x)  (fputc(x,stdout))
+#define ferror(p)   ((p)->_flag & _IOERR)
+#define feof(p)     ((p)->_flag & _IOEOF)
+#define clearerr(p) ((p)->_flag &= (0xff ^ _IOERR ^ _IOEOF))
 
 #endif /* __STDIO */

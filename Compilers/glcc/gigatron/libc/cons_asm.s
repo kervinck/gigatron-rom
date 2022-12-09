@@ -15,7 +15,7 @@ def scope():
 
     def code_printchars():
         label('_console_printchars')
-        tryhop(4);LDW(vLR);STW(R22)
+        tryhop(4);PUSH()
         _LDI('SYS_VDrawBits_134');STW('sysFn')   # prep sysFn
         LDW(R8);STW('sysArgs0')                  # move fgbg, freeing R8
         LDI(0);STW(R12)                          # R12: character counter
@@ -35,7 +35,7 @@ def scope():
         LDI(1);ADDW(R12);STW(R12);               # increment counter
         XORW(R11);_BNE('.loop')                  # loop
         label('.ret')
-        tryhop(7);LDW(R22);STW(vLR);LDW(R12);RET()
+        tryhop(4);LDW(R12);POP();RET()
 
     def code_printonechar():
         nohop()

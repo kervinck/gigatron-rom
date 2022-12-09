@@ -103,11 +103,14 @@ add_executable(gtsim
 # --- Stage binary directory to make glcc usable
 
 set(gigatron_targets
-  glcc glink glink.py
+  glcc glink glink.py gtprof
   interface.json roms.json)
 
 foreach(fn ${gigatron_targets})
   set(output "${CMAKE_CURRENT_BINARY_DIR}/${fn}")
+  if ("${fn}" STREQUAL gtprof)
+     set(fn "mapsim/${fn}")
+  endif()
   add_custom_command(OUTPUT "${output}"
     COMMAND "${CMAKE_COMMAND}" "-E" "copy" "${srcrel}/gigatron/${fn}" "${output}"
     MAIN_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/gigatron/${fn}"
@@ -311,7 +314,7 @@ if (WIN32)
   string(REPLACE "/" "\\\\" cmd_to_lib "${bin_to_lib}")
   install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
              \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${glcc_install_bindir}\")")
-  foreach(pgm glcc glink gtsim)
+  foreach(pgm glcc glink gtsim gtprof)
     set(pycmd "")
     if (NOT "${pgm}" STREQUAL gtsim)
       set(pycmd "\\\"${PYTHON3}\\\" ")
@@ -326,7 +329,7 @@ else()
   file(RELATIVE_PATH bin_to_lib "/${glcc_install_bindir}" "/${glcc_install_libdir}")
   install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
             \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${glcc_install_bindir}\")")
-  foreach(pgm glcc glink gtsim)
+  foreach(pgm glcc glink gtsim gtprof)
     set(output "\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${glcc_install_bindir}/${pgm}")
     install(CODE "message(STATUS \"Creating symlink: ${output}\")
                   execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink

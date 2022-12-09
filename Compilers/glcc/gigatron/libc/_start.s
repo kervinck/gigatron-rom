@@ -4,13 +4,12 @@
 def code0():
     ### _start()
     label('_start');
-    # save vLR, vSP
-    PUSH();LDWI('_exitvsp');STW(T3);LD(vSP);POKE(T3)
+    # ensure stack alignment
     # create stack headroom for argc and argv
-    if args.cpu >= 6:
-        SUBVI(4,SP)
-    else:
-        LDWI(-4);ADDW(SP);STW(SP)
+    LDWI(0xfffc);ANDW(SP);SUBI(4);STW(SP)
+    # call onload functions
+    for f in args.onload:
+        _CALLJ(f)
     # initialize bss
     if not args.no_runtime_bss_initialization:
         _CALLJ('_init_bss')
@@ -29,8 +28,6 @@ def code0():
     LDI(0); STW(R9)
     label('_exitm');
     LDW(R8);STW(R0)
-    label('_exitvsp', pc()+1)
-    LDI(0);ST(vSP)         # .exitvsp is LDI's argument!
     label('_exitm_msgfunc', pc()+1)
     LDWI(0);_BEQ('.halt')  # _exitm_msgfunc is LDWI's argument here
     CALL(vAC)              # arguments in R8 and R9 are already correct
@@ -87,7 +84,8 @@ code=[
 
 if args.gt1exec != args.e:
     code.append(('IMPORT', args.gt1exec))        # causes map start stub to be included
-
+for f in args.onload:
+    code.append( ('IMPORT', f) )                 # causes onload funcs to be included
 if not args.no_runtime_bss_initialization:
     code.append(('IMPORT', '_init_bss'))         # causes _init1.c to be included
 

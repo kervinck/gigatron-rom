@@ -2,13 +2,3 @@ handle 4 1
 3/0 = 1234
 handle 4 1
 323421/0 = 1234
-SIGVIRQ(7): count=0
-SIGVIRQ(7): count=1
-SIGVIRQ(7): count=2
-SIGVIRQ(7): count=3
-SIGVIRQ(7): count=4
-SIGVIRQ(7): count=5
-SIGVIRQ(7): count=6
-SIGVIRQ(7): count=7
-SIGVIRQ(7): count=8
-SIGVIRQ(7): count=9

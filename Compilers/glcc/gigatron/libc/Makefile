@@ -22,10 +22,11 @@ CFILES=$(wildcard *.c)
 O4FILES=${patsubst %.c,${BL}%_4.o,${CFILES}}
 O5FILES=${patsubst %.c,${BL}%_5.o,${CFILES}}
 O6FILES=${patsubst %.c,${BL}%_6.o,${CFILES}}
-OFILES=${O4FILES} ${O5FILES} ${O6FILES}
+O7FILES=${patsubst %.c,${BL}%_7.o,${CFILES}}
+OFILES=${O4FILES} ${O5FILES} ${O6FILES} ${O7FILES}
 RFILES=$(wildcard ../runtime/*.s)
 
-all: ${B}cpu4/libc.a ${B}cpu5/libc.a ${B}cpu6/libc.a 
+all: ${B}cpu4/libc.a ${B}cpu5/libc.a ${B}cpu6/libc.a ${B}cpu7/libc.a
 
 ${B}cpu4/libc.a: ${SFILES} ${O4FILES} ${RFILES}
 	-@mkdir -p ${B}cpu4
@@ -38,6 +39,10 @@ ${B}cpu5/libc.a: ${SFILES} ${O5FILES} ${RFILES}
 ${B}cpu6/libc.a: ${SFILES} ${O6FILES} ${RFILES}
 	-@mkdir -p ${B}cpu6
 	cat ${SFILES} ${O6FILES} ${RFILES} > ${B}/cpu6/libc.a
+
+${B}cpu7/libc.a: ${SFILES} ${O7FILES} ${RFILES}
+	-@mkdir -p ${B}cpu7
+	cat ${SFILES} ${O7FILES} ${RFILES} > ${B}/cpu7/libc.a
 
 # this is incomplete but better than nothing
 DEPS=_stdio.h ${INC}stdio.h ${INC}gigatron/libc.h ${B}rcc${E}
@@ -54,6 +59,10 @@ ${BL}%_6.o: %.c ${DEPS}
 	-@mkdir -p ${BL}
 	${GLCC} -c -cpu=6 -o $@  $<
 
+${BL}%_7.o: %.c ${DEPS}
+	-@mkdir -p ${BL}
+	${GLCC} -c -cpu=7 -o $@  $<
+
 clean: FORCE
 	-rm ${OFILES}
 	-for cpu in 4 5 6; do \
@@ -63,7 +72,7 @@ clean: FORCE
 	-rmdir ${BL}
 
 install: FORCE
-	for cpu in 4 5 6; do if test -d ${B}cpu$$cpu; then \
+	for cpu in 4 5 6 7; do if test -d ${B}cpu$$cpu; then \
 	  ${INSTALL} -d "${libdir}/cpu$$cpu/" ; \
 	  ${INSTALL} -m 644 "${B}cpu$$cpu/libc.a" "${libdir}/cpu$$cpu/libc.a" ; \
 	fi; done

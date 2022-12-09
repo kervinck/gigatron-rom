@@ -1,34 +1,36 @@
 def scope():
 
-    def _MOVQW(i,d):
-        if args.cpu >= 6:
-            MOVQW(i,d)
-        else:
-            LDI(i);STW(d)
+    XV = v('sysArgs0'); YV = v('sysArgs2')
+    RV = v('sysArgs4'); MV = v('sysArgs6')
+    assert YV != T3
+    assert XV != T3
 
-    if 'has_at67_SYS_Divide_s16' in rominfo:
+    if 'has_SYS_Divide_u16' in rominfo:
         # Divide using SYS call
-        XV = v('sysArgs0'); YV = v('sysArgs2')
-        RV = v('sysArgs4'); MV = v('sysArgs6')
+        morecode = []
+        needbig = False
+        info = rominfo['has_SYS_Divide_u16']
+        addr = int(str(info['addr']),0)
+        cycs = int(str(info['cycs']),0)
+        def CallWorker():
+            _LDI(addr);STW('sysFn');SYS(cycs)
 
+    elif 'has_at67_SYS_Divide_s16' in rominfo:
+        # Divide using SYS call
+        morecode = []
+        needbig = True
         info = rominfo['has_at67_SYS_Divide_s16']
         addr = int(str(info['addr']),0)
         cycs = int(str(info['cycs']),0)
         def CallWorker():
-            _MOVQW(0,RV)
-            _MOVQW(1,MV)
+            LDI(0);STW(RV)
+            LDI(1);STW(MV)
             _LDI(addr);STW('sysFn');SYS(cycs)
 
-        morecode = []
-
-    else:
+    elif args.cpu < 7:
         # Divide using vCPU
-        XV = T3; YV = T2;
-        RV = T0; MV = T1
-
-        def CallWorker():
-            _CALLJ('__@divworker')
-
+        needbig = True
+        morecode = [('IMPORT', '__@divworker')]
         def code0():
             nohop()
             label('__@divworker')
@@ -46,44 +48,50 @@ def scope():
             label('.div3')
             INC(MV);LD(MV);XORI(16);_BNE('.div0')
             RET()
-
         module(name='rt_divworker.s',
                code=[ ('CODE', '__@divworker', code0),
                       ('EXPORT', '__@divworker') ] )
-
-        morecode = [('IMPORT', '__@divworker')]
+        def CallWorker():
+            _CALLJ('__@divworker')
 
     # DIVU:  T3/vAC -> vAC
-    assert YV != T3
     def code2():
         label('_@_divu')
         PUSH()
-        STW(YV);_BLT('.bigy');_BNE('.divu1')
-        _CALLJ('_@_raise_zdiv')                    # divide by zero error (no return)
+        _BNE('.divu1')
+        _CALLJ('_@_raise_zdiv')  # divide by zero error
         label('.divu1')
-        LDW(T3)
-        if XV != T3: STW(XV)
-        _BLT('.bigx');
-        label('.divu2')
-        CallWorker()
-        LDW(XV)
+        if args.cpu >= 7:
+            RDIVU(T3)
+        else:
+            STW(YV)
+            if needbig:
+                _BLT('.bigy')
+            LDW(T3);STW(XV)
+            if needbig:
+                _BLT('.bigx')
+            label('.divu2')
+            CallWorker()
+            if needbig:
+                LDW(XV)
         tryhop(2);POP();RET()
         # special cases
-        label('.bigx')                             # x >= 0x8000
-        LD(YV+1);ANDI(0x40);_BEQ('.divu2')         # - but y is small enough
-        label('.bigy')                             # y large
-        _MOVQW(0,MV)                               # - repeated subtractions
-        LDW(T3)
-        if XV != T3: STW(XV)
-        BRA('.loop1')
-        label('.loop0')                            #   (loops at most 3 times)
-        INC(MV)
-        LDW(XV);SUBW(YV);STW(XV)                   #   (warning: SUBVW overwrites MV!)
-        label('.loop1')
-        _CMPWU(YV);_BGE('.loop0')
-        LDW(XV);STW(RV)                            # - for modu
-        LDW(MV)
-        tryhop(2);POP();RET()
+        if needbig:
+            label('.bigx')                          # x >= 0x8000
+            LD(YV+1);ANDI(0x40);_BEQ('.divu2')      # - but y is small enough
+            label('.bigy')                          # y large
+            LDI(0);STW(MV)                          # - repeated subtractions
+            assert MV != T3
+            LDW(T3);STW(XV)
+            BRA('.loop1')
+            label('.loop0')                         #   (loops at most 3 times)
+            INC(MV)
+            LDW(XV);SUBW(YV);STW(XV)
+            label('.loop1')
+            _CMPWU(YV);_BGE('.loop0')
+            LDW(XV);STW(RV)                         # - for modu
+            LD(MV)
+            tryhop(2);POP();RET()
 
     module(name='rt_divu.s',
            code=[ ('CODE', '_@_divu', code2),
@@ -107,44 +115,50 @@ def scope():
                   ('IMPORT', '_@_divu') ] )
 
     # DIVS:  T3/vAC -> vAC
-    # clobbers B2
+    # clobbers B0
     assert YV != T3
     def code2():
         label('_@_divs')
         PUSH()
-        if args.cpu >= 6:
-            MOVQB(0,B2)
-            _BGT('.divs1');_BNE('.divs0')
-            _CALLJ('_@_raise_zdiv')
-            label('.divs0')
-            NEGW(vAC);INC(B2)
-            label('.divs1')
-            STW(YV)
-            LDW(T3);_BGE('.divs2')
-            NEGW(vAC);XORBI(3,B2)
-        else:
-            STW(YV);
-            LDI(0);ST(B2)
-            LDW(YV);_BGT('.divs1');_BNE('.divs0')
-            _CALLJ('_@_raise_zdiv')
-            label('.divs0')
-            LDI(0);SUBW(YV);STW(YV);INC(B2)
-            label('.divs1')
-            LDW(T3);_BGE('.divs2')
-            LD(B2);XORI(3);ST(B2)
-            LDI(0);SUBW(T3)
-        label('.divs2')
-        STW(XV)
-        CallWorker()
-        LD(B2);ANDI(1);_BEQ('.divs4')
-        if args.cpu >= 6:
-            NEGW(XV)
-        else:
-            LDI(0);SUBW(XV)
+        _BNE('.divs0')
+        _CALLJ('_@_raise_zdiv') # divide by zero error (no return)
+        label('.divs0')
+        if args.cpu >= 7:
+            RDIVS(T3)
             tryhop(2);POP();RET()
-        label('.divs4')
-        LDW(XV)
-        tryhop(2);POP();RET()
+        else:
+            STW(YV)
+            if args.cpu >= 6:
+                MOVQB(0,B0)
+                _BGT('.divs1')
+                NEGV(YV);INC(B0)
+                label('.divs1')
+                LDW(T3);STW(XV);_BGE('.divs2')
+                NEGV(XV)
+            else:
+                LDI(0);ST(B0)
+                LDW(YV);_BGT('.divs1')
+                LDI(0);SUBW(YV);STW(YV);INC(B0)
+                label('.divs1')
+                LDW(T3);STW(XV);_BGE('.divs2')
+                LDI(0);SUBW(T3);STW(XV)
+            LD(B0);XORI(3);ST(B0)
+            label('.divs2')
+            CallWorker()
+            LD(B0);ANDI(2);_BEQ('.divs3')
+            if args.cpu >= 6:
+                NEGV(RV)
+            else:
+                LDI(0);SUBW(RV);STW(RV)
+            label('.divs3')
+            LD(B0);ANDI(1);_BEQ('.divs4')
+            if args.cpu >= 6:
+                NEGV(XV)
+            else:
+                LDI(0);SUBW(XV);STW(XV)
+            label('.divs4')
+            LDW(XV)
+            tryhop(2);POP();RET()
 
     module(name='rt_divs.s',
            code=[ ('CODE', '_@_divs', code2),
@@ -153,20 +167,13 @@ def scope():
 
     # MODS: T3 % T2 -> AC
     #  saves T3 / T2 in T1
-    #  clobbers B2
+    #  clobbers B0
     assert RV != T1
     def code2():
         label('_@_mods')
         PUSH()
         _CALLI('_@_divs')
         STW(T1)               # quotient
-        LD(B2);ANDI(2);_BEQ('.mods1')
-        if args.cpu >= 6:
-            NEGW(RV)
-        else:
-            LDI(0);SUBW(RV)
-            tryhop(2);POP();RET()
-        label('.mods1')
         LDW(RV)               # remainder
         tryhop(2);POP();RET()
 

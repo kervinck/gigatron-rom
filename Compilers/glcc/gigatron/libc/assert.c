@@ -7,6 +7,7 @@
 int _assertfail(const char *msg)
 {
 	_raisem(SIGABRT, msg);
+	return 0;
 }
 
 #undef assert

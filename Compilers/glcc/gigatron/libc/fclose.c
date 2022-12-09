@@ -3,11 +3,12 @@
 
 int fclose(FILE *fp)
 {
-	if (fp->_flag) {
-		register int r = _fclose(fp);
-		_sfreeiob(fp);
-		return r;
+	register int r;
+	if (! fp->_flag) {
+		errno = EINVAL;
+		return -1;
 	}
-	errno = EINVAL;
-	return -1;
+	r = _fclose(fp);
+	fp->_flag = 0;
+	return r;
 }

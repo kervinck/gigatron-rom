@@ -1,7 +1,9 @@
 #ifndef __TIME
 #define __TIME
 
-#define CLOCKS_PER_SEC 1000000
+#define CLOCKS_PER_SEC 60
+#define CLK_TCK CLOCKS_PER_SEC
+
 #ifndef NULL
 #define NULL ((void*)0)
 #endif

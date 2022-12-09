@@ -273,7 +273,11 @@ Rule rule(char *id, Tree pattern, char *template, char *code) {
 		Nonterm p = pattern->op;
 		r->chain = p->chain;
 	        p->chain = r;
-		if (r->cost == -1)
+		if (r->cost == -1
+#ifndef ORIGINAL_LBURG_CLOSURE
+		    && r->code[1] != '+'
+#endif
+		    )
 			yyerror("illegal nonconstant cost `%s'\n", code);
 	}
 	for (q = &rules; *q; q = &(*q)->link)
@@ -431,8 +435,20 @@ static void emitclosure(Nonterm nts) {
 			Rule r;
 			print("static void %Pclosure_%S(NODEPTR_TYPE a, int c) {\n"
 "%1struct %Pstate *p = STATE_LABEL(a);\n", p);
-			for (r = p->chain; r; r = r->chain)
+#ifndef ORIGINAL_LBURG_CLOSURE
+			print("\tint d;\n");
+#endif
+			for (r = p->chain; r; r = r->chain) {
+#ifndef ORIGINAL_LBURG_CLOSURE
+				if (r->cost == -1) 
+					print("\td = c + %s;\n", r->code);
+				else
+					print("\td = c + %d;\n", r->cost);
+				emitrecord("\t", r, "d", 0);
+#else
 				emitrecord("\t", r, "c", r->cost);
+#endif
+			}
 			print("}\n\n");
 		}
 }

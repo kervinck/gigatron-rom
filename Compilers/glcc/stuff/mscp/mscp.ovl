@@ -1,0 +1,27 @@
+
+# Placement overrides
+placements = [
+    # Code fragments that need to be place in low memory
+    ('core.c',    'PLACE', '*', 0x200, 0x7fff),
+    ('*',         'PLACE', 'memset', 0x200, 0x7fff),
+    ('*',         'PLACE', 'SYS_Exec', 0x200, 0x7fff),
+    ('*',         'PLACE', 'SYS_ExpanderControl', 0x200, 0x7fff),
+]
+
+def map_place(filename, fragments):
+    directives = []
+    for placement in placements:
+        if fnmatch.fnmatch(filename, placement[0]):
+            if any([fnmatch.fnmatchcase(frag, placement[2]) for frag in fragments]):
+                directives.append(placement[1:])
+    return directives
+
+
+# Define an onload function
+args.onload.insert(0,'mscp_onload')
+
+# Local Variables:
+# mode: python
+# indent-tabs-mode: ()
+# End:
+	

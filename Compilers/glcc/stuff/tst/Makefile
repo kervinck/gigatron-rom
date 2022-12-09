@@ -1,5 +1,5 @@
 CC=../../build/glcc
-ROM=v5a
+ROM=dev7
 MAP=32k
 CFLAGS=-map=${MAP} -rom=${ROM}
 
@@ -20,7 +20,7 @@ TSTcontroller.gt1: TSTcontroller.c
 	${CC} ${CFLAGS} TSTcontroller.c -o $@
 
 TSTmemcpyext.gt1: TSTmemcpyext.c
-	${CC} -map=32k -rom=dev TSTmemcpyext.c -o $@
+	${CC} -map=32k -rom=${ROM} TSTmemcpyext.c -o $@
 
 TSTmem.gt1: TSTmem.c
 	${CC} -map=32k -rom=${ROM} TSTmem.c -o $@

@@ -45,9 +45,8 @@ Tree call(Tree f, Type fty, Coordinate src) {
 					if (aty)
 						q = cast(q, aty);
 					else
-						error("type error in argument %d to %s; found `%t' expected `%t'\n", n + 1, funcname(f),
-
-						      q->type, *proto);
+						error("type error in argument %d to %s; found `%t' expected `%t'\n",
+						      n + 1, funcname(f), q->type, *proto);
                                         if ((isint(q->type) || isenum(q->type)) &&
 					    q->type->size != inttype->size )
 						q = cast(q, promote(q->type));
@@ -154,8 +153,7 @@ static Tree addtree(int op, Tree l, Tree r) {
 		r = cast(r, ty);		
 	} else if (isptr(l->type) && isint(r->type))
 		return addtree(ADD, r, l);
-	else if (  isptr(r->type) && isint(l->type)
-	&& !isfunc(r->type->type))
+	else if (  isptr(r->type) && isint(l->type) && !isfunc(r->type->type))
 		{
 			long n;
 			ty = unqual(r->type);
@@ -227,7 +225,6 @@ static int compatible(Type ty1, Type ty2) {
 }
 int isnullptr(Tree e) {
 	Type ty = unqual(e->type);
-
 	return generic(e->op) == CNST
 	    && (ty->op == INT      && e->u.v.i == 0
 	     || ty->op == UNSIGNED && e->u.v.u == 0
@@ -264,23 +261,24 @@ Type assign(Type xty, Tree e) {
 		return xty;
 	if (isptr(xty) && isnullptr(e))
 		return xty;
-	if ((isvoidptr(xty) && isptr(yty)
-	  || isptr(xty)     && isvoidptr(yty))
-	&& (  (isconst(xty->type)    || !isconst(yty->type))
-	   && (isvolatile(xty->type) || !isvolatile(yty->type))))
-		return xty;
-
-	if ((isptr(xty) && isptr(yty)
-	    && eqtype(unqual(xty->type), unqual(yty->type), 1))
-	&&  (  (isconst(xty->type)    || !isconst(yty->type))
-	    && (isvolatile(xty->type) || !isvolatile(yty->type))))
+	if ((isvoidptr(xty) && isptr(yty) || isptr(xty) && isvoidptr(yty))
+	    && (isconst(xty->type) || !isconst(yty->type))
+	    && (isvolatile(xty->type) || !isvolatile(yty->type))
+	    && (xty->size >= yty->size) )
 		return xty;
 	if (isptr(xty) && isptr(yty)
-	&& (  (isconst(xty->type)    || !isconst(yty->type))
-	   && (isvolatile(xty->type) || !isvolatile(yty->type)))) {
+	    && eqtype(unqual(xty->type), unqual(yty->type), 1)
+	    && (isconst(xty->type)    || !isconst(yty->type))
+	    && (isvolatile(xty->type) || !isvolatile(yty->type))
+	    && (xty->size >= yty->size) )
+		return xty;
+	if (isptr(xty) && isptr(yty)
+	    && (isconst(xty->type)    || !isconst(yty->type))
+	    && (isvolatile(xty->type) || !isvolatile(yty->type))
+	    && (xty->size >= yty->size) ) {
 		Type lty = unqual(xty->type), rty = unqual(yty->type);
-		if (isenum(lty) && rty == inttype
-		||  isenum(rty) && lty == inttype) {
+		if (isenum(lty) && rty == inttype ||
+		    isenum(rty) && lty == inttype) {
 			if (Aflag >= 1)
 				warning("assignment between `%t' and `%t' is compiler-dependent\n",
 					xty, yty);
@@ -354,14 +352,16 @@ Tree condtree(Tree e, Tree l, Tree r) {
 	else if (isptr(xty) && !isfunc(xty->type) && isvoidptr(yty)
 	||       isptr(yty) && !isfunc(yty->type) && isvoidptr(xty))
 		ty = voidptype;
-	else if ((isptr(xty) && isptr(yty)
-		 && eqtype(unqual(xty->type), unqual(yty->type), 1)))
+	else if (isptr(xty) && isptr(yty)
+		 && eqtype(unqual(xty->type), unqual(yty->type), 1)
+		 && fnqual(xty->type) == fnqual(yty->type) )
 		ty = xty;
 	else {
 		typeerror(COND, l, r);
 		return consttree(0, inttype);
 	}
 	if (isptr(ty)) {
+		int op = fnqual(unqual(ty)->type);
 		ty = unqual(unqual(ty)->type);
 		if (isptr(xty) && isconst(unqual(xty)->type)
 		||  isptr(yty) && isconst(unqual(yty)->type))
@@ -369,6 +369,8 @@ Tree condtree(Tree e, Tree l, Tree r) {
 		if (isptr(xty) && isvolatile(unqual(xty)->type)
 		||  isptr(yty) && isvolatile(unqual(yty)->type))
 			ty = qual(VOLATILE, ty);
+		if (op)
+			ty = qual(op, ty);
 		ty = ptr(ty);
 	}
 	switch (e->op) {

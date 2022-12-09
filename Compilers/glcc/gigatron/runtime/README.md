@@ -37,16 +37,3 @@ file `_suppport.s` in the C library.
 Symbols named `__@xxxx` are private to the runtime.
 
 
-## Status
-
-This is complete and passes the test suite.
-
-Improvement opportunities:
-
- * One should investigate SYS calls to speedup these operations. 
-   Sixteen bits multiplication and division are to be provided by at67's new rom.
-   
- * The structure copy code (`rt_copy.s`) could benefit from the same level
-   of optimization than [`memcpy`](../libc/memcpy.s).  This is hard
-   because these functions must have low overhead for small sizes.
-

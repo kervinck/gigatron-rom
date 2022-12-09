@@ -10,41 +10,55 @@ def scope():
 
     def code0():
         nohop()
-        for i in range(0,8):
-            label(savename(i))
-            if args.cpu >= 6:
-                DOKEA(R0+i+i)
-                if i < 7: ADDI(2) 
-            elif args.cpu >= 5:
-                STW(T3);LDW(R0+i+i);DOKE(T3)
-                if i < 7: LDI(2);ADDW(T3)
-            else:
-                LDW(R0+i+i);DOKE(T3)
-                if i < 7: LDI(2);ADDW(T3);STW(T3)
+        if args.cpu >= 6:
+            for i in range(0,8):
+                label(savename(i))
+                DOKEA(R0+i+i);ADDI(2)
+            label(savename(8))
+            DOKEA(B0)
+        elif args.cpu >= 5:
+            for i in range(0,8):
+                label(savename(i))
+                STW(T2);LDW(R0+i+i);DOKE(T2)
+                LDI(2);ADDW(T2)
+            label(savename(8))
+            STW(T2);LDW(B0);DOKE(T2)
+        else:
+            for i in range(0,8):
+                label(savename(i))
+                LDW(R0+i+i);DOKE(T2)
+                LDI(2);ADDW(T2);STW(T2)
+            label(savename(8))
+            LDW(B0);DOKE(T2)
         RET()
 
     def code1():
         nohop()
-        for i in range(0,8):
-            label(rtrnname(i))
-            if args.cpu >= 6:
-                DEEKA(R0+i+i)
-                if i < 7: ADDI(2)
-            elif args.cpu >= 5:
-                STW(T3);DEEK();STW(R0+i+i)
-                if i < 7: LDI(2);ADDW(T3)
-            else:
-                LDW(T3);DEEK();STW(R0+i+i)
-                if i < 7: LDI(2);ADDW(T3);STW(T3)
-        label(rtrnname(8))
         if args.cpu >= 6:
-            LDW(SP);DEEKA(vLR)
+            for i in range(0,8):
+                label(rtrnname(i))
+                DEEKA(R0+i+i);ADDI(2)
+            label(rtrnname(8))
+            DEEKA(vLR)
+        elif args.cpu >= 5:
+            for i in range(0,8):
+                label(rtrnname(i))
+                STW(T3);DEEK();STW(R0+i+i)
+                LDI(2);ADDW(T3)
+            label(rtrnname(8))
+            STW(T3);DEEK();STW(vLR)
         else:
-            LDW(SP);DEEK();STW(vLR)
-        LDW(T2);RET()
+            for i in range(0,8):
+                label(rtrnname(i))
+                LDW(T3);DEEK();STW(R0+i+i)
+                LDI(2);ADDW(T3);STW(T3)
+            label(rtrnname(8))
+            LDW(T3);DEEK();STW(vLR)
+        # return
+        LDW(R8);RET()
 
     module(name='rt_save.s', code=
-           [ ('EXPORT', savename(i)) for i in range(0,8) ] + \
+           [ ('EXPORT', savename(i)) for i in range(0,9) ] + \
            [ ('EXPORT', rtrnname(i)) for i in range(0,9) ] + \
            [ ('CODE', savename(0), code0),
              ('CODE', rtrnname(0), code1) ] )

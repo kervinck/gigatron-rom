@@ -28,15 +28,16 @@
 typedef struct cpustate_s CpuState;
 
 void sys_0x3b4(CpuState*);
-void next_0x301(CpuState*);
+void next_0x307(CpuState*);
 
 char *rom = 0;
 char *gt1 = 0;
 int nogt1 = 0;
+int nogarble = 0;
 const char *trace = 0;
 int verbose = 0;
 int okopen = 0;
-int vmode = 1975;
+int vmode = 3; /*1975;*/
 const char *prof = 0;
 long long *pc2cycs = 0;
 const int alignlong = 4;
@@ -74,12 +75,16 @@ struct cpustate_s { // TTL state that the CPU controls
   uint8_t IR, D, AC, X, Y, OUT, undef;
 };
 
-uint8_t ROM[1<<16][2], RAM[1<<16], IN=0xff;
-uint16_t opc;
-uint8_t  pfx;
-uint8_t  cpuselect;
-long long ot, vt;
+uint8_t ROM[1<<16][2], RAM[1<<17], IN=0xff;
+uint8_t CTRL;
+uint32_t bank;
 long long t;
+
+uint8_t pfx;
+uint16_t da;
+long long dt, rt, st;
+long long vt[2];
+
 
 CpuState cpuCycle(const CpuState S)
 {
@@ -109,16 +114,23 @@ CpuState cpuCycle(const CpuState S)
       case 7: to=E(&T.OUT); lo=S.X; hi=S.Y; incX=1; break;
     }
   uint16_t addr = (hi << 8) | lo;
+  uint32_t xaddr = (addr & 0x8000) ? (addr & 0x7fff) | bank : addr;
 
   int B = S.undef; // Data Bus
   switch (bus) {
     case 0: B=S.D;                        break;
-    case 1: if (!W) B = RAM[addr];        break;
+    case 1: if (!W) B = RAM[xaddr];       break;
     case 2: B=S.AC;                       break;
     case 3: B=IN;                         break;
   }
 
-  if (W) RAM[addr] = B; // Random Access Memory
+  if (W) {
+    if (bus == 1) {
+      CTRL = lo;
+      bank = (CTRL & 0xc0) << 9;
+    } else
+      RAM[xaddr] = B; // Random Access Memory
+  }
 
   uint8_t ALU = 0; // Arithmetic and Logic Unit
   switch (ins) {
@@ -172,9 +184,18 @@ void sim(void)
         vgaY = -36;
       vgaX++;
       if (hSync > 0) {
-        if (vgaX != 200 && t >= 6250000)
+        if (vgaX != 200 && t >= 6250000) {
           fprintf(stderr, "(gtsim) Horizontal timing error:"
                   "vgaY %-3d, vgaX %-3d, t=%0.3f\n", vgaY, vgaX, t/6.25e6);
+#if EXTRA_DEBUG
+          for(int i=0; i<48; i+=16) {
+            fprintf(stderr, "\t%04x:", i);
+            for (int j=0; j<16; j++)
+              fprintf(stderr, " %02x", RAM[i+j]);
+            fprintf(stderr, "\n");
+          }
+#endif     
+        }
         vgaX = 0;
         vgaY++;
       }
@@ -188,20 +209,20 @@ void sim(void)
           exit(10);
         }
       } else if (S.PC == 0x301) {
-        next_0x301(&T);
+        rt = t + 6;             /* instruction return time (adjusted for 0x307) */
+        pfx = 0;
       } else if (S.PC == 0x307) {
-        pfx = *(uint8_t*)(RAM+0x02);
-        opc = *(uint16_t*)(RAM+0x16);
-        ot = t - 6;
-      } else {
-        uint16_t cpupage = (RAM[2]+1)<<8;
-        if (pfx == 2 && S.PC == (cpupage | 0x10)) {
-          vt = t - 8;
-          pfx = 1;
-        } else if (pfx == 1 && S.PC == (cpupage | 0x01)) {
-          ot += t - vt;
-          pfx = 2;
-        }
+        next_0x307(&T);         /* t-dt = (rt-dt-vt[0]) + (t-rt-vt[1]) + (vt[0]+vt[1])  */
+        pfx = 2;                /* cpu prefix */
+        vt[0] = vt[1] = 0;      /* video time (inside and outside instruction) */
+        dt = t;                 /* instruction dispatch time */
+        da = RAM[22]+(RAM[23]<<8);
+      } else if (pfx && (S.PC & 0xff) == 1 && (S.PC >> 8) == (RAM[5]+1)) {
+        pfx = RAM[5];
+      } else if (S.IR == 0xe1 && S.D == 0x1e) { // jmp(Y,[vReturn])
+        vt[!pfx] -= t;
+      } else if (S.IR == 0xe0 && S.D == 0xff && S.Y == RAM[5]) {
+        vt[!pfx] += t - 3;
       }
       // commit
       S = T;
@@ -266,12 +287,19 @@ double feek(word a) {
   return 0;
 }
 
-/* Register base. Default is now 0x40.  
-   Code that does not advertise regbase with
-   SYS_regbase is assumed to use the old value 0x80.
+/* Register base.
+   Code that does not advertise register bases assume default values
+   that match those alllocated by glink in the absence of rom.json
+   overrides. GLCC-2.x always advertises the correct numbers
+   when compiled with map=sim.
 */
 
-unsigned int regbase = 0x80;
+unsigned int regbase = 0x90;
+unsigned int flbase  = 0x81;
+unsigned int t0base  = 0x24;
+unsigned int t2base  = 0x88;
+unsigned int b0base  = 0x8c;
+unsigned int spbase  = 0x8e;
 
 #define vPC       (0x16)
 #define vAC       (0x18)
@@ -279,16 +307,17 @@ unsigned int regbase = 0x80;
 #define vSP       (0x1c)
 #define sysFn     (0x22)
 #define sysArgs0  (0x24+0)
-#define B0        (0xc1)
-#define LAC       (0xc4)
-#define T0        (0xc8)
+#define LAC       (flbase+3)
+#define T0        (t0base)
+#define B0        (b0base)
+#define T2        (t2base)
 #define R0        (regbase+0)
 #define R8        (regbase+16)
 #define R9        (regbase+18)
 #define R10       (regbase+20)
 #define R11       (regbase+22)
 #define R12       (regbase+24)
-#define SP        (regbase+46)
+#define SP        (spbase)
 
 #define addlo(a,i)  (((a)&0xff00)|(((a)+i)&0xff))
 
@@ -412,19 +441,26 @@ word loadGt1(const char *gt1)
 void sys_regbase(void)
 {
   regbase = deek(vAC);
+  flbase = peek(sysArgs0);
+  t0base = peek(sysArgs0+1);
+  t2base = peek(sysArgs0+2);
+  b0base = peek(sysArgs0+3);
+  spbase = peek(sysArgs0+4);
 }
 
 void sys_exit(void)
 {
   if (deek(R9))
     printf("%s\n", &RAM[deek(R9)]);
+  if (pc2cycs)
+    printf("\ntotal %lld cycles (with video & overhead)\n", (t-10)-(st-6));
   exit((sword)deek(R8));
 }
 
 void sys_printf(void)
 {
   const char *fmt = (char*)&RAM[deek(R8)];
-  word ap = deek(SP) + 4;
+  word ap = deek(SP) + 2;
   int n = 0;
   if (trace)
     fflush(NULL);
@@ -487,9 +523,9 @@ void sys_printf(void)
 /* LIBSIM stdio forwarding */
 
 /* Offsets in _iobuf structure (see stdio.h) */
-#define G_IOBUF_FLAG_OFFSET 4
-#define G_IOBUF_FILE_OFFSET 6
-#define G_IOBUF_V_OFFSET    14
+#define G_IOBUF_FLAG_OFFSET 0
+#define G_IOBUF_VTBL_OFFSET 2
+#define G_IOBUF_FILE_OFFSET 4
 
 /* Error codes (see errno.h) */
 #define G_EINVAL    3
@@ -599,7 +635,7 @@ void sys_io_lseek(void)
   }
 }
 
-void sys_io_close(void)
+void sys_io_flush(void)
 {
   int flg = deek(deek(R8) + G_IOBUF_FLAG_OFFSET);
   int fd = deek(deek(R8) + G_IOBUF_FILE_OFFSET);
@@ -608,7 +644,7 @@ void sys_io_close(void)
   if (fd < 0 || flg == 0)
     err = G_EINVAL;
   /* Close */
-  if (fd > 2 && close(fd) < 0 && err == 0)
+  if (fd > 2 && deek(R9) && close(fd) < 0 && err == 0)
     err = G_EIO;
   /* Return */
   if (err) {
@@ -622,7 +658,6 @@ void sys_io_close(void)
 void sys_io_openf(void)
 {
   int flg = deek(deek(R8) + G_IOBUF_FLAG_OFFSET);
-  int rfd = deek(deek(R8) + G_IOBUF_FILE_OFFSET);
   int err = 0;
   
   if (okopen)
@@ -648,12 +683,8 @@ void sys_io_openf(void)
         case EINVAL: err = G_EINVAL; break;
         }
       }
-      if (err == 0 && rfd >= 0 && dup2(fd, rfd) >= 0) {
-        close(fd);
-        fd = rfd;
-      }
       doke(deek(R8) + G_IOBUF_FILE_OFFSET, fd);
-      doke(deek(R8) + G_IOBUF_V_OFFSET, deek(sysArgs0+2));
+      doke(deek(R8) + G_IOBUF_VTBL_OFFSET, deek(sysArgs0+2));
     }
   else
     {
@@ -664,7 +695,7 @@ void sys_io_openf(void)
         strcat(mode,"W");
       if (flg & 8)
         strcat(mode,"A");
-      fprintf(stderr, "\n(gtsim) denied attempt to open file '%s' %s. (allow with -f)\n",
+      fprintf(stderr, "\n(gtsim) denied attempt to open file '%s' [%s]. (allow with -f)\n",
               RAM+deek(R9), mode);
       err = G_EPERM;
     }
@@ -691,9 +722,11 @@ void sys_0x3b4(CpuState *S)
         case 0xff02: sys_io_write(); break;
         case 0xff03: sys_io_read(); break;
         case 0xff04: sys_io_lseek(); break;
-        case 0xff05: sys_io_close(); break;
+        case 0xff05: sys_io_flush(); break;
         case 0xff06: sys_io_openf(); break;
-        default: fprintf(stderr,"(gtsim) unimplemented SysFn=%#x\n", sysFn); break;
+        default:
+          fprintf(stderr,"(gtsim) unimplemented SysFn=%#x\n", deek(sysFn));
+          break;
         }
       /* Return with no action and proper timing */
       S->IR = 0x00; S->D = 0xfa; /* LD(-12/2) */
@@ -703,8 +736,13 @@ void sys_0x3b4(CpuState *S)
   if (deek(sysFn) == SYS_Exec_88)
     {
       static int exec_count = 0;
-      debug("vPC=%#x SYS(%d) [EXEC] ", deek(vPC), S->AC); debugSysFn(); debug("\n");
-      if (++exec_count == 2 && gt1)
+      int pc = deek(vPC);
+      debug("vPC=%#x SYS(%d) [EXEC] ", pc, S->AC); debugSysFn(); debug("\n");
+      if (exec_count==0 && pc>=0x1f0 && pc<0x1f8)
+        {
+          debug("Going into Reset.gt1\n");
+        }
+      else if (++exec_count == 1 && gt1)
         {
           // First exec is Reset.
           // Second exec is MainMenu.
@@ -716,8 +754,9 @@ void sys_0x3b4(CpuState *S)
           // And return from SYS_Exec
           S->IR = 0x00; S->D = 0xf8; /* LD(-16/2) */
           S->PC = 0x3cb;             /* REENTER */
-          ot = t+3;
           nogt1 = 1;
+          st = dt = rt = t + 9;
+          da = 0;
         }
     }
 
@@ -725,7 +764,7 @@ void sys_0x3b4(CpuState *S)
     {
       debug("vPC=%04x SYS(%d) [SETMODE] vAC=%04x\n", deek(vPC), S->AC, deek(vAC));
       if (vmode >= 0 && !nogt1)
-        poke(vAC, vmode);
+        doke(vAC, vmode);
     }
 }
 
@@ -736,18 +775,6 @@ void sys_0x3b4(CpuState *S)
 /* ----------------------------------------------- */
 
 
-
-int oper8(word addr, int i, char *operand)
-{
-  sprintf(operand, "$%02x", peek(addlo(addr,i)));
-  return i+1;
-}
-
-int oper16(word addr, int i, char *operand)
-{
-  sprintf(operand, "$%04x", deek(addlo(addr,i)));
-  return i+2;
-}
 
 int disassemble(word addr, char **pm, char *operand)
 {
@@ -791,16 +818,65 @@ int disassemble(word addr, char **pm, char *operand)
     case 0x35: {
       switch(peek(addlo(addr,1)))
         {
-        case 0x3f:  *pm = "BEQ"; break;
-        case 0x72:  *pm = "BNE"; break;
-        case 0x50:  *pm = "BLT"; break;
-        case 0x4d:  *pm = "BGT"; break;
-        case 0x56:  *pm = "BLE"; break;
-        case 0x53:  *pm = "BGE"; break;
-        default:    *pm = "B??"; break;
+        case 0x00:  *pm = "ADDL";  return 2;       /* v7 */
+        case 0x02:  *pm = "ADDX";  return 2;       /* v7 */
+        case 0x04:  *pm = "SUBL";  return 2;       /* v7 */
+        case 0x06:  *pm = "ANDL";  return 2;       /* v7 */
+        case 0x08:  *pm = "ORL";   return 2;       /* v7 */
+        case 0x0a:  *pm = "XORL";  return 2;       /* v7 */
+        case 0x0c:  *pm = "NEGVL"; goto operx8;    /* v7 */
+        case 0x0e:  *pm = "NEGX";  return 2;       /* v7 */
+        case 0x10:  *pm = "LSLVL"; goto operx8;    /* v7 */
+        case 0x12:  *pm = "LSLXA"; return 2;       /* v7 */
+        case 0x14:  *pm = "CMPLS"; return 2;       /* v7 */
+        case 0x16:  *pm = "CMPLU"; return 2;       /* v7 */
+        case 0x18:  *pm = "LSRXA"; return 2;       /* v7 */
+        case 0x1a:  *pm = "RORX";  return 2;       /* v7 */
+        case 0x1c:  *pm = "MACX";  return 2;       /* v7 */
+        case 0x1e:  *pm = "LDLAC"; return 2;       /* v7 */
+        case 0x20:  *pm = "STLAC"; return 2;       /* v7 */
+        case 0x23:  *pm = "INCVL"; goto operx8;    /* v7 */
+        case 0x25:  *pm = "STFAC"; return 2;       /* v7 */
+        case 0x27:  *pm = "LDFAC"; return 2;       /* v7 */
+        case 0x29:  *pm = "LDFARG";return 2;       /* v7 */
+        case 0x37:  *pm = "NEGV";  goto operx8;    /* v7 */
+        case 0x39:  *pm = "RDIVS"; goto operx8;    /* v7 */
+        case 0x3b:  *pm = "RDIVU"; goto operx8;    /* v7 */
+        case 0x3d:  *pm = "MULW";  goto operx8;    /* v7 */
+        case 0x3f:  *pm = "BEQ";   goto operxbr;
+        case 0x4d:  *pm = "BGT";   goto operxbr;
+        case 0x50:  *pm = "BLT";   goto operxbr;
+        case 0x53:  *pm = "BGE";   goto operxbr;
+        case 0x56:  *pm = "BLE";   goto operxbr;
+        case 0x5c:  *pm = "RESET"; return 2;       /* v7 */
+        case 0x62:  *pm = "DOKEI"; goto operx16r;  /* v7 */
+        case 0x72:  *pm = "BNE";   goto operxbr;
+        case 0x7d:  *pm = "ADDIV"; goto operx8x2;  /* v7 */
+        case 0x9c:  *pm = "SUBIV"; goto operx8x2;  /* v7 */
+        case 0xcb:  *pm = "COPY";  return 2;       /* v7 */
+        case 0xcf:  *pm = "COPYN"; goto operx8;    /* v7 */
+        case 0xdb:  *pm = "MOVL";  goto operx8x2r; /* v7 */
+        case 0xdd:  *pm = "MOVF";  goto operx8x2r; /* v7 */
+        default:    *pm = "???";   goto unknown;
+        operx8:
+          sprintf(operand, "$%02x", peek(addlo(addr,2)));
+          return 3;
+        operx8x2:
+          sprintf(operand, "$%02x, $%02x", peek(addlo(addr,2)), peek(addlo(addr,3)));
+          return 4;
+        operx8x2r:
+          sprintf(operand, "$%02x, $%02x", peek(addlo(addr,3)), peek(addlo(addr,2)));
+          return 4;
+        operxbr:
+          sprintf(operand, "$%04x", (addr&0xff00)|((peek(addlo(addr,2))+2)&0xff));
+          return 3;
+        operx16:
+          sprintf(operand, "$%02x%02x", peek(addlo(addr,3)),peek(addlo(addr,2)));
+          return 4;
+        operx16r:
+          sprintf(operand, "$%02x%02x", peek(addlo(addr,2)),peek(addlo(addr,3)));
+          return 4;
         }
-      sprintf(operand, "$%04x", (addr&0xff00)|((peek(addlo(addr,2))+2)&0xff));
-      return 3;
     }
     case 0xb4: {
       sbyte b = peek(addlo(addr,1));
@@ -810,207 +886,72 @@ int disassemble(word addr, char **pm, char *operand)
         *pm = (b > 0) ? "S??" : "HALT";
       return 2;
     }
-    /* CPU6 instructions below */
-    case 0x14: *pm="DEC"; goto oper8;
-    case 0x16: *pm="MOVQB"; goto oper88;
-    case 0x18: *pm="LSRB"; goto oper8;
-    case 0x1c: *pm="LOKEQI"; goto oper16;
-    case 0x23: *pm="PEEK+"; goto oper8;
-    case 0x25: *pm="POKEI"; goto oper8;
-    case 0x27: *pm="LSLV"; goto oper8;
-    case 0x29: *pm="ADDBA"; goto oper8;
-    case 0x2d: *pm="ADDBI"; goto oper88;
-    case 0x32: *pm="DBNE"; goto oper8br;
-    case 0x37: *pm="DOKEI"; goto oper16r;
-    case 0x39: *pm="PEEKV"; goto oper8;
-    case 0x3b: *pm="DEEKV"; goto oper8;
-    case 0x3d: *pm="LOKEI"; goto oper16;
-    case 0x42: *pm="ADDVI"; goto oper88;
-    case 0x44: *pm="SUBVI"; goto oper88;
-    case 0x46: *pm="DOKE+"; goto oper8;
-    case 0x48: *pm="NOTB"; goto oper8;
-    case 0x4a: *pm="DJGE"; goto oper8x16p2;
-    case 0x5b: *pm="MOVQW"; goto oper88;
-    case 0x60: *pm="DEEK+"; goto oper8;
-    case 0x65: *pm="MOV"; goto oper88r;
-    case 0x67: *pm="PEEKA"; goto oper8;
-    case 0x69: *pm="POKEA"; goto oper8;
-    case 0x6b: *pm="TEQ"; goto oper8;
-    case 0x6d: *pm="TNE"; goto oper8;
-    case 0x6f: *pm="DEEKA"; goto oper8;
-    case 0x77: *pm="SUBBA"; goto oper8;
-    case 0x79: *pm="INCW"; goto oper8;
-    case 0x7b: *pm="DECW"; goto oper8;
-    case 0x7d: *pm="DOKEA"; goto oper8;
-    case 0x8a: *pm="PEEKA+"; goto oper8;
-    case 0x8e: *pm="DBGE"; goto oper8br;
-    case 0x95: *pm="INCWA"; goto oper8;
-    case 0x9c: *pm="LDNI"; goto oper8n;
-    case 0x9e: *pm="ANDBK"; goto oper88r;
-    case 0xa0: *pm="ORBK"; goto oper88r;
-    case 0xa2: *pm="XORBK"; goto oper88r;
-    case 0xa4: *pm="DJNE"; goto oper8x16p2;
-    case 0xa7: *pm="CMPI"; goto oper88;
-    case 0xa9: *pm="ADDVW"; goto oper88;
-    case 0xab: *pm="SUBVW"; goto oper88;
-    case 0xbb: *pm="JEQ"; goto oper16p2;
-    case 0xbd: *pm="JNE"; goto oper16p2;
-    case 0xbf: *pm="JLT"; goto oper16p2;
-    case 0xc1: *pm="JGT"; goto oper16p2;
-    case 0xc3: *pm="JLE"; goto oper16p2;
-    case 0xc5: *pm="JGE"; goto oper16p2;
-    case 0xd1: *pm="POKE+"; goto oper8;
-    case 0xd3: *pm="LSRV"; goto oper8;
-    case 0xd5: *pm="TGE"; goto oper8;
-    case 0xd7: *pm="TLT"; goto oper8;
-    case 0xd9: *pm="TGT"; goto oper8;
-    case 0xdb: *pm="TLE"; goto oper8;
-    case 0xdd: *pm="DECWA"; goto oper8;
-    case 0xe1: *pm="SUBBI"; goto oper88;
-    case 0xb1: {
-      switch(peek(addlo(addr,1)))
-        {
-        case 0x11: *pm = "NOTE"; return 2;
-        case 0x14: *pm = "MIDI"; return 2;
-        case 0x17: *pm = "XLA"; return 2;
-          // more
-        case 0x1a: *pm = "ADDLP"; return 2;
-        case 0x1d: *pm = "SUBLP"; return 2;
-        case 0x20: *pm = "ANDLP"; return 2;
-        case 0x23: *pm = "ORLP"; return 2;
-        case 0x26: *pm = "XORLP"; return 2;
-        case 0x29: *pm = "CMPLPU"; return 2;
-        case 0x2c: *pm = "CMPLPS"; return 2;
-        default:
-          return 2;
-        }
-    }
-    case 0x2f: {
-      switch(peek(addlo(addr,2)))
-        {
-        case 0x11: *pm = "LSLN"; goto oper8p2;
-        case 0x13: *pm = "SEXT"; goto oper8p2;
-        case 0x15: *pm = "NOTW"; goto oper8p2;
-        case 0x17: *pm = "NEGQ"; goto oper8p2;
-        case 0x19: *pm = "ANDBA"; goto oper8p2;
-        case 0x1c: *pm = "ORBA"; goto oper8p2;
-        case 0x1f: *pm = "XORBA"; goto oper8p2;
-        case 0x22: *pm = "FREQM"; goto oper8p2;
-        case 0x24: *pm = "FREQA"; goto oper8p2;
-        case 0x27: *pm = "FREQZ"; goto oper8p2;
-        case 0x2a: *pm = "VOLM"; goto oper8p2;
-        case 0x2c: *pm = "VOLA"; goto oper8p2;
-        case 0x2f: *pm = "MODA"; goto oper8p2;
-        case 0x32: *pm = "MODZ"; goto oper8p2;
-        case 0x34: *pm = "SMCPY"; goto oper8p2;
-        case 0x37: *pm = "CMPWS"; goto oper8p2;
-        case 0x39: *pm = "CMPWU"; goto oper8p2;
-        case 0x3b: *pm = "LEEKA"; goto oper8p2;
-        case 0x3d: *pm = "LOKEA"; goto oper8p2;
-        case 0x4e: *pm = "INCL"; goto oper8p2;
-        case 0x51: *pm = "DECL"; goto oper8p2;
-          // exp
-        case 0xcd: *pm = "NCOPY"; goto oper8p2;
-        case 0xd0: *pm = "STLU"; goto oper8p2;
-        case 0xd3: *pm = "STLS"; goto oper8p2;
-        case 0xd6: *pm = "NOTL"; goto oper8p2;
-        case 0xd9: *pm = "NEGL"; goto oper8p2;
-        oper8p2:
-          sprintf(operand, "$%02x", peek(addlo(addr,1)));
-        default:
-          return 3;
-        }
-    }
-    case 0xc7: {
-      switch(peek(addlo(addr,2)))
-        {
-        case 0x11:  *pm = "STB2"; goto oper16p3;
-        case 0x14:  *pm = "STW2"; goto oper16p3;
-        case 0x17:  *pm = "XCHGB"; goto oper88p3;
-        case 0x19:  *pm = "MOVW"; goto oper88p3;
-        case 0x1b:  *pm = "ADDWI"; goto oper16p3;
-        case 0x1d:  *pm = "SUBWI"; goto oper16p3;
-        case 0x1f:  *pm = "ANDWI"; goto oper16p3;
-        case 0x21:  *pm = "ORWI"; goto oper16p3;
-        case 0x23:  *pm = "XORWI"; goto oper16p3;
-        case 0x25:  *pm = "LDPX"; goto oper88p3;
-        case 0x28:  *pm = "STPX"; goto oper88p3;
-        case 0x2b:  *pm = "CONDI"; goto oper88p3;
-        case 0x2d:  *pm = "CONDB"; goto oper88p3;
-        case 0x30:  *pm = "CONDIB"; goto oper88p3;
-        case 0x33:  *pm = "CONDBI"; goto oper88p3;
-        case 0x35:  *pm = "XCHGW"; goto oper88p3;
-        case 0x38:  *pm = "OSCPX"; goto oper88p3;
-        case 0x3a:  *pm = "SWAPB"; goto oper88p3;
-        case 0x3d:  *pm = "SWAPW"; goto oper88p3;
-        case 0x40:  *pm = "NEEKA"; goto oper88p3;
-        case 0x43:  *pm = "NOKEA"; goto oper88p3;
-          // more
-        case 0x67:  *pm = "ANDBI"; goto oper88p3r;
-        case 0x6a:  *pm = "ORBI"; goto oper88p3r;
-        case 0x6d:  *pm = "XORBI"; goto oper88p3r;
-        case 0x70:  *pm = "JMPI"; goto oper16p3;
-          // exp
-        case 0xcd:  *pm = "MOVL"; goto oper88p3;
-        case 0xd0:  *pm = "MOVF"; goto oper88p3;
-        case 0xd3:  *pm = "NROL"; goto oper88p3n;
-        case 0xd6:  *pm = "NROR"; goto oper88p3nr;
-        oper16p3:
-          sprintf(operand, "$%02x%02x", peek(addlo(addr,1)),peek(addlo(addr,3)));
-          return 4;
-        oper88p3r:
-          sprintf(operand, "$%02x, $%02x", peek(addlo(addr,1)),peek(addlo(addr,3)));
-          return 4;
-        oper88p3:
-          sprintf(operand, "$%02x, $%02x", peek(addlo(addr,3)),peek(addlo(addr,1)));
-          return 4;
-        oper88p3n:
-          sprintf(operand, "$%02x, $%02x",
-                  (peek(addlo(addr,3))-peek(addlo(addr,1)))&0xff,
-                  peek(addlo(addr,1)));
-          return 4;
-        oper88p3nr:
-          sprintf(operand, "$%02x, $%02x",
-                  (peek(addlo(addr,1))-peek(addlo(addr,3)))&0xff,
-                  peek(addlo(addr,3)));
-          return 4;
-        default:
-          return 4;
-        }
-    }
-    default:
-      return 2;
+    case 0x1c:  *pm = "POPV";  goto oper8;    /* v7 */
+    case 0x39:  *pm = "POKEA"; goto oper8;    /* v7 */
+    case 0x3b:  *pm = "DOKEA"; goto oper8;    /* v7 */
+    case 0x3d:  *pm = "DEEKA"; goto oper8;    /* v7 */
+    case 0x3f:  *pm = "JEQ";   goto oper16p2; /* v7 */
+    case 0x41:  *pm = "DEEKV"; goto oper8;    /* v7 */
+    case 0x44:  *pm = "DOKEQ"; goto oper8;    /* v7 */
+    case 0x46:  *pm = "POKEQ"; goto oper8;    /* v7 */
+    case 0x48:  *pm = "MOVQB"; goto oper8x2r; /* v7 */
+    case 0x4a:  *pm = "MOVQW"; goto oper8x2r; /* v7 */
+    case 0x4d:  *pm = "JGT";   goto oper16p2; /* v7 */
+    case 0x50:  *pm = "JLT";   goto oper16p2; /* v7 */
+    case 0x53:  *pm = "JGE";   goto oper16p2; /* v7 */
+    case 0x56:  *pm = "JLE";   goto oper16p2; /* v7 */
+    case 0x66:  *pm = "ADDV";  goto oper8;    /* v7 */
+    case 0x68:  *pm = "SUBV";  goto oper8;    /* v7 */
+    case 0x6a:  *pm = "LDXW";  goto oper816;  /* v7 */
+    case 0x6c:  *pm = "STXW";  goto oper816;  /* v7 */
+    case 0x6e:  *pm = "LDSB";  goto oper8;    /* v7 */
+    case 0x70:  *pm = "INCV";  goto oper8;    /* v7 */
+    case 0x72:  *pm = "JNE";   goto oper16p2; /* v7 */
+    case 0x78:  *pm = "LDNI";  goto oper8n;   /* v7 */
+    case 0x7d:  *pm = "MULQ";  goto oper8;    /* v7 */
+    case 0xb1:  *pm = "MOVIW"; goto oper16r8; /* v7 */
+    case 0xd3:  *pm = "CMPWS"; goto oper8;    /* v7 */
+    case 0xd6:  *pm = "CMPWU"; goto oper8;    /* v7 */
+    case 0xd9:  *pm = "CMPIS"; goto oper8;    /* v7 */
+    case 0xdb:  *pm = "CMPIU"; goto oper8;    /* v7 */
+    case 0xdd:  *pm = "PEEKV"; goto oper8;    /* v7 */
+    default:    *pm = "???";   goto unknown;
     oper8:
       sprintf(operand, "$%02x", peek(addlo(addr,1)));
       return 2;
     oper8n:
-      sprintf(operand, "-$%02x", peek(addlo(addr,1)));
+      sprintf(operand, "$ff%02x", peek(addlo(addr,1)));
       return 2;
-    oper88:
-      sprintf(operand, "$%02x, $%02x", peek(addlo(addr,1)),peek(addlo(addr,2)));
-      return 3;
-    oper88r:
-      sprintf(operand, "$%02x, $%02x", peek(addlo(addr,2)),peek(addlo(addr,1)));
-      return 3;
     oper16:
       sprintf(operand, "$%04x", deek(addlo(addr,1)));
       return 3;
     oper16r:
       sprintf(operand, "$%02x%02x", peek(addlo(addr,1)), peek(addlo(addr,2)));
       return 3;
-    oper16p2:
-      sprintf(operand, "$%04x", addlo(deek(addlo(addr,1)),2));
-      return 3;
-    oper8x16p2:
-      sprintf(operand, "$%02x, $%04x", peek(addlo(addr,1)), addlo(deek(addlo(addr,2)),2));
-      return 4;
     operbr:
       sprintf(operand, "$%04x", (addr&0xff00)|((peek(addlo(addr,1))+2)&0xff));
       return 2;
-    oper8br:
-      sprintf(operand, "$%02x, $%04x", peek(addlo(addr,2)),
-              (addr&0xff00)|((peek(addlo(addr,1))+2)&0xff) );
+    oper16p2:
+      sprintf(operand, "$%02x%02x", peek(addlo(addr,2)), ((peek(addlo(addr,1))+2)&0xff));
+      return 2;
+    oper8x2:
+      sprintf(operand, "$%02x,$%02x", peek(addlo(addr,1)), peek(addlo(addr,2)));
       return 3;
+    oper8x2r:
+      sprintf(operand, "$%02x,$%02x", peek(addlo(addr,2)), peek(addlo(addr,1)));
+      return 3;
+    oper16r8:
+      sprintf(operand, "$$%02x%02x,$%02x", 
+              peek(addlo(addr,2)), peek(addlo(addr,3)), peek(addlo(addr,1)) );
+      return 4;
+    oper816:
+      sprintf(operand, "$%02x,$%02x%02x", peek(addlo(addr,1)),
+              peek(addlo(addr,3)), peek(addlo(addr,2)));
+      return 4;
+    unknown:
+      sprintf(operand, "%02x%02x%02x%02x", peek(addlo(addr,0)), peek(addlo(addr,1)),
+              peek(addlo(addr,2)), peek(addlo(addr,3)));
+      return 2;
     }
 }
 
@@ -1018,37 +959,41 @@ void print_trace(CpuState *S)
 {
   char operand[32];
   char *mnemonic = "???";
-  word addr = addlo(deek(vPC),2);
+  word addr = deek(vPC);
   operand[0] = 0;
   disassemble(addr, &mnemonic, operand);
   fprintf(stderr, "%04x: [", addr);
   if (strchr(trace, 'n')) {
-    fprintf(stderr, "  AC=%02x YX=%02x%02x vTicks=%d t=%+06ld\n\t", S->AC, S->Y, S->X, (int)(char)peek(0x15), (long)((t-ot) % 1000000));
+    fprintf(stderr, "  AC=%02x YX=%02x%02x vTicks=%d t=%+06ld%+06ld%+06ld\n\t",
+            S->AC, S->Y, S->X, (int)(char)peek(0x15),
+            (long)(rt-dt-vt[0]), (long)(t-rt-vt[1]), (long)(vt[0]+vt[1]));
   }
-  fprintf(stderr, " vAC=%04x vLR=%04x", deek(vAC), deek(vLR));
+  fprintf(stderr, " vAC=%04x vLR=%04x SP=%04x", deek(vAC), deek(vLR), deek(SP));
   if (strchr(trace, 's'))
-    fprintf(stderr, " vSP=%02x", peek(vSP));
-  if (strchr(trace, 'l'))
-    fprintf(stderr, " B[0-2]=%02x %02x %02x LAC=%08x",
-            peek(B0), peek(B0+1), peek(B0+2), leek(LAC));
+    fprintf(stderr, " vSP=%04x", deek(vSP));
   if (strchr(trace, 't'))
-    fprintf(stderr, " T[0-3]=%04x %04x %04x %04x",
-            deek(T0), deek(T0+2), deek(T0+4), deek(T0+6));
+    fprintf(stderr, " T[0-3]=%04x %04x %04x %04x B[0-1]=%02x %02x",
+            deek(T0), deek(T0+2), deek(T2), deek(T2+2),
+            peek(B0), peek(B0+1));
   if (strchr(trace, 'f')) {
-    int as = peek(B0);
-    int ae = peek(B0+1);
+    int as = peek(LAC-3);
+    int ae = peek(LAC-2);
     int64_t am = leek(LAC-1) + ((int64_t)peek(LAC+3) << 32);
-    int be = peek(T0+5);
+    int be = peek(T2);
     int64_t bm = leek(T0) + ((int64_t)peek(T0+4) << 32);
-    fprintf(stderr, "\n\t AS=%02x AE=%02x AM=%010llx BE=%02x BM=%010llx\n\t FAC=%.8g FARG=%.8g",
-            as, ae, (long long)am, be, (long long)bm,
+    fprintf(stderr,
+            "\n\t FAC=%02x/%02x/%010llx (%.8g) FARG=%02x/%010llx (%.8g)",
+            as, ae, (long long)am, 
             ((as&0x80) ? -1.0 : +1.0) * ((ae) ? ldexp((double)am, ae-168) : 0.0),
+            be, (long long)bm,
             ((as&0x80)^((as&1)<<7) ? -1.0 : +1.0) * ((be) ? ldexp((double)bm, be-168) : 0.0) );
-  }
+  } else if (strchr(trace, 'l'))
+    fprintf(stderr, "\n\t LAC=%08x LAX=%08x%02x",
+            leek(LAC), leek(LAC), peek(LAC-1));
   if (strchr(trace, 'S')) {
     int i;
     fprintf(stderr, "\n\t sysFn=%04x sysArgs=%02x", deek(sysFn), peek(sysArgs0));
-    for(i=1; i<7; i++)
+    for(i=1; i<=7; i++)
       fprintf(stderr, " %02x", peek(sysArgs0+i));
   }
   if (strchr(trace, 'r')) {
@@ -1062,18 +1007,17 @@ void print_trace(CpuState *S)
     fprintf(stderr, "\n\t R[16-23]=%04x", deek(R0+32));
     for (i=17; i<24; i++)
       fprintf(stderr, " %04x", deek(R0+i+i));
-    fprintf(stderr, "=SP");
   }
   fprintf(stderr, " ]  %-5s %-18s\n",  mnemonic, operand);
 }
 
-void next_0x301(CpuState *S)
+void next_0x307(CpuState *S)
 {
   if (nogt1) {
     if (trace)
       print_trace(S);
-    if (pc2cycs)
-      pc2cycs[opc] += t - ot;
+    if (pc2cycs && da)
+      pc2cycs[da] += t - dt - vt[0] - vt[1];
   }
 }
 
@@ -1103,6 +1047,7 @@ void usage(int exitcode)
             "  -rom romfile: load rom from <romfile>\n"
             "  -f: enable file system access\n"
             "  -nogt1: do not override main menu and run forever\n"
+            "  -nogarble: do not garble memory to ensure repeatable runs\n"
             "  -vmode v: set video mode 0,1,2,3,1975\n"
             "  -t<letters>: trace VCPU execution\n"
             "  -prof fn: writes profiling information into file <fn>\n");
@@ -1113,10 +1058,6 @@ void usage(int exitcode)
 
 int main(int argc, char *argv[])
 {
-  // Initialize with randomized data
-  srand(time(NULL));
-  garble((void*)ROM, sizeof ROM);
-  garble((void*)RAM, sizeof RAM);
   // Parse options
   for (int i=1; i<argc; i++)
     {
@@ -1127,6 +1068,10 @@ int main(int argc, char *argv[])
       else if (! strcmp(argv[i], "-nogt1"))
         {
           nogt1 = 1;
+        }
+      else if (! strcmp(argv[i], "-nogarble"))
+        {
+          nogarble = 1;
         }
       else if (! strcmp(argv[i], "-v"))
         {
@@ -1180,7 +1125,12 @@ int main(int argc, char *argv[])
     }
   if (! gt1 && ! nogt1)
     usage(EXIT_FAILURE);
-  
+  if (! nogarble) {
+    // Initialize with randomized data
+    srand(time(NULL));
+    garble((void*)ROM, sizeof ROM);
+    garble((void*)RAM, sizeof RAM);
+  }
   // Read rom
   if (! rom)
     rom = "../gigatron-rom/dev.rom";

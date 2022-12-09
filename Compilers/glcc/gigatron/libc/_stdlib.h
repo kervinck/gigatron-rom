@@ -10,7 +10,6 @@
 extern void *__glink_weak_malloc(size_t);
 extern void __glink_weak_free(void*);
 
-
 /* String to number conversions */
 
 typedef struct {

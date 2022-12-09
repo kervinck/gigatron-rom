@@ -27,10 +27,10 @@ int main()
 				fputs("Quitting\n", stdout);
 				break;
 			}
-			if (isdigit(c))
-				ungetc('#', stdin);
 			if (c == '0')
 				ungetc('O', stdin);
+			else if (isdigit(c))
+				ungetc('#', stdin);
 		}
 	return 0;
 }

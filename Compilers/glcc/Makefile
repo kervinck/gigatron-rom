@@ -6,7 +6,7 @@ BUILDDIR=build
 bindir=${DESTDIR}${PREFIX}/bin
 libdir=${DESTDIR}${PREFIX}/lib/gigatron-lcc
 INSTALL=${TOP}gigatron/install-sh
-LN_S=ln -s
+LN_S=ln -sf
 B=${TOP}${BUILDDIR}/
 G=${TOP}gigatron/
 TARGET=gigatron
@@ -17,8 +17,11 @@ HOSTFILE=${TOP}etc/gigatron-lcc.c
 GLCC=${B}glcc
 GTSIM=${B}gtsim
 
-SUBDIRS=${G}runtime ${G}libc ${G}map32k ${G}map64k ${G}mapsim ${G}mapconx ${G}map512k
-GFILES=${B}glcc ${B}glink ${B}glink.py ${B}glccver.py ${B}interface.json ${B}roms.json ${GFILES_W}
+SUBDIRS=${G}runtime ${G}libc \
+        ${G}map32k ${G}map64k ${G}mapsim ${G}mapconx \
+        ${G}map128k ${G}map512k
+GFILES=${B}glcc ${B}glink ${B}glink.py ${B}glccver.py ${B}interface.json \
+       ${B}interface-dev.json ${B}roms.json ${GFILES_W}
 ROMFILES=${wildcard ${G}roms/*.rom}
 ROMS=${patsubst ${G}roms/%.rom,%,${ROMFILES}}
 
@@ -149,7 +152,7 @@ TSTBK2FILES=$(wildcard ${G}tst/*.2bk)
 TSTX=${patsubst ${G}tst/%.1bk,${B}tst/%.gt1, ${TSTBK1FILES}}
 TSTO=${patsubst ${G}tst/%.1bk,${B}tst/%.xx1, ${TSTBK1FILES}}
 
-ifeq (${ROM},dev)
+ifeq (${ROM},dev7)
 TSTS=${patsubst ${G}tst/%.2bk,${B}tst/%.s, ${TSTBK2FILES}}
 endif
 

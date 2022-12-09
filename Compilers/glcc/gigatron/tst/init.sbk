@@ -1,4 +1,4 @@
-#VCPUv5
+#VCPUv7
 
 # ======== ('DATA', 'words', code0, 0, 2)
 def code0():
@@ -60,41 +60,36 @@ def code3():
 # ======== ('CODE', 'main', code4)
 def code4():
 	label('main');
-	_PROLOGUE(12,6,0xc0); # save=R6-7
-	LDI(0);STW(R6);
+	_PROLOGUE(12,4,0xc0); # save=R6-7
+	MOVQW(0,R6);
 	_BRA('.8');
 	label('.5');
-	LDI(0);STW(R7);
+	MOVQW(0,R7);
 	_BRA('.12');
 	label('.9');
 	LDWI('.13');STW(R8);
-	_MOVW(R8,[SP,2]);
-	LDWI('y');STW(R22);
-	LDW(R6);LSLW();ADDW(R22);DEEK();STW(R22);
-	LDW(R7);LSLW();ADDW(R22);DEEK();STW(R9);
-	_MOVW(R9,[SP,4]);
+	_STLW(0);
+	LDWI('y');ADDW(R6);ADDW(R6);DEEK();ADDW(R7);ADDW(R7);DEEKA(R9);
+	LDW(R9);_STLW(2);
 	CALLI('printf');
 	label('.10');
-	LDI(1);ADDW(R7);STW(R7);
+	INCV(R7);
 	label('.12');
-	LDWI('y');STW(R22);
-	LDW(R6);LSLW();ADDW(R22);DEEK();STW(R22);
-	LDW(R7);LSLW();ADDW(R22);DEEK();_BNE('.9');
+	LDWI('y');ADDW(R6);ADDW(R6);DEEK();ADDW(R7);ADDW(R7);DEEK();_BNE('.9');
 	LDWI('.14');STW(R8);
-	_MOVW(R8,[SP,2]);
+	_STLW(0);
 	CALLI('printf');
 	label('.6');
-	LDI(1);ADDW(R6);STW(R6);
+	INCV(R6);
 	label('.8');
-	LDWI('y');STW(R22);
-	LDW(R6);LSLW();ADDW(R22);DEEK();_BNE('.5');
+	LDWI('y');ADDW(R6);ADDW(R6);DEEK();_BNE('.5');
 	CALLI('f');
-	LDWI('wordlist');DEEK();STW(R8);
-	_MOVW(R8,[SP,2]);
+	LDWI('wordlist');DEEKA(R8);
+	LDW(R8);_STLW(0);
 	CALLI('g');
 	LDI(0);
 	label('.4');
-	_EPILOGUE(12,6,0xc0,saveAC=True);
+	_EPILOGUE(12,4,0xc0,saveAC=True);
 # ======== ('DATA', '.16', code5, 0, 2)
 def code5():
 	align(2);
@@ -107,80 +102,80 @@ def code5():
 # ======== ('CODE', 'f', code6)
 def code6():
 	label('f');
-	_PROLOGUE(8,6,0x80); # save=R7
-	LDWI('.16');STW(R7);
+	_PROLOGUE(8,4,0x80); # save=R7
+	MOVIW('.16',R7);
 	_BRA('.24');
 	label('.21');
 	LDWI('.25');STW(R8);
-	_MOVW(R8,[SP,2]);
-	LDW(R7);DEEK();STW(R9);
-	_MOVW(R9,[SP,4]);
+	_STLW(0);
+	DEEKV(R7);STW(R9);
+	LDW(R9);_STLW(2);
 	CALLI('printf');
 	label('.22');
-	LDI(2);ADDW(R7);STW(R7);
+	ADDIV(2,R7);
 	label('.24');
-	LDW(R7);DEEK();_BNE('.21');
+	DEEKV(R7);_BNE('.21');
 	LDI(0);
 	label('.15');
-	_EPILOGUE(8,6,0x80,saveAC=True);
+	_EPILOGUE(8,4,0x80,saveAC=True);
 # ======== ('CODE', 'g', code7)
 def code7():
 	label('g');
-	_PROLOGUE(12,6,0xc0); # save=R6-7
+	_PROLOGUE(12,4,0xc0); # save=R6-7
 	LDW(R8);STW(R7);
 	_BRA('.30');
 	label('.27');
-	LDI(0);STW(R6);
+	MOVQW(0,R6);
 	_BRA('.34');
 	label('.31');
 	LDWI('.35');STW(R8);
-	_MOVW(R8,[SP,2]);
-	LDW(R6);LSLW();ADDW(R7);DEEK();STW(R9);
-	_MOVW(R9,[SP,4]);
+	_STLW(0);
+	LDW(R6);LSLW();ADDW(R7);DEEKA(R9);
+	LDW(R9);_STLW(2);
 	CALLI('printf');
 	label('.32');
-	LDI(1);ADDW(R6);STW(R6);
+	INCV(R6);
 	label('.34');
-	LDW(R6);_CMPIU(3);_BLT('.31');
+	LDI(3);_CMPWU(R6);_BGT('.31');
 	LDWI('.25');STW(R8);
-	_MOVW(R8,[SP,2]);
+	_STLW(0);
 	LDI(6);ADDW(R7);STW(R9);
-	_MOVW(R9,[SP,4]);
+	LDW(R9);_STLW(2);
 	CALLI('printf');
 	label('.28');
-	LDI(12);ADDW(R7);STW(R7);
+	ADDIV(12,R7);
 	label('.30');
-	LDW(R7);DEEK();_BNE('.27');
+	DEEKV(R7);_BNE('.27');
 	CALLI('h');
 	LDI(0);
 	label('.26');
-	_EPILOGUE(12,6,0xc0,saveAC=True);
+	_EPILOGUE(12,4,0xc0,saveAC=True);
 # ======== ('CODE', 'h', code8)
 def code8():
 	label('h');
-	_PROLOGUE(16,12,0x80); # save=R7
-	LDI(0);STW(R7);
+	_PROLOGUE(16,10,0x80); # save=R7
+	MOVQW(0,R7);
 	_BRA('.40');
 	label('.37');
 	LDWI('.41');STW(R8);
-	_MOVW(R8,[SP,2]);
-	LDW(R7);LSLW();ADDW(R7);LSLW();LSLW();STW(R22);
-	LDWI('words');ADDW(R22);DEEK();STW(R9);
-	_MOVW(R9,[SP,4]);
-	LDWI(v('words')+2);ADDW(R22);DEEK();STW(R10);
-	_MOVW(R10,[SP,6]);
-	LDWI(v('words')+4);ADDW(R22);DEEK();STW(R11);
-	_MOVW(R11,[SP,8]);
-	LDWI(v('words')+6);ADDW(R22);STW(R12);
-	_MOVW(R12,[SP,10]);
+	_STLW(0);
+	LDW(R7);_MULI(12);STW(R23);
+	LDWI('words');ADDW(R23);DEEKA(R9);
+	LDW(R9);_STLW(2);
+	LDWI(v('words')+2);ADDW(R23);DEEKA(R10);
+	LDW(R10);_STLW(4);
+	LDWI(v('words')+4);ADDW(R23);DEEKA(R11);
+	LDW(R11);_STLW(6);
+	LDWI(v('words')+6);ADDW(R23);STW(R12);
+	LDW(R12);_STLW(8);
 	CALLI('printf');
 	label('.38');
-	LDI(1);ADDW(R7);STW(R7);
+	INCV(R7);
 	label('.40');
-	LDW(R7);_CMPIU(5);_BLT('.37');
+	LDI(5);_CMPWU(R7);_BGT('.37');
 	LDI(0);
 	label('.36');
-	_EPILOGUE(16,12,0x80,saveAC=True);
+	_EPILOGUE(16,10,0x80,saveAC=True);
 # ======== ('DATA', '.41', code9, 0, 1)
 def code9():
 	label('.41');
@@ -247,7 +242,7 @@ code=[
 	('DATA', '.17', code15, 0, 1),
 	('DATA', '.14', code16, 0, 1),
 	('DATA', '.13', code17, 0, 1) ]
-module(code=code, name='tst/init.c', cpu=5);
+module(code=code, name='tst/init.c', cpu=7);
 
 # Local Variables:
 # mode: python

@@ -12,8 +12,8 @@ typedef struct doprint2_s {
 
 static void dpf(char **bb, const char *buf, size_t sz)
 {
-	register char *b = *bb;
-	if (b) {
+	register char *b;
+	if ((b = *bb)) {
 		memcpy(b, buf, sz);
 		b += sz;
 		*b = 0;

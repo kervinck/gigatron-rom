@@ -1,4 +1,4 @@
-#VCPUv5
+#VCPUv7
 
 # ======== ('CODE', 'main', code0)
 def code0():
@@ -10,117 +10,109 @@ def code0():
 # ======== ('CODE', 'f', code1)
 def code1():
 	label('f');
-	_PROLOGUE(8,2,0x80); # save=R7
+	_PROLOGUE(8,0,0x80); # save=R7
 	LDW(R8);STW(R7);
+	CALLI('f');STW(R23);
+	STW(B0);_STLW(-2+8,src=R23);LDW(B0)  #genspill
 	CALLI('f');STW(R22);
-	STW(T3);_MOVW(R22,[SP,-2+8]);LDW(T3) #genspill
-	CALLI('f');STW(R21);
-	_SP(-2+8);DEEK();ADDW(R21);STW(R7);
+	_LDLW(-2+8);ADDW(R22);STW(R7);
 	LDI(0);
 	label('.2');
-	_EPILOGUE(8,2,0x80,saveAC=True);
+	_EPILOGUE(8,0,0x80,saveAC=True);
 # ======== ('CODE', 'f2', code2)
 def code2():
 	label('f2');
-	_PROLOGUE(8,2,0xc0); # save=R6-7
+	_PROLOGUE(8,0,0xc0); # save=R6-7
 	LDW(R8);STW(R7);
-	CALLI('f');STW(R22);
-	STW(T3);_MOVW(R22,[SP,-2+8]);LDW(T3) #genspill
+	CALLI('f');STW(R23);
+	STW(B0);_STLW(-2+8,src=R23);LDW(B0)  #genspill
 	LDW(R7);_BEQ('.5');
 	CALLI('f');
 	STW(R6);
 	_BRA('.6');
 	label('.5');
-	LDI(1);STW(R6);
+	MOVQW(1,R6);
 	label('.6');
-	_SP(-2+8);DEEK();ADDW(R6);STW(R7);
+	_LDLW(-2+8);ADDW(R6);STW(R7);
 	LDI(0);
 	label('.3');
-	_EPILOGUE(8,2,0xc0,saveAC=True);
+	_EPILOGUE(8,0,0xc0,saveAC=True);
 # ======== ('CODE', 'f3', code3)
 def code3():
 	label('f3');
-	_PROLOGUE(32,2,0xff); # save=R0-7
+	_PROLOGUE(32,0,0xff); # save=R0-7
 	LDW(R8);STW(R7);
 	LDW(R9);STW(R6);
 	LDI(0);STW(R5);
-	LDI(0);STW(R4);
-	LDI(0);STW(R3);
-	LDI(0);STW(R2);
-	LDI(0);STW(R1);
-	LDI(0);STW(R0);
-	_SP(-2+32);STW(R22);
-	LDI(0);DOKE(R22);
-	_SP(-4+32);STW(R22);
-	LDI(0);DOKE(R22);
-	_SP(-6+32);STW(R22);
-	LDI(0);DOKE(R22);
-	_SP(-8+32);STW(R22);
-	LDI(0);DOKE(R22);
-	LDW(R6);STW(R22);
-	STW(T3);_MOVW(R22,[SP,-12+32]);LDW(T3) #genspill
-	LDI(2);ADDW(R22);STW(R6);
+	STW(R4);
+	STW(R3);
+	STW(R2);
+	STW(R1);
+	STW(R0);
+	_STLW(-2+32);
+	_STLW(-4+32);
+	_STLW(-6+32);
+	_STLW(-8+32);
+	LDW(R6);STW(R23);
+	STW(B0);_STLW(-12+32,src=R23);LDW(B0)  #genspill
+	ADDIV(2,R6);
 	LDW(R7);_BEQ('.9');
-	CALLI('f');STW(R21);
-	_SP(-10+32);STW(R22);
-	LDW(R21);DOKE(R22);
+	CALLI('f');
+	_STLW(-10+32);
 	_BRA('.10');
 	label('.9');
-	_SP(-10+32);STW(R22);
-	LDI(0);DOKE(R22);
+	LDI(0);_STLW(-10+32);
 	label('.10');
-	_SP(-10+32);DEEK();STW(T1);_MOVW([SP,-12+32],T3);LDW(T1);DOKE(T3);
+	_LDLW(-10+32);STW(B0);_LDLW(-12+32);STW(T0);LDW(B0);DOKE(T0);
 	LDI(0);
 	label('.7');
-	_EPILOGUE(32,2,0xff,saveAC=True);
+	_EPILOGUE(32,0,0xff,saveAC=True);
 # ======== ('CODE', 'f4', code4)
 def code4():
 	label('f4');
-	_PROLOGUE(12,2,0x0); # save=None
+	_PROLOGUE(8,0,0x0); # save=None
 	LDI(0);STW(R19);
-	LDI(0);STW(R18);
-	LDI(0);STW(R17);
-	LDI(0);STW(R16);
-	LDI(0);STW(R15);
-	LDI(0);STW(R14);
-	LDWI('i');DEEK();STW(R22);
-	LDW(R22);LSLW();LSLW();ADDW(R22);STW(R21);
-	LDWI('a');ADDW(R21);_MOVF([vAC],F10);
-	STW(T3);_MOVF(F10,[SP,-5+12]);LDW(T3) #genspill
-	LDWI('b');ADDW(R21);_MOVF([vAC],F10);
-	STW(T3);_MOVF(F10,[SP,-10+12]);LDW(T3) #genspill
-	_MOVF('.15',F10);
-	_MOVF([SP,-5+12],FAC);_SP(-10+12);_FADD();LDI(F10);_FCMP();_BEQ('.13');
-	LDW(R22);_BEQ('.13');
-	_MOVF([SP,-5+12],FAC);_SP(-10+12);_FSUB();LDI(F10);_FCMP();_BEQ('.13');
-	LDI(1);STW(R13);
+	STW(R18);
+	STW(R17);
+	STW(R16);
+	STW(R15);
+	STW(R14);
+	LDWI('i');DEEKA(R23);
+	LDW(R23);_MULI(5);STW(R22);
+	LDWI('a');ADDW(R22);_MOVF([vAC],F10);
+	LDWI('b');ADDW(R22);_MOVF([vAC],F20);
+	STW(B0);_MOVF(F20,[SP,-5+8]);LDW(B0) #genspill
+	_MOVF('.15',F20);
+	_MOVF(F10,FAC);_SP(-5+8);_FADD();LDI(F20);_FCMP();_BEQ('.13');
+	LDW(R23);_BEQ('.13');
+	_MOVF(F10,FAC);_SP(-5+8);_FSUB();LDI(F20);_FCMP();_BEQ('.13');
+	MOVQW(1,R13);
 	_BRA('.14');
 	label('.13');
-	LDI(0);STW(R13);
+	MOVQW(0,R13);
 	label('.14');
-	LDWI('i');STW(R22);
-	LDW(R13);DOKE(R22);
+	LDWI('i');DOKEA(R13);
 	LDI(0);
 	label('.11');
-	_EPILOGUE(12,2,0x0,saveAC=True);
+	_EPILOGUE(8,0,0x0,saveAC=True);
 # ======== ('CODE', 'f5', code5)
 def code5():
 	label('f5');
 	PUSH();
-	LDWI('k');DEEK();STW(R22);
-	LDWI('m');DEEK();STW(R21);
-	LDWI('A');DEEK();STW(R20);
-	LDW(R22);_MUL(R21);STW(T3);LSLW();LSLW();ADDW(T3);ADDW(R20);STW(R19);
-	LDWI('j');DEEK();STW(R18);
-	_MUL(R21);STW(T3);LSLW();LSLW();ADDW(T3);ADDW(R20);STW(R21);
-	LDWI('n');DEEK();STW(R20);
-	LDWI('B');DEEK();STW(R17);
-	LDW(R22);_MUL(R20);STW(T3);LSLW();LSLW();ADDW(T3);ADDW(R17);STW(R22);
-	LDW(R18);_MUL(R20);STW(T3);LSLW();LSLW();ADDW(T3);ADDW(R17);STW(R20);
-	LDW(R22);_MOVF([vAC],FAC);LDW(R20);_FMUL();_MOVF(FAC,F16);
-	LDW(R19);_MOVF([vAC],FAC);LDW(R21);_FMUL();LDI(F16);_FADD();_MOVF(FAC,'x');
-	LDW(R22);_MOVF([vAC],FAC);LDW(R21);_FMUL();_MOVF(FAC,F16);
-	LDW(R19);_MOVF([vAC],FAC);LDW(R20);_FMUL();LDI(F16);_FSUB();_MOVF(FAC,'x');
+	LDWI('k');DEEKA(R23);
+	LDWI('m');DEEKA(R22);
+	LDWI('A');DEEKA(R21);
+	LDW(R23);_MUL(R22);_MULI(5);ADDW(R21);STW(R20);
+	LDWI('j');DEEKA(R19);
+	LDW(R19);_MUL(R22);_MULI(5);ADDW(R21);STW(R22);
+	LDWI('n');DEEKA(R21);
+	LDWI('B');DEEKA(R18);
+	LDW(R23);_MUL(R21);_MULI(5);ADDW(R18);STW(R23);
+	LDW(R19);_MUL(R21);_MULI(5);ADDW(R18);STW(R21);
+	LDW(R23);_MOVF([vAC],FAC);LDW(R21);_FMUL();_MOVF(FAC,F17);
+	LDW(R20);_MOVF([vAC],FAC);LDW(R22);_FMUL();LDI(F17);_FADD();_MOVF(FAC,'x');
+	LDW(R23);_MOVF([vAC],FAC);LDW(R22);_FMUL();_MOVF(FAC,F17);
+	LDW(R20);_MOVF([vAC],FAC);LDW(R21);_FMUL();LDI(F17);_FSUB();_MOVF(FAC,'x');
 	LDI(0);
 	label('.16');
 	tryhop(2);POP();RET()
@@ -200,7 +192,7 @@ code=[
 	('COMMON', 'b', code14, 50, 1),
 	('COMMON', 'a', code15, 50, 1),
 	('DATA', '.15', code16, 0, 1) ]
-module(code=code, name='tst/spill.c', cpu=5);
+module(code=code, name='tst/spill.c', cpu=7);
 
 # Local Variables:
 # mode: python

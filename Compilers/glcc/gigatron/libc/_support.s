@@ -131,6 +131,23 @@ def scope():
                   ('IMPORT', '_doprint_long_imp', 'IF', '_@_using_lmov'),
                   ('CODE', '_doprint_long', code_doprint_long) ] )
 
+    # -----------------------------------------------
+    # Define symbol "_egt1" which is an initialized pointer
+    # that marks the end of the highest gt1 segment. This
+    # is filled by the linker via __glink_magic_egt1.
+
+    def code_egt1():
+        align(2)
+        label('_egt1')
+        label('__glink_magic_egt1')
+        words(0xBEEF)
+
+    module(name='_egt1.s',
+           code=[ ('EXPORT', '_egt1'),
+                  ('EXPORT', '__glink_magic_egt1'),
+                  ('DATA', '_egt1', code_egt1, 2, 2) ])
+
+
 scope()
 
 # Local Variables:

@@ -1,4 +1,4 @@
-#VCPUv5
+#VCPUv7
 
 # ======== ('CODE', 'main', code0)
 def code0():
@@ -10,72 +10,60 @@ def code0():
 # ======== ('CODE', 'memchar', code1)
 def code1():
 	label('memchar');
-	_PROLOGUE(8,2,0x0); # save=None
-	_SP(-4+8);DEEK();STW(R22);
-	_SP(-4+8);STW(R21);
-	LDI(1);ADDW(R22);DOKE(R21);
-	_SP(-1+8);STW(R21);
-	LDW(R22);PEEK();POKE(R21);
-	_SP(-4+8);DEEK();ADDI(1);STW(R22);
-	_SP(-4+8);STW(R21);
-	LDW(R22);DOKE(R21);
-	_SP(-1+8);STW(R21);
-	LDW(R22);PEEK();POKE(R21);
-	_SP(-4+8);DEEK();STW(R22);
-	_SP(-4+8);STW(R21);
-	LDW(R22);SUBI(-(-1));DOKE(R21);
-	_SP(-1+8);STW(R21);
-	LDW(R22);PEEK();POKE(R21);
-	_SP(-4+8);DEEK();SUBI(-(-1));STW(R22);
-	_SP(-4+8);STW(R21);
-	LDW(R22);DOKE(R21);
-	_SP(-1+8);STW(R21);
-	LDW(R22);PEEK();POKE(R21);
+	_PROLOGUE(8,0,0x0); # save=None
+	_LDLW(-4+8);STW(R23);
+	ADDI(1);_STLW(-4+8);
+	_SP(-1+8);STW(R22);
+	PEEKV(R23);POKE(R22);
+	_LDLW(-4+8);ADDI(1);_STLW(-4+8);
+	STW(R23);
+	_SP(-1+8);STW(R22);
+	PEEKV(R23);POKE(R22);
+	_LDLW(-4+8);STW(R23);
+	SUBI(-(-1));_STLW(-4+8);
+	_SP(-1+8);STW(R22);
+	PEEKV(R23);POKE(R22);
+	_LDLW(-4+8);SUBI(-(-1));_STLW(-4+8);
+	STW(R23);
+	_SP(-1+8);STW(R22);
+	PEEKV(R23);POKE(R22);
 	LDI(0);
 	label('.2');
-	_EPILOGUE(8,2,0x0,saveAC=True);
+	_EPILOGUE(8,0,0x0,saveAC=True);
 # ======== ('CODE', 'memint', code2)
 def code2():
 	label('memint');
-	_PROLOGUE(8,2,0x0); # save=None
-	_SP(-4+8);DEEK();STW(R22);
-	_SP(-4+8);STW(R21);
-	LDI(2);ADDW(R22);DOKE(R21);
-	_SP(-2+8);STW(R21);
-	LDW(R22);DEEK();DOKE(R21);
-	_SP(-4+8);DEEK();ADDI(2);STW(R22);
-	_SP(-4+8);STW(R21);
-	LDW(R22);DOKE(R21);
-	_SP(-2+8);STW(R21);
-	LDW(R22);DEEK();DOKE(R21);
-	_SP(-4+8);DEEK();STW(R22);
-	_SP(-4+8);STW(R21);
-	LDW(R22);SUBI(-(-2));DOKE(R21);
-	_SP(-2+8);STW(R21);
-	LDW(R22);DEEK();DOKE(R21);
-	_SP(-4+8);DEEK();SUBI(-(-2));STW(R22);
-	_SP(-4+8);STW(R21);
-	LDW(R22);DOKE(R21);
-	_SP(-2+8);STW(R21);
-	LDW(R22);DEEK();DOKE(R21);
+	_PROLOGUE(8,0,0x0); # save=None
+	_LDLW(-4+8);STW(R23);
+	ADDI(2);_STLW(-4+8);
+	DEEKV(R23);_STLW(-2+8);
+	_LDLW(-4+8);ADDI(2);_STLW(-4+8);
+	
+	DEEK();_STLW(-2+8);
+	_LDLW(-4+8);STW(R23);
+	SUBI(-(-2));_STLW(-4+8);
+	DEEKV(R23);_STLW(-2+8);
+	_LDLW(-4+8);SUBI(-(-2));_STLW(-4+8);
+	
+	DEEK();_STLW(-2+8);
 	LDI(0);
 	label('.3');
-	_EPILOGUE(8,2,0x0,saveAC=True);
+	_EPILOGUE(8,0,0x0,saveAC=True);
 # ======== ('CODE', 'regchar', code3)
 def code3():
 	label('regchar');
 	PUSH();
-	LDW(R18);STW(R22);
-	LDI(1);ADDW(R22);STW(R18);
-	LDW(R22);PEEK();STW(R19);
-	LDI(1);ADDW(R18);
-	STW(R18);
+	LDW(R18);
+	INCV(R18);
 	PEEK();STW(R19);
-	LDW(R18);STW(R22);
-	SUBI(-(-1));STW(R18);
-	LDW(R22);PEEK();STW(R19);
-	LDW(R18);SUBI(-(-1));
-	STW(R18);
+	INCV(R18);
+	LDW(R18);
+	PEEK();STW(R19);
+	LDW(R18);
+	SUBIV(-(-1),R18);
+	PEEK();STW(R19);
+	SUBIV(-(-1),R18);
+	LDW(R18);
 	PEEK();STW(R19);
 	LDI(0);
 	label('.4');
@@ -84,17 +72,17 @@ def code3():
 def code4():
 	label('regint');
 	PUSH();
-	LDW(R18);STW(R22);
-	LDI(2);ADDW(R22);STW(R18);
-	LDW(R22);DEEK();STW(R19);
-	LDI(2);ADDW(R18);
-	STW(R18);
+	LDW(R18);
+	ADDIV(2,R18);
 	DEEK();STW(R19);
-	LDW(R18);STW(R22);
-	SUBI(-(-2));STW(R18);
-	LDW(R22);DEEK();STW(R19);
-	LDW(R18);SUBI(-(-2));
-	STW(R18);
+	ADDIV(2,R18);
+	LDW(R18);
+	DEEK();STW(R19);
+	LDW(R18);
+	SUBIV(-(-2),R18);
+	DEEK();STW(R19);
+	SUBIV(-(-2),R18);
+	LDW(R18);
 	DEEK();STW(R19);
 	LDI(0);
 	label('.5');
@@ -111,7 +99,7 @@ code=[
 	('CODE', 'regchar', code3),
 	('EXPORT', 'regint'),
 	('CODE', 'regint', code4) ]
-module(code=code, name='tst/incr.c', cpu=5);
+module(code=code, name='tst/incr.c', cpu=7);
 
 # Local Variables:
 # mode: python

@@ -32,44 +32,26 @@
  */
 
 #include <stdlib.h>
+#include <gigatron/libc.h>
 
 typedef int cmp_t(const void *, const void *);
 
 #define min(a, b)	(a) < (b) ? (a) : (b)
 
-static void swap(char *a, char *b, size_t n)
-{
-	if ( ((unsigned)a&1) || (n&1) ) {
-		register char *p = a;
-		register char *q = b;
-		while (n) {
-			register char t = *p;
-			*p = *q;
-			*q = t;
-			p++;
-			q++;
-			n--;
-		}
-	} else {
-		register int *p = (int*)a;
-		register int *q = (int*)b;
-		while (n) {
-			register int t = *p;
-			*p = *q;
-			*q = t;
-			p++;
-			q++;
-			n -= 2;
-		}
-	}
-}
+#define swap(a,b,n) _memswp(a,b,n)
 
 static char *
 med3(char *a, char *b, char *c, cmp_t *cmp)
 {
-	return cmp(a, b) < 0 ?
-	       (cmp(b, c) < 0 ? b : (cmp(a, c) < 0 ? c : a ))
-              :(cmp(b, c) > 0 ? b : (cmp(a, c) < 0 ? a : c ));
+	char *x = a;
+	if (cmp(x, b) < 0)
+		x = b;
+	if (cmp(x, c) >= 0) {
+		x = (char*)((size_t)a ^ (size_t)b ^ (size_t)x);
+		if (cmp(x, c) < 0)
+			x = c;
+	}
+	return x;
 }
 
 void

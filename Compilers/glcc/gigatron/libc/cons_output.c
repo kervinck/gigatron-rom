@@ -4,7 +4,7 @@
 #include <gigatron/libc.h>
 #include <gigatron/sys.h>
 
-struct console_state_s console_state = { CONSOLE_DEFAULT_FGBG, 0, 0, 1, 1 };
+__near struct console_state_s console_state = { CONSOLE_DEFAULT_FGBG, 0, 0, 1, 1 };
 
 static char *cons_addr(void)
 {
@@ -20,7 +20,7 @@ static char *cons_addr(void)
 void console_clear_screen(void)
 {
 	_console_reset(console_state.fgbg);
-	console_state.cx = console_state.cy = 0;
+	console_state_set_cycx(0);
 }
 
 void console_clear_to_eol(void)
@@ -49,26 +49,24 @@ static void scroll(int nl, char pg0)
 int console_print(register const char *s, register int len)
 {
 	register int nc = 0;
-	register int *pcx = &console_state.cx;
-	register int *pcy = &console_state.cy;
 	while (nc < len && s[nc]) {
 		register int n;
 		register char *addr;
 		n = console_info.ncolumns;
-		if (console_state.wrapx && *pcx - n >= 0) {
-			*pcx = 0;
-			*pcy += 1;
+		if (console_state.wrapx && console_state.cx - n >= 0) {
+			console_state.cx = 0;
+			console_state.cy += 1;
 		}
 		n = console_info.nlines;
-		if (console_state.wrapy && *pcy - n >= 0) {
+		if (console_state.wrapy && console_state.cy - n >= 0) {
 			int pg0 = videoTable[console_info.offset[0]];
 			_console_clear((char*)(pg0 << 8), console_state.fgbg, 8);
 			scroll(n, pg0);
-			*pcy = n - 1;
+			console_state.cy = n - 1;
 		}
 		if ((! _console_ctrl(s[nc])) && (addr = cons_addr()) &&
 		    (n = _console_printchars(console_state.fgbg, addr, s + nc, len - nc)) ) {
-			*pcx += n;
+			console_state.cx += n;
 			nc += n;
 		} else {
 			nc += 1;

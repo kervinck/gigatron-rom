@@ -17,12 +17,12 @@ LIBNAME=libcon_h
 SFILES=$(wildcard *.s)
 CFILES=$(wildcard *.c)
 O5FILES=${patsubst %.c,${B}${LIBNAME}/%_5.o,${CFILES}}
-O6FILES=${patsubst %.c,${B}${LIBNAME}/%_6.o,${CFILES}}
-OFILES=${O5FILES} ${O6FILES}
+O7FILES=${patsubst %.c,${B}${LIBNAME}/%_7.o,${CFILES}}
+OFILES=${O5FILES} ${O7FILES}
 
 all: ${B}${MAPDIR}/${LIBNAME}.a ${B}${LIBNAME}/test.gt1
 
-${B}${MAPDIR}/${LIBNAME}.a: ${SFILES} ${O4FILES} ${O5FILES} ${O6FILES}
+${B}${MAPDIR}/${LIBNAME}.a: ${SFILES} ${OFILES}
 	-@mkdir -p ${B}${MAPDIR}
 	cat $+ > $@
 
@@ -30,10 +30,9 @@ ${B}${LIBNAME}/%_5.o: %.c ${B}rcc${E}
 	-@mkdir -p ${B}${LIBNAME}
 	${GLCC} -c -cpu=5 -o $@ $<
 
-${B}${LIBNAME}/%_6.o: %.c ${B}rcc${E}
+${B}${LIBNAME}/%_7.o: %.c ${B}rcc${E}
 	-@mkdir -p ${B}${LIBNAME}
-	${GLCC} -c -cpu=6 -o $@  $<
-
+	${GLCC} -c -cpu=7 -o $@  $<
 
 ${B}${LIBNAME}/test.gt1: test.c ${B}${MAPDIR}/${LIBNAME}.a
 	${GLCC} -rom=v5a -o $@ test.c ${B}${MAPDIR}/${LIBNAME}.a

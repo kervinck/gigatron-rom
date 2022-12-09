@@ -9,9 +9,7 @@ int _schkwrite(register FILE *fp)
 	if (flag & (_IOERR|_IOEOF))
 		return EOF;
 	if (! (flag & _IOWRIT))
-		return EPERM;
-	if (! (fp->_v->flsbuf && fp->_v->write))
-		return ENOTSUP;
+		return errno = EPERM;
 	return 0;
 }
 
@@ -21,9 +19,7 @@ int _schkread(register FILE *fp)
 	if (flag & (_IOERR|_IOEOF))
 		return EOF;
 	if (! (flag & _IOREAD))
-		return EPERM;
-	if (! (fp->_v->filbuf && fp->_v->read))
-		return ENOTSUP;
+		return errno = EPERM;
 	return 0;
 }
 
@@ -34,60 +30,7 @@ int _serror(FILE *fp, int errn)
 		fp->_flag |= _IOERR;
 	} else if (errn < 0)
 		fp->_flag |= _IOEOF;
-	if (errn) {
-		fp->_cnt = 0;
-		fp->_ptr = 0;
-		return EOF;
-	} else
-		return 0;
-}
-
-int _flsbuf(register int c, register FILE *fp)
-{
-	register int n;
-	if ((n = _schkwrite(fp)))
-		return _serror(fp, n);
-	return fp->_v->flsbuf(c, fp);
-}
-
-int _filbuf(register FILE *fp)
-{
-	register int n;
-	register char *buf;
-	if ((n = _schkread(fp)))
-		return _serror(fp, n);
-	return fp->_v->filbuf(fp);
-}
-
-int _fcheck(register FILE *fp)
-{
-	register int f = fp->_flag;
-	if (f == 0 || (f & (_IOERR|_IOEOF)))
-		return EOF;
-	return 0;
-}
-
-int _fflush(register FILE *fp)
-{
-	register int flag;
-	flag = fp->_flag;
-	if ((flag & (_IOFBF|_IOWRIT)) == (_IOFBF|_IOWRIT)) {
-		_flsbuf(EOF, fp);
-		return _fcheck(fp);
-	} else {
-		fp->_cnt = 0;
-		return 0;
-	}
-}
-
-int _fclose(register FILE *fp)
-{
-	register int r = 0;
-	if (_fflush(fp))
-		r = -1;
-	if (fp->_v && fp->_v->close && (*fp->_v->close)(fp) < 0)
-		r = -1;
-	return r;
+	return EOF;
 }
 
 void _swalk(int(*func)(FILE*))
@@ -99,11 +42,20 @@ void _swalk(int(*func)(FILE*))
 		for (i = 0; i != _IOB_NUM; f++, i++)
 			if  (f->_flag)
 				(*func)(f);
-		if (! next)
+		if (next) {
+			f = next->_iob;
+			next = next->next;
+		} else
 			break;
-		f = next->_iob;
-		next = next->next;
 	}
+}
+
+int _fclose(FILE *fp)
+{
+	int (*flush)(FILE*,int);
+	if (fp->_flag && (flush = fp->_v->flush))
+		return flush(fp, 1);
+	return 0;
 }
 
 static void _fcloseall(void)

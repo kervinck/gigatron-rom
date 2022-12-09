@@ -31,7 +31,7 @@
 
 # -------------- glink proper
 
-import argparse, json, string, functools
+import argparse, json, string, functools, fnmatch
 import os, sys, traceback, copy, builtins
 import builtins
 import glccver
@@ -79,7 +79,7 @@ zpsize = 0
 def debug(s, level=1):
     if args.d and args.d >= level:
         print("(glink debug) " + s, file=sys.stderr)
-        
+
 def where(exc=False):
     '''Locate error in a .s/.o/.a file'''
     if exc:
@@ -111,7 +111,7 @@ class __metaUnk(type):
         for m in cls.wrapped.split():
             namespace[m] = wrap(getattr(int, m))
         return type(name, bases, namespace)
-    
+
 class Unk(int, metaclass=__metaUnk):
     '''Class to represent unknown symbol values'''
     __slots__= ()
@@ -178,8 +178,11 @@ def check_br(x):
 
 def check_cpu(v):
     if args.cpu < v and final_pass:
-        stb = traceback.extract_stack(limit=2)
-        warning(f"opcode {stb[0].name} not implemented by cpu={args.cpu}", dedup=True)
+        stb = traceback.extract_stack(limit=3)
+        name = stb[1].name
+        if name != name.upper():
+            name = stb[0].name
+        error(f"opcode {name} not implemented by cpu={args.cpu}", dedup=True)
 
 def resolve(s, ignore=None):
     '''Resolve a global symbol and return its value or None.
@@ -213,7 +216,7 @@ class Fragment:
         self.amax = None           # max address range
     def __repr__(self):
         return f"Fragment({self.segment},'{self.name}',...)"
-        
+
 class Module:
     '''Class for assembly modules read from .s/.o/.a files.'''
     def __init__(self, name=None, cpu=None, code=None):
@@ -230,37 +233,49 @@ class Module:
         self.symrefs = {}
         self.symdefs = {}
         self.sympass = {}
-        # overlay can define map_place to insert placement directives
-        if map_place:
-            for tp in map_place(self.name) or []:
-                if tp[0] == 'PLACE':
-                    code.append(tp)
+        # inner function to process a placement fragment
+        def placement(tp):
+            matches = [f for f in self.code if fnmatch.fnmatchcase(f.name, tp[1])]
+            for match in matches:
+                if tp[0] == 'NOHOP':
+                    match.nohop = True
+                elif match.amin == None:
+                    match.amax = tp[3] if len(tp) > 3 else None
+                    match.amin = tp[2]
+                elif len(matches) < 2:
+                    error(f"Conflicting placement constraints {tp}")
+            return len(matches)
         # process code list
         for tp in code:
             if tp[0] == 'EXPORT':
-                self.exports.append(tp[1])              # ('EXPORT', "symbolname") 
+                self.exports.append(tp[1])                    # ('EXPORT', "symbolname")
             elif tp[0] == 'IMPORT' and len(tp) == 2:
-                self.imports.append(tp[1])              # ('IMPORT', "symbolname")
+                self.imports.append(tp[1])                    # ('IMPORT', "symbolname")
             elif tp[0] == 'IMPORT' and len(tp) > 3 and tp[2] == 'IF':
-                self.cimports.append(tp)                # ('IMPORT', "symbolname", 'IF', ...)
+                self.cimports.append(tp)                      # ('IMPORT', "symbolname", 'IF', ...)
+            elif tp[0] == 'IMPORT' and len(tp) == 4 and tp[2] == 'AT':
+                self.symdefs[tp[1]] = int(tp[3])              # ('IMPORT', "symbolname", 'AT', address)
             elif tp[0] == 'CODE':
-                self.code.append(Fragment(*tp))         # ('CODE', "name", func)
+                self.code.append(Fragment(*tp))               # ('CODE', "name", func)
             elif tp[0] == 'DATA' or tp[0] == 'BSS' or tp[0] == 'COMMON':
-                self.code.append(Fragment(*tp))         # ('DATA|BSS|COMMON', "name", func, size, align)
-            elif tp[0] == 'ORG' or tp[0] == 'PLACE':
-                matches = self.code
-                if tp[1] != '*':
-                    matches = [f for f in self.code if f.name == tp[1]]
-                if len(matches) < 1:
-                    error(f"Cannot locate fragment for {tp}")
-                for match in matches:
-                    if match.amin:
-                        error(f"Conflicting placement constraints {tp}")
-                    else:                                # ('ORG', "name|*", addr)
-                        match.amin = tp[2]               # ('PLACE', "name|*", minaddr, maxaddr)
-                        match.amax = tp[3] if len(tp) > 3 else None
-            elif tp[0] != 'NOP':
+                self.code.append(Fragment(*tp))               # ('DATA|BSS|COMMON', "name", func, size, align)
+            elif tp[0] in ('ORG','PLACE','NOHOP'):            # ('PLACE', "pattern", minaddr, maxaddr)
+                if placement(tp) < 1:                         # ('ORG', "pattern", addr)
+                    error(f"Cannot locate fragment for {tp}") # ('NOHOP', "pattern")
+            elif tp[0] != 'NOP':                              # ('NOP',)
                 error(f"Unrecognized fragment specification {tp}")
+        # placement overlay
+        if map_place:
+            fragnames = [f.name for f in self.code]
+            for tp in map_place(self.name, fragnames) or []:
+                if tp[0] in ('ORG', 'PLACE', 'NOHOP'):
+                    n = placement(tp)
+                    if n == 0:
+                        warning(f"map_place directive {tp} does not match any fragment");
+                    elif args.d > 0:
+                        debug(f"map_place directive {tp} matches {n} fragment(s)")
+                elif tp[0] != 'NOP':
+                    error(f"Unrecognized map_place() specification {tp}")
     def __repr__(self):
         return f"Module('{self.fname or self.name}',...)"
     def label(self, sym, val):
@@ -292,7 +307,7 @@ class Segment:
     def __repr__(self):
         d = f",flags={hex(self.flags)}" if self.flags else ''
         return f"Segment({hex(self.saddr)},{hex(self.eaddr)}{d})"
-                
+
 def emit(*args):
     global final_pass, the_pc, the_segment
     if final_pass:
@@ -303,7 +318,7 @@ def emit(*args):
     the_pc += len(args)
 
 def extern(sym):
-    '''Adds a symbol to the import list of a module. 
+    '''Adds a symbol to the import list of a module.
        This happens when `measure_code_fragment' is called.
        Pseudo-instructons need this to make sure the linker
        inserts the appropriate runtime routines.'''
@@ -324,7 +339,7 @@ def record_fragment_address(addr):
         else:
             addrinfo[(finfo[1],addr)] = (finfo[0], the_fragment, the_module)
             fraginfo[fid] = (finfo[0],)
-            
+
 
 # ------------- jumps and hops
 
@@ -342,10 +357,10 @@ def emit_long_jump(d):
         CALLI(d)          # 3 bytes
     else:
         STLW(-2); LDWI(d); STW(vLR);
-        LDLW(-2); RET()   # 10 bytes
+        LDLW(-2); RET()   # <10 bytes
 
 def hop(sz, jump):
-    '''Ensure, possibly with a hop, that there are at 
+    '''Ensure, possibly with a hop, that there are at
        least sz bytes left in the segment. '''
     if bytes_left() < sz:
         global hops_enabled
@@ -363,7 +378,7 @@ def hop(sz, jump):
                 fatal(f"map memory exhausted while fitting function `{the_fragment.name}'")
             if jump:
                 emit_long_jump(ns.pc)
-            hops_enabled = True            
+            hops_enabled = True
             the_segment.pc = the_pc
             if args.fragments and final_pass:
                 record_fragment_address(the_pc)
@@ -384,7 +399,7 @@ def emitjump(d):
         emit_long_jump(d)
     hops_enabled = save_hops_enabled
     tryhop(jump=False)
-    
+
 def emitjcc(BCC, BNCC, JCC, d):
     global hops_enabled, lbranch_counter
     save_hops_enabled = hops_enabled
@@ -415,39 +430,91 @@ def emitjcc(BCC, BNCC, JCC, d):
             hops_enabled = False
     hops_enabled = save_hops_enabled
 
-def emit_prefx1(opcode):
-    check_cpu(6); tryhop(2)
-    emit(0xb1, opcode)
+# ------------- opcode helpers
 
-def emit_prefx2(opcode, arg1):
-    check_cpu(6); tryhop(3)
-    emit(0x2f, arg1, opcode)
-    # emit(0x2f, opcode, arg1) # old style
+def emit_op(*args):
+    '''Calls emits with strings replaced by opcodes according to interface.json.
+       This displaces the knowledge of the correct opcodes into inteface[-dev].json
+       but one still has to provide the right arguments.'''
+    bytes=[]
+    for arg in args:
+        if not isinstance(arg, str):
+            bytes.append(arg)
+        elif not arg in symdefs:
+            error(f"emit_op: opcode {arg} not defined in interface.json")
+        else:
+            if arg[-3:-1] == "_v":
+                check_cpu(int(arg[-1:]))
+            op = symdefs[arg]
+            oq = op >> 8
+            if oq == 0x35:
+                bytes.append(oq)
+            elif oq != 0x3:
+                error(f"emit_op: cannot emit opcode {arg} defined as {hex(op)}")
+            bytes.append(op & 0xff)
+    tryhop(len(bytes))
+    emit(*bytes)
 
-def emit_prefx3(opcode, arg1, arg2):
-    check_cpu(6); tryhop(4)
-    emit(0xc7, arg2, opcode, arg1)
-    # emit(0xc7, opcode, arg1, arg2) # old style
+
+# ------------- mulq
+
+mulq_map = {}
+
+def create_mulq_map():
+    global mulq_map
+    if args.cpu >= 7:
+        mulq_n = {}
+        for kk in range(256):
+            p = c = 2
+            k = kk
+            while k != 0:
+                if k & 0x80 == 0x80:
+                    p = p << 1; c += 1; k <<= 1; k &= 0xff
+                elif k & 0xc0 == 0x40:
+                    p += 1; c += 1; k <<= 2; k &= 0xff
+                else:
+                    p -= 1; c += 1; k <<= 3; k &= 0xff
+            if not p in mulq_n or mulq_n[p] >= c:
+                mulq_n[p] = c
+                mulq_map[p] = kk
+    mulq_map[0] = lambda: LDI(0)
+    mulq_map[1] = lambda: None
+    mulq_map[2] = lambda: LSLW()
+    mulq_map[4] = lambda: LSLW(repeat=2)
 
 
 # ------------- map of page zero
 
 zpage_map = [ None for i in range(0,256) ]
 
-def zpage_reserve(rng, lbl):
+def zpage_reserve(rng, lbl, error_on_conflict=True):
     for i in rng:
         if i < 0 or i >= 256:
             fatal(f"Cannot reserve address {hex(i)} in page zero")
         elif zpage_map[i] and zpage_map[i] != lbl:
-            fatal(f"Zero page address {hex(i)} is both {zpage_map[i]} and {lbl}")
-        zpage_map[i] = lbl
+            if error_on_conflict:
+                fatal(f"Zero page address {hex(i)} is both {zpage_map[i]} and {lbl}")
+        else:
+            zpage_map[i] = lbl
+
+def zpage_alloc(sz, label, fromAddr=0):
+    for i in range(fromAddr, 256):
+        if zpage_map[i:i+sz].count(None) == sz:
+            zpage_reserve(range(i, i+sz), label)
+            return i
 
 def create_zpage_map():
-    zpage_reserve(range(0,0x30), "ROMVAR")
-    if 'has_vIRQ' in rominfo: zpage_reserve(range(0x30,0x35), "VIRQ")
-    zpage_reserve(range(0x80,0x81), "ROMVAR")
-    zpage_reserve(range(0xc0,0xd0), "RUNTIME")
     zpage_reserve(range(0xd0,0x100), "STACK")
+    zpage_reserve(range(0,0x30), "V4")
+    zpage_reserve(range(0x80,0x81), "V4")
+    if args.cpu < 7:
+        zpage_reserve(range(0x30,0x42), "LOADER")
+    elif args.cpu >= 5:
+        zpage_reserve(range(0x30,0x36), "VIRQ")
+    if args.cpu == 6:
+        zpage_reserve(range(0xc0,0xd0), "VX0")
+    if args.cpu >= 7:
+        zpage_reserve(range(0x81,0x8c), "V7")
 
 def create_zpage_segments():
     segs = []
@@ -470,7 +537,7 @@ def create_zpage_segments():
 
 module_builtins_okay = '''None True False abs all any ascii bin bool chr
 dict divmod enumerate filter float format frozenset getattr hasattr hash
-hex id int isinstance issubclass iter len list map max min next oct ord 
+hex id int isinstance issubclass iter len list map max min next oct ord
 pow print property range repr reversed set setattr slice sorted str sum
 tuple type zip'''
 module_builtins = {}
@@ -481,24 +548,58 @@ for s in module_builtins_okay.split():
         module_builtins[s] = getattr(__builtins__, s)
 
 def create_register_names(base):
-    if base < 0 or base + 0x30 > 0x100:
-        fatal(f"Illegal register location {hex(base)}-{hex(base+0x2f)}.")
-    d = { # Traditional
-          "vPC":  0x0016, "vAC":  0x0018,
+    d = { "vPC":  0x0016, "vAC":  0x0018,
           "vACL": 0x0018, "vACH": 0x0019,
           "vLR":  0x001a, "vSP":  0x001c,
-          # ROMvX0 names
-          "vLAC": 0xc4, "vDST": 0xcc,
-          # GLCC names
-          "B0": 0xc1, "B1": 0xc2, "B2": 0xc3, "LAC": 0xc4,
-          "T0": 0xc8, "T1": 0xca, "T2": 0xcc, "T3": 0xce,
           "FAC":  0xFACFACFAC }
+    # ROM-dependent registers
+    t0t1 = t2t3 = b0b1 = flac = rsp = None
+    if 'registerFLAC' in rominfo:
+        flac = int(str(rominfo['registerFLAC']),0)
+        zpReserve(flac,flac+6,"REGS:FLAC")
+    elif args.cpu >= 7:
+        flac = symdefs['vFAS_v7']
+    if 'registerT2T3' in rominfo:
+        t2t3 = int(str(rominfo['registerT2T3']),0)
+        zpReserve(t2t3,t2t3+3,"REGS:T2T3")
+    elif args.cpu >= 7:
+        t2t3 = symdefs['vT2_v7']
+    if 'registerB0B1' in rominfo:
+        b0b1 = int(str(rominfo['registerB0B1']),0)
+        zpReserve(b0b1,b0b1+1,"REGS:B0B1")
+    if 'registerTOT1' in rominfo:
+        t0t1 = int(str(rominfo['registerT0T1']),0)
+        zpReserve(t0t1,t0t1+3,"REGS:T0T1")
+    if 'registerSP' in rominfo:
+        assert args.cpu < 7
+        rsp  = int(str(rominfo['registerSP']),0)
+        zpReserve(rsp,rsp+1,"REGS:SP")
+    elif args.cpu >= 7:
+        rsp = d['vSP'] ## USE 16BITS STACK
+    flac = flac or zpage_alloc(7,"REGS:FLAC", 0x80)
+    t0t1 = t0t1 or symdefs['sysArgs0']
+    t2t3 = t2t3 or zpage_alloc(4,"REGS:T2T3", 0x80)
+    b0b1 = b0b1 or zpage_alloc(2,"REGS:B0B1", 0x80)
+    rsp  = rsp or zpage_alloc(2,"REGS:SP", 0x80)
     # GLCC registers
-    zpage_reserve(range(base,base+0x30), "REGISTERS")
+    if base == None and 'registerBase' in rominfo:
+        base = int(str(rominfo['registerBase']),0)
+    if base == None:
+        base = zpage_alloc(0x30, "REGS:R0-23", 0x90)
+    elif base < 0 or base + 0x30 > 0x100:
+        fatal(f"Illegal register location {hex(base)}-{hex(base+0x2f)}.")
+    else:
+        zpage_reserve(range(base,base+0x30), "REGS:R0-23")
     for i in range(0,24): d[f'R{i}'] = base + i + i
-    for i in range(0,22): d[f'L{i}'] = d[f'R{i}']
-    for i in range(0,21): d[f'F{i}'] = d[f'R{i}']
-    d['SP'] = d['R23']
+    for i in range(0,23): d[f'L{i}'] = d[f'R{i}']
+    for i in range(0,22): d[f'F{i}'] = d[f'R{i}']
+    rsp = rsp or d['R23']
+    debug(f"Registers: base:{hex(base)} T01:{hex(t0t1)} T23:{hex(t2t3)}")
+    debug(f"Registers: LAC:{hex(flac+3)} B012:{hex(b0b1)} SP:{hex(rsp)}")
+    d.update({'T0':t0t1, 'T1':t0t1+2, 'T2':t2t3, 'T3':t2t3+2,
+              'B0':b0b1, 'B1':b0b1+1, 'LAX':flac+2, 'LAC':flac+3,
+              'FAS':flac, 'FAE':flac+1, 'SP':rsp })
+    # Publish register names
     for (k,v) in d.items():
         module_dict[k] = v
         globals()[k] = v
@@ -520,6 +621,7 @@ def vasm(func):
 @vasm
 def error(s, dedup=False):
     global the_pass, final_pass, error_counter
+    dedup = dedup or final_pass
     if the_pass == 0 or final_pass:
         if dedup and s in dedup_errors: return
         dedup_errors.add(s)
@@ -530,6 +632,7 @@ def error(s, dedup=False):
 @vasm
 def warning(s, dedup=False):
     global the_pass, final_pass, warning_counter
+    dedup = dedup or final_pass
     if the_pass == 0 or final_pass:
         if dedup and s in dedup_errors: return
         dedup_errors.add(s)
@@ -571,7 +674,9 @@ def genlabel():
 
 @vasm
 def zpReserve(addr0,addr1,lbl):
-    zpage_reserve(range(addr0,addr1+1),lbl)
+    if the_pass == 0:
+        rng = range(addr0, addr1+1)
+        zpage_reserve(rng, lbl, error_on_conflict=False)
 @vasm
 def pc():
     return the_pc
@@ -671,663 +776,461 @@ def label(sym, val=None, hop=None):
 
 @vasm
 def ST(d):
-    tryhop(2); emit(0x5e, check_zp(d))
+    emit_op("ST", check_zp(d))
 @vasm
 def STW(d):
-    tryhop(2); emit(0x2b, check_zp(d))
+    emit_op("STW", check_zp(d))
 @vasm
 def STLW(d):
-    tryhop(2); emit(0xec, check_im8s(d))
+    emit_op("STLW", check_im8s(d))
 @vasm
 def LD(d):
-    tryhop(2); emit(0x1a, check_zp(d))
+    emit_op("LD", check_zp(d))
 @vasm
 def LDI(d, hop=True):
-    tryhop(2); emit(0x59, check_im8s(d))
+    emit_op("LDI", check_im8s(d))
 @vasm
 def LDWI(d):
-    tryhop(3); d=int(v(d)); emit(0x11, lo(d), hi(d))
+    d=int(v(d)); emit_op("LDWI", lo(d), hi(d))
 @vasm
 def LDW(d):
-    tryhop(2); emit(0x21, check_zp(d))
+    emit_op("LDW", check_zp(d))
 @vasm
 def LDLW(d):
-    tryhop(2); emit(0xee, check_im8s(d))
+    emit_op("LDLW", check_im8s(d))
 @vasm
 def ADDW(d):
-    tryhop(2); emit(0x99, check_zp(d))
+    emit_op("ADDW", check_zp(d))
 @vasm
 def SUBW(d):
-    tryhop(2); emit(0xb8, check_zp(d))
+    emit_op("SUBW", check_zp(d))
 @vasm
 def ADDI(d):
-    tryhop(2); emit(0xe3, check_imm8(d))
+    emit_op("ADDI", check_imm8(d))
 @vasm
 def SUBI(d):
-    tryhop(2); emit(0xe6, check_imm8(d))
+    emit_op("SUBI", check_imm8(d))
 @vasm
-def LSLW():
-    tryhop(1); emit(0xe9)
+def LSLW(repeat = 1):
+    for _ in range(repeat): emit_op("LSLW")
 @vasm
 def INC(d):
-    tryhop(2); emit(0x93, check_zp(d))
+    emit_op("INC", check_zp(d))
 @vasm
 def ANDI(d):
-    tryhop(2); emit(0x82, check_imm8(d))
+    emit_op("ANDI", check_imm8(d))
 @vasm
 def ANDW(d):
-    tryhop(2); emit(0xf8, check_zp(d))
+    emit_op("ANDW", check_zp(d))
 @vasm
 def ORI(d):
-    tryhop(2); emit(0x88, check_imm8(d))
+    emit_op("ORI", check_imm8(d))
 @vasm
 def ORW(d):
-    tryhop(2); emit(0xfa, check_zp(d))
+    emit_op("ORW", check_zp(d))
 @vasm
 def XORI(d):
-    tryhop(2); emit(0x8c, check_imm8(d))
+    emit_op("XORI", check_imm8(d))
 @vasm
 def XORW(d):
-    tryhop(2); emit(0xfc, check_zp(d))
+    emit_op("XORW", check_zp(d))
 @vasm
 def PEEK():
-    tryhop(1); emit(0xad)
+    emit_op("PEEK")
 @vasm
 def DEEK():
-    tryhop(1); emit(0xf6)
+    emit_op("DEEK")
 @vasm
 def POKE(d):
-    tryhop(2); emit(0xf0, check_zp(d))
+    emit_op("POKE", check_zp(d))
 @vasm
 def DOKE(d):
-    tryhop(2); emit(0xf3, check_zp(d))
+    emit_op("DOKE", check_zp(d))
 @vasm
 def LUP(d):
-    tryhop(2); emit(0x7f, check_zp(d))
+    emit_op("LUP", check_zp(d))
 @vasm
 def BRA(d):
-    emit(0x90, check_br(d)); tryhop(jump=False)
+    emit_op("BRA", check_br(d))
+    tryhop(jump=False)
 @vasm
 def BEQ(d):
-    tryhop(3); emit(0x35, 0x3f, check_br(d))
+    emit_op("BCC", "EQ", check_br(d))
 @vasm
 def BNE(d):
-    tryhop(3); emit(0x35, 0x72, check_br(d))
+    emit_op("BCC", "NE", check_br(d))
 @vasm
 def BLT(d):
-    tryhop(3); emit(0x35, 0x50, check_br(d))
+    emit_op("BCC", "LT", check_br(d))
 @vasm
 def BGT(d):
-    tryhop(3); emit(0x35, 0x4d, check_br(d))
+    emit_op("BCC", "GT", check_br(d))
 @vasm
 def BLE(d):
-    tryhop(3); emit(0x35, 0x56, check_br(d))
+    emit_op("BCC", "LE", check_br(d))
 @vasm
 def BGE(d):
-    tryhop(3); emit(0x35, 0x53, check_br(d))
+    emit_op("BCC", "GE", check_br(d))
 @vasm
 def CALL(d):
-    tryhop(3); emit(0xcf, check_zp(d))
+    emit_op("CALL", check_zp(d))
 @vasm
 def RET():
-    emit(0xff); tryhop(jump=False)
+    emit_op("RET"); tryhop(jump=False)
 @vasm
 def PUSH():
-    tryhop(1); emit(0x75)
+    emit_op("PUSH")
 @vasm
 def POP():
-    tryhop(1); emit(0x63)
+    emit_op("POP")
 @vasm
 def ALLOC(d):
-    tryhop(2); emit(0xdf, check_im8s(d))
+    emit_op("ALLOC", check_im8s(d))
 @vasm
 def SYS(op):
     op = v(op)
     if not isinstance(op ,Unk):
         if op & 1 != 0 or op < 0 or op >= 284:
             error(f"illegal argument {op} for SYS opcode")
-        op = min(0, 14 - op // 2) & 0xff
-    tryhop(2); emit(0xb4, op)
+        # If maxTicks is not defined, use 14.
+        # All ROMs should ensure that 14 works.
+        maxTicks = 14
+        if 'maxTicks' in rominfo:
+            maxTicks = int(rominfo['maxTicks'])
+        op = min(0, maxTicks - op // 2) & 0xff
+    emit_op("SYS", op)
 @vasm
 def HALT():
-    emit(0xb4, 0x80); tryhop(jump = False)
+    tryhop(2); emit(0xb4, 0x80); tryhop(jump = False)
 @vasm
 def DEF(d):
-    tryhop(2); emit(0xcd, check_br(d))
+    emit_op("DEF", check_br(d))
+
+# cpu 5 opcodes
 @vasm
 def CALLI(d):
-    check_cpu(5); tryhop(3); d=int(v(d)); emit(0x85, lo(d), hi(d))
+    d=int(v(d)); emit_op("CALLI_v5", lo(d), hi(d))
 @vasm
 def CMPHS(d):
-    check_cpu(5); tryhop(2); emit(0x1f, check_zp(d))
+    if args.cpu == 6:
+        tryhop(3); emit(0x2f, check_zp(d), 0x37)
+    else:
+        emit_op("CMPHS_v5", check_zp(d))
 @vasm
 def CMPHU(d):
-    check_cpu(5); tryhop(2); emit(0x97, check_zp(d))
+    if args.cpu == 6:
+        tryhop(3); emit(0x2f, check_zp(d), 0x3a)
+    else:
+        emit_op("CMPHU_v5", check_zp(d))
 
-# instructions for cpu6 (opcodes to be checked once at67's rom is released)
-# -- main page
+# cpu 7 opcodes (with cpu 6 aliases when known)
 @vasm
-def DEC(d):
-    '''DEC: Decrement byte var ([D]--), 22 cycles'''
-    check_cpu(6); tryhop(2); emit(0x14, check_zp(d))
-@vasm
-def MOVQB(imm,d): # was MOVQ
-    '''MOVQB: Load a byte var with a small constant 0..255, 28 cycles'''
-    check_cpu(6); tryhop(3); emit(0x16, check_zp(imm), check_zp(d))
-@vasm
-def LSRB(d):
-    '''LSRB: Logical shift right on a byte var, 28 cycles'''
-    check_cpu(6); tryhop(2); emit(0x18, check_zp(d))
-@vasm
-def LOKEQI(d): # revisit
-    '''LOKEQI: Loke immediate unsigned word into address contained in [vAC], 34 cycles'''
-    check_cpu(6); tryhop(3); emit(0x1c, lo(d), hi(d))
-@vasm
-def PEEKp(d):
-    '''PEEK+: Peek byte at address contained in var, inc var, 30 cycles'''
-    check_cpu(6); tryhop(2); emit(0x23, check_zp(d))
-@vasm
-def POKEI(d):
-    '''POKEI: Poke immediate byte into address contained in [vAC], 20 cycles'''
-    check_cpu(6); tryhop(2); emit(0x25, check_im8s(d))
-@vasm
-def LSLV(d):
-    '''LSLV: Logical shift left word var, 28 cycles'''
-    check_cpu(6); tryhop(2);  emit(0x27, check_zp(d))
-@vasm
-def ADDBA(d):
-    '''ADDBA: vAC += var.lo, 28 cycles'''
-    check_cpu(6); tryhop(2); emit(0x29, check_zp(d))
-@vasm
-def ADDBI(imm,d):
-    '''ADDBI: Add a constant 0..255 to byte var, 28 cycles'''
-    check_cpu(6); tryhop(3); emit(0x2d, check_zp(imm), check_zp(d))
-@vasm
-def DBNE(v, d):
-    '''DBNE:  Decrement byte var and branch if not zero, 28 cycles'''
-    check_cpu(6); tryhop(3); emit(0x32, check_br(d), check_zp(v))
-@vasm
-def DOKEI(d):
-    '''DOKEI: Doke immediate word into address contained in [vAC], 30 cycles'''
-    check_cpu(6); tryhop(3); d=int(v(d)); emit(0x37, hi(d), lo(d))
-@vasm
-def PEEKV(d):
-    '''PEEKV: Read byte from address contained in var, 30 cycles'''
-    check_cpu(6); tryhop(2); emit(0x39, check_zp(d))
-@vasm
-def DEEKV(d):
-    '''DEEKV: Read word from address contained in var, 28 cycles'''
-    check_cpu(6); tryhop(2); emit(0x3b, check_zp(d))
-@vasm
-def LOKEI(d): # revisit
-    '''LOKEI: oke immediate long into address contained in [vAC], 42 cycles'''
-    check_cpu(6); tryhop(5); emit(0x3d, lo(d), hi(d), (d>>16)&0xff, (d>>24)&0xff) 
-@vasm
-def ADDVI(imm,d):
-    '''ADDVI: Add imm8 to 16bit zero page var, var += imm, vAC = var, 50 cycles'''
-    check_cpu(6); tryhop(3); emit(0x42, check_zp(imm), check_zp(d))
-@vasm
-def SUBVI(imm,d):
-    '''SUBVI: Subtract imm8 to 16bit zero page var, var -= imm, vAC = var, 50 cycles'''
-    check_cpu(6); tryhop(3); emit(0x44, check_zp(imm), check_zp(d))
-@vasm
-def DOKEp(d):
-    '''DOKE+: doke word in vAC to address contained in var, var += 2, 30 cycles'''
-    check_cpu(6); tryhop(2); emit(0x46, check_zp(d))
-@vasm
-def NOTB(d):
-    '''NOTB: var.lo = var.lo ^ 0xff, 22 cycles'''
-    check_cpu(6); tryhop(2); emit(0x48, check_zp(d))
-@vasm
-def DJGE(v, d):
-    '''DJGE:  long version of DBGE, 42 cycles'''
-    check_cpu(6); tryhop(3); emit(0x4a, check_zp(v), lo(d-1), hi(d))
+def MOVQB(imm,d):
+    if args.cpu == 6:
+        tryhop(3);emit(0x16, check_zp(imm), check_zp(d))
+    else:
+        emit_op("MOVQB_v7", check_zp(d), check_zp(imm))
 @vasm
 def MOVQW(imm,d):
-    '''MOVQW: Load a word var with a small constant 0..255, 30 cycles'''
-    check_cpu(6); tryhop(3); emit(0x5b, check_zp(imm), check_zp(d))
+    if args.cpu == 6:
+        tryhop(3);emit(0x4d, check_zp(imm), check_zp(d))
+    else:
+        emit_op("MOVQW_v7", check_zp(d), check_zp(imm))
 @vasm
-def DEEKp(d):
-    '''DEEK+: Deek word at address contained in var, var += 2, 30 cycles'''
-    check_cpu(6); tryhop(2); emit(0x60, check_zp(d))
+def POKEQ(d):
+    if args.cpu == 6:
+        tryhop(2);emit(0x25, check_zp(d)) # aka POKEI
+    else:
+        emit_op("POKEQ_v7", check_zp(d))
 @vasm
-def MOVB(s,d): # was MOV
-    '''MOVB: Moves a byte from src var to dst var, 28 cycles'''
-    check_cpu(6); tryhop(3); emit(0x65, check_zp(d), check_zp(s))
+def DOKEQ(d):
+    emit_op("DOKEQ_v7", check_zp(d))
 @vasm
-def PEEKA(d):
-    '''PEEKA: Peek a byte from [vAC] to var, 24 cycles'''
-    check_cpu(6); tryhop(2); emit(0x67, check_zp(d))
+def DOKEI(d):
+    d = int(v(d))
+    if args.cpu == 6:
+        tryhop(3);emit(0x77, (d>>8)&0xff, d&0xff)
+    else:
+        emit_op("DOKEI_v7", (d>>8)&0xff, d&0xff)
 @vasm
 def POKEA(d):
-    '''POKEA: Poke a byte from var to [vAC], 22 cycles'''
-    check_cpu(6); tryhop(2); emit(0x69, check_zp(d))
-@vasm
-def TEQ(d):
-    '''TEQ: Test for EQ, returns 0x0000 or 0x0001 in var, 28 cycles'''
-    check_cpu(6); tryhop(2); emit(0x6b, check_zp(d))
-@vasm
-def TNE(d):
-    '''TEQ: Test for NE, returns 0x0000 or 0x0001 in var, 28 cycles'''
-    check_cpu(6); tryhop(2); emit(0x6d, check_zp(d))
-@vasm
-def DEEKA(d):
-    '''DEEKA: Deek a word from [vAC] to var, 30 cycles'''
-    check_cpu(6); tryhop(2); emit(0x6f, check_zp(d))
-@vasm
-def SUBBA(d):
-    '''SUBBA: vAC -= var.lo, 28 cycles'''
-    check_cpu(6); tryhop(2); emit(0x77, check_zp(d))
-@vasm
-def INCW(d):
-    '''INCW: Increment word var, 26 cycles'''
-    check_cpu(6); tryhop(2); emit(0x79, check_zp(d))
-@vasm
-def DECW(d):
-    '''DECW: Decrement word var, 26 cycles'''
-    check_cpu(6); tryhop(2); emit(0x7b, check_zp(d))
+    if args.cpu == 6:
+        tryhop(2);emit(0x69, check_zp(d))
+    else:
+        emit_op("POKEA_v7", check_zp(d))
 @vasm
 def DOKEA(d):
-    '''DOKEA: Doke a word from var to [vAC], 30 cycles'''
-    check_cpu(6); tryhop(2); emit(0x7d, check_zp(d))
+    if args.cpu == 6:
+        tryhop(2);emit(0x7d, check_zp(d))
+    else:
+        emit_op("DOKEA_v7", check_zp(d))
 @vasm
-def PEEKAp(d):
-    '''PEEKA+: Peek a byte from [vAC] to var, incw vAC, 26 to 30 cycles'''
-    check_cpu(6); tryhop(2); emit(0x8a, check_zp(d))
+def DEEKV(d):
+    if args.cpu == 6:
+        tryhop(2);emit(0x3b, check_zp(d))
+    else:
+        emit_op("DEEKV_v7", check_zp(d))
 @vasm
-def DBGE(v, d):
-    '''DBGE:  Decrement byte var and branch if >= 0, 30 cycles'''
-    check_cpu(6); tryhop(3); emit(0x8e, check_br(d), check_zp(v))
+def PEEKV(d):
+    if args.cpu == 6:
+        tryhop(2);emit(0x5b, check_zp(d))
+    else:
+        emit_op("PEEKV_v7", check_zp(d))
 @vasm
-def INCWA(d):
-    '''INCWA: Increment word var, vAC=var, 26-28 cycles'''
-    check_cpu(6); tryhop(2); emit(0x95, check_br(d))
+def DEEKA(d):
+    if args.cpu == 6:
+        tryhop(2);emit(0x6f, check_zp(d))
+    else:
+        emit_op("DEEKA_v7", check_zp(d))
+@vasm
+def PEEKA(d):
+    if args.cpu == 6:
+        tryhop(2);emit(0x67, check_zp(d))
+    else:
+        emit_op("PEEKA_v7", check_zp(d))
 @vasm
 def LDNI(d):
-    '''LDNI: Load an 8bit immediate as a negative 16bit immediate into vAC'''
-    check_cpu(6); tryhop(2); emit(0x9c, check_zp(d))
-@vasm
-def ANDBK(d,imm):
-    '''ANDBK: vAC = var & imm'''
-    check_cpu(6); tryhop(3); emit(0x9e, check_zp(imm), check_zp(d))
-@vasm
-def ORBK(d,imm):
-    '''ORBK: vAC = var | imm'''
-    check_cpu(6); tryhop(3); emit(0xa0, check_zp(imm), check_zp(d))
-@vasm
-def XORBK(d,imm):
-    '''XORBK: vAC = var ^ imm'''
-    check_cpu(6); tryhop(3); emit(0xa2, check_zp(imm), check_zp(d))
-@vasm
-def DJNE(v, d):
-    '''DJNE: long version of DBNE,E 42 cycles'''
-    check_cpu(6); tryhop(3); emit(0xa4, check_zp(v), lo(d-1), hi(d))
-@vasm
-def CMPI(d,imm):
-    '''CMPI: Compare byte variable to 8bit immediate, 30 cycles'''
-    check_cpu(6); tryhop(3); emit(0xa7, check_zp(imm), check_zp(d))
-@vasm
-def ADDVW(s,d):
-    '''ADDVW: Add two 16bit zero page vars, dst += src, vAC = dst, 28-54 cycles'''
-    check_cpu(6); tryhop(3); emit(0xa9, check_zp(s), check_zp(d))
-@vasm
-def SUBVW(s,d):
-    '''SUBVW: Subtract two 16bit zero page vars, dst -= src, vAC = dst, 30-54 cycles'''
-    check_cpu(6); tryhop(3); emit(0xab, check_zp(s), check_zp(d))
+    if args.cpu == 6:
+        tryhop(2);emit(0x9c, check_zp(-d))
+    else:
+        emit_op("LDNI_v7", check_zp(d ^ 0xff00))
 @vasm
 def JEQ(d):
-    '''JEQ: jump to 16bit address if vAC=0, 26 cycles'''
-    check_cpu(6); tryhop(3); d=int(v(d)); emit(0xbb, lo(d-2), hi(d))
+    tryhop(3); d=int(v(d));
+    if args.cpu == 6:
+        emit(0xbb, lo(d-2), hi(d))
+    else:
+        emit_op("JEQ_v7", lo(d-2), hi(d))
+@vasm
+def CMPWS(d):
+    emit_op("CMPWS_v7", check_zp(d))
+@vasm
+def CMPWU(d):
+    emit_op("CMPWU_v7", check_zp(d))
+@vasm
+def CMPIS(d):
+    emit_op("CMPIS_v7", check_zp(d))
+@vasm
+def CMPIU(d):
+    emit_op("CMPIU_v7", check_zp(d))
 @vasm
 def JNE(d):
-    '''JNE: jump to 16bit address if vAC!=0, 26 cycles'''
-    check_cpu(6); tryhop(3); d=int(v(d)); emit(0xbd, lo(d-2), hi(d))
+    tryhop(3); d=int(v(d));
+    if args.cpu == 6:
+        emit(0xbd, lo(d-2), hi(d))
+    else:
+        emit_op("JNE_v7", lo(d-2), hi(d))
 @vasm
 def JLT(d):
-    '''JLT: jump to 16bit address if vAC<0, 24 to 26 cycles'''
-    check_cpu(6); tryhop(3); d=int(v(d)); emit(0xbf, lo(d-2), hi(d))
+    tryhop(3); d=int(v(d));
+    if args.cpu == 6:
+        emit(0xbf, lo(d-2), hi(d))
+    else:
+        emit_op("JLT_v7", lo(d-2), hi(d))
 @vasm
 def JGT(d):
-    '''JGT: jump to 16bit address if vAC>0, 24 to 26 cycles'''
-    check_cpu(6); tryhop(3); d=int(v(d)); emit(0xc1, lo(d-2), hi(d))
+    tryhop(3); d=int(v(d));
+    if args.cpu == 6:
+        emit(0xc1, lo(d-2), hi(d))
+    else:
+        emit_op("JGT_v7", lo(d-2), hi(d))
 @vasm
 def JLE(d):
-    '''JLE: jump to 16bit address if vAC<=0, 24 to 28 cycles'''
-    check_cpu(6); tryhop(3); d=int(v(d)); emit(0xc3, lo(d-2), hi(d))
+    tryhop(3); d=int(v(d));
+    if args.cpu == 6:
+        emit(0xc3, lo(d-2), hi(d))
+    else:
+        emit_op("JLE_v7", lo(d-2), hi(d))
 @vasm
 def JGE(d):
-    '''JGE: jump to 16bit address if vAC>=0, 22 to 26 cycles'''
-    check_cpu(6); tryhop(3); d=int(v(d)); emit(0xc5, lo(d-2), hi(d))
-@vasm
-def POKEp(d):
-    '''POKE+: Poke byte in vAC to address contained in var, inc var, 30 cycles'''
-    check_cpu(6); tryhop(2); emit(0xd1, check_zp(d))
-@vasm
-def LSRV(d):
-    '''LSRV: Logical shift right word var, 56 cycles'''
-    check_cpu(6); tryhop(2);  emit(0xd3, check_zp(d))
-@vasm
-def TGE(d):
-    '''TEQ: Test for GE, returns 0x0000 or 0x0001 in var, 28 cycles'''
-    check_cpu(6); tryhop(2); emit(0xd5, check_zp(d))
-@vasm
-def TLT(d):
-    '''TLT: Test for LT, returns 0x0000 or 0x0001 in var, 28 cycles'''
-    check_cpu(6); tryhop(2); emit(0xd7, check_zp(d))
-@vasm
-def TGT(d):
-    '''TGT: Test for GT, returns 0x0000 or 0x0001 in var, 28 cycles'''
-    check_cpu(6); tryhop(2); emit(0xd9, check_zp(d))
-@vasm
-def TLE(d):
-    '''TLE: Test for LE, returns 0x0000 or 0x0001 in var, 28 cycles'''
-    check_cpu(6); tryhop(2); emit(0xdb, check_zp(d))
-@vasm
-def DECWA(d):
-    '''DECWA: Decrement word var, vAC=var, 28-30 cycles'''
-    check_cpu(6); tryhop(3); emit(0xdd, check_zp(d))
-@vasm
-def SUBBI(imm,d):
-    '''SUBBI: Subtract a constant 0..255 from a byte var, 28 cycles'''
-    check_cpu(6); tryhop(3); emit(0xe1, check_zp(imm), check_zp(d))
-
-# -- prefix1 instructions
-@vasm
-def NOTE():
-    '''NOTE: vAC = ROM:[NotesTable + vAC.lo*2], 22 + 28 cycles'''
-    emit_prefx1(0x11)
-@vasm
-def MIDI():
-    '''MIDI: vAC = ROM:[NotesTable + (vAC.lo - 11)*2], 22 + 30 cycles'''
-    emit_prefx1(0x14)
-
-# -- prefix2 instructions
-@vasm
-def LSLN(d):
-    '''Shifts vAC left by d positions'''
-    emit_prefx2(0x11, check_zp(d))
-@vasm
-def SEXT(d): # doc?
-    '''Sign extend vAC based on a variable mask (?)'''
-    emit_prefx2(0x13, check_zp(d))
-@vasm
-def NOTW(d):
-    '''NOTW: Boolean invert var'''
-    emit_prefx2(0x15, check_zp(d))
-@vasm
-def NEGW(d):
-    '''NEGW: Arithmetic negate var'''
-    emit_prefx2(0x17, check_zp(d))
-@vasm
-def ANDBA(d):
-    '''ANDBA: vAC &= var.lo, 22+22 cycles'''
-    emit_prefx2(0x19, check_zp(d))
-@vasm
-def ORBA(d):
-    '''ORBA: vAC |= var.lo, 22+20 cycles'''
-    emit_prefx2(0x1c, check_zp(d))
-@vasm
-def XORBA(d):
-    '''XORBA: vAC ^= var.lo, 22+20 cycles'''
-    emit_prefx2(0x1f, check_zp(d))
-@vasm
-def FREQM(d):
-    '''FREQM: [(((chan & 3) + 1) <<8) | 0x00FC] = vAC, chan var = [0..3], 22 + 26 cycles'''
-    emit_prefx2(0x22, check_zp(d))
-@vasm
-def FREQA(d):
-    '''FREQA: [((((chan - 1) & 3) + 1) <<8) | 0x00FC] = vAC, chan var = [1..4], 22 + 26 cycles'''
-    emit_prefx2(0x24, check_zp(d))
-@vasm
-def FREQZ(d):
-    '''FREQZ: [(((imm & 3) + 1) <<8) | 0x00FC] = 0, imm = [0..3], 22 + 22 cycles'''
-    emit_prefx2(0x27, check_zp(d))
-@vasm
-def VOLM(d):
-    '''VOLM: [(((chan & 3) + 1) <<8) | 0x00FA] = vAC.low, chan var = [0..3], 22 + 24 cycles'''
-    emit_prefx2(0x2a, check_zp(d))
-@vasm
-def VOLA(d):
-    '''VOLA: [((((chan - 1) & 3) + 1) <<8) | 0x00FA] = 63 - vAC.low + 64, chan var = [1..4],  22 + 26 cycles'''
-    emit_prefx2(0x2c, check_zp(d))
-@vasm
-def MODA(d):
-    '''MODA: [((((chan - 1) & 3) + 1) <<8) | 0x00FB] = vAC.low, chan var = [1..4], 22 + 24 cycles'''
-    emit_prefx2(0x2f, check_zp(d))
-@vasm
-def MODZ(d):
-    '''MODZ: [(((imm & 3) + 1) <<8) | 0x00FA] = 0x0200, imm = [0..3], 22 + 24 cycles'''
-    emit_prefx2(0x32, check_zp(d))
-@vasm
-def SMPCPY(d):                  # doc?
-    '''SMPCPY: ???'''
-    emit_prefx2(0x34, check_zp(d))
-@vasm
-def CMPWS(d):                   # not using, broken
-    '''CMPWS: CMPHS + SUBW'''
-    emit_prefx2(0x37, check_zp(d))
-@vasm
-def CMPWU(d):                   # not using, broken
-    '''CMPWU: CMPHU + SUBW'''
-    emit_prefx2(0x39, check_zp(d))
-@vasm
-def LEEKA(d):
-    emit_prefx2(0x3b, check_zp(d))
-@vasm
-def LOKEA(d):
-    emit_prefx2(0x3d, check_zp(d))
-@vasm
-def FEEKA(d):                   # not using
-    emit_prefx2(0x3f, check_zp(d))
-@vasm
-def FOKEA(d):                   # not using
-    emit_prefx2(0x42, check_zp(d))
-@vasm
-def MEEKA(d):                   # not using
-    emit_prefx2(0x44, check_zp(d))
-@vasm
-def MOKEA(d):                   # not using
-    emit_prefx2(0x46, check_zp(d))
-@vasm
-def LSRVL(d):                   # revisit
-    emit_prefx2(0x48, check_zp(d))
-@vasm
-def LSLVL(d):                   # revisit
-    emit_prefx2(0x4b, check_zp(d))
-@vasm
-def INCL(d):
-    emit_prefx2(0x4e, check_zp(d))
-@vasm
-def DECL(d):
-    emit_prefx2(0x51, check_zp(d))
-
-# -- prefix3 instructions
-@vasm
-def STB2(d):                    # was ST2
-    '''STB2: Store vAC.lo into 16bit immediate address, (22 + 20 cycles)'''
-    d=int(v(d)); emit_prefx3(0x11, lo(d), hi(d))
-@vasm
-def STW2(d):
-    '''STW2: Store vAC into 16bit immediate address, (22 + 22 cycles)'''
-    d=int(v(d)); emit_prefx3(0x14, lo(d), hi(d))
-@vasm
-def XCHGB(s,d):                 # was XCHG
-    '''XCHG: Swap two zero byte variables, (22 + 30 cycles)'''
-    emit_prefx3(0x17, check_zp(s), check_zp(d))
-@vasm
-def MOVW(s,d):
-    '''MOVW: Move 16bits from src zero page var to dst zero page var, (22 + 28 cycles)'''
-    emit_prefx3(0x19, check_zp(s), check_zp(d))
-@vasm
-def ADDWI(d):
-    '''ADDWI: vAC += immediate 16bit value, (22 + 28 cycles)'''
-    d=int(v(d)); emit_prefx3(0x1b, lo(d), hi(d))
-@vasm
-def SUBWI(d):
-    '''SUBWI: vAC -= immediate 16bit value, (22 + 28 cycles)'''
-    d=int(v(d)); emit_prefx3(0x1d, lo(d), hi(d))
-@vasm
-def ANDWI(d):
-    '''ANDWI: vAC &= immediate 16bit value, (22 + 26 cycles)'''
-    d=int(v(d)); emit_prefx3(0x1f, lo(d), hi(d))
-@vasm
-def ORWI(d):
-    '''ORWI: vAC |= immediate 16bit value, (22 + 22 cycles)'''
-    d=int(v(d)); emit_prefx3(0x21, lo(d), hi(d))
-@vasm
-def XORWI(d):
-    '''XORWI: vAC &= immediate 16bit value, (22 + 22 cycles)'''
-    d=int(v(d)); emit_prefx3(0x23, lo(d), hi(d))
-@vasm
-def LDPX(a,c):
-    '''LDPX: Load Pixel, <address var>, <colour var>, (22 + 30 cycles)'''
-    emit_prefx3(0x25, check_zp(a), check_zp(c))
-@vasm
-def STPX(a,c):
-    '''STPX: Store Pixel, <address var>, <colour var>, (22 + 28 cycles)'''
-    emit_prefx3(0x28, check_zp(a), check_zp(c))
-@vasm
-def CONDI(i,j):
-    '''CONDI: chooses immediate operand based on condition, (vAC == 0), (22 + 26 cycles)'''
-    emit_prefx3(0x2b, check_zp(i), check_zp(j))
-@vasm
-def CONDB(v,w):
-    '''CONDB: chooses zero page byte var based on condition, (vAC == 0), (22 + 28 cycles)'''
-    emit_prefx3(0x2d, check_zp(v), check_zp(w))
-@vasm
-def CONDIB(i,v):
-    '''CONDIB: chooses between imm and zero page byte var based on condition, (vAC == 0), (22 + 26 cycles)'''
-    emit_prefx3(0x30, check_zp(i), check_zp(v))
-@vasm
-def CONDBI(v,i):
-    '''CONDBI: chooses between zero page byte var and imm based on condition, (vAC == 0), (22 + 26 cycles)'''
-    emit_prefx3(0x33, check_zp(v), check_zp(i))
-@vasm
-def XCHGW(s,d): 
-    '''XCHGW: Exchange two zero word variables, 22 + 46 cycles, destroys vAC'''
-    emit_prefx3(0x35, check_zp(d), check_zp(s))
-@vasm
-def OSCPX(s, d):                # doc? correct?
-    '''OSCPX: '''
-    emit_prefx3(0x38, check_zp(d), check_zp(s))
-@vasm
-def SWAPB(s, d):                # doc?
-    '''SWAPB: swap bytes pointed to by vars s and d, 22 + 46 cycles'''
-    emit_prefx3(0x3a, check_zp(d), check_zp(s))
-@vasm
-def SWAPW(s, d):                # doc?
-    '''SWAPW: swap words pointed to by vars s and d, 22 + 46 cycles'''
-    emit_prefx3(0x3d, check_zp(d), check_zp(s))
-@vasm
-def NEEKA(n, d):                # not using
-    '''NEEKA: Peek <n> bytes from [vAC] into [var], 22 + 34*n + 24 cycles'''
-    emit_prefx3(0x40, check_zp(d), check_zp(n))
-@vasm
-def NOKEA(n, d):                # not using
-    '''Poke <n> bytes from [var] into [vAC], 22 + 34*n + 24 cycles'''
-    emit_prefx3(0x43, check_zp(d), check_zp(n))
-@vasm
-def ADDVL(s, d):                # not using, broken
-    emit_prefx3(0x46, check_zp(s), check_zp(d))
-@vasm
-def SUBVL(s, d):                # not using, broken
-    emit_prefx3(0x49, check_zp(s), check_zp(d))
-@vasm
-def ANDVL(s, d):                # not using
-    emit_prefx3(0x4c, check_zp(s), check_zp(d))
-@vasm
-def ORVL(s, d):                 # not using
-    emit_prefx3(0x4f, check_zp(s), check_zp(d))
-@vasm
-def XORVL(s, d):                # not using
-    emit_prefx3(0x52, check_zp(s), check_zp(d))
-@vasm
-def JEQL(d):                    # not using
-    d = int(v(d)); emit_prefx3(0x55, hi(d), lo(d-2))
-@vasm
-def JNEL(d):                    # not using
-    d = int(v(d)); emit_prefx3(0x58, hi(d), lo(d-2))
-@vasm
-def JLTL(d):                    # not using
-    d = int(v(d)); emit_prefx3(0x5b, hi(d), lo(d-2))
-@vasm
-def JGTL(d):                    # not using
-    d = int(v(d)); emit_prefx3(0x5e, hi(d), lo(d-2))
-@vasm
-def JLEL(d):                    # not using
-    d = int(v(d)); emit_prefx3(0x61, hi(d), lo(d-2))
-@vasm
-def JGEL(d):                    # not using
-    d = int(v(d)); emit_prefx3(0x64, lo(d-2), hi(d))
-@vasm
-def ANDBI(imm,d):
-    '''ANDBI: And immediate byte with byte var, result in byte var, 22 + 20 cycles'''
-    emit_prefx3(0x67, check_zp(d), check_zp(imm))
-@vasm
-def ORBI(imm,d):
-    '''ORBI: Or immediate byte with byte var, result in byte var, 22 + 20 cycles'''
-    emit_prefx3(0x6a, check_zp(d), check_zp(imm))
-@vasm
-def XORBI(imm,d):
-    '''XORBI: Xor immediate byte with byte var, result in byte var, 22 + 20 cycles'''
-    emit_prefx3(0x6d, check_zp(d), check_zp(imm))
-
-# Experimental cpu6 instructions
-@vasm
-def XLA():
-    emit_prefx1(0x17)
-@vasm
-def JMPI(d):
-    emit_prefx3(0x70, lo(d), hi(d))
+    tryhop(3); d=int(v(d));
+    if args.cpu == 6:
+        emit(0xc5, lo(d-2), hi(d))
+    else:
+        emit_op("JGE_v7", lo(d-2), hi(d))
+@vasm
+def MOVIW(d,x):
+    d=int(v(d))
+    emit_op('MOVIW_v7', check_zp(x), hi(d), lo(d))
+@vasm
+def MULQ(kod):
+    emit_op('MULQ_v7', check_zp(kod))
 @vasm
 def MOVL(s,d):
-    emit_prefx3(0xcd, check_zp(s), check_zp(d))
+    if args.cpu == 6:
+        tryhop(4);emit(0xc7, check_zp(d), 0xcd, check_zp(s))
+    else:
+        emit_op("MOVL_v7", check_zp(d), check_zp(s))
 @vasm
 def MOVF(s,d):
-    emit_prefx3(0xd0, check_zp(s), check_zp(d))
+    if args.cpu == 6:
+        tryhop(4);emit(0xc7, check_zp(d), 0xd0, check_zp(s))
+    else:
+        emit_op("MOVF_v7", check_zp(d), check_zp(s))
 @vasm
-def NCOPY(n):
-    emit_prefx2(0xcd, check_zp(n))
+def COPY():
+    emit_op("COPY_v7")
 @vasm
-def ADDLP():
-    emit_prefx1(0x1a)
+def COPYN(n):
+    n = check_zp(n)
+    if args.cpu == 6:
+        LDW(T3);tryhop(3);emit(0x2f,n,0xcd);STW(T3)
+    else:
+        emit_op("COPYN_v7", n)
 @vasm
-def SUBLP():
-    emit_prefx1(0x1d)
+def NEGV(d):
+    if args.cpu == 6:
+        tryhop(3);emit(0x2f,check_zp(d),0x17)
+    else:
+        emit_op("NEGV_v7", check_zp(d))
 @vasm
-def ANDLP():
-    emit_prefx1(0x20)
+def MULW(d):
+    emit_op("MULW_v7", check_zp(d))
 @vasm
-def ORLP():
-    emit_prefx1(0x23)
+def RDIVU(d):
+    emit_op("RDIVU_v7", check_zp(d))
 @vasm
-def XORLP():
-    emit_prefx1(0x26)
+def RDIVS(d):
+    emit_op("RDIVS_v7", check_zp(d))
 @vasm
-def CMPLPU():
-    emit_prefx1(0x29)
+def INCV(d):
+    if args.cpu == 6:
+        tryhop(3);emit(0x2f, check_zp(d), 0x6a)
+    else:
+        emit_op("INCV_v7", check_zp(d))
 @vasm
-def CMPLPS():
-    emit_prefx1(0x2c)
+def ADDV(d):
+    emit_op("ADDV_v7", check_zp(d))
 @vasm
-def STLU(d):
-    emit_prefx2(0xd0, check_zp(d))
+def SUBV(d):
+    emit_op("SUBV_v7", check_zp(d))
 @vasm
-def STLS(d):
-    emit_prefx2(0xd3, check_zp(d))
+def ADDIV(i,d):
+    emit_op("ADDIV_v7", check_zp(i), check_zp(d))
 @vasm
-def NOTL(d):
-    emit_prefx2(0xd6, check_zp(d))
+def SUBIV(i,d):
+    emit_op("SUBIV_v7", check_zp(i), check_zp(d))
 @vasm
-def NEGL(d):
-    emit_prefx2(0xd9, check_zp(d))
+def ADDL():
+    if args.cpu == 6:
+        tryhop(2); emit(0xb1, 0x1a)
+    else:
+        emit_op("ADDL_v7")
 @vasm
-def NROL(n,d):
-    emit_prefx3(0xd3, check_zp((d+check_zp(n))&0xff), check_zp(d))
+def ADDX():
+    emit_op("ADDX_v7")
 @vasm
-def NROR(n,d):
-    emit_prefx3(0xd6, check_zp(d), check_zp((d+check_zp(n))&0xff))
-    
+def SUBL():
+    if args.cpu == 6:
+        tryhop(2); emit(0xb1, 0x1d)
+    else:
+        emit_op("SUBL_v7")
+@vasm
+def ANDL():
+    if args.cpu == 6:
+        tryhop(2); emit(0xb1, 0x20)
+    else:
+        emit_op("ANDL_v7")
+@vasm
+def ORL():
+    if args.cpu == 6:
+        tryhop(2); emit(0xb1, 0x23)
+    else:
+        emit_op("ORL_v7")
+@vasm
+def XORL():
+    if args.cpu == 6:
+        tryhop(2); emit(0xb1, 0x26)
+    else:
+        emit_op("XORL_v7")
+@vasm
+def NEGVL(d):
+    if args.cpu == 6:
+        tryhop(3); emit(0x2f, check_zp(d), 0xd8)
+    else:
+        emit_op("NEGVL_v7", check_zp(d))
+@vasm
+def NEGX():
+    emit_op("NEGX_v7")
+@vasm
+def LSLVL(d):
+    if args.cpu == 6:
+        LDI(0);tryhop(4);emit(0xc7, check_zp(d), 0xd3, check_zp(d)+4)
+    else:
+        emit_op('LSLVL_v7', check_zp(d))
+@vasm
+def LSLXA():
+    emit_op('LSLXA_v7')
+@vasm
+def CMPLS():
+    if args.cpu == 6:
+        tryhop(2); emit(0xb1, 0x2c)
+    else:
+        emit_op('CMPLS_v7')
+@vasm
+def CMPLU():
+    if args.cpu == 6:
+        tryhop(2); emit(0xb1, 0x29)
+    else:
+        emit_op('CMPLU_v7')
+@vasm
+def LSRXA():
+    emit_op('LSRXA_v7')
+@vasm
+def RORX(cpu6exact=True):
+    if args.cpu == 6:
+        if cpu6exact:           # Move vAC-LSB to vAC-MSB
+            ADDI(127);ANDI(128);ST(vACH)
+        tryhop(4);emit(0xc7, LAX+5, 0xd6, LAX)
+        if cpu6exact:           # Move vAC-MSB to vAC-LSB
+            LD(vACH);PEEK()
+    else:
+        emit_op('RORX_v7')
+@vasm
+def MACX():
+    emit_op('MACX_v7')
+@vasm
+def LDLAC():
+    if args.cpu == 6:
+        tryhop(3);emit(0x2f, LAC, 0x3d)
+    else:
+        emit_op('LDLAC_v7')
+@vasm
+def STLAC():
+    if args.cpu == 6:
+        tryhop(3);emit(0x2f, LAC, 0x3f)
+    else:
+        emit_op('STLAC_v7')
+@vasm
+def INCVL(d):
+    if args.cpu == 6:
+        tryhop(3);emit(0x2f, check_zp(d), 0x4f)
+    else:
+        emit_op('INCVL_v7', check_zp(d))
+@vasm
+def STFAC():
+    emit_op('STFAC_v7')
+@vasm
+def LDFAC():
+    emit_op('LDFAC_v7')
+@vasm
+def LDFARG():
+    emit_op('LDFARG_v7')
+@vasm
+def PUSHV(d):
+    emit_op('PUSHV_v7', check_zp(d))
+@vasm
+def POPV(d):
+    emit_op('POPV_v7', check_zp(d))
+@vasm
+def LDXW(d,imm):
+    emit_op('LDXW_v7', check_zp(d), lo(imm), hi(imm))
+@vasm
+def STXW(d,imm):
+    emit_op('STXW_v7', check_zp(d), lo(imm), hi(imm))
+@vasm
+def LDSB(d):
+    emit_op('LDSB_v7', check_zp(d))
 
 # pseudo instructions used by the compiler
 @vasm
@@ -1342,7 +1245,7 @@ def _SP(n):
         _LDI(n); ADDW(SP)
 @vasm
 def _LDI(d):
-    '''Emit LDI or LDWI depending on the size of d.'''
+    '''Emit LDI, LDNI or LDWI.'''
     # Warning. In rare cases, using _LDI instead of LDWI can lead to
     # infinite relaxation loops when the argument d is an expression
     # than can construct a small address that depends on a yet unknown
@@ -1350,63 +1253,138 @@ def _LDI(d):
     d = v(d)
     if is_zeropage(d):
         LDI(d)
-    elif args.cpu >= 6 and is_zeropage(-d):
-        LDNI(-d)
+    elif args.cpu == 6 and is_zeropage(-d):
+        LDNI(d)
+    elif args.cpu >= 6 and is_zeropage(-d-1):
+        LDNI(d)
     else:
         LDWI(d)
 @vasm
 def _LDW(d):
-    '''Emit LDW or LDWI+DEEK depending on the size of d.'''
+    '''Emit LDW or LDWI+DEEK.'''
     d = v(d)
     if is_zeropage(d):
         LDW(d)
     else:
-        _LDI(d); DEEK()
+        LDWI(d); DEEK()
 @vasm
 def _LD(d):
-    '''Emit LD or LDWI+PEEK depending on the size of d.'''
+    '''Emit LD or LDWI+PEEK.'''
     d = v(d)
     if is_zeropage(d):
         LD(d)
     else:
-        _LDI(d); PEEK()
-@vasm
-def _PEEKV(d):
-    '''Compile as PEEKV(d) on cpu6, LDW(d);PEEK() otherwise'''
-    if args.cpu >= 6:
-        PEEKV(d)
-    else:
-        LDW(d); PEEK()
+        LDWI(d); PEEK()
 @vasm
 def _DEEKV(d):
-    '''Compile as DEEKV(d) on cpu6, LDW(d);DEEK() otherwise'''
+    '''DEEKV(d) on cpu>=6, LDW(d);DEEK() otherwise'''
     if args.cpu >= 6:
         DEEKV(d)
     else:
         LDW(d); DEEK()
 @vasm
+def _PEEKV(d):
+    '''PEEKV(d) on cpu>=6, LDW(d);PEEK() otherwise'''
+    if args.cpu >= 6:
+        PEEKV(d)
+    else:
+        LDW(d); PEEK()
+@vasm
+def _MOVIW(d,x):
+    '''Moves immediate d into word var x.
+       - Emits MOVIW, MOVQW, or a _LDI solution.
+       - May trash vAC.'''
+    d = int(v(d))
+    if x == vAC:
+        _LDI(d)
+    elif args.cpu >= 6 and is_zeropage(d):
+        MOVQW(d, check_zp(x))
+    elif args.cpu >= 7:
+        MOVIW(d, check_zp(x))
+    else:
+        _LDI(d);STW(x)
+@vasm
+def _ALLOC(d):
+    '''Adds positive of negative immediate d to SP (not vSP).
+       - Emits ALLOC, ADDIV, SUBIV or a _SP based solution.
+       - May trash vAC.'''
+    d = int(v(d))
+    if d & 3:
+        warning("Unaligned stack can cause serious trouble")
+    if args.cpu >= 7:
+        if SP == vSP and d >= -128 and d < 128:
+            ALLOC(d)
+        elif d > 0 and d < 256:
+            ADDIV(d,SP)
+        elif d < 0 and d > -256:
+            SUBIV(-d,SP)
+        elif d != 0:
+            _LDI(d);ADDV(SP)
+    elif d != 0:
+        _SP(d);STW(SP)
+@vasm
+def _LDLW(off):
+    '''Load word at offset <off> from SP (not vSP).
+       - Emits LDLW LDXW (cpu7) or a DEEK solution'''
+    off = int(v(off))
+    if args.cpu >= 7 and SP == vSP and is_zeropage(off):
+        LDLW(off)
+    elif args.cpu > 7:
+        LDXW(SP,off)
+    else:
+        _SP(off);DEEK()
+@vasm
+def _STLW(off, src=None):
+    '''Store word at offset <off> from SP (not vSP).
+       - Emits STLW STXW (cpu7) or a DOKE solution (which might
+       clobber T2,T3).  Optional argument src can specify a source
+       register other than vAC, allowing better DOKE solutions.'''
+    off = int(v(off))
+    if args.cpu >= 7 and SP == vSP and is_zeropage(off):
+        if src != None and src != vAC: LDW(src)
+        STLW(off)
+    elif args.cpu >= 7:
+        if src != None and src != vAC: LDW(src)
+        STXW(SP,off)
+    elif args.cpu >= 6:
+        if src == None or src == vAC: STW(T3); src=T3
+        _SP(off);DOKEA(src)
+    else:
+        if src == None or src == vAC: STW(T3); src=T3
+        _SP(off);STW(T2);LDW(src);DOKE(T2)
+@vasm
 def _SHLI(imm):
     '''Shift vAC left by imm positions'''
     imm &= 0xf
-    if (imm & 0x8):
-        ST('vACH');ORI(255);XORI(255)
+    if args.cpu >= 7 and imm == 0x8:
+        ST(vACH);MOVQB(0,vAC)
         imm &= 0x7
-    # too much overhead calling SYS_LSLW4_46
-    if args.cpu >= 6 and imm > 2:
-        LSLN(imm)
-    elif imm > 0:
-        for i in range(0, imm):
-            LSLW()
+    if imm & 0x8:
+        ST(vACH);ORI(255);XORI(255)
+        imm &= 0x7
+    if args.cpu >= 7 and imm == 0x4:
+        MOVIW('SYS_LSLW4_46','sysFn');SYS(46)
+        imm -= 4
+    if args.cpu >= 7 and imm >= 3:
+        MULQ(0xff ^ (0xff >> (imm-1)))
+        imm = 0
+    while imm > 0:
+        LSLW()
+        imm -= 1
 @vasm
 def _SHRIS(imm):
     '''Shift vAC right (signed) by imm positions'''
     imm &= 0xf
-    if imm == 8:
-        LD(vACH);XORI(128);SUBI(128)
-    elif imm == 1:
+    if imm & 8:
+        if args.cpu >= 7:
+            LDSB(vACH)
+        else:
+            LD(vACH);XORI(128);SUBI(128)
+        imm &= 7
+    if imm == 1:
         extern("_@_shrs1")
         _CALLI("_@_shrs1")           # T3 >> 1 -> vAC
-    else:
+    elif imm > 0:
         STW(T3); LDI(imm)
         extern('_@_shrs')
         _CALLI('_@_shrs')            # T3 >> AC -> vAC
@@ -1414,14 +1392,20 @@ def _SHRIS(imm):
 def _SHRIU(imm):
     '''Shift vAC right (unsigned) by imm positions'''
     imm &= 0xf
-    if imm == 8:
+    if imm & 8:
         LD(vACH)
-    elif imm == 1 and args.cpu >= 6:
-        LSRV(vAC)
+        imm &= 7
+    if args.cpu >= 7 and imm > 0:
+        systable = (None,"SYS_LSRW1_48",
+                    "SYS_LSRW2_52","SYS_LSRW3_52",
+                    "SYS_LSRW4_50","SYS_LSRW5_50",
+                    "SYS_LSRW6_48","SYS_LSRW7_30")
+        MOVIW(systable[imm],'sysFn')
+        SYS(int(systable[imm][-2:]))
     elif imm == 1:
         extern("_@_shru1")
         _CALLI("_@_shru1")
-    else:
+    elif imm > 0:
         STW(T3); LDI(imm)
         extern('_@_shru')
         _CALLI('_@_shru')       # T3 >> AC -> vAC
@@ -1429,7 +1413,7 @@ def _SHRIU(imm):
 def _SHL(d):
     '''Shift vAC left by [d] positions'''
     STW(T3); LDW(d)
-    extern('_@_shl') 
+    extern('_@_shl')
     _CALLI('_@_shl')            # T3 << AC -> vAC
 @vasm
 def _SHRS(d):
@@ -1445,20 +1429,40 @@ def _SHRU(d):
     _CALLI('_@_shru')           # T3 >> AC --> vAC
 @vasm
 def _MUL(d):
-    if 'has_at67_SYS_Multiply_s16' in rominfo:
+    if args.cpu >= 7:
+        MULW(d)
+    elif 'has_at67_SYS_Multiply_s16' in rominfo:
         STW('sysArgs0'); LDW(d)
         extern('_@_at67_mul')
         _CALLI('_@_at67_mul')   # sysArg0 * AC --> vAC
-        pass
     else:
         STW(T3); LDW(d)
         extern('_@_mul')
         _CALLI('_@_mul')        # T3 * AC --> vAC
 @vasm
 def _MULI(d):
-    STW(T3);_LDI(d)
-    extern('_@_mul')
-    _CALLI('_@_mul')            # T3 * AC --> vAC
+    d = int(v(d))
+    if abs(d) in mulq_map:
+        if d < 0:
+            d = -d
+            if args.cpu >= 6:
+                NEGV(vAC)
+            else:
+                STW(T3);LDI(0);SUBW(T3)
+        c = mulq_map[abs(d)]
+        if callable(c):
+            c()
+        else:
+            MULQ(c)
+    elif d != 1:
+        STW(T3);_LDI(d);
+        if args.cpu >= 7:
+            MULW(T3)
+        else:
+            extern('_@_mul')
+            _CALLI('_@_mul')    # T3 * AC --> vAC
+        return
+
 @vasm
 def _DIVS(d):
     STW(T3); LDW(d)
@@ -1481,14 +1485,24 @@ def _MODU(d):
     _CALLI('_@_modu')           # T3 % vAC --> vAC
 @vasm
 def _DIVIS(d):
-    STW(T3);_LDI(d)
-    extern('_@_divs')
-    _CALLI('_@_divs')           # T3 / AC --> vAC
+    d = int(v(d))
+    ld = d.bit_length() - 1
+    if d > 0 and ld > 0 and d == (1 << ld):
+        _SHRIS(ld)
+    else:
+        STW(T3);_LDI(d)
+        extern('_@_divs')
+        _CALLI('_@_divs')       # T3 / AC --> vAC
 @vasm
 def _DIVIU(d):
-    STW(T3);_LDI(d)
-    extern('_@_divu')
-    _CALLI('_@_divu')           # T3 / AC --> vAC
+    d = int(v(d))
+    ld = d.bit_length() - 1
+    if d > 0 and ld > 0 and d == (1 << ld):
+        _SHRIU(ld)
+    else:
+        STW(T3);_LDI(d)
+        extern('_@_divu')
+        _CALLI('_@_divu')       # T3 / AC --> vAC
 @vasm
 def _MODIS(d):
     STW(T3);_LDI(d)
@@ -1500,88 +1514,50 @@ def _MODIU(d):
     extern('_@_modu')
     _CALLI('_@_modu')           # T3 % vAC --> vAC
 @vasm
-def _MOVW(s,d): # was _MOV
-    '''Move word from reg/addr s to d. 
-       One of s or d can be [vAC] or [SP, offset].
-       When this is the case, s cannot be vAC.
-       Can trash T2 and T3'''
-    s = v(s)
-    d = v(d)
-    if s != d:
-        if type(s) == list and len(s) == 2 and s[0] == SP:
-            _SP(s[1]); s = [vAC]
-        elif type(d) == list and len(d) == 2 and d[0] == SP:
-            _SP(d[1]); d = [vAC]
-        if args.cpu >= 6 and s == [vAC] and is_zeropage(d) and d != vAC:
-            DEEKA(d)
-        elif args.cpu >= 6 and is_zeropage(s) and d == [vAC]:
-            DOKEA(s)
-        elif d == [vAC] and s == vAC:
-            error("Cannot _MOVW from vAC to [vAC] or [SP, offset]")
-        elif d == [vAC]:
-            STW(T2); _LDW(s); DOKE(T2)
-        elif is_zeropage(d):
-            if s == [vAC]:
-                DEEK()
-            elif s != vAC:
-                _LDW(s)
-            if d != vAC:
-                STW(d)
-        elif s == vAC or s == [vAC]:
-            if s == [vAC]:
-                DEEK()
-            if args.cpu >= 6:
-                STW2(d)
-            else:
-                STW(T3); _LDI(d); STW(T2);
-                LDW(T3); DOKE(T2)
-        elif args.cpu >= 6:
-            _LDW(s); STW2(d)
-        else:
-            _LDI(d); STW(T2); _LDW(s); DOKE(T2)
-@vasm
 def _BRA(d):
     emitjump(v(d))
 @vasm
 def _BEQ(d):
-    if args.cpu >= 6 and args.jcconly:
+    if args.cpu >= 6:
         JEQ(d)
     else:
         emitjcc(BEQ, BNE, JEQ, v(d))
 @vasm
 def _BNE(d):
-    if args.cpu >= 6 and args.jcconly:
+    if args.cpu >= 6:
         JNE(d)
     else:
         emitjcc(BNE, BEQ, JNE, v(d))
 @vasm
 def _BLT(d):
-    if args.cpu >= 6 and args.jcconly:
+    if args.cpu >= 6:
         JLT(d)
     else:
         emitjcc(BLT, BGE, JLT, v(d))
 @vasm
 def _BGT(d):
-    if args.cpu >= 6 and args.jcconly:
+    if args.cpu >= 6:
         JGT(d)
     else:
         emitjcc(BGT, BLE, JGT, v(d))
 @vasm
 def _BLE(d):
-    if args.cpu >= 6 and args.jcconly:
+    if args.cpu >= 6:
         JLE(d)
     else:
         emitjcc(BLE, BGT, JLE, v(d))
 @vasm
 def _BGE(d):
-    if args.cpu >= 6 and args.jcconly:
+    if args.cpu >= 6:
         JGE(d)
     else:
         emitjcc(BGE, BLT, JGE, v(d))
 @vasm
 def _CMPIS(d):
     '''Compare vAC (signed) with immediate in range 0..255'''
-    if args.cpu >= 5:
+    if args.cpu >= 7:
+        CMPIS(d)
+    elif args.cpu >= 5 and not "without_CmpOps" in rominfo:
         CMPHS(0); SUBI(d)
     else:
         lbl = genlabel()
@@ -1592,7 +1568,9 @@ def _CMPIS(d):
 @vasm
 def _CMPIU(d):
     '''Compare vAC (unsigned) with immediate in range 0..255'''
-    if args.cpu >= 5:
+    if args.cpu >= 7:
+        CMPIU(d)
+    elif args.cpu >= 5 and not "without_CmpOps" in rominfo:
         CMPHU(0); SUBI(d)
     else:
         lbl = genlabel()
@@ -1604,34 +1582,37 @@ def _CMPIU(d):
 @vasm
 def _CMPWS(d):
     '''Compare vAC (signed) with register.'''
-    if args.cpu >= 5:
+    if args.cpu >= 7:
+        CMPWS(d)                # 36 cycles
+    elif args.cpu >= 5 and not "without_CmpOps" in rominfo:
         d = v(d)
-        CMPHS(d+1); SUBW(d)
+        CMPHS(d+1); SUBW(d)     # 28+28 cycles
     else:
         lbl1 = genlabel()
         lbl2 = genlabel()
-        # no hops because cpu4 long jumps also use -2(vSP)
-        tryhop(18)
-        STLW(-2); XORW(d); BGE(lbl1)
-        LDLW(-2); ORI(1); BRA(lbl2)
+        tryhop(16)
+        XORW(d); BGE(lbl1)
+        XORW(d); ORI(1); BRA(lbl2)
         label(lbl1, hop=0)
-        LDLW(-2); SUBW(d)
+        XORW(d); SUBW(d)
         label(lbl2, hop=0)
 @vasm
 def _CMPWU(d):
     '''Compare vAC (unsigned) with register.'''
-    if args.cpu >= 5:
+    if args.cpu >= 7:
+        CMPWU(d)                # 36 cycles
+    elif args.cpu >= 5 and not "without_CmpOps" in rominfo:
         d = v(d)
-        CMPHU(d+1); SUBW(d)
+        CMPHU(d+1); SUBW(d)     # 28+28 cycles
     else:
         lbl1 = genlabel()
         lbl2 = genlabel()
         # no hops because cpu4 long jumps also use -2(vSP)
-        tryhop(18)
-        STLW(-2); XORW(d); BGE(lbl1)
+        tryhop(16)
+        XORW(d); BGE(lbl1)
         LDW(d); ORI(1); BRA(lbl2)
         label(lbl1, hop=0)
-        LDLW(-2); SUBW(d)
+        XORW(d); SUBW(d)
         label(lbl2, hop=0)
 @vasm
 def _MOVM(s,d,n,align=1): # was _BMOV
@@ -1650,19 +1631,18 @@ def _MOVM(s,d,n,align=1): # was _BMOV
         if args.cpu >= 6:
             if d == [vAC]:
                 STW(T2)
-            elif d != [T2] and s != [vAC]:
-                _LDI(d);STW(T2)
-            elif d != [T2]:
-                MOVQW(lo(d),T2)
-                if not is_zeropage(d):
-                    MOVQB(hi(d),T2+1)
+            if s == [vAC]:
+                STW(T3)
+            if d != [vAC] and d != [T2]:
+                _MOVIW(d,T2)
             if s != [vAC]:
-                _LDI(s)
-            while n >= 256:
-                n = n -256
-                NCOPY(0)
-            if n > 0:
-                NCOPY(n)
+                _MOVIW(s,T3)
+            if n > 0 and n <= 256:
+                COPYN(n & 0xff)
+            elif n > 0:
+                _LDI(n)
+                lbl = genlabel(); label(lbl)
+                COPY();_BNE(lbl)
         else:
             if d == [vAC]:
                 STW(T2)
@@ -1693,67 +1673,66 @@ def _MOVL(s,d): # was _LMOV
             _SP(s[1]); s = [vAC]
         elif type(d) == list and len(d) == 2 and d[0] == SP:
             _SP(d[1]); d = [vAC]
-        if is_zeropage(d, 3):
-            if is_zeropage(s, 3):
-                if args.cpu >= 6:
-                    MOVL(s,d)                        # z->z :  4 bytes (cpu6)
-                elif args.cpu >= 5:
-                    LDWI(((d & 0xff) << 8) | (s & 0xff))
-                    extern('_@_lcopyz_')
-                    _CALLI('_@_lcopyz_')              # z->z :  6 bytes
-                else:
-                    LDW(s);STW(d);LDW(s+2);STW(d+2)
-            elif args.cpu >= 6:
+        if args.cpu >= 6:
+            if is_zeropage(d,3) and is_zeropage(s,3):
+                MOVL(s,d)
+            elif is_zeropage(d,3):
                 if s != [vAC]:
                     _LDI(s)
-                LEEKA(d)                             # a|l->z: 4,6,7 bytes (cpu6)
-            elif s != [vAC]:
-                _LDW(s); STW(d);
-                _LDW(s+2); STW(d+2)                  # l->z:   12 bytes
+                if d == LAC:
+                    LDLAC()
+                else:
+                    DEEKA(d);ADDI(2);DEEKA(d+2)
+            elif is_zeropage(s,3):
+                if d == [T2]:
+                    LDW(T2)
+                elif d != [vAC]:
+                    _LDI(d)
+                if s == LAC:
+                    STLAC()
+                else:
+                    DOKEA(s);ADDI(2);DOKEA(s+2)
             else:
-                STW(T0); LDI(d); STW(T2);
-                extern('_@_lcopy_')
-                _CALLI('_@_lcopy_')                   # a->l:   9 bytes
-        elif is_zeropage(s, 3) and args.cpu >= 6:
-            if d == [T2]:
-                LDW(T2)
-            elif d != [vAC]:
-                _LDI(d)
-            LOKEA(s)                                 # z->a|l: 4,6,7 bytes (cpu6)
-        elif args.cpu >= 6:
-            if d == [vAC]:
-                STW(T2)
-            elif d != [T2] and s != [vAC]:
-                _LDI(d);STW(T2)
-            elif d != [T2]:
-                MOVQW(lo(d),T2)
-                if not is_zeropage(d):
-                    MOVQB(hi(d),T2+1)
-            if s != [vAC]:
-                _LDI(s)                              # generic NCOPY
-            NCOPY(4)                                 # is 3-11 bytes long (cpu6)
+                if d == [vAC]:
+                    STW(T2)
+                if s == [vAC]:
+                    STW(T3)
+                if d != [T2] and d != [vAC]:
+                    _MOVIW(d, T2)
+                if s != [vAC]:
+                    _MOVIW(s, T3)
+                COPYN(4)        # 5-9 bytes
         else:
-            if d == [vAC]:
-                STW(T2)
-            if s == [vAC]:
-                STW(T0)
-            if d != [vAC] and d != [T2]:
-                _LDI(d); STW(T2)
-            if s != [vAC]:                            # generic call sequence
-                _LDI(s); STW(T0)                      # is 5-13 bytes long
-            extern('_@_lcopy_')
-            _CALLJ('_@_lcopy_')  # [T0..T0+4) --> [T2..T2+4)
+            if is_zeropage(d,3) and is_zeropage(s,3):
+                if args.cpu >= 5:
+                    LDWI(((d & 0xff) << 8) | (s & 0xff))
+                    extern('_@_lcopyz_')
+                    _CALLI('_@_lcopyz_')  # 6 bytes
+                else:
+                    LDW(s);STW(d)
+                    LDW(s+2);STW(d+2)     # 8 bytes
+            else:
+                if d == [vAC]:
+                    STW(T2)
+                if s == [vAC]:
+                    STW(T0)
+                if d != [vAC] and d != [T2]:
+                    _LDI(d); STW(T2)
+                if s != [vAC]:            # 5-13 bytes
+                    _LDI(s); STW(T0)
+                extern('_@_lcopy_')
+                _CALLJ('_@_lcopy_')
 @vasm
 def _LADD():
     if args.cpu >= 6:
-        ADDLP()
+        ADDL()
     else:
         extern('_@_ladd')
         _CALLI('_@_ladd')       # LAC+[vAC] --> LAC
 @vasm
 def _LSUB():
     if args.cpu >= 6:
-        SUBLP()
+        SUBL()
     else:
         extern('_@_lsub')
         _CALLI('_@_lsub')       # LAC-[vAC] --> LAC
@@ -1779,85 +1758,82 @@ def _LMODU():
     _CALLI('_@_lmodu')          # LAC%[vAC] --> LAC
 @vasm
 def _LSHL():
-    extern('_@_lshl')
-    _CALLI('_@_lshl')           # LAC<<vAC --> LAC
+    if args.cpu >= 7:
+        MOVQB(0,LAX);LSLXA()
+    else:
+        extern('_@_lshl')
+        _CALLI('_@_lshl')       # LAC<<vAC --> LAC
 @vasm
 def _LSHRS():
     extern('_@_lshrs')
     _CALLI('_@_lshrs')          # LAC>>vAC --> LAC
 @vasm
 def _LSHRU():
-    extern('_@_lshru')
-    _CALLI('_@_lshru')          # LAC>>vAC --> LAC
+    if args.cpu >= 7:
+        LSRXA()
+    else:
+        extern('_@_lshru')
+        _CALLI('_@_lshru')      # LAC>>vAC --> LAC
 @vasm
 def _LNEG():
     if args.cpu >= 6:
-        NEGL(LAC)
+        NEGVL(LAC)
     else:
         extern('_@_lneg')
         _CALLJ('_@_lneg')       # -LAC --> LAC
 @vasm
 def _LCOM():
-    if args.cpu >= 6:
-        NOTL(LAC)
-    else:
-        extern('_@_lcom')
-        _CALLJ('_@_lcom')       # ~LAC --> LAC
+    extern('_@_lcom')
+    _CALLJ('_@_lcom')           # ~LAC --> LAC
 @vasm
 def _LAND():
     if args.cpu >= 6:
-        ANDLP()
+        ANDL()
     else:
         extern('_@_land')
         _CALLI('_@_land')       # LAC&[vAC] --> LAC
 @vasm
 def _LOR():
     if args.cpu >= 6:
-        ORLP()
+        ORL()
     else:
         extern('_@_lor')
         _CALLI('_@_lor')        # LAC|[vAC] --> LAC
 @vasm
 def _LXOR():
     if args.cpu >= 6:
-        XORLP()
+        XORL()
     else:
         extern('_@_lxor')
         _CALLI('_@_lxor')       # LAC^[vAC] --> LAC
 @vasm
 def _LCMPS():
     if args.cpu >= 6:
-        CMPLPS()
+        CMPLS()
     else:
         extern('_@_lcmps')
         _CALLI('_@_lcmps')      # SGN(LAC-[vAC]) --> vAC
 @vasm
 def _LCMPU():
     if args.cpu >= 6:
-        CMPLPU()
+        CMPLU()
     else:
         extern('_@_lcmpu')
         _CALLI('_@_lcmpu')      # SGN(LAC-[vAC]) --> vAC
 @vasm
 def _LCMPX():
     if args.cpu >= 6:
-        XORLP()
+        CMPLS()
     else:
         extern('_@_lcmpx')
         _CALLI('_@_lcmpx')      # TST(LAC-[vAC]) --> vAC
 @vasm
 def _STLU(d):
-    if args.cpu >= 6:
-        STLU(d)
-    else:
-        STW(d);LDI(0);STW(d+2);
+    STW(d);LDI(0);STW(d+2);
 @vasm
 def _STLS(d):
-    if args.cpu >= 6:
-        STLS(d)
-    elif d == vAC:
-        extern('_@_lcvi')       # vAC --> LAC
-        _CALLI('_@_lcvi')
+    if args.cpu >= 7:
+        STW(d);LDSB(vACH);LDSB(vACH);STW(d+2)
     else:
         extern('_@_lexts')      # (vAC<0) ? -1 : 0 --> vAC
         STW(d);_CALLI('_@_lexts');STW(d+2)
@@ -1878,13 +1854,21 @@ def _MOVF(s,d): # was _FMOV
         if d == FAC:
             if s != [vAC]:
                 _LDI(s)
-            extern('_@_fldfac')
-            _CALLI('_@_fldfac')   # [vAC..vAC+5) --> FAC
+            if args.cpu >= 7:
+                LDFAC()
+            else:
+                extern('_@_fldfac')
+                _CALLI('_@_fldfac')
         elif s == FAC:
-            if d != [vAC]:
+            if d == [T2]:
+                LDW(T2)
+            elif d != [vAC]:
                 _LDI(d)
-            extern('_@_fstfac')
-            _CALLI('_@_fstfac')   # FAC --> [vAC..vAC+5)
+            if args.cpu >= 7:
+                STFAC()
+            else:
+                extern('_@_fstfac')
+                _CALLI('_@_fstfac')
         elif is_zeropage(d, 4) and is_zeropage(s, 4):
             if args.cpu >= 6:
                 MOVF(s,d)
@@ -1898,15 +1882,13 @@ def _MOVF(s,d): # was _FMOV
         elif args.cpu >= 6:
             if d == [vAC]:
                 STW(T2)
-            elif d != [T2] and s != [vAC]:
-                _LDI(d);STW(T2)
-            elif d != [T2]:
-                MOVQW(lo(d),T2)
-                if not is_zeropage(d):
-                    MOVQB(hi(d),T2+1)
+            if s == [vAC]:
+                STW(T3)
+            if d != [vAC] and d != [T2]:
+                _MOVIW(d,T2)
             if s != [vAC]:
-                _LDI(s)
-            NCOPY(5)
+                _MOVIW(s,T3)
+            COPYN(5)
         else:
             maycross=False
             if d == [vAC]:
@@ -1984,7 +1966,7 @@ def _FSCALB():
 def _CALLI(d):
     '''Call subroutine at far location d.
        - For cpu >= 5. this function just emits a CALLI instruction
-       - For cpu < 5, this function trashes 'sysArgs6', 'sysArgs7' and [SP-2].'''
+       - For cpu < 5, this function can trash sysArgs[67].'''
     if args.cpu >= 5:
         CALLI(d)
     else:
@@ -1992,7 +1974,7 @@ def _CALLI(d):
         tryhop(11);STLW(-2);LDWI(d);STW('sysArgs6');LDLW(-2);CALL('sysArgs6')
 @vasm
 def _CALLJ(d):
-    '''Call subroutine at far location d. 
+    '''Call subroutine at far location d.
        - For cpu >= 5. this function just emits a CALLI instruction
        - For cpu < 5, this function trashes vAC.'''
     if args.cpu >= 5:
@@ -2002,59 +1984,62 @@ def _CALLJ(d):
 @vasm
 def _PROLOGUE(framesize,maxargoffset,mask):
     '''Function prologue'''
-    if args.cpu >= 6 and framesize < 256:
-        tryhop(4);LDW(vLR);DOKE(SP);SUBVI(framesize,SP)
-    else:
-        tryhop(4);LDW(vLR);DOKE(SP);_SP(-framesize);STW(SP)
-    if mask:
-        ADDI(maxargoffset)
-        extern('_@_save_%02x' % mask)
-        if args.cpu >= 5:
-            _CALLI('_@_save_%02x' % mask)
+    tryhop(2);LDW(vLR);STW(B0)
+    if args.cpu >= 7:
+        _ALLOC(-framesize)
+        if maxargoffset == 0:
+            LDW(SP)
         else:
-            STW(T3); _CALLJ('_@_save_%02x' % mask)
+            _LDI(maxargoffset);ADDW(SP)
+    else:
+        _SP(-framesize);STW(SP)
+        if maxargoffset != 0:
+            ADDI(maxargoffset)
+    if mask == 0 and args.cpu >= 6:
+        DOKEA(B0)
+    elif args.cpu >= 5:
+        extern('_@_save_%02x' % mask)
+        CALLI('_@_save_%02x' % mask)
+    else:
+        extern('_@_save_%02x' % mask)
+        STW(T2);LDWI('_@_save_%02x' % mask);CALL(vAC)
 @vasm
 def _EPILOGUE(framesize,maxargoffset,mask,saveAC=False):
     '''Function epilogue'''
     if saveAC:
-        STW(T2);
-    diff = framesize - maxargoffset;
-    if args.cpu >= 6 and framesize < 256:
-        ADDVI(framesize, SP)
+        STW(R8);
+    if args.cpu >= 7:
+        _ALLOC(framesize)
+        _SP(maxargoffset-framesize)
     else:
-        _SP(framesize);STW(SP);
-    if diff >= 0 and diff < 256:
-        SUBI(diff)
-    elif args.cpu >= 6:
-        SUBWI(diff)
-    else:
-        _SP(-diff);
-    extern('_@_rtrn_%02x' % mask)
+        _SP(framesize);STW(SP)
+        if framesize - maxargoffset < 256:
+            SUBI(framesize - maxargoffset)
+        else:
+            _SP(maxargoffset-framesize)
     if args.cpu >= 5:
-        _CALLI('_@_rtrn_%02x' % mask)
+        extern('_@_rtrn_%02x' % mask)
+        CALLI('_@_rtrn_%02x' % mask)
     else:
-        STW(T3); _CALLJ('_@_rtrn_%02x' % mask)
-        
-# compat
-module_dict['_MOV'] = _MOVW
+        extern('_@_rtrn_%02x' % mask)
+        STW(T3);LDWI('_@_rtrn_%02x' % mask);CALL(vAC)
+
+
+# compatibility
+
 module_dict['_LMOV'] = _MOVL
 module_dict['_FMOV'] = _MOVF
 module_dict['_BMOV'] = _MOVM
-module_dict['ST2'] = STB2
-module_dict['XCHG'] = XCHGB
-module_dict['MOVQ'] = MOVQB
-module_dict['MOV'] = MOVB
-
 
 # ------------- reading .s/.o/.a files
-              
+
 def read_file(f):
     '''Reads a .s/.o/.a file in a pristine environment'''
     global the_module, the_fragment, new_modules, module_list
     debug(f"reading '{f}'")
     with open(f, 'r') as fd:
         s = fd.read()
-        try: 
+        try:
             c = compile(s, f, 'exec')
         except SyntaxError as err:
             fatal(str(err))
@@ -2080,7 +2065,7 @@ def search_file(fn, path):
         if os.access(f, os.R_OK):
             return f
     return None
-        
+
 def read_lib(l):
     '''Search a library file along the library path and read it.'''
     f = search_file(f"lib{l}.a", args.L)
@@ -2114,6 +2099,9 @@ def read_interface():
     with open(os.path.join(lccdir,'interface.json')) as file:
         for (name, value) in json.load(file).items():
             symdefs[name] = value if isinstance(value, int) else int(value, base=0)
+    with open(os.path.join(lccdir,'interface-dev.json')) as file:
+        for (name, value) in json.load(file).items():
+            symdefs[name] = value if isinstance(value, int) else int(value, base=0)
 
 def get_rominfo(roms, rom):
     if rom in roms:
@@ -2129,7 +2117,7 @@ def get_rominfo(roms, rom):
                 ri.pop('inherits')
         return ri
     return None
-            
+
 def read_rominfo(rom):
     '''Read `rom.jsom' to translate rom names into romType byte and cpu version.'''
     global rominfo, romtype, romcpu
@@ -2145,7 +2133,9 @@ def read_rominfo(rom):
         args.cpu = romcpu
     if romcpu and args.cpu and args.cpu > romcpu:
         print(f"glink: warning: rom '{args.rom}' does not implement cpu{args.cpu}", file=sys.stderr)
-    
+    if 'warning' in rominfo:
+        warning(rominfo['warning'])
+
 
 
 # ------------- compute code closure from import/export information
@@ -2228,7 +2218,7 @@ def compute_closure():
             e = None
             elist = find_exporters(sym)
             for m in elist:
-                if m.library:                      # rules for selecting one of many library 
+                if m.library:                      # rules for selecting one of many library
                     if e and not e.library:        # modules exporting a same required symbol:
                         pass                       # -- cannot override a non-library module
                     elif m.cpu > args.cpu:         # -- ignore exports when module targets too high a cpu.
@@ -2309,8 +2299,8 @@ class Stop(Exception):
         self.msg = msg
 
 def round_used_segments():
-    '''Split all segments containing code or data into 
-       a used segment and a free segment starting on 
+    '''Split all segments containing code or data into
+       a used segment and a free segment starting on
        a page boundary. Marks used segment as non-BSS.'''
     for (i,s) in enumerate(segment_list):
         epage = (s.pc + 0xff) & ~0xff
@@ -2326,7 +2316,7 @@ def aligned(addr, align):
     if align and align > 1:
         addr = align * ((addr + align - 1) // align)
     return addr
-    
+
 def find_data_segment(size, align=None):
     amin = the_fragment.amin
     amax = the_fragment.amax
@@ -2336,6 +2326,8 @@ def find_data_segment(size, align=None):
         addr = aligned(s.pc, align)
         if amin != None and amin > addr:
             addr = aligned(amin, align)
+        if the_fragment.nohop and (addr ^ (addr + size - 1)) & 0xff00 != 0:
+            addr = aligned(addr, 256)
         if amin != None and amax == None:
             if not (amin >= s.saddr and amin < s.eaddr):
                 continue
@@ -2350,14 +2342,16 @@ def find_data_segment(size, align=None):
         if amax != None and addr + size > amax + 1:
             continue
         while addr > s.pc and s.pc > s.saddr and addr < s.pc + 4:
-            s.pc += 1                           # not worth splitting
-            if s.buffer:
-                s.buffer.append(0)
+            while s.pc < addr:                  # not worth splitting
+                s.buffer.append(0) if s.buffer else None
+                s.pc += 1
+            s.pc = addr
         if addr > s.pc:                         # split the segment
-            ns = Segment(s.saddr, addr, s.flags)
-            ns.pc = s.pc
-            segment_list.insert(i, ns)
-            s.pc = s.saddr = addr
+            ns = Segment(addr, s.eaddr, s.flags)
+            s.eaddr = addr
+            segment_list.insert(i+1, ns)
+            s = ns
+            i = i+1
         return s
 
 def find_code_segment(size):
@@ -2367,6 +2361,8 @@ def find_code_segment(size):
     for (i,s) in enumerate(segment_list):
         if amin == None and s.flags & 0x1:  # not a code segment
             continue
+        if amin and amax and amin < 0x100 and amax >= 0x100:
+            amin = 0x100                    # do not place code in page zero
         addr = s.pc
         if amin != None and amin > s.pc:
             addr = amin
@@ -2387,30 +2383,31 @@ def find_code_segment(size):
             continue
         # possibly carve segment before address addr
         if addr > s.pc:
-            ns = Segment(s.saddr, addr, s.flags)
-            ns.pc = s.pc
-            segment_list.insert(i, ns)
-            i += 1
-            s.pc = s.saddr = addr
+            ns = Segment(addr, s.eaddr, s.flags)
+            s.eaddr = addr
+            segment_list.insert(i+1, ns)
+            s = ns
+            i = i+1
         # since code segments cannot cross page boundaries
         # it is sometimes necessary to carve a code segment from a larger one
         if s.eaddr > epage:
-            ns = Segment(addr, epage, s.flags)
-            s.saddr = s.pc = epage
-            segment_list.insert(i, ns)
-            s = ns
+            ns = Segment(epage, s.eaddr, s.flags)
+            s.eaddr = epage
+            segment_list.insert(i+1, ns)
         return s
     # not found
     return None
 
-def assemble_code_fragments(m, placed=False):
+def assemble_code_fragments(m, placed=False, absolute=False):
     global the_module, the_fragment, the_segment, the_pc
     global hops_enabled, short_function
     the_module = m
     for frag in m.code:
         the_fragment = frag
         if frag.segment == 'CODE':
-            if bool(frag.amin and not frag.amax) != bool(placed):
+            if bool(frag.amin) != bool(placed):
+                continue
+            if placed and bool(frag.amax) == absolute:
                 continue
             funcsize = frag.size
             the_segment = None
@@ -2445,12 +2442,14 @@ def assemble_code_fragments(m, placed=False):
             if args.rpth and labelchange_counter > args.rpth and not final_pass:
                 raise Stop(f"{labelchange_counter} changed labels already: restarting a new pass.")
 
-def assemble_data_fragments(m, cseg):
+def assemble_data_fragments(m, cseg, placed=False):
     global the_module, the_fragment, the_segment, hops_enabled, the_pc
     global labelchange_counter
     the_module = m
     for frag in m.code:
         the_fragment = frag
+        if bool(frag.amin) != bool(placed):
+            continue
         if frag.segment == cseg:
             hops_enabled = False
             the_segment = find_data_segment(frag.size, align=frag.align)
@@ -2462,13 +2461,16 @@ def assemble_data_fragments(m, cseg):
             if args.fragments and final_pass:
                 record_fragment_address(the_pc)
             try:
-                frag.func()
+                if isinstance(frag.func, (builtins.bytes, bytearray)):
+                    emit(*frag.func)
+                else:
+                    frag.func()
             except Exception as err:
                 fatal(str(err), exc=True)
             the_segment.pc = the_pc
             if args.fragments and final_pass:
                 record_fragment_address(the_pc)
-            
+
 def run_pass():
     global the_pass, the_module, the_fragment
     global labelchange_counter, genlabel_counter
@@ -2482,9 +2484,15 @@ def run_pass():
         segment_list.append(Segment(s,e,d))
     debug(f"pass {the_pass}")
     try:
-        # code segments with explicit address
+        # code segments with explicit address or placement constraints
         for m in module_list:
-            assemble_code_fragments(m, placed=True)
+            assemble_code_fragments(m, placed=True, absolute=True)
+        for m in module_list:
+            assemble_code_fragments(m, placed=True, absolute=False)
+        for m in module_list:
+            assemble_data_fragments(m, 'DATA', placed=True)
+        for m in module_list:
+            assemble_data_fragments(m, 'BSS', placed=True)
         # remaining code segments
         for m in module_list:
             assemble_code_fragments(m, placed=False)
@@ -2503,7 +2511,7 @@ def run_pass():
     # cleanup
     the_module = None
     the_fragment = None
-    
+
 def run_passes():
     global final_pass
     final_pass = False
@@ -2597,7 +2605,7 @@ def process_magic_symbols():
      * '__glink_magic_init' is a list of finalization
        functions called by exit().
 
-    In addition, there are two magic lists whose records are 
+    In addition, there are two magic lists whose records are
     not found in modules but allocated by the linker.
      * '__glink_magic_bss' is a linked list of BSS segments
        that must be cleared at runtime. Each list record occupies
@@ -2607,7 +2615,10 @@ def process_magic_symbols():
        for the malloc() function. Each list record occupies
        the first 4 bytes of a segment. The first pointer contains
        the segment size.
+     * '__glink_magic_egt1' is not a list but merely a pointer
+       that marks the end of the highest gt1 segment.
     '''
+    egt1_addr = None
     for s in exporters:
         if s.startswith("__glink_magic_"):
             head_module = exporters[s]
@@ -2623,13 +2634,41 @@ def process_magic_symbols():
                 process_magic_bss(s, head_module, head_addr)
             elif s == '__glink_magic_heap':
                 process_magic_heap(s, head_module, head_addr)
+            elif s == '__glink_magic_egt1':
+                egt1_addr = head_addr
             else:
                 process_magic_list(s, head_module, head_addr)
+    if egt1_addr != None:
+        egt1 = 0
+        for s in segment_list:
+            if s.buffer and s.saddr + len(s.buffer) > egt1:
+                egt1 = s.saddr + len(s.buffer)
+        debug(f"Last GT1 segments ends at address {hex(egt1)}\n")
+        doke_gt1(egt1_addr, egt1)
 
 def save_gt1(fname, start):
     with open(fname,"wb") as fd:
         seglist = segment_list.copy()
         seglist.sort(key = lambda x : x.saddr)
+        # collapse zeropage segments
+        zpseg = None
+        for s in seglist:
+            if not s.buffer:
+                continue
+            elif s.saddr & 0xff00:
+                break
+            elif not zpseg:
+                zpseg = s
+            else:
+                pc = zpseg.saddr + len(zpseg.buffer)
+                assert s.saddr >= pc
+                zpseg.buffer += builtins.bytes(s.saddr - pc)
+                if pc < 0x80 and s.saddr > 0x80:
+                    zpseg.buffer[0x80 - zpseg.saddr] = 1
+                zpseg.buffer += s.buffer
+                zpseg.eaddr = s.eaddr
+                s.buffer = None
+        # save segments
         for s in seglist:
             if not s.buffer:
                 continue
@@ -2642,7 +2681,7 @@ def save_gt1(fname, start):
                 fd.write(buffer)
                 a0 = a1
         fd.write(builtins.bytes((0, hi(start), lo(start))))
-        
+
 def print_symbols(allsymbols=False):
     syms = []
     for m in module_list:
@@ -2670,10 +2709,11 @@ def print_fragments():
             if nparts > 1:
                 name = name + f" ({part}/{nparts})"
         plen = rng[1] - rng[0]
-        blen = f"({plen} byte{'s' if plen > 1 else ''})"
-        print(f"\t{rng[0]:04x}-{rng[1]-1:04x} {blen:<14s} {cseg:<5s} {name:<28s} {m.fname:<22s}")
+        if plen > 0:
+            blen = f"({plen} byte{'s' if plen > 1 else ''})"
+            print(f"\t{rng[0]:04x}-{rng[1]-1:04x} {blen:<14s} {cseg:<5s} {name:<28s} {m.fname:<22s}")
 
-    
+
 # ------------- main function
 
 
@@ -2691,24 +2731,24 @@ def glink(argv):
             conflict_handler='resolve',
             usage='glink [options] {<files.o>} -l<lib> -o <outfile.gt1>',
             description='Collects gigatron .{s,o,a} files into a .gt1 file.',
-            epilog=''' 
+            epilog='''
             	This program accepts the modules generated by
                 gigatron-lcc/rcc (suffix .s or .o). These files are
-                text files with a python syntax that construct functions 
+                text files with a python syntax that construct functions
                 and data structures that defines all the VCPU instructions,
                 labels and data for this module.  Glink also accepts
                 concatenation of such files forming a library (suffix
                 .a).  The -cpu, -rom, and -map options provide values
                 than handcrafted code inside a module can test to
-                select different implementations. 
-                * The -rom option informs the libraries about 
+                select different implementations.
+                * The -rom option informs the libraries about
                   the availability of natively implemented SYS functions.
-                * The -cpu option enables instructions that were added 
-                  in successive implementations of the Gigatron VCPU.  
+                * The -cpu option enables instructions that were added
+                  in successive implementations of the Gigatron VCPU.
                   Its default value depends on the -rom option.
-                * The -map option tells at which addresses the program, 
-                  the data, and the stack should be located. It also tells 
-                  which runtime libraries should be loaded by default. 
+                * The -map option tells at which addresses the program,
+                  the data, and the stack should be located. It also tells
+                  which runtime libraries should be loaded by default.
                   The map argument can be a map name followed by comma
                   separated overlay names. Overlays are python files
                   that tweak the map. These files are searched in
@@ -2729,9 +2769,9 @@ def glink(argv):
                             help='select the target rom version: v4, v5a (default: v5a).')
         parser.add_argument('-map', "--map", type=str, action='store',
                             help='select a linker map')
-        parser.add_argument('-info', "--info", action='store_true', 
+        parser.add_argument('-info', "--info", action='store_true',
                             help='describe the selected map, cpu, rom')
-        parser.add_argument('-V', "--version", action='store_true', 
+        parser.add_argument('-V', "--version", action='store_true',
                             help='report glcc/glink version')
         parser.add_argument('-l', type=str, action='append', metavar='LIB',
                             help='library files. -lxxx searches for libxxx.a')
@@ -2751,14 +2791,14 @@ def glink(argv):
                             help='select the gt1 execution address (default _gt1exec)')
         parser.add_argument('-r', '--require', type=str, action='append', dest='r', metavar='SYM',
                             help='enter a symbol as undefined and require it to be resolved by the link')
+        parser.add_argument('--onload', type=str, action='append', dest='onload', metavar='SYM',
+                            help='define an early initialization function')
         parser.add_argument('--short-function-size-threshold', dest='sfst',
                             metavar='SIZE', type=int, action='store',
                             help='attempts to fit functions smaller than this threshold into a single page.')
         parser.add_argument('--long-function-segment-size', dest='lfss',
                             metavar='SIZE', type=int, action='store',
                             help='minimal segment size for functions split across segments.')
-        parser.add_argument('--prefer-bcc', action='store_false', dest='jcconly', default=True,
-                            help='use Bcc instructions instead of short Jcc instructions (cpu>=6)')
         parser.add_argument('--no-runtime-bss-initialization', action='store_true',
                             help='cause all bss segments to go as zeroes in the gt1 file')
         parser.add_argument('--minimal-heap-segment-size', dest='mhss',
@@ -2768,7 +2808,7 @@ def glink(argv):
                             metavar='LBLCHG', type=int, action='store', default=200,
                             help='restart a pass whenever the label change counter reach this threshold')
         parser.add_argument('--register-base', dest='regbase', metavar='ADDR',
-                            type=lambda x: int(x,0), action='store', default=0x50,
+                            type=lambda x: int(x,0), action='store', default=None,
                             help='set base address of register block')
         parser.add_argument("--mapdir", type=str, action='append', metavar='MAPDIR',
                             help='add directories to search linker maps')
@@ -2783,9 +2823,8 @@ def glink(argv):
         args.files = args.files or []
         read_interface()
         create_zpage_map()
+        create_mulq_map()
         create_register_names(args.regbase)
-        symdefs['_runbase'] = 0xc0
-        symdefs['_regbase'] = args.regbase
         args.map = args.map or '32k'
         sm = args.map.split(',')
         args.map = sm[0]
@@ -2795,6 +2834,7 @@ def glink(argv):
         args.l = args.l or []
         args.L = args.L or []
         args.r = args.r or []
+        args.onload = args.onload or []
         read_map(args.map, sm[1:])
         args.L.append(os.path.join(lccdir,f"cpu{args.cpu}"))
         args.L.append(lccdir)
@@ -2812,8 +2852,17 @@ def glink(argv):
                 print(f" No information found on rom '{args.rom}'")
             print()
             print('================= CPU INFO')
-            if args.cpu == 6:
-                print('  vCPU 6 is an experimental cpu with numerous additional opcodes')
+            if args.cpu == 7:
+                print('  vCPU 7 comes with the DEV7 roms and adds new opcodes to vCPU 5.')
+            elif args.cpu == 6:
+                print('  vCPU 6 comes with at67'"'"'s ROMvX0 and contains many new opcodes\n'
+                      ' whose encoding might change from release to release. vCPU 6 is not\n'
+                      ' backward compatible with vCPU 5 because it gives different encoding\n'
+                      ' to the CMPHU and CMPHS opcodes. Program compiled for vCPU 5 do not\n'
+                      ' run reliably on ROMvX0 and programs compiled for vCPU 6 only run\n'
+                      ' on ROMvX0. Programs compiled with -rom=vx0 -cpu=5 try to navigate\n'
+                      ' these constraints and might run on the dev6 rom (proposed v6)\n'
+                      ' and later if one disables the rom check. Your mileage can vary.')
             elif args.cpu == 5:
                 print('  vCPU 5 was introduced in ROMv5a with opcodes CALLI, CMPHU, CMPHS.')
             elif args.cpu == 4:
@@ -2825,7 +2874,7 @@ def glink(argv):
             else:
                 print(f"  No information found on map '{args.map}'")
             return 0
-        
+
         # load all .s/.o/.a files
         if not args.files:
             fatal(f"no input files were specified")
@@ -2873,7 +2922,7 @@ def glink(argv):
         for s in segment_list:
             if s.pc > s.eaddr:
                 fatal(f"internal error: segment overflow in {s} (final pc={hex(s.pc)})")
-        
+
         # output
         save_gt1(args.o, args.gt1exec)
         if args.symbols:
@@ -2881,7 +2930,7 @@ def glink(argv):
         if args.fragments:
             print_fragments()
         return 0
-    
+
     except FileNotFoundError as err:
         fatal(str(err), exc=True)
     except Exception as err:

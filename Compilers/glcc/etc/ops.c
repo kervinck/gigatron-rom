@@ -13,7 +13,7 @@ static int doop(int op, int type, const char *sz, const char *opname) {
 	int count = 0;
 	static int last;
 
-	*if (op == LOAD)
+	if (op == LOAD)
 		return 0;
 	if (last != 0 && last != op)
 		printf("\n");

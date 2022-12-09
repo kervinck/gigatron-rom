@@ -34,9 +34,10 @@ def map_segments():
         for addr in range(tp[1], eaddr, estep):
             yield (addr, addr+tp[0], tp[4])
 
-def map_place(name):
+def map_place(filename,fragnames):
     '''
-    Returns a list of additional (PLACE...) directives for file 'name'.
+    Returns a list of additional (PLACE...) directives 
+    for file 'filename' with fragments named 'fragnames'.
     '''
     return []
 

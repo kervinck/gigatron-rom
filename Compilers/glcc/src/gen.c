@@ -31,7 +31,6 @@ static void     ralloc(Node);
 static void     reduce(Node, int);
 static int      reprune(Node*, int, int, Node);
 static int      requate(Node);
-static Node     reuse(Node, int);
 static void     rewrite(Node, int);
 static Symbol   spillee(Symbol, unsigned mask[], Node);
 static void     spillr(Symbol, Node);
@@ -206,7 +205,7 @@ static void reduce(Node p, int nt) {
 		}
 	}
 }
-static Node reuse(Node p, int nt) {
+Node reuse(Node p, int nt) {
 	struct _state {
 		short cost[1];
 	};
@@ -330,7 +329,7 @@ static void dumprule(int rulenum) {
 		fprint(stderr, "\n");
 }
 
-void emitfmt(const char *fmt, Node p, Node *kids, short *nts)
+void emitfmt(const char *fmt, Node p, int nt, Node *kids, short *nts)
 {
 	/* Enhancements of emitasm with respect to the original
 	   version: emitasm() now retrieves the template and calls the
@@ -372,7 +371,7 @@ unsigned emitasm(Node p, int nt)
 				while (*fmt++ != '\n') { }
 		}
 		(*IR->x._kids)(p, rulenum, kids);
-		(*IR->x.emitfmt)(fmt, p, kids, nts);
+		(*IR->x.emitfmt)(fmt, p, nt, kids, nts);
 	}
 	return 0;
 }

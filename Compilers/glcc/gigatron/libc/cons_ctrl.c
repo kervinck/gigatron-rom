@@ -35,11 +35,8 @@ int _console_ctrl(register int c)
 		break;
 #endif
 #if CTRL_BELL
-	case '\a': {
-		static struct channel_s bell = {0,1,77,21};
-		for (c = channelMask_v4 & 3; c >= 0; c--)
-			channel(c+1) = bell;
-		soundTimer = 4; }
+	case '\a':
+		_console_bell(4);
 		break;
 #endif
 	default:

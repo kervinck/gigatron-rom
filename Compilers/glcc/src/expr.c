@@ -32,7 +32,10 @@ static Type super(Type ty) {
 			return unsignedtype;
 		break;
 	case POINTER:
-		return unsignedptr;
+		if (ty->size <= unsignedptr->size)
+			return unsignedptr;
+		/* do: unsignedfarptr */
+		assert(0);
 	}
 	return ty;
 }
@@ -217,6 +220,8 @@ static Tree unary(void) {
 		if (istypename(t, tsym)) {
 			Type ty, ty1 = typename(), pty;
 			expect(')');
+			if (fnqual(ty1))
+				error("cannot cast value as qualified type `%t'\n", fnqual(ty1), ty1);
 			ty = unqual(ty1);
 			if (isenum(ty)) {
 				Type ty2 = ty->type;
@@ -569,7 +574,7 @@ Tree cast(Tree p, Type type) {
 			p = retype(p, inttype);
 			break;
 		case POINTER:
-			if (isint(dst) && src->size > dst->size)
+			if (src->size > dst->size)
 				warning("conversion from `%t' to `%t' is undefined\n", p->type, type);
 			p = simplify(CVP, super(src), p, NULL);
 			break;
