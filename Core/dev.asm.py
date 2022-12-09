@@ -364,13 +364,13 @@ ledTempo        = zpByte() # Next value for ledTimer after LED state change
 #   that need them. This is considerably riskier.
 userVars        = zpByte(0)
 userVars_v4     = zpByte(0)
-
 # Saved vCPU context during vIRQ
 # Code that uses vCPU interrupts should not use these locations.
 vIrqSave        = zpByte(6)
-
-# Start of safely usable bytes under ROMv5 and derivatives
+# Start of safely usable bytes under ROMv5
 userVars_v5     = zpByte(0)
+# Start of safely usable bytes under ROMv6
+userVars_v6     = zpByte(0)
 
 # [0x80]
 # Constant 0x01. 
@@ -394,7 +394,6 @@ videoTable      = 0x0100 # Indirection table: Y[0] dX[0]  ..., Y[119] dX[119]
 vReset          = 0x01f0
 vIRQ_v5         = 0x01f6
 ctrlBits        = 0x01f8
-ctrlBits_v5     = ctrlBits
 videoTop_v5     = 0x01f9 # Number of skip lines
 
 # Highest bytes are for sound channel variables
@@ -686,7 +685,7 @@ st([ledState_v2])               # Setting to 1..126 means "stopped"
 # !!! Better use vReset as generic entry point for soft reset
 
 # ROM type (see also Docs/GT1-files.txt)
-romTypeValue = symbol('romTypeValue_DEVROM')
+romTypeValue = symbol('romTypeValue_ROMv6')
 
 label('SYS_Reset_88')
 assert pc()>>8 == 0
@@ -787,7 +786,7 @@ jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_Multiply_s16_DEVROM_66: 16 bit multiplication
+# Extension SYS_Multiply_s16_v6_66: 16 bit multiplication
 #-----------------------------------------------------------------------
 #
 # Computes C = C + A * B where A,B,C are 16 bits integers.
@@ -800,13 +799,13 @@ ld(-20/2)                       #17
 #
 # Credits: at67
 
-label('SYS_Multiply_s16_DEVROM_66')
+label('SYS_Multiply_s16_v6_66')
 ld(hi('sys_Multiply_s16'),Y)    #15 slot 0x9e
 jmp(Y,'sys_Multiply_s16')       #16
 ld([sysArgs+6])                 #17 load mask.lo
 
 #-----------------------------------------------------------------------
-# Extension SYS_Divide_s16_DEVROM_80: 15 bit division
+# Extension SYS_Divide_s16_v6_80: 15 bit division
 #-----------------------------------------------------------------------
 #
 # Computes the Euclidean division of 0<=A<=32767 and 0<B<=32767.
@@ -820,7 +819,7 @@ ld([sysArgs+6])                 #17 load mask.lo
 #
 # Credits: at67
 
-label('SYS_Divide_s16_DEVROM_80')
+label('SYS_Divide_s16_v6_80')
 ld(hi('sys_Divide_s16'),Y)      #15 slot 0xa1
 jmp(Y,'sys_Divide_s16')         #16
 ld([sysArgs+4])                 #17
@@ -936,7 +935,7 @@ jmp(Y,'REENTER')                #16
 ld(-20/2)                       #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_ScanMemoryExt_DEVROM_50
+# Extension SYS_ScanMemoryExt_v6_50
 #-----------------------------------------------------------------------
 
 # SYS function for searching a byte in a 0 to 256 bytes string located
@@ -949,14 +948,14 @@ ld(-20/2)                       #17
 # vACL                    Length of the string (0 means 256)
 # vACH                    Bit 6 and 7 contain the bank number
 
-label('SYS_ScanMemoryExt_DEVROM_50')
+label('SYS_ScanMemoryExt_v6_50')
 ld(hi('sys_ScanMemoryExt'),Y)   #15 slot 0xe3
 jmp(Y,'sys_ScanMemoryExt')      #16
 ld([vAC+1])                     #17
 
 
 #-----------------------------------------------------------------------
-# Extension SYS_ScanMemory_DEVROM_50
+# Extension SYS_ScanMemory_v6_50
 #-----------------------------------------------------------------------
 
 # SYS function for searching a byte in a 0 to 256 bytes string.
@@ -967,13 +966,13 @@ ld([vAC+1])                     #17
 # sysArgs[2], sysArgs[3]  Bytes to locate in the string
 # vACL                    Length of the string (0 means 256)
 
-label('SYS_ScanMemory_DEVROM_50')
+label('SYS_ScanMemory_v6_50')
 ld(hi('sys_ScanMemory'),Y)      #15 slot 0xe6
 jmp(Y,'sys_ScanMemory')         #16
 ld([sysArgs+1],Y)               #17
 
 #-----------------------------------------------------------------------
-# Extension SYS_CopyMemory_DEVROM_80
+# Extension SYS_CopyMemory_v6_80
 #-----------------------------------------------------------------------
 
 # SYS function for copying 1..256 bytes
@@ -985,13 +984,13 @@ ld([sysArgs+1],Y)               #17
 # Doesn't cross page boundaries.
 # Overwrites sysArgs[4:7] and vLR.
 
-label('SYS_CopyMemory_DEVROM_80')
+label('SYS_CopyMemory_v6_80')
 ld(hi('sys_CopyMemory'),Y)       # 15 slot 0xe9
 jmp(Y, 'sys_CopyMemory')         # 16
 ld([vAC])                        # 17
 
 #-----------------------------------------------------------------------
-# Extension SYS_CopyMemoryExt_DEVROM_100
+# Extension SYS_CopyMemoryExt_v6_100
 #-----------------------------------------------------------------------
 
 # SYS function for copying 1..256 bytes across banks
@@ -1007,7 +1006,7 @@ ld([vAC])                        # 17
 # Temporarily deselect all SPI devices.
 # Should not call without expansion board
 
-label('SYS_CopyMemoryExt_DEVROM_100')
+label('SYS_CopyMemoryExt_v6_100')
 ld(hi('sys_CopyMemoryExt'),Y)    # 15 slot 0xec
 jmp(Y, 'sys_CopyMemoryExt')      # 16
 ld([vAC+1])                      # 17
@@ -3154,7 +3153,7 @@ ld(hi(ctrlBits),Y)              #17 Control state as saved by SYS_ExpanderContro
 
 
 #-----------------------------------------------------------------------
-# Extension SYS_ReceiveSerial1_DEVROM_32
+# Extension SYS_ReceiveSerial1_v6_32
 #-----------------------------------------------------------------------
 
 # SYS function for receiving one byte over the serial controller port.
@@ -3172,7 +3171,7 @@ ld(hi(ctrlBits),Y)              #17 Control state as saved by SYS_ExpanderContro
 #     sysArgs[2]   Checksum
 #     sysArgs[3]   Wait value (videoY)
 
-label('SYS_ReceiveSerial1_DEVROM_32')
+label('SYS_ReceiveSerial1_v6_32')
 bra('sys_ReceiveSerial1')       #15
 ld([sysArgs+3])                 #16
 
@@ -5525,7 +5524,7 @@ ld(-44/2)                       #42
 
 align(0x100, size=0x100)
 
-# SYS_CopyMemory_DEVROM_80 implementation
+# SYS_CopyMemory_v6_80 implementation
 
 label('sys_CopyMemory')
 ble('.sysCm#20')                     #18   goto burst6
@@ -5630,7 +5629,7 @@ jmp(Y,'REENTER')                     #22
 ld(-26/2)                            #23
 
 #-----------------------------------------------------------------------
-# SYS_CopyMemoryExt_DEVROM_100 implementation
+# SYS_CopyMemoryExt_v6_100 implementation
 
 label('sys_CopyMemoryExt')
 
@@ -5740,7 +5739,7 @@ ld(-38/2)                            #35 max: 38 + 52 = 90 cycles
 align(0x100, size=0x100)
 
 #-----------------------------------------------------------------------
-# SYS_ScanMemory_DEVROM_50 implementation
+# SYS_ScanMemory_v6_50 implementation
 
 label('sys_ScanMemory')
 ld([sysArgs+0],X)                    #18
@@ -5791,7 +5790,7 @@ ld(-34/2)                            #31
 
 
 #-----------------------------------------------------------------------
-# SYS_ScanMemoryExt_DEVROM_50 implementation
+# SYS_ScanMemoryExt_v6_50 implementation
 
 label('sys_ScanMemoryExt')
 ora(0x3c,X)                          #18
@@ -6063,9 +6062,10 @@ define('ledTempo',   ledTempo)
 define('userVars',   userVars)
 define('userVars_v4',userVars_v4)
 define('userVars_v5',userVars_v5)
+define('userVars_v5',userVars_v6)
 define('videoTable', videoTable)
 define('vIRQ_v5',    vIRQ_v5)
-define('ctrlBits_v5',ctrlBits_v5)
+define('ctrlBits_v5',ctrlBits)
 define('videoTop_v5',videoTop_v5)
 define('userCode',   userCode)
 define('soundTable', soundTable)
