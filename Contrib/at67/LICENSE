@@ -1,20 +1,30 @@
-/*****************************************************************************/
-/* Code in Contrib/at67 copyright and license                                */
-/*****************************************************************************/
-BSD 2-Clause License
+# DON'T BE A DICK PUBLIC LICENSE
 
-Copyright (c) 2018-2019, Ari Tsironis
+Copyright (c) 2022, at67
 All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+Everyone is permitted to copy and distribute verbatim or modified
+copies of this license document.
 
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
+> DON'T BE A DICK PUBLIC LICENSE
+> TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
+1. Do whatever you like with the original work, just don't be a dick.
+
+   Being a dick includes - but is not limited to - the following instances:
+
+ 1a. Outright copyright infringement - Don't just copy this and change the name.
+ 1b. Selling the unmodified original with no work done what-so-ever, that's REALLY being a dick.
+ 1c. Modifying the original work to contain hidden harmful content. That would make you a PROPER dick.
+ 1d. Using all or parts therein of this code or ROM in your own code or ROM without written permission.
+
+2. If you become rich through modifications, related works/services, or supporting the original work,
+share the love. Only a dick would make loads off this work and not buy the original work's
+creator(s) a pint.
+
+3. Code is provided with no warranty. Using somebody else's code and bitching when it goes wrong makes
+you a DONKEY dick. Fix the problem yourself. A non-dick would submit the fix back.
+
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
