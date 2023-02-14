@@ -1,0 +1,96 @@
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv2
+
+' graph display with clock (hr:min) using 59.98Hz counter.
+' Set time with Famicom A button + arrows.
+
+const CLOCKC     = &h03
+const MINADJUST  = -3          ' adjust (1/100 sec/min) for clock finetuning
+const HOURADJUST = 8           ' adjust (1/100 sec/hour) for clock finetuning
+
+def A, B, K, P, U, V, , CONTRL, CLOCKX, HOUR, MINUTE, SECOND
+
+initialize:
+   init vars @A
+   mode 2
+   set BG_COLOUR, &h00
+	set FG_COLOUR, CLOCKC
+   poke &h0E, 0
+
+begin:
+	COLOUR = rnd(23) + 1
+   gosub newscreen
+   repeat
+
+      ' update clock
+      Z = SECOND + (427 / 256 * B)
+      if Z >= 6000
+         inc MINUTE
+         SECOND = SECOND + MINADJUST - 6000
+         if MINUTE = 60
+            MINUTE = 0
+            inc HOUR
+            SECOND = SECOND + HOURADJUST
+            if HOUR = 24 then HOUR = 0
+         endif
+         gosub newscreen
+      endif
+
+      ' add graph
+		for X = 0 to 159
+			Y = 72 - (U / 100)
+			poke Y * 256 + X, COLOUR
+         U = U + V :	V = V - U / P
+			B = peek(&h0E)
+			if B < A then SECOND = SECOND + 427
+			A = B
+		next X
+
+		' new graph colour
+		COLOUR = COLOUR + 23
+		if COLOUR mod 64 = 0 then COLOUR = COLOUR + 23
+
+		' set time
+		CONTRL = peek(&h11)
+		if CONTRL <> 255 then gosub settime
+
+   forever
+
+newscreen:
+   cls
+   CLOCKX = rnd(128) + 2
+	gosub showclock
+	P = rnd(101) + 43 : P = P * (rnd(2) + 1) : U = 5400 : V = 0
+return
+
+settime:
+	set FG_COLOUR, &hFF
+	while CONTRL <> 255
+		if CONTRL = 119
+			inc MINUTE
+			if MINUTE > 59 then MINUTE = 0
+			SECOND = 0
+		elseif CONTRL = 123
+			dec MINUTE
+			if MINUTE < 0 then MINUTE = 59
+			SECOND = 0
+		elseif CONTRL = 125
+			dec HOUR
+			if HOUR < 0 then HOUR = 23
+		elseif CONTRL = 126
+			inc HOUR
+			if HOUR > 23 then HOUR = 0
+		endif
+		gosub showclock
+		wait 10
+		CONTRL = peek(&h11)
+	wend
+	if SECOND = 0 then poke &h0E, 0
+	set FG_COLOUR, CLOCKC
+	gosub showclock
+return
+
+showclock:
+   at CLOCKX, 1
+   print HOUR / 10 ; HOUR mod 10 ; ":" ; MINUTE / 10 ; MINUTE mod 10
+return
