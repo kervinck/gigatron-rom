@@ -161,6 +161,20 @@ from asm import *
 import gcl0x as gcl
 import font_v4 as font
 
+
+
+# Variable WITH_SPI_BITS defines the number of potential MISO bits in
+# bytes returned by a RAM&IO expansion board (in range 1 to 4). The
+# GAL-based expansion boards work will all four settings. Marcel's
+# original board theoretically offers four spi channels but in
+# practice supports only one connected device on one of the first
+# WITH_SPI_BITS channels. Hans61 7400-based board with two channels
+# and Alastair's Gigasaur work best with WITH_SPI_BITS=2.
+
+WITH_SPI_BITS = defined('WITH_SPI_BITS', 2)
+
+
+
 enableListing()
 #-----------------------------------------------------------------------
 #
@@ -3832,7 +3846,10 @@ for i in range(8):
   ctrl(Y,Xpp)                   #25+i*12 Set MOSI
   ctrl(Y,Xpp)                   #26+i*12 Raise SCLK, disable RAM!
   ld([0])                       #27+i*12 Get MISO
-  anda(0b00001111)              #28+i*12 This is why R1 as pull-DOWN is simpler
+  if 1 <= WITH_SPI_BITS <= 4:
+    anda((1<<WITH_SPI_BITS)-1)  #28+i*12
+  else:
+    anda(0b00001111)            #28+i*12 This is why R1 as pull-DOWN is simpler
   beq(pc()+3)                   #29+i*12
   bra(pc()+2)                   #30+i*12
   ld(1)                         #31+i*12

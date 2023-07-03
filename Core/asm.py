@@ -11,7 +11,7 @@
 
 import inspect
 import json
-from os.path import basename, splitext
+from os.path import basename, splitext, relpath
 import re
 import sys
 
@@ -549,7 +549,7 @@ def writeRomFiles(sourceFile):
 
     # List source filename
     info = inspect.getframeinfo(inspect.currentframe().f_back)
-    file.write('* source: %s\n' % info.filename)
+    file.write('* source: %s\n' % relpath(info.filename))
 
     # Disassemble and list all ROM words
     lastOpcode = None
@@ -690,10 +690,10 @@ def highlight(*args):
 # - function defined('SYMBOL') returns VALUE or 1 if the
 #   symbol was defined, None if if wasn't.
 _defined = {}
-def defined(s):
+def defined(s, default=None):
   if s in _defined:
     return _defined[s]
-  return None
+  return default
 import ast
 for i in reversed(range(len(sys.argv))):
   arg = sys.argv[i]
