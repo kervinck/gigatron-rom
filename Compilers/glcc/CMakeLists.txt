@@ -104,7 +104,7 @@ add_executable(gtsim
 
 set(gigatron_targets
   glcc glink glink.py gtprof
-  interface.json roms.json)
+  interface.json interface-dev.json roms.json)
 
 foreach(fn ${gigatron_targets})
   set(output "${CMAKE_CURRENT_BINARY_DIR}/${fn}")
@@ -204,7 +204,7 @@ endforeach()
 
 function(add_glcc_library libname libfile)
   # Parse the CPU x optional argument
-  set(cpulist 4 5 6)
+  set(cpulist 4 5 6 7)
   list(GET ARGN 0 car)
   if ("${car}" STREQUAL "CPU")
     list(POP_FRONT ARGN car cpulist)
@@ -276,10 +276,12 @@ add_glcc_library("libconx" "mapconx/libconx.a" "gigatron/mapconx/libconx/*.c")
 add_glcc_library("libcon_b" "map512k/libcon_b.a" "gigatron/map512k/libcon_b/*.c" "gigatron/map512k/libcon_b/*.s")
 add_glcc_library("libcon_n" "map512k/libcon_n.a" "gigatron/map512k/libcon_n/*.c" "gigatron/map512k/libcon_n/*.s")
 add_glcc_library("libcon_h" "map512k/libcon_h.a" "gigatron/map512k/libcon_h/*.c" "gigatron/map512k/libcon_h/*.s")
+add_glcc_library("libcon1" "map128k/libcon1.a" "gigatron/map128k/libcon1/*.c" "gigatron/map128k/libcon1/*.s")
 add_glcc_library("libsim" "mapsim/libsim.a" "gigatron/mapsim/libsim/*.c"  "gigatron/mapsim/libsim/*.s")
 add_glcc_library("libc-cpu4" "cpu4/libc.a" CPU 4 "gigatron/libc/*.c" "gigatron/libc/*.s" "gigatron/runtime/*.s")
 add_glcc_library("libc-cpu5" "cpu5/libc.a" CPU 5 "gigatron/libc/*.c" "gigatron/libc/*.s" "gigatron/runtime/*.s")
 add_glcc_library("libc-cpu6" "cpu6/libc.a" CPU 6 "gigatron/libc/*.c" "gigatron/libc/*.s" "gigatron/runtime/*.s") 
+add_glcc_library("libc-cpu7" "cpu7/libc.a" CPU 7 "gigatron/libc/*.c" "gigatron/libc/*.s" "gigatron/runtime/*.s") 
 
 
 # ---- Installation
