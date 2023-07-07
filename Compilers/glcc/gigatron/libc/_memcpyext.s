@@ -45,28 +45,20 @@ def scope():
             LDWI('.memcpyextb');STW(R19)
             LDW(R18);SYS(40)
             label('.loop1')
-            if args.cpu <= 5:
-                LDW('sysArgs2');PEEK();POKE(R19)
-                INC(R19);INC('sysArgs2')
-                LD('sysArgs5');SUBI(1);ST('sysArgs5');_BNE('.loop1')
-            else:
-                PEEKp('sysArgs2');POKEp(R19)
-                DBNE('sysArgs5','.loop1')
+            LDW('sysArgs2');PEEK();POKE(R19)
+            INC(R19);INC('sysArgs2')
+            LD('sysArgs5');SUBI(1);ST('sysArgs5');_BNE('.loop1')
             LDW(R17);SYS(40)
             LDWI('.memcpyextb');STW(R19)
             label('.loop2')
-            if args.cpu <= 5:
-                LDW(R19);PEEK();POKE('sysArgs0')
-                INC(R19);INC('sysArgs0')
-                LD('sysArgs4');SUBI(1);ST('sysArgs4');_BNE('.loop2')
-            else:
-                PEEKp(R19);POKEp('sysArgs0')
-                DBNE('sysArgs4','.loop2')
+            LDW(R19);PEEK();POKE('sysArgs0')
+            INC(R19);INC('sysArgs0')
+            LD('sysArgs4');SUBI(1);ST('sysArgs4');_BNE('.loop2')
             LDW(R16);SYS(40)
             RET()
 
         code.append(('CODE', '_memcpyext0', code0))
-        code.append(('PLACE', '_memcpyext0', 0x0000, 0x8000))
+        code.append(('PLACE', '_memcpyext0', 0x0200, 0x7fff))
 
 
     # void *_memcpyext(int banks, void *dest, const void *src, size_t n);

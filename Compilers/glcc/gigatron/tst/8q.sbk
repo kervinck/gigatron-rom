@@ -1,58 +1,45 @@
-#VCPUv5
+#VCPUv7
 
 # ======== ('CODE', 'main', code0)
 def code0():
 	label('main');
-	_PROLOGUE(8,4,0x80); # save=R7
-	LDI(0);STW(R7);
+	_PROLOGUE(8,2,0x80); # save=R7
+	MOVQW(0,R7);
 	label('.2');
-	LDW(R7);LSLW();STW(R22);
-	LDWI('down');ADDW(R22);STW(R21);
-	LDI(1);DOKE(R21);
-	LDWI('up');ADDW(R22);STW(R22);
-	LDI(1);DOKE(R22);
+	LDW(R7);LSLW();STW(R23);
+	LDWI('down');ADDW(R23);DOKEQ(1);
+	LDWI('up');ADDW(R23);DOKEQ(1);
 	label('.3');
-	LDI(1);ADDW(R7);STW(R7);
-	LDW(R7);_CMPIS(15);_BLT('.2');
-	LDI(0);STW(R7);
+	INCV(R7);
+	LDI(15);_CMPWS(R7);_BGT('.2');
+	MOVQW(0,R7);
 	label('.6');
-	LDWI('rows');STW(R22);
-	LDW(R7);LSLW();ADDW(R22);STW(R22);
-	LDI(1);DOKE(R22);
+	LDWI('rows');ADDW(R7);ADDW(R7);DOKEQ(1);
 	label('.7');
-	LDI(1);ADDW(R7);STW(R7);
-	LDW(R7);_CMPIS(8);_BLT('.6');
+	INCV(R7);
+	LDI(8);_CMPWS(R7);_BGT('.6');
 	LDI(0);STW(R8);
-	_MOVW(R8,[SP,2]);
+	_STLW(0);
 	CALLI('queens');
 	LDI(0);
 	label('.1');
-	_EPILOGUE(8,4,0x80,saveAC=True);
+	_EPILOGUE(8,2,0x80,saveAC=True);
 # ======== ('CODE', 'queens', code1)
 def code1():
 	label('queens');
-	_PROLOGUE(8,4,0xc0); # save=R6-7
+	_PROLOGUE(8,2,0xc0); # save=R6-7
 	LDW(R8);STW(R7);
-	LDI(0);STW(R6);
+	MOVQW(0,R6);
 	label('.11');
-	LDWI('rows');STW(R22);
-	LDW(R6);LSLW();ADDW(R22);DEEK();_BEQ('.15');
-	LDWI(v('up')+14);STW(R22);
-	LDW(R6);SUBW(R7);LSLW();ADDW(R22);DEEK();_BEQ('.15');
-	LDWI('down');STW(R22);
-	LDW(R6);ADDW(R7);LSLW();ADDW(R22);DEEK();_BEQ('.15');
-	LDWI('down');STW(R22);
-	LDW(R6);ADDW(R7);LSLW();ADDW(R22);STW(R22);
-	LDI(0);DOKE(R22);
-	LDWI(v('up')+14);STW(R22);
-	LDW(R6);SUBW(R7);LSLW();ADDW(R22);STW(R22);
-	LDI(0);DOKE(R22);
-	LDWI('rows');STW(R22);
-	LDW(R6);LSLW();ADDW(R22);STW(R22);
-	LDI(0);DOKE(R22);
-	LDWI('x');STW(R22);
-	LDW(R7);LSLW();ADDW(R22);STW(R22);
-	LDW(R6);DOKE(R22);
+	LDWI('rows');ADDW(R6);ADDW(R6);DEEK();_BEQ('.15');
+	LDW(R6);SUBW(R7);LSLW();LDXW(vAC,v('up')+14);_BEQ('.15');
+	LDW(R6);ADDW(R7);LSLW();LDXW(vAC,'down');_BEQ('.15');
+	LDWI('down');STW(R23);
+	LDW(R6);ADDW(R7);LSLW();ADDW(R23);DOKEQ(0);
+	LDWI(v('up')+14);STW(R23);
+	LDW(R6);SUBW(R7);LSLW();ADDW(R23);DOKEQ(0);
+	LDWI('rows');ADDW(R6);ADDW(R6);DOKEQ(0);
+	LDWI('x');ADDW(R7);ADDW(R7);DOKEA(R6);
 	LDW(R7);XORI(7);_BNE('.19');
 	CALLI('print');
 	_BRA('.20');
@@ -60,43 +47,38 @@ def code1():
 	LDI(1);ADDW(R7);STW(R8);
 	CALLI('queens');
 	label('.20');
-	LDWI('down');STW(R22);
-	LDW(R6);ADDW(R7);LSLW();ADDW(R22);STW(R22);
-	LDI(1);DOKE(R22);
-	LDWI(v('up')+14);STW(R22);
-	LDW(R6);SUBW(R7);LSLW();ADDW(R22);STW(R22);
-	LDI(1);DOKE(R22);
-	LDWI('rows');STW(R22);
-	LDW(R6);LSLW();ADDW(R22);STW(R22);
-	LDI(1);DOKE(R22);
+	LDWI('down');STW(R23);
+	LDW(R6);ADDW(R7);LSLW();ADDW(R23);DOKEQ(1);
+	LDWI(v('up')+14);STW(R23);
+	LDW(R6);SUBW(R7);LSLW();ADDW(R23);DOKEQ(1);
+	LDWI('rows');ADDW(R6);ADDW(R6);DOKEQ(1);
 	label('.15');
 	label('.12');
-	LDI(1);ADDW(R6);STW(R6);
-	LDW(R6);_CMPIS(8);_BLT('.11');
+	INCV(R6);
+	LDI(8);_CMPWS(R6);_BGT('.11');
 	LDI(0);
 	label('.10');
-	_EPILOGUE(8,4,0xc0,saveAC=True);
+	_EPILOGUE(8,2,0xc0,saveAC=True);
 # ======== ('CODE', 'print', code2)
 def code2():
 	label('print');
-	_PROLOGUE(8,6,0x80); # save=R7
-	LDI(0);STW(R7);
+	_PROLOGUE(8,4,0x80); # save=R7
+	MOVQW(0,R7);
 	label('.23');
 	LDWI('.27');STW(R8);
-	_MOVW(R8,[SP,2]);
-	LDWI('x');STW(R22);
-	LDW(R7);LSLW();ADDW(R22);DEEK();ADDI(49);STW(R9);
-	_MOVW(R9,[SP,4]);
+	_STLW(0);
+	LDWI('x');ADDW(R7);ADDW(R7);DEEK();ADDI(49);STW(R9);
+	LDW(R9);_STLW(2);
 	CALLI('printf');
 	label('.24');
-	LDI(1);ADDW(R7);STW(R7);
-	LDW(R7);_CMPIS(8);_BLT('.23');
+	INCV(R7);
+	LDI(8);_CMPWS(R7);_BGT('.23');
 	LDWI('.28');STW(R8);
-	_MOVW(R8,[SP,2]);
+	_STLW(0);
 	CALLI('printf');
 	LDI(0);
 	label('.22');
-	_EPILOGUE(8,6,0x80,saveAC=True);
+	_EPILOGUE(8,4,0x80,saveAC=True);
 # ======== ('COMMON', 'x', code3, 16, 2)
 def code3():
 	align(2);
@@ -140,7 +122,7 @@ code=[
 	('COMMON', 'up', code6, 30, 2),
 	('DATA', '.28', code7, 0, 1),
 	('DATA', '.27', code8, 0, 1) ]
-module(code=code, name='tst/8q.c', cpu=5);
+module(code=code, name='tst/8q.c', cpu=7);
 
 # Local Variables:
 # mode: python

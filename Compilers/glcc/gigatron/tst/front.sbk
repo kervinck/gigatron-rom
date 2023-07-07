@@ -1,20 +1,20 @@
-#VCPUv5
+#VCPUv7
 
 # ======== ('CODE', 'main', code0)
 def code0():
 	label('main');
-	_PROLOGUE(4,4,0x0); # save=None
+	_PROLOGUE(4,2,0x0); # save=None
 	LDI(0);STW(R8);
-	_MOVW(R8,[SP,2]);
+	_STLW(0);
 	CALLI('exit');
 	LDI(0);
 	label('.1');
-	_EPILOGUE(4,4,0x0,saveAC=True);
+	_EPILOGUE(4,2,0x0,saveAC=True);
 # ======== ('CODE', 'nested', code1)
 def code1():
 	label('nested');
 	PUSH();
-	LDW(R8);_CMPIS(4);_BGE('.6');
+	LDI(4);_CMPWS(R8);_BLE('.6');
 	LDW(R9);XORI(114);_BEQ('.9');
 	label('.6');
 	LDW(R8);XORI(1);_BNE('.8');
@@ -51,8 +51,8 @@ def code4():
 # ======== ('CODE', 'Dfunc', code5)
 def code5():
 	label('Dfunc');
-	_PROLOGUE(4,2,0x0); # save=None
-	_EPILOGUE(4,2,0x0,saveAC=True);
+	_PROLOGUE(4,0,0x0); # save=None
+	_EPILOGUE(4,0,0x0,saveAC=True);
 # ======== ('CODE', 'f', code6)
 def code6():
 	label('f');
@@ -66,23 +66,23 @@ def code7():
 # ======== ('CODE', 'f2', code8)
 def code8():
 	label('f2');
-	_PROLOGUE(8,2,0xc0); # save=R6-7
-	_EPILOGUE(8,2,0xc0,saveAC=True);
+	_PROLOGUE(8,0,0xc0); # save=R6-7
+	_EPILOGUE(8,0,0xc0,saveAC=True);
 # ======== ('CODE', 'g', code9)
 def code9():
 	label('g');
-	_PROLOGUE(4,2,0x80); # save=R7
-	_EPILOGUE(4,2,0x80,saveAC=True);
+	_PROLOGUE(4,0,0x80); # save=R7
+	_EPILOGUE(4,0,0x80,saveAC=True);
 # ======== ('CODE', 'h', code10)
 def code10():
 	label('h');
-	_PROLOGUE(4,2,0x80); # save=R7
-	_EPILOGUE(4,2,0x80,saveAC=True);
+	_PROLOGUE(4,0,0x80); # save=R7
+	_EPILOGUE(4,0,0x80,saveAC=True);
 # ======== ('CODE', 'h1', code11)
 def code11():
 	label('h1');
-	_PROLOGUE(8,2,0xc0); # save=R6-7
-	_EPILOGUE(8,2,0xc0,saveAC=True);
+	_PROLOGUE(8,0,0xc0); # save=R6-7
+	_EPILOGUE(8,0,0xc0,saveAC=True);
 # ======== ('CODE', 'h2', code12)
 def code12():
 	label('h2');
@@ -135,8 +135,8 @@ def code21():
 # ======== ('CODE', 'gx1', code22)
 def code22():
 	label('gx1');
-	_PROLOGUE(4,2,0x0); # save=None
-	_EPILOGUE(4,2,0x0,saveAC=True);
+	_PROLOGUE(4,0,0x0); # save=None
+	_EPILOGUE(4,0,0x0,saveAC=True);
 # ======== ('CODE', 'ff1', code23)
 def code23():
 	label('ff1');
@@ -155,18 +155,18 @@ def code25():
 # ======== ('CODE', 'cmp', code26)
 def code26():
 	label('cmp');
-	_PROLOGUE(8,2,0xc0); # save=R6-7
-	_EPILOGUE(8,2,0xc0,saveAC=True);
+	_PROLOGUE(8,0,0xc0); # save=R6-7
+	_EPILOGUE(8,0,0xc0,saveAC=True);
 # ======== ('CODE', 'sort', code27)
 def code27():
 	label('sort');
-	_PROLOGUE(4,2,0x0); # save=None
-	_EPILOGUE(4,2,0x0,saveAC=True);
+	_PROLOGUE(4,0,0x0); # save=None
+	_EPILOGUE(4,0,0x0,saveAC=True);
 # ======== ('CODE', 'onearg', code28)
 def code28():
 	label('onearg');
-	_PROLOGUE(4,2,0x0); # save=None
-	_EPILOGUE(4,2,0x0,saveAC=True);
+	_PROLOGUE(4,0,0x0); # save=None
+	_EPILOGUE(4,0,0x0,saveAC=True);
 # ======== ('COMMON', 'ss4', code29, 2, 2)
 def code29():
 	align(2);
@@ -292,7 +292,7 @@ code=[
 	('COMMON', 'x', code37, 2, 2),
 	('COMMON', 'b', code38, 2, 2),
 	('COMMON', 'a', code39, 2, 2) ]
-module(code=code, name='tst/front.c', cpu=5);
+module(code=code, name='tst/front.c', cpu=7);
 
 # Local Variables:
 # mode: python

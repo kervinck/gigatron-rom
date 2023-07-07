@@ -5,8 +5,8 @@ def scope():
 
     def code0():
         '''version that uses Sys_SetMemory_v2_54'''
+        nohop()
         label('memset');                            # R8=d, R9=v, R10=l
-        PUSH()
         LDW(R8);STW(R21);STW('sysArgs2')
         LDWI('SYS_SetMemory_v2_54');STW('sysFn')    # prep sys
         LD(R9);ST('sysArgs1')
@@ -25,7 +25,8 @@ def scope():
         label('.memset5')
         LDW(R10);ST('sysArgs0');SYS(54)
         label('.done')
-        LDW(R21);tryhop(2);POP();RET();
+        LDW(R21)
+        RET()
 
 
     return [('EXPORT', 'memset'),

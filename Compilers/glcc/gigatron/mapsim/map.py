@@ -38,6 +38,13 @@ def map_segments():
         for addr in range(tp[1], eaddr, estep):
             yield (addr, addr+tp[0], tp[4])
 
+def map_place(filename,fragnames):
+    '''
+    Returns a list of additional (PLACE...) directives 
+    for file 'filename' with fragments named 'fragnames'.
+    '''
+    return []
+
 def map_libraries(romtype):
     '''
     Returns a list of extra libraries to scan before the standard ones
@@ -54,12 +61,23 @@ def map_modules(romtype):
     def code0():
         nohop() # instead of org(0x200)
         label(args.gt1exec)
-        LDWI(0xffff);STW('sysFn');LDWI('_regbase');SYS(40) # tell regbase to gtsim
-        LDWI(initsp);STW(SP);                              # init stack pointer
+        # call SYS_regbase to inform gtsim about register locations
+        LDWI(0xffff);STW('sysFn')
+        LDI(FAS);ST('sysArgs0')
+        LDI(T0); ST('sysArgs1')
+        LDI(T2); ST('sysArgs2')
+        LDI(B0); ST('sysArgs3')
+        LDI(SP); ST('sysArgs4')
+        LDI(R0); SYS(40)
+        # init stack pointer
+        LDWI(initsp);STW(SP)
+        # LDWI(0xfe08);STW(vSP)
+        # rom test;
         if romtype and romtype >= 0x80:
             LD('romType');ANDI(0xfc);XORI(romtype);BNE('.err')
         elif romtype:
             LD('romType');ANDI(0xfc);SUBI(romtype);BLT('.err')
+        # call start
         LDWI(v(args.e));CALL(vAC)
         label('.err')
         LDI(100);STW(R8)

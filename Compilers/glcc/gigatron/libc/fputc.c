@@ -1,6 +1,9 @@
 #include "_stdio.h"
 
-int fputc(register int c, register FILE *fp)
+int fputc(int c, register FILE *fp)
 {
-	return putc(c, fp);
+	if (! _schkwrite(fp))
+		if (fp->_v->write(fp, (const char*)&c, 1) > 0)
+			return c;
+	return EOF;
 }

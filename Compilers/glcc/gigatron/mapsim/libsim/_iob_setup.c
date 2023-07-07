@@ -5,32 +5,18 @@
    is referenced in the program. The default version hooks stdin,
    stdout, and stderr to the console. */
 
-extern struct _svec _sim_svec;
-char ibuf[92];
-char obuf[92];
+extern struct _iovec _sim_iovec;
 
 void _iob_setup(void)
 {
-	/* stdin */
-	_iob[0]._flag = _IONBF|_IOREAD;
-	_iob[0]._v = &_sim_svec;
-	_iob[0]._file = 0;
-	setvbuf(&_iob[0], ibuf, _IOLBF, sizeof(ibuf));
-	/* stdout */
-	_iob[1]._flag = _IONBF|_IOWRIT;
-	_iob[1]._v = &_sim_svec;
-	_iob[1]._file = 1;
-	setvbuf(&_iob[1], obuf, _IOLBF, sizeof(obuf));
-	/* stderr */
+	_iob[0]._flag = _IOLBF|_IOREAD;
+	_iob[1]._flag = _IOFBF|_IOWRIT;
 	_iob[2]._flag = _IONBF|_IOWRIT;
-	_iob[2]._v = &_sim_svec;
-	_iob[2]._file = 2;
-	/* buffer */
-	
-}
-
-void _sim_flush(void)
-{
-	fflush(stdout);
+	_iob[0]._v = &_sim_iovec;
+	_iob[1]._v = &_sim_iovec;
+	_iob[2]._v = &_sim_iovec;
+	_iob[0]._x = (void*)0;
+	_iob[1]._x = (void*)1;
+	_iob[2]._x = (void*)2;
 }
 

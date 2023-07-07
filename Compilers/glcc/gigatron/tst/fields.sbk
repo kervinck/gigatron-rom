@@ -1,4 +1,4 @@
-#VCPUv5
+#VCPUv7
 
 # ======== ('DATA', 'x', code0, 8, 2)
 def code0():
@@ -27,126 +27,126 @@ def code2():
 # ======== ('CODE', 'main', code3)
 def code3():
 	label('main');
-	_PROLOGUE(16,16,0x0); # save=None
+	_PROLOGUE(16,14,0x0); # save=None
 	LDWI('.4');STW(R8);
-	_MOVW(R8,[SP,2]);
-	LDWI('x');DEEK();STW(R9);
-	_MOVW(R9,[SP,4]);
+	_STLW(0);
+	LDWI('x');DEEKA(R9);
+	LDW(R9);_STLW(2);
 	LDWI(v('x')+2);PEEK();STW(R10);
-	_MOVW(R10,[SP,6]);
+	LDW(R10);_STLW(4);
 	LDWI(v('x')+4);DEEK();_SHLI(4);_SHRIS(4);STW(R11);
-	_MOVW(R11,[SP,8]);
+	LDW(R11);_STLW(6);
 	LDWI(v('x')+4);DEEK();_SHRIS(12);STW(R12);
-	_MOVW(R12,[SP,10]);
+	LDW(R12);_STLW(8);
 	LDWI(v('x')+6);DEEK();_SHLI(9);_SHRIS(13);STW(R13);
-	_MOVW(R13,[SP,12]);
+	LDW(R13);_STLW(10);
 	LDWI(v('x')+7);PEEK();STW(R14);
-	_MOVW(R14,[SP,14]);
+	LDW(R14);_STLW(12);
 	CALLI('printf');
 	LDWI('.10');STW(R8);
-	_MOVW(R8,[SP,2]);
-	LDWI('y');DEEK();STW(R22);
-	ANDI(3);STW(R9);
-	_MOVW(R9,[SP,4]);
-	LDW(R22);_SHRIU(2);ANDI(15);STW(R10);
-	_MOVW(R10,[SP,6]);
-	LDWI(v('y')+2);DEEK();STW(R11);
-	_MOVW(R11,[SP,8]);
+	_STLW(0);
+	LDWI('y');DEEKA(R23);
+	LDW(R23);ANDI(3);STW(R9);
+	LDW(R9);_STLW(2);
+	LDW(R23);_SHRIU(2);ANDI(15);STW(R10);
+	LDW(R10);_STLW(4);
+	LDWI(v('y')+2);DEEKA(R11);
+	LDW(R11);_STLW(6);
 	CALLI('printf');
-	LDWI(v('x')+4);STW(R22);
-	LDWI(4095);STW(R21);
-	LDWI(0xf000);STW(R20);
-	LDWI('i');DEEK();_SHLI(12);_SHRIS(12);_SHLI(12);ANDW(R20);STW(R20);
-	LDW(R22);DEEK();ANDW(R21);ORW(R20);DOKE(R22);
-	LDWI(v('x')+6);STW(R22);
-	LDWI(0xff8f);STW(R21);
-	LDW(R22);DEEK();ANDW(R21);DOKE(R22);
+	LDWI(v('x')+4);STW(R23);
+	LDWI(4095);STW(R22);
+	LDWI(0xf000);STW(R21);
+	LDWI('i');DEEK();_SHLI(12);_SHRIS(12);_SHLI(12);ANDW(R21);STW(R21);
+	DEEKV(R23);ANDW(R22);ORW(R21);DOKE(R23);
+	LDWI(v('x')+6);STW(R23);
+	LDWI(0xff8f);STW(R22);
+	DEEKV(R23);ANDW(R22);DOKE(R23);
 	LDWI('.4');STW(R8);
-	_MOVW(R8,[SP,2]);
-	LDWI('x');DEEK();STW(R9);
-	_MOVW(R9,[SP,4]);
+	_STLW(0);
+	LDWI('x');DEEKA(R9);
+	LDW(R9);_STLW(2);
 	LDWI(v('x')+2);PEEK();STW(R10);
-	_MOVW(R10,[SP,6]);
+	LDW(R10);_STLW(4);
 	LDWI(v('x')+4);DEEK();_SHLI(4);_SHRIS(4);STW(R11);
-	_MOVW(R11,[SP,8]);
+	LDW(R11);_STLW(6);
 	LDWI(v('x')+4);DEEK();_SHRIS(12);STW(R12);
-	_MOVW(R12,[SP,10]);
+	LDW(R12);_STLW(8);
 	LDWI(v('x')+6);DEEK();_SHLI(9);_SHRIS(13);STW(R13);
-	_MOVW(R13,[SP,12]);
+	LDW(R13);_STLW(10);
 	LDWI(v('x')+7);PEEK();STW(R14);
-	_MOVW(R14,[SP,14]);
+	LDW(R14);_STLW(12);
 	CALLI('printf');
-	LDWI('y');STW(R22);
-	LDWI(0xfffc);STW(R21);
-	LDW(R22);DEEK();ANDW(R21);ORI(2);DOKE(R22);
-	LDWI(v('y')+2);STW(R22);
-	LDWI('i');DEEK();DOKE(R22);
+	LDWI('y');STW(R23);
+	LDWI(0xfffc);STW(R22);
+	DEEKV(R23);ANDW(R22);ORI(2);DOKE(R23);
+	LDWI('i');DEEKA(R23);
+	LDWI(v('y')+2);DOKEA(R23);
 	LDWI('.10');STW(R8);
-	_MOVW(R8,[SP,2]);
-	LDWI('y');DEEK();STW(R22);
-	ANDI(3);STW(R9);
-	_MOVW(R9,[SP,4]);
-	LDW(R22);_SHRIU(2);ANDI(15);STW(R10);
-	_MOVW(R10,[SP,6]);
-	LDWI(v('y')+2);DEEK();STW(R11);
-	_MOVW(R11,[SP,8]);
+	_STLW(0);
+	LDWI('y');DEEKA(R23);
+	LDW(R23);ANDI(3);STW(R9);
+	LDW(R9);_STLW(2);
+	LDW(R23);_SHRIU(2);ANDI(15);STW(R10);
+	LDW(R10);_STLW(4);
+	LDWI(v('y')+2);DEEKA(R11);
+	LDW(R11);_STLW(6);
 	CALLI('printf');
 	LDWI('x');STW(R8);
-	_MOVW(R8,[SP,2]);
+	_STLW(0);
 	CALLI('f2');
 	LDI(0);
 	label('.3');
-	_EPILOGUE(16,16,0x0,saveAC=True);
+	_EPILOGUE(16,14,0x0,saveAC=True);
 # ======== ('CODE', 'f1', code4)
 def code4():
 	label('f1');
-	_PROLOGUE(12,8,0x80); # save=R7
+	_PROLOGUE(12,6,0x80); # save=R7
 	LDW(R8);STW(R7);
-	LDWI(0xffc3);STW(R22);
-	LDW(R7);DEEK();ANDW(R22);DOKE(R7);
-	LDWI(0xfffc);STW(R22);
-	LDI(0);ANDI(3);ANDI(3);STW(R21);
-	LDW(R7);DEEK();ANDW(R22);ORW(R21);DOKE(R7);
-	LDW(R7);DEEK();ANDI(60);_BEQ('.22');
+	LDWI(0xffc3);STW(R23);
+	DEEKV(R7);ANDW(R23);DOKE(R7);
+	LDWI(0xfffc);STW(R23);
+	LDI(0);ANDI(3);ANDI(3);STW(R22);
+	DEEKV(R7);ANDW(R23);ORW(R22);DOKE(R7);
+	DEEKV(R7);ANDI(60);_BEQ('.22');
 	LDWI('.24');STW(R8);
-	_MOVW(R8,[SP,2]);
+	_STLW(0);
 	CALLI('printf');
 	label('.22');
-	LDW(R7);DEEK();ORI(3);DOKE(R7);
-	LDW(R7);DEEK();ORI(60);DOKE(R7);
+	DEEKV(R7);ORI(3);DOKE(R7);
+	DEEKV(R7);ORI(60);DOKE(R7);
 	LDWI('.25');STW(R8);
-	_MOVW(R8,[SP,2]);
-	LDW(R7);DEEK();STW(R22);
+	_STLW(0);
+	DEEKV(R7);STW(R23);
 	ANDI(3);STW(R9);
-	_MOVW(R9,[SP,4]);
-	LDW(R22);_SHRIU(2);ANDI(15);STW(R10);
-	_MOVW(R10,[SP,6]);
+	LDW(R9);_STLW(2);
+	LDW(R23);_SHRIU(2);ANDI(15);STW(R10);
+	LDW(R10);_STLW(4);
 	CALLI('printf');
 	LDI(0);
 	label('.21');
-	_EPILOGUE(12,8,0x80,saveAC=True);
+	_EPILOGUE(12,6,0x80,saveAC=True);
 # ======== ('CODE', 'f2', code5)
 def code5():
 	label('f2');
-	_PROLOGUE(8,4,0xc0); # save=R6-7
+	_PROLOGUE(8,2,0xc0); # save=R6-7
 	LDW(R8);STW(R7);
 	LDWI('i');DEEK();_BNE('.28');
-	LDI(1);STW(R6);
+	MOVQW(1,R6);
 	_BRA('.29');
 	label('.28');
-	LDI(0);STW(R6);
+	MOVQW(0,R6);
 	label('.29');
-	LDWI(0xfffc);STW(R22);
-	LDW(R6);ANDI(3);ANDI(3);STW(R21);
-	LDW(R7);DEEK();ANDW(R22);ORW(R21);DOKE(R7);
+	LDWI(0xfffc);STW(R23);
+	LDW(R6);ANDI(3);ANDI(3);STW(R22);
+	DEEKV(R7);ANDW(R23);ORW(R22);DOKE(R7);
 	LDW(R7);STW(R8);
 	CALLI('f1');
-	LDWI(0xffc3);STW(R22);
-	LDI(0);ANDI(15);_SHLI(2);ANDI(60);STW(R21);
-	LDW(R7);DEEK();ANDW(R22);ORW(R21);DOKE(R7);
+	LDWI(0xffc3);STW(R23);
+	LDI(0);ANDI(15);_SHLI(2);ANDI(60);STW(R22);
+	DEEKV(R7);ANDW(R23);ORW(R22);DOKE(R7);
 	LDI(0);
 	label('.26');
-	_EPILOGUE(8,4,0xc0,saveAC=True);
+	_EPILOGUE(8,2,0xc0,saveAC=True);
 # ======== ('DATA', '.25', code6, 0, 1)
 def code6():
 	label('.25');
@@ -189,7 +189,7 @@ code=[
 	('DATA', '.24', code7, 0, 1),
 	('DATA', '.10', code8, 0, 1),
 	('DATA', '.4', code9, 0, 1) ]
-module(code=code, name='tst/fields.c', cpu=5);
+module(code=code, name='tst/fields.c', cpu=7);
 
 # Local Variables:
 # mode: python

@@ -586,7 +586,7 @@ static Node replace(Node p) {
 		if (generic(p->op) == INDIR && isaddrop(p->kids[0]->op))
 			p = newnode(p->op, newnode(p->kids[0]->op, NULL, NULL,
 				p->kids[0]->syms[0]), NULL, NULL);
-		else if (generic(p->op) == ADDRG)
+		else if (isaddrop(p->op))
 			p = newnode(p->op, NULL, NULL, p->syms[0]);
 		else
 			assert(0);
@@ -614,12 +614,16 @@ static Node prune(Node forest) {
 			if (!tmp->defined)
 				(*IR->local)(tmp);
 			tmp->defined = 1;
-			if ((  generic(p->kids[1]->op) == INDIR
-			    && isaddrop(p->kids[1]->kids[0]->op)
-			    && p->kids[1]->kids[0]->syms[0]->sclass == REGISTER)
-			|| ((  generic(p->kids[1]->op) == INDIR
-			    && isaddrop(p->kids[1]->kids[0]->op)) && tmp->sclass == AUTO)
-			|| (generic(p->kids[1]->op) == ADDRG && tmp->sclass == AUTO)) {
+			if ((generic(p->kids[1]->op) == INDIR
+			     && isaddrop(p->kids[1]->kids[0]->op)
+			     && p->kids[1]->kids[0]->syms[0]->sclass == REGISTER) ||
+			    (isaddrop(p->kids[1]->op)
+			     && p->kids[1]->syms[0]->sclass == REGISTER) ||
+			    (generic(p->kids[1]->op) == INDIR
+			     && isaddrop(p->kids[1]->kids[0]->op)
+			     && tmp->sclass == AUTO) ||
+			    (isaddrop(p->kids[1]->op)
+			     && tmp->sclass == AUTO) ) {
 				if (tmp->u.t.replace >= 0) {
 					tmp->u.t.replace = 1;
 					count++;
@@ -635,6 +639,7 @@ static Node prune(Node forest) {
 	return forest;
 }
 static Node visit(Node p, int listed) {
+	extern int addrlCSE;
 	if (p)
 		if (p->syms[2])
 			p = tmpnode(p);
@@ -643,9 +648,9 @@ static Node visit(Node p, int listed) {
 			p->kids[0] = visit(p->kids[0], 0);
 			p->kids[1] = visit(p->kids[1], 0);
 		}
-
-		else if (specific(p->op) == ADDRL+P || specific(p->op) == ADDRF+P) {
-			assert(!listed);
+		else if ((specific(p->op) == ADDRL+P || specific(p->op) == ADDRF+P)
+			 && !addrlCSE ) { /* disable CSE for local variable address.  */
+			assert(!listed);  /* setting addrlCSE risk increasing spills. */
 			p = newnode(p->op, NULL, NULL, p->syms[0]);
 			p->count = 1;
 		}

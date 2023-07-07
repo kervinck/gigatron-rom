@@ -1,52 +1,38 @@
 #include "_stdio.h"
 #include <errno.h>
 
-static int _sflags(int f, const char *s)
+static int _sflags(register const char *s)
 {
-	char c = *s;
-	f = f & _IOBUFMASK; 
-	if (c == 'r')
-		f |= _IOREAD;
-	else if (c == 'w')
-		f |= _IOWRIT;
-	else if (c == 'a')
-		/* _IOEOF means append mode to _open() */
-		f |= _IOWRIT|_IOEOF;
-	else
-		return 0;
-	while (c = *++s) {
-		if (c == 'b')
-			continue;
-		else if (c == '+')
-			/* no buffering for r/w streams */
-			f = f & ~_IOLBF | (_IORW | _IONBF); 
-		else
-			return 0;
+	register int c,f;
+	switch(*s) {
+	case 'r': f = _IOREAD; break;
+	case 'w': f = _IOWRIT; break;
+	case 'a': f = _IOWRIT|_IOEOF; break;
+	default: return 0;
 	}
+	while((c = *++s))
+		switch(c) {
+		case '+': f = _IORW; break;
+		case 'b': break;
+		default: return 0;
+		}
 	return f;
 }
 
 FILE *freopen(register const char *fname, register const char *mode, register FILE *fp)
 {
-	register int oflag, nflag;
-	if (! (oflag = nflag = fp->_flag))
-		nflag = _IOFBF;
-	nflag = _sflags(nflag, mode);
-	if (! (nflag && fname)) {
+	register int nflag;
+	if (! (nflag = _sflags(mode))) {
 		errno = EINVAL;
 		return 0;
 	}
-	if (oflag) {
-		_fclose(fp);
-	} else {
-		fp->_file = -1;
-	}
+	_fclose(fp);
 	fp->_flag = nflag;
 	if (_openf(fp, fname) >= 0) {
 		clearerr(fp);
 		return fp;
 	}	
-	_sfreeiob(fp);
+	fp->_flag = 0;
 	return 0;
 }
 

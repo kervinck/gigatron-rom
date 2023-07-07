@@ -1,8 +1,37 @@
 
+GLCC_RELEASE_2.2
+
+- Stdio no longer buffers (like avr libc)
+- Avoid zero page variables used by the loader
+- More compact console code
+- Added include file sys/pragma.h with attributes
+- Added __attribute keyword with nohop, place, org
+- Added SYS_Sprite
+- Added _memswp
+- Improved lburg with nonconstant cost in nonterminal closures
+- Support for code that runs on dev/vx0/dev7 (-rom=v6--)
+- faster ldiv and fp
+
+GLCC_RELEASE_2.1
+
+- updated dev7 support
+- glink --onload=xxx arranges for xxx to be called early
+
+GLCC_RELEASE_2.0
+
+- Improved profiler
+- Added map128k for dev128k7.rom
+- Best effort support for vx0 instruction set (-cpu=6)
+- Support for dev7 instruction set (-cpu=7)
+- New state-based peephole optimizer
+- Support for __near variable in page zero
+- Support for __near and __far keywords
 - Added placement overrides in map files
 - Runtime: faster long addition and subtraction
 - Library: slightly simplified stdio (less buffering)
-
+- Library: added clock() function using vIRQ
+- Library: redirected SIGVIRQ through clock vIRQ
+- Library: no SIGVIRQ overhead unless used
 
 GLCC_RELEASE_1.5
 

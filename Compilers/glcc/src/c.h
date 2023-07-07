@@ -38,11 +38,9 @@
 
 #define isqual(t)     ((t)->op >= CONST)
 #define unqual(t)     (isqual(t) ? (t)->type : (t))
+#define isvolatile(t) (isqual(t) && ((t)->op & 16))
+#define isconst(t)    (isqual(t) && ((t)->op & 4))
 
-#define isvolatile(t) ((t)->op == VOLATILE \
-                    || (t)->op == CONST+VOLATILE)
-#define isconst(t)    ((t)->op == CONST \
-                    || (t)->op == CONST+VOLATILE)
 #define isarray(t)    (unqual(t)->op == ARRAY)
 #define isstruct(t)   (unqual(t)->op == STRUCT \
                     || unqual(t)->op == UNION)
@@ -63,6 +61,7 @@
 #define fieldleft(p)  (8*(p)->type->size - \
                         fieldsize(p) - fieldright(p))
 #define fieldmask(p)  (~(fieldsize(p) < 8*unsignedtype->size ? ~0u<<fieldsize(p) : 0u))
+
 typedef struct node *Node;
 
 typedef struct list *List;
@@ -91,6 +90,8 @@ typedef struct tree *Tree;
 typedef struct type *Type;
 
 typedef struct field *Field;
+
+typedef struct attribute *Attribute;
 
 typedef struct {
 	unsigned printed:1;
@@ -251,6 +252,12 @@ struct swtch {
 	long *values;
 	Symbol *labels;
 };
+struct attribute {
+	Attribute link;
+	const char *name;
+	Symbol args[2];
+	char okay;
+};
 struct symbol {
 	char *name;
 	int scope;
@@ -266,6 +273,7 @@ struct symbol {
 	unsigned generated:1;
 	unsigned defined:1;
 	Type type;
+	Attribute attr;
 	float ref;
 	union {
 		struct {
@@ -601,3 +609,7 @@ extern void rmtypes(int);
 extern int ttob(Type);
 extern int variadic(Type);
 
+#define QUAL1(n) (n)^CONST: case (n)^VOLATILE: case (n)^VOLATILE^CONST
+#define QUAL     QUAL1(0): case FAR: case NEAR: case QUAL1(FAR): case QUAL1(NEAR)
+
+extern int fnqual(Type);

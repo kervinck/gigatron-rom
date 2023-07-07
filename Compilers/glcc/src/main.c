@@ -16,6 +16,7 @@ int Aflag;		/* >= 0 if -A specified */
 int Pflag;		/* != 0 if -P specified */
 int glevel;		/* == [0-9] if -g[0-9] specified */
 int xref;		/* != 0 for cross-reference data */
+int addrlCSE;           /* != 0 to enable csr for local variable addresses */
 Symbol YYnull;		/* _YYnull  symbol if -n or -nvalidate specified */
 Symbol YYcheck;		/* _YYcheck symbol if -nvalidate,check specified */
 
@@ -173,6 +174,8 @@ void main_init(int argc, char *argv[]) {
 			IR->wants_dag = argv[i][11] - '0';
 		else if (strncmp(argv[i], "-unsigned_char=", 15) == 0)
 			IR->unsigned_char = argv[i][15] - '0';
+		else if (strncmp(argv[i], "-laddr_cse=", 11) == 0)
+			addrlCSE = argv[i][11] - '0';
 		else if (*argv[i] != '-' || strcmp(argv[i], "-") == 0) {
 			if (infile == NULL)
 				infile = argv[i];

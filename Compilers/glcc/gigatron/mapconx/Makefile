@@ -22,7 +22,8 @@ CFILES=$(wildcard ${LIBNAME}/*.c)
 O4FILES=${patsubst %.c,${B}%_4.o,${CFILES}}
 O5FILES=${patsubst %.c,${B}%_5.o,${CFILES}}
 O6FILES=${patsubst %.c,${B}%_6.o,${CFILES}}
-OFILES=${O4FILES} ${O5FILES} ${O6FILES}
+O7FILES=${patsubst %.c,${B}%_7.o,${CFILES}}
+OFILES=${O4FILES} ${O5FILES} ${O7FILES}
 
 all: ${PYTARGETS} ${B}${MAPDIR}/${LIBNAME}.a
 
@@ -45,6 +46,10 @@ ${B}${LIBNAME}/%_5.o: ${LIBNAME}/%.c ${B}rcc${E}
 ${B}${LIBNAME}/%_6.o: ${LIBNAME}/%.c ${B}rcc${E}
 	-@mkdir -p ${B}${LIBNAME}
 	${GLCC} -c -cpu=6 -o $@  $<
+
+${B}${LIBNAME}/%_7.o: ${LIBNAME}/%.c ${B}rcc${E}
+	-@mkdir -p ${B}${LIBNAME}
+	${GLCC} -c -cpu=7 -o $@  $<
 
 clean: FORCE
 	-rm -rf ${PYTARGETS} ${B}${MAPDIR}/${LIBNAME}.a

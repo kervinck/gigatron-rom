@@ -15,7 +15,6 @@ extern void _exit(int retcode);
 
 /* Exit with a return code_and an optional message.
    The libc version of _exitm does the following:
-   - restore vSP to the value it had in `_start`.
    - calls the function pointer `_exitm_msgfunc` if nonzero
    - flashes a pixel on the first screen line at a position
      indicative of the return code. */
@@ -94,24 +93,6 @@ extern double _p1evl(double x, double *coeff, int n);
 
 /* ---- Stdio ---- */
 
-struct _sbuf {
-	int size;
-	char xtra[2];
-	char data[2];
-};
-
-struct _svec {
-	int  (*flsbuf)(int c, FILE *fp);
-	int  (*write)(FILE *fp, const void *buf, size_t cnt);
-	int  (*filbuf)(FILE *fp);
-	int  (*read)(FILE *fp, void *buf, size_t cnt);
-	long (*lseek)(FILE *fp, long off, int whence);
-	int  (*close)(FILE *fp);
-};
-
-/* generic flsbuf and filbuf functions for the above table */
-extern int _default_flsbuf(register int c, register FILE *fp);
-extern int _default_filbuf(register FILE *fp);
 
 /* This function is called before main() to initialize the _iob[]. 
    The default version hooks the console to stdin/stdout/stderr. */
@@ -122,7 +103,6 @@ extern void _iob_setup(void);
    called with fp->_flag containing the desired read/write mode
    and fp->_file set to -1 or set to a desired file descriptor. */
 extern int _openf(FILE *fp, const char *fname);
-
 
 /* ---- Bitsets ---- */
 
@@ -178,5 +158,19 @@ extern void *_memchr2ext(char bank, const void *s, char c0, char c1, size_t n);
    Returns zero when no expansion. */
 extern void *_memcpyext(char banks, void *dst, const void* src, size_t n);
 
+/* Swap two memory blocks of size n. */
+extern void _memswp(void *a, void *b, size_t n);
+
+
+/* ---- Clock ---- */
+
+/* The standard function clock() returns a clock_t which is a long
+   but only contains 24 bits numbers (0 to 16M). The alternative
+   entry point _clock() returns a 16 bits integer which is often
+   sufficient and avoids long int overhead. */
+extern unsigned int _clock(void);
+
+/* Wait for n vertical blanks (or n clocks) */
+extern void _wait(int n);
 
 #endif

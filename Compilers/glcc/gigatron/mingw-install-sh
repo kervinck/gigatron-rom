@@ -29,6 +29,7 @@ cmd_to_lib=`relpath "${bindir}" "${libdir}" | sed -e 's:/:\\\\:g'`
 ${INSTALL} -d "${bindir}" || true
 echo '@py -3 "%~dp0\\'"$cmd_to_lib"'\\%~n0" %*' > "${bindir}/glcc.cmd"
 echo '@py -3 "%~dp0\\'"$cmd_to_lib"'\\%~n0" %*' > "${bindir}/glink.cmd"
+echo '@py -3 "%~dp0\\'"$cmd_to_lib"'\\%~n0" %*' > "${bindir}/gtprof.cmd"
 echo '@"%~dp0\\'"$cmd_to_lib"'\\gtsim.exe" %*'  > "${bindir}/gtsim.cmd"
 
 # add useful programs to the bin directory

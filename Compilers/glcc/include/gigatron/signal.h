@@ -10,15 +10,15 @@ typedef void (*sig_handler_t)(int);
 #define SIG_IGN ((sig_handler_t)1)
 
 /* -- Non recoverable signals  */
-#define SIGABRT	0  /*  abort() */
-#define SIGILL	1  /*  n/a     */
-#define SIGSEGV	2  /*  n/a     */
-#define SIGQUIT	3  /*  n/a     */
-/* -- Recoverable signals      */
-#define SIGFPE  4  /*  runtime */
-#define SIGINT	5  /*  n/a     */
-#define SIGTERM	6  /*  n/a     */
-#define SIGVIRQ 7  /*  vIRQ    */
+#define SIGABRT 0                 /*  abort() */
+#define SIGILL  1                 /*  n/a     */
+#define SIGSEGV 2                 /*  n/a     */
+#define SIGQUIT 3                 /*  n/a     */
+/* -- Recoverable signals */
+#define SIGFPE  4                 /*  runtime */
+#define SIGINT  5                 /*  n/a     */
+#define SIGTERM 6                 /*  n/a     */
+#define SIGVIRQ SIGVIRQ_is_deprecated
 
 #define FPE_INTDIV      1       /* integer divide by zero */
 #define FPE_FLTOVF      2       /* floating point overflow */
@@ -29,7 +29,6 @@ typedef void (*sig_handler_t)(int);
 #define FPE_FLTINV      7       /* (not impl.) floating point invalid operation */
 
 sig_handler_t signal(int, sig_handler_t);
-
 int raise(int);
 
 #endif /* __SIGNAL */

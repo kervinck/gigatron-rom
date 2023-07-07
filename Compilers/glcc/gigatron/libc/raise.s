@@ -12,12 +12,13 @@ def scope():
         LDW(R9);STW(T3)
         LDW(R8)
         label('__@raisem')                   # signo in vAC, msg in T3
-        STLW(-2);
+        STW(T1)                              # save signo
         label('_raise_disposition', pc()+1)
         LDWI(0)
         _BEQ('.raise2')
-        STW(T2);
-        LDW(vLR);DOKE(SP);LDLW(-2);CALL(T2)  # dispatcher (no return)
+        STW(T2)
+        PUSH()
+        LDW(T1);CALL(T2)   # dispatcher (no return)
         label('.raise2')
         LDI(20);STW(R8);
         LDW(T3);STW(R9);
@@ -35,9 +36,10 @@ def scope():
     def code1():
         nohop()
         label('_raise_sets_code')
+        STW(T3)
         LDWI('_raise_code');STW(T2)
-        LDLW(-2);DOKE(T2)
-        LDW(SP);DEEK();STW(vLR);RET()
+        LDW(T3);DOKE(T2)
+        POP();RET()
         align(2);
         label('_raise_code')
         words(0)

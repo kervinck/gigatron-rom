@@ -32,7 +32,7 @@ static void asgncode(Type ty, int lev) {
 		return;
 	ty->x.marked = 1;
 	switch (ty->op) {
-	case VOLATILE: case CONST: case VOLATILE+CONST:
+	case QUAL:
 		asgncode(ty->type, lev);
 		ty->x.typeno = ty->type->x.typeno;
 		break;

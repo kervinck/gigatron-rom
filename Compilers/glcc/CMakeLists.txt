@@ -103,11 +103,14 @@ add_executable(gtsim
 # --- Stage binary directory to make glcc usable
 
 set(gigatron_targets
-  glcc glink glink.py
-  interface.json roms.json)
+  glcc glink glink.py gtprof
+  interface.json interface-dev.json roms.json)
 
 foreach(fn ${gigatron_targets})
   set(output "${CMAKE_CURRENT_BINARY_DIR}/${fn}")
+  if ("${fn}" STREQUAL gtprof)
+     set(fn "mapsim/${fn}")
+  endif()
   add_custom_command(OUTPUT "${output}"
     COMMAND "${CMAKE_COMMAND}" "-E" "copy" "${srcrel}/gigatron/${fn}" "${output}"
     MAIN_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/gigatron/${fn}"
@@ -201,7 +204,7 @@ endforeach()
 
 function(add_glcc_library libname libfile)
   # Parse the CPU x optional argument
-  set(cpulist 4 5 6)
+  set(cpulist 4 5 6 7)
   list(GET ARGN 0 car)
   if ("${car}" STREQUAL "CPU")
     list(POP_FRONT ARGN car cpulist)
@@ -273,10 +276,12 @@ add_glcc_library("libconx" "mapconx/libconx.a" "gigatron/mapconx/libconx/*.c")
 add_glcc_library("libcon_b" "map512k/libcon_b.a" "gigatron/map512k/libcon_b/*.c" "gigatron/map512k/libcon_b/*.s")
 add_glcc_library("libcon_n" "map512k/libcon_n.a" "gigatron/map512k/libcon_n/*.c" "gigatron/map512k/libcon_n/*.s")
 add_glcc_library("libcon_h" "map512k/libcon_h.a" "gigatron/map512k/libcon_h/*.c" "gigatron/map512k/libcon_h/*.s")
+add_glcc_library("libcon1" "map128k/libcon1.a" "gigatron/map128k/libcon1/*.c" "gigatron/map128k/libcon1/*.s")
 add_glcc_library("libsim" "mapsim/libsim.a" "gigatron/mapsim/libsim/*.c"  "gigatron/mapsim/libsim/*.s")
 add_glcc_library("libc-cpu4" "cpu4/libc.a" CPU 4 "gigatron/libc/*.c" "gigatron/libc/*.s" "gigatron/runtime/*.s")
 add_glcc_library("libc-cpu5" "cpu5/libc.a" CPU 5 "gigatron/libc/*.c" "gigatron/libc/*.s" "gigatron/runtime/*.s")
 add_glcc_library("libc-cpu6" "cpu6/libc.a" CPU 6 "gigatron/libc/*.c" "gigatron/libc/*.s" "gigatron/runtime/*.s") 
+add_glcc_library("libc-cpu7" "cpu7/libc.a" CPU 7 "gigatron/libc/*.c" "gigatron/libc/*.s" "gigatron/runtime/*.s") 
 
 
 # ---- Installation
@@ -311,7 +316,7 @@ if (WIN32)
   string(REPLACE "/" "\\\\" cmd_to_lib "${bin_to_lib}")
   install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
              \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${glcc_install_bindir}\")")
-  foreach(pgm glcc glink gtsim)
+  foreach(pgm glcc glink gtsim gtprof)
     set(pycmd "")
     if (NOT "${pgm}" STREQUAL gtsim)
       set(pycmd "\\\"${PYTHON3}\\\" ")
@@ -326,7 +331,7 @@ else()
   file(RELATIVE_PATH bin_to_lib "/${glcc_install_bindir}" "/${glcc_install_libdir}")
   install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
             \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${glcc_install_bindir}\")")
-  foreach(pgm glcc glink gtsim)
+  foreach(pgm glcc glink gtsim gtprof)
     set(output "\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${glcc_install_bindir}/${pgm}")
     install(CODE "message(STATUS \"Creating symlink: ${output}\")
                   execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink

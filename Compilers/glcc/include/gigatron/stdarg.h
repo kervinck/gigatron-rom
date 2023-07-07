@@ -20,7 +20,7 @@ typedef __va_list va_list;
   ((size_t)&(((struct{char c; mode m;}*)(0))->m))
 
 #define __va_arg_ptr(list, mode, n)\
-	&((list=(__va_list)(((size_t)list+sizeof(mode)+(n))&~(n)))[-(int)sizeof(mode)])
+	&((list=(__va_list)(((size_t)list+(sizeof(mode)+(n)))&~(n)))[-(int)sizeof(mode)])
 
 #define va_start(list, start)\
   ((void)((list)=(__va_list)&((&start)[1])))

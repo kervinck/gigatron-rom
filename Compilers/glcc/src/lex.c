@@ -704,6 +704,39 @@ int gettok(void) {
 				cp = rcp + 9;
 				return FIRSTARG;
 			}
+			if (rcp[0] == '_'
+			&&  rcp[1] == 'f'
+			&&  rcp[2] == 'a'
+			&&  rcp[3] == 'r'
+			&& !(map[rcp[4]]&(DIGIT|LETTER))) {
+				cp = rcp + 4;
+				return FAR;
+			}
+			if (rcp[0] == '_'
+			&&  rcp[1] == 'n'
+			&&  rcp[2] == 'e'
+			&&  rcp[3] == 'a'
+			&&  rcp[4] == 'r'
+			&& !(map[rcp[5]]&(DIGIT|LETTER))) {
+				cp = rcp + 5;
+				return NEAR;
+			}
+			if (rcp[0] == '_'
+			&&  rcp[1] == 'a'
+			&&  rcp[2] == 't'
+			&&  rcp[3] == 't'
+			&&  rcp[4] == 'r'
+			&&  rcp[5] == 'i'
+			&&  rcp[6] == 'b'
+			&&  rcp[7] == 'u'
+			&&  rcp[8] == 't'
+			&&  rcp[9] == 'e'
+			&&  rcp[10] == '_'
+			&&  rcp[11] == '_'
+			&& !(map[rcp[12]]&(DIGIT|LETTER))) {
+				cp = rcp + 12;
+				return ATTRIBUTE;
+			}			
 			goto id;
 		default:
 			if ((map[cp[-1]]&BLANK) == 0)

@@ -23,7 +23,7 @@ void mincprintf(const char *fmt, ...)
 			l = *f;
 			if (l == 's') {
 				s = va_arg(ap, char*);
-				l = strlen(s);
+				l = 32767;
 			} else if (l == 'd') {
 				char buf[8];
 				s = itoa(va_arg(ap, int), buf, 10);

@@ -1,7 +1,30 @@
 def scope():
 
-    if 'has_at67_SYS_Multiply_s16' in rominfo:
-        # Muliply using SYS call
+    if 'has_SYS_Multiply_s16' in rominfo:
+        info = rominfo['has_SYS_Multiply_s16']
+        addr = int(str(info['addr']),0)
+        cycs = int(str(info['cycs']),0)
+        def code1():
+            nohop()
+            label('_@_mul')             # T3*vAC -> vAC  (traditional entry point)
+            STW('sysArgs2')
+            LDW(T3);STW('sysArgs0')
+            BRA('.1')
+            label('_@_at67_mul')        # sysArgs0*vAC -> vAC  (faster entry point)
+            STW('sysArgs2')
+            label('.1')
+            LDWI(addr);STW('sysFn')
+            LDI(0);STW('sysArgs4')
+            SYS(cycs)
+            RET()
+
+        module(name='rt_at67_mul.s',
+               code= [ ('EXPORT', '_@_mul'),
+                       ('EXPORT', '_@_at67_mul'),
+                       ('CODE', '_@_mul', code1) ] )
+    
+    elif 'has_at67_SYS_Multiply_s16' in rominfo:
+        # Multiply using SYS call
         info = rominfo['has_at67_SYS_Multiply_s16']
         addr = int(str(info['addr']),0)
         cycs = int(str(info['cycs']),0)
@@ -15,15 +38,11 @@ def scope():
             STW('sysArgs2')
             label('.1')
             LDWI(addr);STW('sysFn')
-            if args.cpu >= 6:
-                MOVQW(0, 'sysArgs4');MOVQW(1, 'sysArgs6')
-            else:
-                LDI(0);STW('sysArgs4');LDI(1);STW('sysArgs6')
+            LDI(0);STW('sysArgs4');LDI(1);STW('sysArgs6')
             SYS(cycs)
-            LDW('sysArgs4')
             RET()
 
-        module(name='rt_at67_mul.s',
+        module(name='rt_mul.s',
                code= [ ('EXPORT', '_@_mul'),
                        ('EXPORT', '_@_at67_mul'),
                        ('CODE', '_@_mul', code1) ] )

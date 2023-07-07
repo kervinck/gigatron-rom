@@ -6,35 +6,57 @@
     "#" : "- Key 'romType' is used for runtime ROM check",
     "#" : "- Other keys can be tested by the runtime libraries",
 
-    "v4"  : { "cpu" : 4,
-	      "romType" : "0x38"
-	    },
+    "v4"    : { 
+		"cpu" : 4,
+		"romType" : "0x38",
+		"maxTicks" : 14
+	      },
 
-    "v5a" : { "cpu" : 5,
-	      "romType" : "0x40",
-	      "inherits" : "v4",
-	      "has_vIRQ" : 1
-	    },
+    "v5a"   : { "cpu" : 5,
+		"inherits" : "v4",
+		"romType" : "0x40",
+		"has_vIRQ" : 1
+	      },
 
-    "dev" : { "cpu" : 5,
-	      "romType" : "0xf8",
-	      "inherits" : "v5a",
-	      "has_SYS_CopyMemory" :          { "addr" : "0xe9", "cycs" : 80 },
-	      "has_SYS_CopyMemoryExt" :       { "addr" : "0xec", "cycs" : 100 },
-	      "has_SYS_ScanMemory" :          { "addr" : "0xe6", "cycs" : 50 }
-	    },
+    "dev6"  : { "cpu" : 5,
+		"inherits" : "v5a",
+		"romType" : "0xf8",
+		"has_SYS_CopyMemory" :          { "addr" : "0xe9", "cycs" : 80  },
+		"has_SYS_CopyMemoryExt" :       { "addr" : "0xec", "cycs" : 100 },
+		"has_SYS_ScanMemory" :          { "addr" : "0xe6", "cycs" : 50  },
+		"has_SYS_ScanMemoryExt" :       { "addr" : "0xe3", "cycs" : 50  },
+		"has_at67_SYS_Multiply_s16" :   { "addr" : "0x9e", "cycs" : 66  },
+		"has_at67_SYS_Divide_s16" :     { "addr" : "0xa1", "cycs" : 80  }
+	      },
 
-    "exp" : { "cpu" : 5,
-	      "romType" : "0xf8",
-	      "inherits" : "dev",
-	      "has_SYS_ScanMemoryExt" :       { "addr" : "0xe3", "cycs" : 50 }
-	    },
+    "v6"    : { "cpu" : 5,
+		"inherits" : "dev6",
+		"romType" : "0x48"
+	      },
 
-    "vx0" : { "cpu" : 6,
-	      "romType" : "0x80",
-	      "inherits" : "dev",
-	      "has_SYS_ScanMemoryExt" :       { "addr" : "0xe3", "cycs" : 50 },
-	      "has_at67_SYS_Multiply_s16" :   { "addr" : "0x9e", "cycs": 66 },
-	      "has_at67_SYS_Divide_s16" :     { "addr" : "0xa1", "cycs": 80 }
-	    }
+    "v6--"  : { "cpu" : 5,
+		"inherits" : "dev6",
+		"romType" : "0x48",
+		"without_CmpOps" : 1
+	      },
+
+    "vx0"   : { "cpu" : 6,
+		"inherits" : "dev6",
+		"romType" : "0x80",
+		"maxTicks" : 15,
+		"registerBase" : "0x50",
+		"registerFLAC" : "0xc1",
+		"registerSP"   : "0x48",
+		"registerT2T3" : "0xcc",
+		"warning" : "ROMvX0 opcodes may change often!"
+	      },
+    
+    "dev7"  : { "cpu" : 7,
+		"inherits" : "v6",
+		"romType" : "0xf8",
+		"maxTicks" : 15,
+		"may_work_with_map128k" : 1,
+		"has_SYS_Multiply_s16" :        { "addr" : "0x9e", "cycs" : 34  },
+		"has_SYS_Divide_u16" :          { "addr" : "0xa1", "cycs" : 34  }
+	      }
 }

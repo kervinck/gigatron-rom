@@ -1,28 +1,26 @@
 
-# This variant uses only the NCOPY opcode. Requires cpu6.
-def scope_ncopy():
+# This variant uses only the COPY/COPYN opcodes. Requires cpu7.
+# Peak rate is 10 bytes/scanline with little setup time.
+def scope_copy_op():
     def code0():
         nohop()
         label('memcpy');                            # R8=d, R9=s, R10=l
-        PUSH()
-        LDW(R8);STW(vDST)
-        label('.memcpy1')
-        LDW(R10);_BEQ('.memcpy3')
-        LD(R10+1);_BEQ('.memcpy2')
-        LDW(R9);NCOPY(0);STW(R9)
-        DEC(R10+1);_BRA('.memcpy1')
-        label('.memcpy2')
-        LDWI(v('.ncopy')+1);POKEA(R10)
-        LDW(R9);label('.ncopy');NCOPY(1)
-        label('.memcpy3')
-        LDW(R8);tryhop(2);POP();RET()
+        LDW(R8);STW(T2)
+        LDW(R9);STW(T3)
+        LDW(R10)
+        label('memcpy1')
+        COPY()
+        label('memcpy2')
+        JNE('memcpy1')
+        RET()
 
     module(name='memcpy.s',
            code=[('EXPORT', 'memcpy'),
                  ('CODE', 'memcpy', code0) ])
     
 
-# This longer variant uses SYS_CopyMemory.
+# This longer but slightly faster variant uses SYS_CopyMemory.
+# Peak rate is 12 bytes/scanline with substantial setup time.
 def scope_syscopymemory():
     info = rominfo['has_SYS_CopyMemory']
     addr = int(str(info['addr']),0)
@@ -61,6 +59,7 @@ def scope_syscopymemory():
            
 
 # This variant uses vCPU only
+# Peak rate slightly above 1 byte/scanline.
 def scope_vcpu():
            
     def code0():
@@ -72,21 +71,16 @@ def scope_vcpu():
         label('_memcpy0')
         # single byte
         LD('sysArgs4');ANDI(1);_BEQ('.cpy2')
-        _PEEKV('sysArgs2');POKE('sysArgs0')
+        LDW('sysArgs2');PEEK();POKE('sysArgs0')
         INC('sysArgs2');INC('sysArgs0')
         LD('sysArgs4');ANDI(0xfe);ST('sysArgs4');_BEQ('.cpydone')
         # even length
         label('.cpy2')
-        if args.cpu <= 5:
-           label('.cpy2loop')
-           LDW('sysArgs2');DEEK();DOKE('sysArgs0')
-           INC('sysArgs2');INC('sysArgs0')
-           INC('sysArgs2');INC('sysArgs0')
-           LD('sysArgs4');SUBI(2);ST('sysArgs4');_BNE('.cpy2loop')
-        else:
-           label('.cpy2loop')
-           DEEKp('sysArgs2'); DOKEp('sysArgs0')
-           DEC('sysArgs4'); DBNE('sysArgs4', '.cpy2loop')
+        label('.cpy2loop')
+        LDW('sysArgs2');DEEK();DOKE('sysArgs0')
+        INC('sysArgs2');INC('sysArgs0')
+        INC('sysArgs2');INC('sysArgs0')
+        LD('sysArgs4');SUBI(2);ST('sysArgs4');_BNE('.cpy2loop')
         label('.cpydone')
         RET()
 
@@ -123,9 +117,8 @@ def scope_vcpu():
                  ('CODE', '_memcpy0', code0),
                  ('CODE', 'memcpy', code1) ])
 
-
-if args.cpu >= 6 and False:
-    scope_ncopy()
+if args.cpu >= 7:
+    scope_copy_op()
 elif 'has_SYS_CopyMemory' in rominfo:
     scope_syscopymemory()
 else:

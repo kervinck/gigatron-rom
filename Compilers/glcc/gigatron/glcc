@@ -77,20 +77,27 @@ hasrom = False
 hasmap = False
 hasv = False
 usage = False
+duplicate = None
 argv = []
 for arg in sys.argv:
     opt = arg
     if opt.startswith('--'):
         opt = opt[1:]
     if opt.startswith('-cpu='):
+        duplicate = "-cpu" if hascpu else duplicate
         hascpu = arg.split('=')[1]
     elif opt.startswith('-rom='):
+        duplicate = "-rom" if hasrom else duplicate
         hasrom = arg.split('=')[1]
     elif opt.startswith('-map='):
+        duplicate = "-map" if hasmap else duplicate
         hasmap = arg.split('=')[1]
     elif opt == '-v':
         hasv = True
     argv.append(arg)
+if duplicate:
+    print(f"Duplicate option {duplicate}", file=sys.stderr)
+    sys.exit(1)
 if len(argv) < 2:
     usage = True
 

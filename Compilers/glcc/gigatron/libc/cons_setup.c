@@ -7,9 +7,9 @@
 static void console_exitm_msgfunc(int retcode, const char *s)
 {
 	if (s) {
-		static struct console_state_s rst = {3, 0, 0, 1, 1};
-		console_state = rst;
-		console_state.cy = console_info.nlines;
+		console_state.fgbg = 3;
+		console_state_set_cycx(console_info.nlines);
+		console_state_set_wrap(0x101);
 		console_print(s, console_info.ncolumns);
 	}
 }

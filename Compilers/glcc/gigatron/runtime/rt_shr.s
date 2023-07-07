@@ -52,16 +52,10 @@ def scope():
        label('_@_shrs')
        PUSH();ST(T2)
        LDW(T3);_BGE('.shrs1')
-       if args.cpu >= 6:
-           NOTW(T3)
-       else:
-           _LDI(0xffff);XORW(T3);STW(T3)
+       _LDI(0xffff);XORW(T3);STW(T3)
        _CALLJ('__@shru_t2')
-       if args.cpu >= 6:
-           NOTW(vAC)
-       else:
-           STW(T3);_LDI(0xffff);XORW(T3)
-       _BRA('.shrs2')
+       STW(T3);_LDI(0xffff);XORW(T3)
+       tryhop(2);POP();RET()
        label('.shrs1')
        _CALLJ('__@shru_t2')
        label('.shrs2')
@@ -76,19 +70,25 @@ def scope():
     def code0():
         nohop()
         label('_@_shru1')
-        if args.cpu >= 6:
-            LSRV(vAC)
+        if args.cpu >= 7:
+            MOVIW('SYS_LSRW1_48','sysFn')
         else:
-            STW(T3); LDWI('SYS_LSRW1_48'); STW('sysFn'); LDW(T3)
-            SYS(48)
+            STW(T3)
+            _MOVIW('SYS_LSRW1_48','sysFn')
+            LDW(T3)
+        SYS(48)
         RET()
         label('_@_shrs1')
         _BGE('_@_shru1')
-        if args.cpu >= 6:
-            LSRV(vAC);ORWI(0x8000)
+        if args.cpu >= 7:
+            _MOVIW('SYS_LSRW1_48','sysFn')
+            _MOVIW(0x8000, T2)
         else:
-            STW(T3); LDWI('SYS_LSRW1_48'); STW('sysFn'); LDWI(0x8000); STW(T2); LDW(T3)
-            SYS(48); ORW(T2)
+            STW(T3)
+            _MOVIW('SYS_LSRW1_48','sysFn')
+            _MOVIW(0x8000, T2)
+            LDW(T3)
+        SYS(48); ORW(T2)
         RET()
 
     module(name='rt_shr1.s',

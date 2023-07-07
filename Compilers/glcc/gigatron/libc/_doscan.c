@@ -144,7 +144,7 @@ int _doscan(register FILE *fp, register const char *fmt, register __va_list ap)
 			spc(dd);
 			continue;
 		} else if (c != '%' || fmt[1] == '%' && fmt++) {
-			if (dd->c != '%')
+			if (dd->c != c)
 				break;
 			_doscan_next(dd);
 			continue;

@@ -66,8 +66,7 @@ static Type xxinit(int op, char *name, Metrics m) {
 	return ty;
 }
 static Type type(int op, Type ty, int size, int align, void *sym) {
-	unsigned h = (op^((unsigned long)ty>>3))
-&(NELEMS(typetable)-1);
+	unsigned h = (op^((unsigned long)ty>>3)) &(NELEMS(typetable)-1);
 	struct entry *tn;
 
 	if (op != FUNCTION && (op != ARRAY || size > 0))
@@ -145,13 +144,15 @@ void type_init(int argc, char *argv[]) {
 	funcptype = ptr(func(voidtype, NULL, 1));
 	charptype = ptr(chartype);
 #define xx(v,t) if (v==NULL && t->size==voidptype->size && t->align==voidptype->align) v=t
-	xx(unsignedptr,unsignedshort);
+	if (unsignedshort->size != unsignedtype->size)
+		xx(unsignedptr,unsignedshort);
 	xx(unsignedptr,unsignedtype);
 	xx(unsignedptr,unsignedlong);
 	xx(unsignedptr,unsignedlonglong);
 	if (unsignedptr == NULL)
 		unsignedptr = type(UNSIGNED, NULL, voidptype->size, voidptype->align, voidptype->u.sym);
-	xx(signedptr,shorttype);
+	if (shorttype->size != inttype->size)
+		xx(signedptr,shorttype);
 	xx(signedptr,inttype);
 	xx(signedptr,longtype);
 	xx(signedptr,longlong);
@@ -230,25 +231,41 @@ Type atop(Type ty) {
 }
 Type qual(int op, Type ty) {
 	if (isarray(ty))
-		ty = type(ARRAY, qual(op, ty->type), ty->size,
-			ty->align, NULL);
+		return type(ARRAY, qual(op, ty->type), ty->size, ty->align, NULL);
 	else if (isfunc(ty))
 		warning("qualified function type ignored\n");
-	else if (isconst(ty)    && op == CONST
-	||       isvolatile(ty) && op == VOLATILE)
-		error("illegal type `%k %t'\n", op, ty);
-	else {
+	else if (op == CONST || op == VOLATILE || op == NEAR || op == FAR) {
+		if (isconst(ty) && op == CONST ||
+		    isvolatile(ty) && op == VOLATILE ||
+		    (ty->op & 32) && (op == FAR || op == NEAR) )
+			error("illegal type `%k %t'\n", op, ty);
 		if (isqual(ty)) {
-			op += ty->op;
+			op ^= ty->op;
 			ty = ty->type;
 		}
-		ty = type(op, ty, ty->size, ty->align, NULL);
+		return type(op, ty, ty->size, ty->align, NULL);
+	} else {
+		if (isconst((struct{int op;}*)&op)) {
+			ty = qual(CONST, ty);
+			op ^= CONST;
+		}
+		if (isvolatile((struct{int op;}*)&op)) {
+			ty = qual(VOLATILE, ty);
+			op ^= VOLATILE;
+		}
+		if (op == NEAR || op == FAR)
+			return qual(op, ty);
+		assert(!op);
 	}
 	return ty;
 }
 Type func(Type ty, Type *proto, int style) {
-	if (ty && (isarray(ty) || isfunc(ty)))
+	int i;
+	if (ty && (isarray(ty) || isfunc(ty) || fnqual(ty)))
 		error("illegal return type `%t'\n", ty);
+	for(i=0; proto && proto[i]; i++)
+		if (fnqual(proto[i]))
+			error("illegal argument type '%t'\n", proto[i]);
 	ty = type(FUNCTION, ty, 0, 0, NULL);
 	ty->u.f.proto = proto;
 	ty->u.f.oldstyle = style;
@@ -293,6 +310,8 @@ Type newstruct(int op, char *tag) {
 Field newfield(char *name, Type ty, Type fty) {
 	Field p, *q = &ty->u.sym->u.s.flist;
 
+	if (fnqual(fty))
+		error("illegal field type `%t'\n", fty);
 	if (name == NULL)
 		name = stringd(genlabel(1));
 	for (p = *q; p; q = &p->link, p = *q)
@@ -320,8 +339,7 @@ int eqtype(Type ty1, Type ty2, int ret) {
 	case UNSIGNED: case INT: case FLOAT:
 		return 0;
 	case POINTER:  return eqtype(ty1->type, ty2->type, 1);
-	case VOLATILE: case CONST+VOLATILE:
-	case CONST:    return eqtype(ty1->type, ty2->type, 1);
+	case QUAL:     return eqtype(ty1->type, ty2->type, 1);
 	case ARRAY:    if (eqtype(ty1->type, ty2->type, 1)) {
 		       	if (ty1->size == ty2->size)
 		       		return 1;
@@ -395,10 +413,7 @@ Type compose(Type ty1, Type ty2) {
 	switch (ty1->op) {
 	case POINTER:
 		return ptr(compose(ty1->type, ty2->type));
-	case CONST+VOLATILE:
-		return qual(CONST, qual(VOLATILE,
-			compose(ty1->type, ty2->type)));
-	case CONST: case VOLATILE:
+	case QUAL:
 		return qual(ty1->op, compose(ty1->type, ty2->type));
 	case ARRAY:    { Type ty = compose(ty1->type, ty2->type);
 			 if (ty1->size && (ty1->type->size && ty2->size == 0 || ty1->size == ty2->size))
@@ -430,7 +445,7 @@ Type compose(Type ty1, Type ty2) {
 }
 int ttob(Type ty) {
 	switch (ty->op) {
-	case CONST: case VOLATILE: case CONST+VOLATILE:
+	case QUAL:
 		return ttob(ty->type);
 	case VOID: case INT: case UNSIGNED: case FLOAT:
 		return ty->op + sizeop(ty->size);
@@ -483,8 +498,7 @@ int hasproto(Type ty) {
 	if (ty == 0)
 		return 1;
 	switch (ty->op) {
-	case CONST: case VOLATILE: case CONST+VOLATILE: case POINTER:
-	case ARRAY:
+	case QUAL: case POINTER: case ARRAY:
 		return hasproto(ty->type);
 	case FUNCTION:
 		return hasproto(ty->type) && ty->u.f.proto;
@@ -538,7 +552,7 @@ static Field isfield(const char *name, Field flist) {
 /* outtype - output type ty */
 void outtype(Type ty, FILE *f) {
 	switch (ty->op) {
-	case CONST+VOLATILE: case CONST: case VOLATILE:
+	case QUAL:
 		fprint(f, "%k %t", ty->op, ty->type);
 		break;
 	case STRUCT: case UNION: case ENUM:
@@ -635,7 +649,7 @@ static void prtype(Type ty, FILE *f, int indent, unsigned mark) {
 	case FLOAT: case INT: case UNSIGNED: case VOID:
 		fprint(f, "(%k %d %d [\"%s\"])", ty->op, ty->size, ty->align, ty->u.sym->name);
 		break;
-	case CONST+VOLATILE: case CONST: case VOLATILE: case POINTER: case ARRAY:
+	case QUAL: case POINTER: case ARRAY:
 		fprint(f, "(%k %d %d ", ty->op, ty->size, ty->align);
 		prtype(ty->type, f, indent+1, mark);
 		fprint(f, ")");
@@ -699,7 +713,7 @@ char *typestring(Type ty, char *str) {
 	for ( ; ty; ty = ty->type) {
 		Symbol p;
 		switch (ty->op) {
-		case CONST+VOLATILE: case CONST: case VOLATILE:
+		case QUAL:
 			if (isptr(ty->type))
 				str = stringf("%k %s", ty->op, str);
 			else
@@ -753,3 +767,15 @@ char *typestring(Type ty, char *str) {
 	assert(0); return 0;
 }
 
+int fnqual(Type ty)
+{
+	if (isqual(ty)) {
+		int op = ty->op;
+		if (isvolatile(ty))
+			op ^= VOLATILE;
+		if (isconst(ty))
+			op ^= CONST;
+		return op;
+	}
+	return 0;
+}

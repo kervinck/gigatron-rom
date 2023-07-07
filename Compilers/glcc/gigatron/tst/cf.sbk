@@ -1,77 +1,77 @@
-#VCPUv5
+#VCPUv7
 
 # ======== ('CODE', 'main', code0)
 def code0():
 	label('main');
-	_PROLOGUE(28,10,0xf8); # save=R3-7
+	_PROLOGUE(28,8,0xf8); # save=R3-7
 	LDW(R8);STW(R7);
 	LDW(R9);STW(R6);
-	LDW(R7);_CMPIS(1);_BGT('.2');
+	LDI(1);_CMPWS(R7);_BLT('.2');
 	_MOVF('.4',[SP,-5+28]);
 	_BRA('.3');
 	label('.2');
-	LDI(2);ADDW(R6);DEEK();STW(R8);
-	_MOVW(R8,[SP,2]);
+	LDI(2);ADDW(R6);DEEKA(R8);
+	LDW(R8);_STLW(0);
 	CALLI('atof');
 	LDWI('.5');_FDIV();_MOVF(FAC,[SP,-5+28]);
 	label('.3');
-	LDI(0);STW(R5);
+	MOVQW(0,R5);
 	label('.6');
-	LDW(R5);STW(R22);
-	LDI(1);ADDW(R22);STW(R5);
-	LDWI('f');STW(R21);
-	LDW(R22);LSLW();LSLW();ADDW(R22);ADDW(R21);STW(T2);_MOVF('.4',[T2]);
+	LDW(R5);STW(R23);
+	INCV(R5);
+	LDWI('f');STW(R22);
+	LDW(R23);_MULI(5);ADDW(R22);STW(T2);_MOVF('.4',[T2]);
 	label('.7');
-	LDW(R5);_CMPIS(127);_BLE('.6');
-	LDI(0);STW(R4);
+	LDI(127);_CMPWS(R5);_BGE('.6');
+	MOVQW(0,R4);
 	_BRA('.11');
 	label('.10');
-	LDWI('f');STW(R22);
-	LDW(R3);LSLW();LSLW();ADDW(R3);ADDW(R22);STW(R22);
-	_MOVF('.13',FAC);LDW(R22);_FADD();LDW(R22);_MOVF(FAC,[vAC]);
-	LDI(1);ADDW(R4);STW(R4);
+	LDWI('f');STW(R23);
+	LDW(R3);_MULI(5);ADDW(R23);STW(R23);
+	_MOVF('.13',FAC);LDW(R23);_FADD();LDW(R23);_MOVF(FAC,[vAC]);
+	INCV(R4);
 	label('.11');
-	CALLI('getchar');STW(R22);
+	CALLI('getchar');STW(R23);
 	STW(R3);
-	_LDI(-1);XORW(R22);_BNE('.10');
+	LDNI(-1);XORW(R23);_BNE('.10');
 	LDWI('.14');STW(R8);
-	_MOVW(R8,[SP,2]);
+	_STLW(0);
 	CALLI('printf');
-	LDI(0);STW(R5);
+	MOVQW(0,R5);
 	label('.15');
-	LDWI('f');STW(R22);
-	LDW(R5);LSLW();LSLW();ADDW(R5);ADDW(R22);_MOVF([vAC],F20);
-	_MOVF(F20,FAC);LDWI('.4');_FCMP();_BEQ('.19');
-	LDW(R4);_STLS(LAC);_FCVI();_MOVF(FAC,F17);
-	_MOVF(F20,FAC);LDI(F17);_FDIV();_SP(-5+28);_FCMP();_BLT('.19');
-	LDW(R5);_CMPIS(32);_BGT('.21');
+	LDWI('f');STW(R23);
+	LDW(R5);_MULI(5);ADDW(R23);_MOVF([vAC],F21);
+	_MOVF(F21,FAC);LDWI('.4');_FCMP();_BEQ('.19');
+	LDW(R4);_STLS(LAC);_FCVI();_MOVF(FAC,F18);
+	_MOVF(F21,FAC);LDI(F18);_FDIV();_SP(-5+28);_FCMP();_BLT('.19');
+	LDI(32);_CMPWS(R5);_BLT('.21');
 	LDWI('.23');STW(R8);
-	_MOVW(R8,[SP,2]);
+	_STLW(0);
 	LDW(R5);STW(R9);
-	_MOVW(R9,[SP,4]);
+	LDW(R9);_STLW(2);
 	CALLI('printf');
 	_BRA('.22');
 	label('.21');
 	LDWI('.24');STW(R8);
-	_MOVW(R8,[SP,2]);
+	_STLW(0);
 	LDW(R5);STW(R9);
-	_MOVW(R9,[SP,4]);
+	LDW(R9);_STLW(2);
 	CALLI('printf');
 	label('.22');
 	LDWI('.25');STW(R8);
-	_MOVW(R8,[SP,2]);
-	LDW(R5);LSLW();LSLW();ADDW(R5);STW(R22);
-	LDW(R4);_STLS(LAC);_FCVI();_MOVF(FAC,F19);
-	_MOVF('.5',FAC);LDWI('f');ADDW(R22);_FMUL();LDI(F19);_FDIV();_MOVF(FAC,F9);
-	_MOVF(F9,[SP,4]);
+	_STLW(0);
+	LDWI('f');STW(R23);
+	LDW(R4);_STLS(LAC);_FCVI();_MOVF(FAC,F20);
+	_MOVF('.5',FAC);LDW(R5);_MULI(5);ADDW(R23);_FMUL();LDI(F20);_FDIV();_MOVF(FAC,F9);
+	_MOVF(F9,[SP,2]);
 	CALLI('printf');
 	label('.19');
 	label('.16');
-	LDI(1);ADDW(R5);STW(R5);
-	LDW(R5);_CMPIS(127);_BLE('.15');
+	INCV(R5);
+	LDI(127);_CMPWS(R5);_BGE('.15');
 	LDI(0);
 	label('.1');
-	_EPILOGUE(28,10,0xf8,saveAC=True);
+	_EPILOGUE(28,8,0xf8,saveAC=True);
 # ======== ('COMMON', 'f', code1, 640, 1)
 def code1():
 	label('f');
@@ -120,7 +120,7 @@ code=[
 	('DATA', '.13', code6, 0, 1),
 	('DATA', '.5', code7, 0, 1),
 	('DATA', '.4', code8, 0, 1) ]
-module(code=code, name='tst/cf.c', cpu=5);
+module(code=code, name='tst/cf.c', cpu=7);
 
 # Local Variables:
 # mode: python

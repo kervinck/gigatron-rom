@@ -14,8 +14,12 @@ def scope():
     def code1():
         nohop()
         label('_@_land')
-        STW(T3);DEEK();ANDW(LAC);STW(LAC)
-        LDI(2);ADDW(T3);DEEK();ANDW(LAC+2);STW(LAC+2)
+        if args.cpu >= 6:
+            ANDL()
+            warning("cpu6: should use ANDL instead of _@_land")
+        else:
+            STW(T3);DEEK();ANDW(LAC);STW(LAC)
+            LDI(2);ADDW(T3);DEEK();ANDW(LAC+2);STW(LAC+2)
         RET()
 
     module(name='rt_land.s',
@@ -25,8 +29,12 @@ def scope():
     def code2():
         nohop()
         label('_@_lor')
-        STW(T3);DEEK();ORW(LAC);STW(LAC)
-        LDI(2);ADDW(T3);DEEK();ORW(LAC+2);STW(LAC+2)
+        if args.cpu >= 6:
+            ORL()
+            warning("cpu6: should use ORL instead of _@_lor")
+        else:
+            STW(T3);DEEK();ORW(LAC);STW(LAC)
+            LDI(2);ADDW(T3);DEEK();ORW(LAC+2);STW(LAC+2)
         RET()
 
     module(name='rt_lor.s',
@@ -36,8 +44,12 @@ def scope():
     def code3():
         nohop()
         label('_@_lxor')
-        STW(T3);DEEK();XORW(LAC);STW(LAC)
-        LDI(2);ADDW(T3);DEEK();XORW(LAC+2);STW(LAC+2)
+        if args.cpu >= 6:
+            XORL()
+            warning("cpu6: should use XORL instead of _@_lxor")
+        else:
+            STW(T3);DEEK();XORW(LAC);STW(LAC)
+            LDI(2);ADDW(T3);DEEK();XORW(LAC+2);STW(LAC+2)
         RET()
 
     module(name='rt_lxor.s',
