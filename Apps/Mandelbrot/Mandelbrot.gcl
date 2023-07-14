@@ -73,7 +73,7 @@ $1ff [do i= A= B= 1<< SquareTable+ ptr= SlowMulShift7! ptr: i 1- if>=0loop]
     
 
 {-----------------------------------------------------------------------+
-|} $0300 \vLR: ret{          RAM page 3                                      |
+|} $0300 \vLR: [ret]{          RAM page 3                                      |
 +-----------------------------------------------------------------------}
 $0300:
 
@@ -152,7 +152,7 @@ $0300:
 ] CalcSet=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 4                                      |
+|}\vLR>++ [ret]{          RAM page 4                                      |
 +-----------------------------------------------------------------------}
 $0400:
 
@@ -218,7 +218,7 @@ $0400:
 $201a Separator= {High: separator character, Low: XOR when blinking}
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 5                                      |
+|}\vLR>++ [ret]{          RAM page 5                                      |
 +-----------------------------------------------------------------------}
 $0500:
 
@@ -290,7 +290,7 @@ $0500:
 ] PrintChar=
 
 {-----------------------------------------------------------------------+
-|}\vLR>++ ret{          RAM page 6                                      |
+|}\vLR>++ [ret]{          RAM page 6                                      |
 +-----------------------------------------------------------------------}
 $0600:
 
@@ -319,13 +319,12 @@ $0600:
   [do
     i 1+ i= 64^ if<>0           {Break after completing 63 iterations}
 
-                                {Mandelbrot function: z' := z^2 + c}
-    X A= Y Y+ B= MulShift7! Y0+ Y= {Y = 2*X*Y + Y0}
-    XX YY- X0+                  X= {X = X^2 - Y^2 + X0}
-
+    X Y- A= SqrShift7! Y=       {Y=(X-Y)^2}
+    XX YY+ Y- Y0+ Y=            {Y=X2+Y2-(X-Y)^2+Y0}
+    XX YY- X0+ X=               {X =X2-Y2+X0}
                                 {Calculate squares}
-   {X}A= SqrShift7!             XX=
-    Y A= SqrShift7!             YY=
+   {X}A= SqrShift7!  XX=
+    Y A= SqrShift7!  YY=
 
     -$200 XX+ YY+
     if<=0loop {else} i          {Also break when X^2 + Y^2 > 4}
