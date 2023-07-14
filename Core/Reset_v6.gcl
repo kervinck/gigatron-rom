@@ -1,0 +1,339 @@
+{-----------------------------------------------------------------------+
+|                                                                       |
+|       Reset Gigatron (pseudo) hardware                                |
+|                                                                       |
++-----------------------------------------------------------------------}
+
+gcl0x
+
+{ No need for romType check because Reset.gcl gets hard-compiled in  }
+
+_ledTimer=$2d
+
+$1f8 CtrlBits=
+
+
+{ CheckMemory }
+[def
+  push
+
+  { Check for expander and expanded memory }
+
+  \SYS_ExpanderControl_v4_40 _sysFn=
+  \memSize, 1- 255& 1+ i=           {Number of pages as counted at boot}
+  $8024 q=                          {sysArgs0 + 32K}
+  CheckExpander! [if<>0             {return $0 for 64k, $1c31 for 128k, $0c35 for 512k}
+    Char= PrintChar!            {Print '1' or '5'}
+    >Char, 2<< i=  ]            {Obtain two low digits of memory size}
+
+  { Convert memory page count to K in two decimals }
+
+  $2f2f Char= i                 {Two ASCII counters, both starting at '0'-1}
+  [do <Char++ 40- if>=0loop] 40+{Count number of 10K chunks}
+  [do >Char++  4- if>=0loop]    {Count number of 1K chunks}
+
+  PrintChar!
+  >Char, Char= PrintChar!
+
+  pop ret
+] CheckMemory=
+
+{ PrintS }
+[def
+  {
+     Print ASCII string to screen
+  }
+  push
+  Text=
+  [do
+    Text, if<>0
+    Char=
+    10^ [if<>0                  {Check for CR}
+      PrintChar!
+    else
+      2 <Pos. >Pos, 8+ >Pos.    {Move one text line down, indented}
+    ]
+    <Text++
+    loop]
+  pop ret
+] PrintS=
+
+{ PrintChar }
+[def
+  {
+    Draw ASCII character on screen using the 5x8 pixel built-in font
+  }
+  <Char, 82-                    {Map ASCII code to offset in font table}
+  [if<0 50+ i= \font32up        {First page for ASCII 32..81}
+   else     i= \font82up] j=    {Second page is ASCII 82..127}
+  i 2<< i+                      {Multiply by 5}
+  j+ j=                         {Add page address to reach bitmap data}
+  \SYS_VDrawBits_134 _sysFn=    {Prepare SYS call}
+  $3f20 \sysArgs0:              {Blue/White}
+  Pos \sysArgs4:                {Position of character}
+  6+ Pos=                       {Advance position by 6 pixels for next call}
+  5 [do i=                      {Loop to draw 5 vertical slices of 8 pixels}
+    j 0?? \sysArgs2.            {Get byte from ROM using `LUP 0' instruction}
+    134!!                       {Invoke SYS function to draw 8 vertical pixels}
+    <j++ <\sysArgs4++           {Advance to next slice in ROM and on screen}
+    i 1- if>0loop]              {Looping}
+  ret
+] PrintChar=
+
+{-----------------------------------------------------------------------+
+|} >\vLR++ ret {        RAM page 3                                      |
++-----------------------------------------------------------------------}
+*=$0300
+
+{ SetupChannel }
+[def
+  {
+    Setup a note on one channel
+    High byte is channel, low byte is note (should be even)
+    Reset the oscillators and channel variables
+  }
+  i= 255| 255^ $fa| p=          {Pointer to channel struct}
+  <i, i=                        {Extract note}
+  0 p. <p++                     {.wavA}
+  3 p. <p++                     {.wavX, 3=Sawtooth}
+  \notesTable i+ 0?? p. <p++    {.keyL}
+  \notesTable i+ 1?? p. <p++    {.keyH}
+  p. <p++                       {.oscL}
+  p.                            {.oscH}
+  ret
+] SetupChannel=
+
+{ CheckCard }
+[def
+
+  { Try putting card in SPI mode and get a positive response }
+  push
+  16 [do
+    j=
+
+    { Reset the SD Memory Card and put in SPI mode }
+
+    {
+    |  """To communicate with the SD card, your program has to place the SD
+    |     card into the SPI mode. To do this, set the MOSI and CS lines to
+    |     logic value 1 and toggle SD CLK for at least 74 cycles."""
+    }
+
+    10 [do i=                   {Lets do 10 bytes for 80 cycles}
+      SendOnesToCard!           {Keep MOSI line high by only sending ones}
+      i 1- if>0loop]
+
+    {
+    |  """After the 74 cycles (or more) have occurred, your program
+    |     should set the CS line to 0 and send the command CMD0:
+    |         01.000000 00000000 00000000 00000000 00000000 1001010.1
+    |     This is the reset command, which puts the SD card into the SPI
+    |     mode if executed when the CS line is low."""
+    }
+
+    { EnableCard }
+    \SYS_ExpanderControl_v4_40  {SYS function}
+    _sysFn= $8078 40!!          {Enable SPI0, keep MOSI high, bank 1}
+
+    { Setup command bytes }
+    _Command=$81
+    [def #$ff #$ff              {Start with two dummy bytes}
+         #$40 #0 #0 #0 #0 #$95] {CMD0: GO_IDLE_STATE}
+    p= \Command q=
+    8 [do i=                    {Copy command bytes to exchange buffer}
+      p, <p++                   {Fetch byte and advance read pointer}
+      q. <q++                   {Store byte and advance write pointer}
+      i 1- if>0loop]            {Looping}
+
+    { Send to SPI0 device }
+    \Command _sysArgs0=         {Begin}
+    8+       _sysArgs2=         {End and overwrite exchange buffer}
+    \SYS_SpiExchangeBytes_v4_134{SYS function}
+    _sysFn= 134!!
+
+    {
+    |  """To receive this message, your program should continuously toggle
+    |     the SD CLK signal and observe the MISO line for data, while keeping
+    |     the MOSI line high and the CS line low. Your program can detect the
+    |     message, because every message begins with a 0 bit, and when the
+    |     SD card sends no data it keeps the MISO line high."""
+    }
+
+    { WaitForCardReply }
+    16 [do i=                   {Poll for at least 8 reply bytes}
+      SendOnesToCard!           {Keep MOSI line high by only sending ones}
+      128&                      {Note: communication is byte-aligned}
+      if<>0                     {Break out when valid message detected}
+        i 1- if>0loop]          {Or when loop counter exhausted}
+
+    {
+    |  """Note that the response to each command is sent by the card a few
+    |     SD CLK cycles later. If the expected response is not received within
+    |     16 clock cycles after sending the reset command, the reset command
+    |     has to be sent again."""
+    }
+
+    { DisableCard }
+    \SYS_ExpanderControl_v4_40  {SYS function}
+    _sysFn= $807c 40!!          {Disable SPI, keep MOSI high, bank 1}
+
+    \sysArgs6, if<>0            {Break on zeroes from pull-down R1}
+
+    1^ [if=0                    {Only 1 means success}
+      FindBoot! _sysArgs0=      {Load Boot from ROM and execute}
+      $200 _vLR=
+      \SYS_Exec_88 _sysFn= 88!!]
+
+    j 1- if>0loop]              {Retry}
+
+    pop ret
+] CheckCard=
+
+{ SendOnesToCard }
+[def
+  255 \sysArgs6.                {Place byte in exchange buffer}
+  \sysArgs6 _sysArgs0=          {Begin}
+  1+        _sysArgs2=          {End}
+  \SYS_SpiExchangeBytes_v4_134  {SYS function}
+  _sysFn= 134!!                 {Exchanges a single byte}
+  \sysArgs6,                    {Reply byte}
+  ret
+] SendOnesToCard=
+
+{-----------------------------------------------------------------------+
+|}>\vLR++ ret{          RAM page 4                                      |
++-----------------------------------------------------------------------}
+*=$0400
+
+{ FindProg }
+[def
+  q=
+  \SYS_ReadRomDir_v5_80 _sysFn=
+  0 [do 80!! p=
+    q deek _sysArgs0^ [if=0
+     2 q+ deek _sysArgs2^ [if=0
+       4 q+ deek _sysArgs4^ [if=0
+         6 q+ deek _sysArgs6^ [if=0 p ret]]]]
+    p loop]
+    ret
+] FindProg=
+
+[def [def `Main #0 #0 #0 #0 ] push FindProg! pop ret
+] FindMain=
+
+[def [def `Boot #0 #0 #0 #0 ] push FindProg! pop ret
+] FindBoot=
+
+{ CheckExpander }
+[def
+  {prereqs: q=$8024 _sysFn=\SYS_ExpanderControl_v4_40}
+
+  $aa $7c. $7c 40!!             {Expanded: Disable SPI, bank 1}
+                                {Original 32k: undefined value in [$7c] }
+  $7c, $aa^ [if=0               {Note: doesn't work if undefined value was $aa!}
+    $55 $7c. $7c 40!!           {Try again with complementary pattern}
+    $7c, $55^ ]
+  [if<>0
+    0 CtrlBits. ret]            { Undefined value in [$7c] -> no expander }
+  $3c 40!!                      {Expanded: Disable SPI, bank 0}
+  _sysArgs0 255^ q.             {Invert value from memory}
+  _sysArgs0^ [if<>0             {If different, setting bank 0 did not work}
+    0 CtrlBits. ret]            {-> no expander board}
+
+  {Expander present: test for 128K}
+  $bc 40!!                      {Expanded: Disable SPI, bank 2}
+  _sysArgs0 255^ q.             {Invert value from memory}
+  _sysArgs0^ [if=0              {If equal, no A16, and thererefore 64K max}
+    $807c 40!! 0 ret]           {Expanded: Disable SPI, MOSI high, bank 1}
+  $1c31 i=                      {At least 128K}
+
+  {A16 present: test for 512k}
+  $a, $fc& $fc^ [if=0           {If patched 512k rom is present}
+    $fcf0 40!! $aa q.           { write $aa into bank 15}
+    $5cf0 40!! $55 q.           { write $55 into bank 5}
+    $fcf0 40!!                  { back to bank 15 }
+    q, $aa^ [if=0               { read and compare with $aa }
+    $0c35 i=]                   { found 512k }
+    $00f0 40!! ]                { restore new banking register to default}
+
+  $807c 40!!                    {Disable SPI, MOSI high, bank 1}
+  i ret                         {Return 0 for 32/64K, $1c31 for 128K, $0c35 for 512k}
+] CheckExpander=
+
+
+
+
+{-----------------------------------------------------------------------+
+|}>\vLR++ ret{          RAM page 5                                      |
++-----------------------------------------------------------------------}
+*=$0500
+
+{ Resetting waveform tables after video/audio/vCPU have started }
+\SYS_ResetWaveforms_v4_50 \sysFn: 0 50!!
+\SYS_ShuffleNoise_v4_46   \sysFn: 0 46!! 46!! 46!! 46!!
+
+{ Setup a G-major chord with 4 channels, but don't play it yet }
+$158 {1: G-3} SetupChannel!
+$270 {2: G-4} SetupChannel!
+$360 {3: B-3} SetupChannel! {was: $378 {3: B-4} SetupChannel!}
+$466 {4: D-4} SetupChannel! {was: $47e {4: D-5} SetupChannel!}
+
+{ Setup video }
+[
+  { Setup video indirection table }
+  $100 p= {videoTable}
+  $800 q= {frame}
+  [do
+    >q,  p. <p++                { Y[i] = 8..127}
+    0    p. <p++                {dX[i] = 0}
+    >q++ q  if>0loop]
+
+  { Clear screen }
+  \SYS_SetMemory_v2_54 _sysFn=  {!!! Not in ROM v1 !!!}
+  32 \sysArgs1.                 {Color blue}
+  $800 [do
+    p= _sysArgs2=               {Destination}
+    160 \sysArgs0.              {Count}
+    54!!                        {SYS call}
+    $100 p+ if>0loop]
+]
+
+{ Restart blinkenlights }
+\ledState_v2, 128&              {Check if sequencer still running}
+[if=0 \ledState_v2. \ledTimer.] {For continuity only restart when paused}
+9 \ledTempo.                    {6.0 Hz ( = 60/(9+1)), was 5.5 Hz}
+
+{
+  Print startup message
+  +--------------------------+
+  |   *** Gigatron ??K ***   |
+  | TTL microcomputer ROM vX |
+
+}
+$814 Pos=
+[def `***`Gigatron` #0] PrintS!
+CheckMemory!
+[def `K`***` #10
+  ``TTL`microcomputer
+  ``ROM`v6 #0]                  {ROM`vN for versioned release ROMs}
+PrintS!
+
+{ Change into default video mode }
+\SYS_SetMode_v2_80 _sysFn=      {!!! Not in ROM v1 !!!}
+
+$a, $fc& $fc^ [if=0             { Test for 512k rom }
+  2    { yes: Mode 2 -> "A-C-" }
+ else
+  1    { no:  Mode 1 -> "ABC-"}
+] 80!!
+
+{ Try booting from memory card if there is an expansion card and at least 64K }
+CtrlBits, [if<>0 \memSize, [if=0 CheckCard!]]
+
+{ Load and start ROM program }
+FindMain! _sysArgs0= $200 _vLR= \SYS_Exec_88 _sysFn= 88!!
+
+{-----------------------------------------------------------------------+
+|                                                                       |
++-----------------------------------------------------------------------}
+
