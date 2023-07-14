@@ -31,7 +31,7 @@ CFLAGS:=-std=c11 -O3 -Wall
 #	Development
 #-----------------------------------------------------------------------
 
-# Development towards "ROM v5"
+# Development towards "ROM v6"
 dev.rom: Core/* Apps/*/* Makefile interface.json
 	python3 Core/dev.asm.py\
 		packedPictures=Apps/Pictures/packedPictures.rgb\
@@ -54,8 +54,8 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		Credits=Apps/Credits/Credits_v4.gt1\
 		Egg=Apps/Horizon/Horizon_c_v2.gt1\
 		Boot=Apps/CardBoot/CardBoot_v2.gt1\
-		Main=Apps/MainMenu/MainMenu_v6.gcl\
-		Reset=Core/Reset_v6.gcl
+		Main=Apps/MainMenu/MainMenu.gcl\
+		Reset=Core/Reset.gcl
 
 run: Docs/gtemu $(DEV)
 	# Run ROM in reference emulator on console
@@ -98,6 +98,38 @@ burn85:
 #-----------------------------------------------------------------------
 #	Released ROM versions
 #-----------------------------------------------------------------------
+
+# ROMv6 freezes lots of change since ROMv5a,
+# including improved support for RAM&IO Expansion boards, a new
+# application GtMine, a faster Mandelbrot, and lots of smaller
+# improvements and bug fixes.
+ROMv6.rom: Core/* Apps/*/* Makefile interface.json
+	python3 Core/ROMv6.asm.py\
+		packedPictures=Apps/Pictures/packedPictures.rgb\
+		Snake=Apps/Snake/Snake_v3.gcl\
+		SYS_Racer_v1.py\
+		zippedRacerHorizon=Apps/Racer/Horizon-256x16.rgb\
+		Racer=Apps/Racer/Racer_v3.gcl\
+		Mandelbrot=Apps/Mandelbrot/Mandelbrot_v2.gt1\
+		SYS_Loader_v5.py\
+		Pictures=Apps/Pictures/Pictures_v3.gcl\
+		Bricks=Apps/Bricks/Bricks_v2.gt1\
+		GtMine=Apps/GtMine/gtmine_v1.gt1\
+		TinyBASIC=Apps/TinyBASIC/TinyBASIC_v6.gcl\
+		TicTac=Apps/TicTac/LoadTicTac_v1.gcl\
+		TicTacGtb=Apps/TicTac/TicTac_v2.gtb\
+		WozMon=Apps/WozMon/WozMon_v2.gcl\
+		Apple1=Apps/Apple-1/Apple-1_v3.gt1\
+		MSBASIC=Apps/MSBASIC/MSBASIC_v1.gt1\
+		Loader=Apps/Loader/Loader_v4.gcl\
+		Credits=Apps/Credits/Credits_v4.gt1\
+		Egg=Apps/Horizon/Horizon_c_v2.gt1\
+		Boot=Apps/CardBoot/CardBoot_v2.gt1\
+		Main=Apps/MainMenu/MainMenu_v6.gcl\
+		Reset=Core/Reset_v6.gcl
+
+burnv6: ROMv6.rom
+	minipro -p 'AT27C1024 @DIP40' -w "$<" -y -s
 
 # Untested freeze of dev.rom
 ROMv5a.rom: Core/* Apps/*/* Makefile interface.json

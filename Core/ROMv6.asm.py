@@ -685,7 +685,7 @@ st([ledState_v2])               # Setting to 1..126 means "stopped"
 # !!! Better use vReset as generic entry point for soft reset
 
 # ROM type (see also Docs/GT1-files.txt)
-romTypeValue = symbol('romTypeValue_DEVROM')
+romTypeValue = symbol('romTypeValue_ROMv6')
 
 label('SYS_Reset_88')
 assert pc()>>8 == 0
