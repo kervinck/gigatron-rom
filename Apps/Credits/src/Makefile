@@ -1,19 +1,19 @@
 
 # compile c programs with GLCC
-CC=glcc
+CC=../../../Compilers/glcc/build/glcc
 
 # use 32k map modified by overlay horizon.ovl
-CFLAGS=-map=32k,./Horizon.ovl -rom=v6
+CFLAGS=-map=32k -rom=v6
 
 # avoid runtime bss initialization to save code.
 LDFLAGS=--no-runtime-bss-init
 
 # target
-TARGET=../Horizon_c.gt1
+TARGET=../Credits.gt1
 
 
-$(TARGET): Horizon.c Horizon.ovl
-	${CC} ${CFLAGS} ${LDFLAGS} Horizon.c -o $@
+$(TARGET): Credits.c scroll.s Makefile
+	${CC} ${CFLAGS} ${LDFLAGS} Credits.c scroll.s -o $@
 
 clean:
 	-rm $(TARGET)

@@ -4,6 +4,7 @@
  "romTypeValue_ROMv3"   : "0x28",
  "romTypeValue_ROMv4"   : "0x38",
  "romTypeValue_ROMv5"   : "0x40",
+ "romTypeValue_ROMv6"   : "0x48",
  "romTypeValue_DEVROM"  : "0xf8",
 
  "zeroConst"            : "0x0000",
@@ -41,6 +42,7 @@
  "userVars"             : "0x0030",
  "userVars_v4"          : "0x0030",
  "userVars_v5"          : "0x0036",
+ "userVars_v6"          : "0x0036",
  "oneConst"             : "0x0080",
  "userVars2"            : "0x0081",
 
@@ -131,7 +133,12 @@
  "HALT"                 : "0x80b4",
  "vIRQ_Return"          : "0x0400",
 
- "SYS_Exec_88"          : "0x00ad",
+ "SYS_Multiply_s16_v6_66"   : "0x009e",
+ "SYS_Divide_s16_v6_80"     : "0x00a1",
+ "SYS_Exec_88"              : "0x00ad",
+ "SYS_ScanMemory_v6_50"     : "0x00e6",
+ "SYS_CopyMemory_v6_80"     : "0x00e9",
+ "SYS_CopyMemoryExt_v6_100" : "0x00ec",
  "SYS_ReadRomDir_v5_80" : "0x00ef",
  "SYS_Out_22"           : "0x00f4",
  "SYS_In_24"            : "0x00f9",
@@ -154,16 +161,18 @@
  "font82up"             : "0x0800",
  "notesTable"           : "0x0900",
  "invTable"             : "0x0a00",
- "SYS_SetMode_v2_80"    : "0x0b00",
- "SYS_SetMemory_v2_54"  : "0x0b03",
- "SYS_SendSerial1_v3_80": "0x0b06",
+ "SYS_SetMode_v2_80"          : "0x0b00",
+ "SYS_SetMemory_v2_54"        : "0x0b03",
+ "SYS_SendSerial1_v3_80"      : "0x0b06",
  "SYS_ExpanderControl_v4_40"  : "0x0b09",
  "SYS_Run6502_v4_80"          : "0x0b0c",
  "SYS_ResetWaveforms_v4_50"   : "0x0b0f",
  "SYS_ShuffleNoise_v4_46"     : "0x0b12",
  "SYS_SpiExchangeBytes_v4_134": "0x0b15",
+ "SYS_ReceiveSerial1_v6_32"   : "0xb18",
  "SYS_Sprite6_v3_64"    : "0x0c00",
  "SYS_Sprite6x_v3_64"   : "0x0c40",
  "SYS_Sprite6y_v3_64"   : "0x0c80",
  "SYS_Sprite6xy_v3_64"  : "0x0cc0"
 }
+

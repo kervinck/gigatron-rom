@@ -948,7 +948,7 @@ _Statements5=*                  {Borrow a few bytes here for RUN}
   0 _sysArgs4=
   _sysArgs6 tmp= 
   1 _sysArgs6=
-  \SYS_Divide_s16_DEVROM_80 _sysFn= 80!!
+  \SYS_Divide_s16_v6_80 _sysFn= 80!!
   _sysArgs4 i=       {Remainder}
   _sysArgs0 j=       {Quotient }
   tmp _sysArgs6=
@@ -964,7 +964,7 @@ _Statements5=*                  {Borrow a few bytes here for RUN}
 { Calculate vAC * Value, result in vAC }
 [def
   _sysArgs0= 
-  \SYS_Multiply_s16_DEVROM_66 _sysFn=
+  \SYS_Multiply_s16_v6_66 _sysFn=
   Value _sysArgs2=
   0 _sysArgs4= 
   _sysArgs6 tmp=

@@ -1474,7 +1474,7 @@ ret]
     clen- [if>0 0] clen+ \IncFilePos!
     Ptr \sysArgs2:
     caddr \sysArgs0: i+ caddr=
-    \SYS_CopyMemory_DEVROM_80 \sysFn:
+    \SYS_CopyMemory_v6_80 \sysFn:
     i 80!!
     clen i- clen=
     if>0loop]
@@ -1558,7 +1558,7 @@ _FFPage=$7c
 _SectorBuffer=$7d00             {512 bytes}
 _ClusterList=$7f00              {Room for 256/4 = 64 clusters = 32KB}
 
-_SYS_CopyMemory_DEVROM_80=$e9
+_SYS_CopyMemory_v6_80=$e9
 
 {-----------------------------------------------------------------------+
 |                                                                       |
