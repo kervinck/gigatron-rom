@@ -1,0 +1,559 @@
+_runtimePath_ "../../at67/gbas/runtime"
+_runtimeStart_ &h7FFF
+_spriteStripeChunks_ 15, &h7000, descending
+_codeRomType_ ROMv3
+cls : mode 2
+
+'audio fix for ROMv5a
+poke &h21, peek(&h21) OR 3
+sound off
+cls
+
+' ------------------
+'   Rounds
+' ------------------
+const GAMEOVER = 0
+const BET = 1
+const COMEOUT = 2
+const POINT = 3
+const NEWGAME = 4
+const NEXTROUND = 5
+
+' ------------------
+'   Coordinates
+' ------------------
+const tableX = 3
+const tableY = 40
+
+' ------------------
+'   Dice
+' ------------------
+dice1Value = 1
+dice1X = 20
+dice1Y = 50
+dice2Value = 1
+dice2X = 100
+dice2Y = 65
+
+' ------------------
+'   Other Vars
+' ------------------
+balance = 100
+betAmount = 25
+winAmount = 0
+currentRound = BET
+rollPoint = 6
+tempRoll = 6
+inputDevice = 255
+
+' ------------------
+'   Game Setup
+' ------------------
+set BG_COLOUR, 0
+cls
+gosub drawTable
+gosub displayBalance
+gosub displayBet
+gosub drawBetText
+
+' ------------------
+'   Main Loop
+' ------------------
+loop:
+    if currentRound &= GAMEOVER
+        gosub gameOverInput
+    else    
+        gosub handleInput
+    endif
+    goto &loop
+
+' ------------------
+'   Input
+' ------------------
+handleInput:
+    inputDevice = get("BUTTON_STATE")
+
+    if (inputDevice = 247) AND (currentRound = BET)
+        betAmount = betAmount + 25
+        if betAmount &> 100
+            betAmount = 25
+        endif
+        gosub displayBet
+        gosub playSndBet
+        wait 10
+    endif
+
+    if (inputDevice = 251) AND (currentRound = BET)
+        betAmount = betAmount - 25
+        if betAmount &< 25
+            betAmount = 100
+        endif
+        gosub displayBet
+        gosub playSndBet
+        wait 10
+    endif
+    
+    if (inputDevice = 191 OR inputDevice = 127) AND (currentRound = NEXTROUND)
+        gosub playSndAlert
+        set BG_COLOUR, 0
+        set FG_COLOUR, 0
+        at 0,110 : print "         "
+        rectf 10, 10, 140, 35
+        gosub drawBetText
+        currentRound = NEWGAME
+        wait 10
+    endif
+
+    if (inputDevice = 191 OR inputDevice = 127) AND (currentRound = POINT)
+        gosub pointPhase
+        wait 10
+    endif
+
+    if (inputDevice = 191 OR inputDevice = 127) AND (currentRound = BET)
+        if betAmount &> balance
+            betAmount = balance
+            gosub displayBet
+        endif
+        balance = balance - betAmount
+        gosub displayBalance
+        gosub comeOutPhase
+        wait 10
+    endif
+
+    if (inputDevice = 191 OR inputDevice = 127) AND (currentRound = NEWGAME)
+        gosub drawTable
+        currentRound = BET
+        wait 10
+    endif
+return
+
+' ------------------
+'   Come-Out Phase
+' ------------------
+comeOutPhase:
+    gosub playSndRollDice
+
+    dice1Value = rnd(6) + 1
+    dice2Value = rnd(6) + 1
+    rollPoint = (dice1Value + dice2Value)
+    gosub drawTable
+    gosub drawDice
+
+    set BG_COLOUR, 0
+    set FG_COLOUR, 0
+    at 0,110 : print "         "
+    rectf 10, 10, 140, 35
+
+    set FG_COLOUR, 63
+    at 10,10 : print "You rolled:"
+    at 78,10 : print rollPoint
+
+    if rollPoint &= 7
+        set FG_COLOUR, 12
+        at 10,25 : print "Lucky Seven!"
+        wait 100
+        gosub win
+        set FG_COLOUR, 12
+        at 10,25 : print "You won the roll!"
+        wait 200
+        set FG_COLOUR, 63
+        at 10,25 : print "Play again (A) or (B)"
+        currentRound = NEXTROUND
+    elseif rollPoint &= 11
+        set FG_COLOUR, 12
+        at 10,25 : print "Yo-leven!"
+        wait 100
+        gosub win
+        set FG_COLOUR, 12
+        at 10,25 : print "You won the roll!"
+        wait 200
+        set FG_COLOUR, 63
+        at 10,25 : print "Play again (A) or (B)"
+        currentRound = NEXTROUND
+    elseif rollPoint &= 2
+        set FG_COLOUR, 3
+        at 10,25 : print "Snake Eyes!"
+        wait 100
+        gosub playSndLose
+        at 10,25 : print "You lost the roll!"
+        wait 200
+        set FG_COLOUR, 63
+        at 10,25 : print "Play again (A) or (B)"
+        currentRound = NEXTROUND
+        gosub updateBalance
+    elseif rollPoint &= 3
+        set FG_COLOUR, 3
+        at 10,25 : print "Craps Three!"
+        wait 100
+        gosub playSndLose
+        at 10,25 : print "You lost the roll!"
+        wait 200
+        set FG_COLOUR, 63
+        at 10,25 : print "Play again (A) or (B)"
+        currentRound = NEXTROUND
+        gosub updateBalance
+    elseif rollPoint &= 12
+        set FG_COLOUR, 3
+        at 10,25 : print "Boxcars!"
+        wait 100
+        gosub playSndLose
+        at 10,25 : print "You lost the roll!"
+        wait 200
+        set FG_COLOUR, 63
+        at 10,25 : print "Play again (A) or (B)"
+        currentRound = NEXTROUND
+        gosub updateBalance
+    else
+        wait 50
+        gosub playSndAlert
+        currentRound = POINT
+        set FG_COLOUR, 15
+        at 10,10 : print "The point is: "
+        at 90,10 : print rollPoint
+        set FG_COLOUR, 63
+        at 10,25 : print "Roll Dice (A) or (B)"
+    endif
+return
+
+' ------------------
+'   Point Phase
+' ------------------
+pointPhase:
+    gosub playSndRollDice
+
+    dice1Value = rnd(6) + 1
+    dice2Value = rnd(6) + 1
+    tempRoll = (dice1Value + dice2Value)
+    at 10,25 : print "                      "
+    gosub drawTable
+    gosub drawDice
+
+    if tempRoll &= rollPoint
+        set FG_COLOUR, 12
+        at 10,25 : print "You rolled:"
+        at 78,25 : print tempRoll
+        wait 100
+        gosub win
+        set FG_COLOUR, 12
+        at 10,25 : print "You won the roll!"
+        wait 200
+        set FG_COLOUR, 63
+        at 10,25 : print "Play again (A) or (B)"
+        currentRound = NEXTROUND
+    elseif tempRoll &= 7
+        set FG_COLOUR, 3
+        at 10,25 : print "Seven Out!"
+        wait 100
+        gosub playSndLose
+        at 10,25 : print "You lost the roll!"
+        wait 200
+        set FG_COLOUR, 63
+        at 10,25 : print "Play again (A) or (B)"
+        currentRound = NEXTROUND
+        gosub updateBalance
+    else
+        at 10,25 : print "You rolled:"
+        at 78,25 : print tempRoll
+        wait 75
+        gosub pointPhase
+    endif
+return
+
+' ------------------
+'   Win
+' ------------------
+win:
+    winAmount = 2 * betAmount
+    gosub updateBalance
+return
+
+' ------------------
+'   Game Over
+' ------------------
+gameOverInput:
+    inputDevice = get("BUTTON_STATE")
+
+    if inputDevice = 191 OR inputDevice = 127
+        gosub playSndAlert
+        balance = 100
+        betAmount = 25
+        winAmount = 0
+        currentRound = BET
+        gosub drawTable
+        gosub drawBetText
+        gosub displayBet
+        gosub displayBalance
+    endif
+return
+
+displayGameOver:
+    set BG_COLOUR, 0
+    set FG_COLOUR, 0
+    at 0,110 : print "         "
+    rectf 10, 10, 140, 35
+
+    set FG_COLOUR, 3
+    set BG_COLOUR, 0
+    at 40,10 : print "You're broke!"
+    set FG_COLOUR, 63
+    at 32,25 : print "Press (A) or (B)"
+    gosub playSndLose
+return
+
+' ------------------
+'   Sound FX
+' ------------------
+playSndAlert:
+    note = 0 : notes = note
+    index = 50
+    set SOUND_TIMER, 2
+    gosub getRomNote
+    sound on, 1, note
+    WAIT 3
+    index = 55
+    set SOUND_TIMER, 2
+    gosub getRomNote
+    sound on, 1, note
+return
+
+playSndRollDice:
+    note = 0 : notes = note
+    index = 40
+    set SOUND_TIMER, 4
+    gosub getRomNote
+    sound on, 1, note
+    WAIT 4
+    index = 45
+    set SOUND_TIMER, 4
+    gosub getRomNote
+    sound on, 1, note
+return
+
+playSndLose:
+    note = 0 : notes = note
+    index = 45
+    set SOUND_TIMER, 4
+    gosub getRomNote
+    sound on, 1, note
+    WAIT 4
+    index = 40
+    set SOUND_TIMER, 4
+    gosub getRomNote
+    sound on, 1, note
+return
+
+playSndBet:
+    note = 0 : notes = note
+    index = betAmount/25 + 60
+    set SOUND_TIMER, 5
+    gosub getRomNote
+    sound on, 1, note
+return
+
+playSndWin:
+    WAIT 10
+    note = 0 : notes = note
+    index = 60
+    set SOUND_TIMER, 4
+    gosub getRomNote
+    sound on, 1, note
+    WAIT 8
+    set SOUND_TIMER, 2
+    gosub getRomNote
+    sound on, 1, note
+    WAIT 4
+    index = 65
+    set SOUND_TIMER, 20
+    gosub getRomNote
+    sound on, 1, note
+    WAIT 20
+return
+
+getRomNote:
+    asm
+        LDWI    0x0900
+        ADDW    _index
+        ADDW    _index
+        STW     _notes
+        LUP     0
+        ST      _note
+        LDW     _notes
+        LUP     1
+        ST      _note + 1
+    endasm
+return
+
+' ------------------
+'   Draw Bet Text
+' ------------------
+drawBetText:
+    set BG_COLOUR, 0
+    set FG_COLOUR, 63
+    at 10,10 : print "Enter Bet (Up/Down)"
+    at 10,25 : print "Roll Dice (A) or (B)"   
+return
+
+' ------------------
+'   Draw Table
+' ------------------
+drawTable:
+    set BG_COLOUR, 0
+    set FG_COLOUR, 8
+    rectf tableX+2, tableY+2, 154, tableY+58
+    set FG_COLOUR, 6
+    rect tableX, tableY, 156, tableY+60
+    set FG_COLOUR, 11
+    rect tableX+1, tableY+1, 155, tableY+59
+    set BG_COLOUR, 8
+    set FG_COLOUR, 12
+    at tableX+39,tableY+27 : print "Gigatron TTL"
+return
+
+' ------------------
+'   Draw Dice
+' ------------------
+drawDice:
+' Dice 1
+    dice1X = rnd(50) + 6
+    dice1Y = rnd(30) + 48
+    set BG_COLOUR, 0
+    set FG_COLOUR, 2
+    rectf dice1X, dice1Y, dice1X+20, dice1Y+20
+    set FG_COLOUR, 0
+    rect dice1X, dice1Y, dice1X+20, dice1Y+20
+
+    set FG_COLOUR, 63
+
+    if dice1Value = 1
+        rectf dice1X+9, dice1Y+9, dice1X+11, dice1Y+11
+    elseif dice1Value = 2
+        rectf dice1X+5, dice1Y+5, dice1X+7, dice1Y+7
+        rectf dice1X+13, dice1Y+13, dice1X+15, dice1Y+15
+    elseif dice1Value = 3
+        rectf dice1X+3, dice1Y+3, dice1X+5, dice1Y+5
+        rectf dice1X+9, dice1Y+9, dice1X+11, dice1Y+11
+        rectf dice1X+15, dice1Y+15, dice1X+17, dice1Y+17
+    elseif dice1Value = 4
+        rectf dice1X+5, dice1Y+5, dice1X+7, dice1Y+7
+        rectf dice1X+5, dice1Y+13, dice1X+7, dice1Y+15
+        rectf dice1X+13, dice1Y+5, dice1X+15, dice1Y+7
+        rectf dice1X+13, dice1Y+13, dice1X+15, dice1Y+15
+    elseif dice1Value = 5
+        rectf dice1X+3, dice1Y+3, dice1X+5, dice1Y+5
+        rectf dice1X+15, dice1Y+3, dice1X+17, dice1Y+5
+        rectf dice1X+9, dice1Y+9, dice1X+11, dice1Y+11
+        rectf dice1X+3, dice1Y+15, dice1X+5, dice1Y+17
+        rectf dice1X+15, dice1Y+15, dice1X+17, dice1Y+17
+    else
+        rectf dice1X+5, dice1Y+3, dice1X+7, dice1Y+5
+        rectf dice1X+5, dice1Y+9, dice1X+7, dice1Y+11
+        rectf dice1X+5, dice1Y+15, dice1X+7, dice1Y+17
+        rectf dice1X+13, dice1Y+3, dice1X+15, dice1Y+5
+        rectf dice1X+13, dice1Y+9, dice1X+15, dice1Y+11
+        rectf dice1X+13, dice1Y+15, dice1X+15, dice1Y+17
+    endif
+
+' Dice 2
+    dice2X = rnd(50) + 84
+    dice2Y = rnd(30) + 48
+    set BG_COLOUR, 0
+    set FG_COLOUR, 2
+    rectf dice2X, dice2Y, dice2X+20, dice2Y+20
+    set FG_COLOUR, 0
+    rect dice2X, dice2Y, dice2X+20, dice2Y+20
+
+    set FG_COLOUR, 63
+
+    if dice2Value = 1
+        rectf dice2X+9, dice2Y+9, dice2X+11, dice2Y+11
+    elseif dice2Value = 2
+        rectf dice2X+5, dice2Y+5, dice2X+7, dice2Y+7
+        rectf dice2X+13, dice2Y+13, dice2X+15, dice2Y+15
+    elseif dice2Value = 3
+        rectf dice2X+3, dice2Y+3, dice2X+5, dice2Y+5
+        rectf dice2X+9, dice2Y+9, dice2X+11, dice2Y+11
+        rectf dice2X+15, dice2Y+15, dice2X+17, dice2Y+17
+    elseif dice2Value = 4
+        rectf dice2X+5, dice2Y+5, dice2X+7, dice2Y+7
+        rectf dice2X+5, dice2Y+13, dice2X+7, dice2Y+15
+        rectf dice2X+13, dice2Y+5, dice2X+15, dice2Y+7
+        rectf dice2X+13, dice2Y+13, dice2X+15, dice2Y+15
+    elseif dice2Value = 5
+        rectf dice2X+3, dice2Y+3, dice2X+5, dice2Y+5
+        rectf dice2X+15, dice2Y+3, dice2X+17, dice2Y+5
+        rectf dice2X+9, dice2Y+9, dice2X+11, dice2Y+11
+        rectf dice2X+3, dice2Y+15, dice2X+5, dice2Y+17
+        rectf dice2X+15, dice2Y+15, dice2X+17, dice2Y+17
+    else
+        rectf dice2X+5, dice2Y+3, dice2X+7, dice2Y+5
+        rectf dice2X+5, dice2Y+9, dice2X+7, dice2Y+11
+        rectf dice2X+5, dice2Y+15, dice2X+7, dice2Y+17
+        rectf dice2X+13, dice2Y+3, dice2X+15, dice2Y+5
+        rectf dice2X+13, dice2Y+9, dice2X+15, dice2Y+11
+        rectf dice2X+13, dice2Y+15, dice2X+15, dice2Y+17
+    endif
+return
+
+' ------------------
+'   Display Balance
+' ------------------
+displayBalance:
+    set BG_COLOUR, 0
+    set FG_COLOUR, 63
+    if balance &< 10
+        at 106,110 : print "Bal:000"
+        at 148,110 : print balance
+    elseif balance &< 100
+        at 106,110 : print "Bal:00"
+        at 142,110 : print balance
+    elseif balance &< 999
+        at 106,110 : print "Bal:0"
+        at 136,110 : print balance
+    else
+        at 106,110 : print "Bal:"
+        at 130,110 : print balance
+    endif
+return
+
+' ------------------
+'   Update Balance
+' ------------------
+updateBalance:
+    if winAmount &> 0
+        set BG_COLOUR, 3
+        set FG_COLOUR, 15
+        at 3,110 : print "Win:"
+        at 26,110 : print winAmount
+        balance = balance + winAmount
+        if balance &> 9999
+            balance = 9999
+        endif
+        winAmount = 0
+        gosub displayBalance
+        gosub playSndWin
+    endif
+
+    if balance &< 1
+        currentRound = GAMEOVER
+        gosub displayGameOver
+    endif
+return
+
+' ------------------
+'   Display Bet
+' ------------------
+displayBet:
+    set BG_COLOUR, 0
+    set FG_COLOUR, 63
+    if betAmount &< 10
+        at 56,110 : print "Bet:00"
+        at 92,110 : print betAmount
+    elseif betAmount &< 100
+        at 56,110 : print "Bet:0"
+        at 86,110 : print betAmount
+    else
+        at 56,110 : print "Bet:"
+        at 80,110 : print betAmount
+    endif
+return
+
