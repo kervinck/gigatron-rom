@@ -4,6 +4,7 @@ A collection of software and tools I developed for the [Gigatron TTL microcomput
 ## Software
 
 + [Video Poker](#video-poker)
++ [Craps](#craps)
 + [Fish Tank](#fish-tank)
 
 ### Video Poker
@@ -48,6 +49,48 @@ Winning hands and rewards are as follows:
 
 **Pair of Jacks or Better:** 1 x Bet
 
+### Craps
+
+Craps dice game for Gigatron developed in [at67's gtBASIC](https://forum.gigatron.io/viewtopic.php?f=4&t=232). Requires Gigatron ROMv3 or higher.
+
+![Screenshot](screenshots/craps-01.png?raw=true)
+
+**Gamepad Controls**
+- **Up, Down** - Increase / Decrease bet
+- **A Button** - Roll the dice
+- **B Button** - Roll the dice
+
+**Keyboard Controls**
+- **Up, Down** - Increase / Decrease bet
+- **Backspace, Delete, End** - Roll the dice
+- **Home, PrtScn/Insert/SysReq** - Roll the dice
+
+**Gameplay**
+
+Craps is a dice game where you bet on the outcomes of the roll of a pair of dice.
+
+Each round has two phases, "come-out" and "point", which are described below:
+
+**Come-Out Phase**
+
+First, wager your bet with **Up/Down**. 
+
+Next, roll the dice by pressing **A** or **B** on the gamepad.
+
+A come-out roll of 2 ("Snake Eyes"), 3 ("Craps Three"), or 12 ("Boxcars") is called "craps" or "crapping out" and you lose the bet.
+
+A come-out roll of 7 ("Lucky Seven") or 11 ("Yo-leven") is a "natural" and you win the bet.
+
+All other rolls (4, 5, 6, 8, 9, and 10) establish the "point", and you move onto the second phase of the game described below.
+
+**Point Phase**
+
+During the point phase, press **A** or **B** on the gamepad to start rolling the dice.
+
+The dice will continue to roll until you either hit your point and win, or roll a 7 ("Seven Out") and lose.
+
+Unlike the come-out phase, it is important to note that your bet is unaffected by rolls of 2, 3, 11, or 12 at this time.
+
 ### Fish Tank
 
 **Work-in-Progress**
@@ -72,7 +115,7 @@ A personalized version of the BabelFish firmware which supports Arduino Mega as 
 Modification of the original which adds support for the Arduino Mega. Sends GT1 or BASIC files to the Gigatron from a computer.
 
 ### gigatron-gimp-palette.gpl
-Gigatron Color Palette for GIMP
+Gigatron Color Palette for GIMP.
 
 ### minipro
 Usage examples and udev rules for minipro.
