@@ -11,7 +11,7 @@ def scope():
         label('.raise1')
         LDW(R9);STW(T3)
         LDW(R8)
-        label('__@raisem')                   # signo in vAC, msg in T3
+        label('__@raisem')                   # signo in vAC, msg in T3, vSP_v7 long aligned!
         STW(T1)                              # save signo
         label('_raise_disposition', pc()+1)
         LDWI(0)

@@ -13,6 +13,11 @@
 #include <string.h>
 #include <math.h>
 #include <gigatron/console.h>
+#include <gigatron/libc.h>
+
+#ifndef TIMER
+# define TIMER 1
+#endif
 
 #define HEIGHT 15
 #define WIDTH 26
@@ -51,6 +56,10 @@ void main(void) {
   int x, y, data;
   float sx, sy;
    
+#if TIMER
+  unsigned int ticks = _clock();
+#endif
+
   for(y = 0; y < HEIGHT; y = y + YSTEP ) {
     for(x = 0; x < WIDTH; x = x + XSTEP ) {
       sx = -0.7 + (SCALE * (WIDTH/2.0 - x) / (WIDTH/2.0))*(-1);
@@ -62,4 +71,10 @@ void main(void) {
       console_print((char*)&data, 1);
     }
   }
+#if TIMER
+  ticks = _clock() - ticks;
+  console_state.fgbg = 0xff;
+  console_state.cy = console_state.cx = 7;
+  mincprintf(" %d %d/60 seconds ", ticks/60, ticks % 60);
+#endif
 }

@@ -25,7 +25,7 @@ def code1():
 	LDW(R9);XORI(111);_BEQ('.9');
 	LDW(R9);XORI(121);_BNE('.3');
 	label('.9');
-	LDW(R9);STW(R8);
+	MOVW(R9,R8);
 	label('.3');
 	LDI(0);
 	label('.2');

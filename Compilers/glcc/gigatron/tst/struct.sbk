@@ -63,10 +63,10 @@ def code2():
 def code3():
 	label('makerect');
 	_PROLOGUE(24,10,0x80); # save=R7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	_SP(-8+24);STW(T2);_MOVM([SP,2+24],[T2],4,2);
 	_SP(-4+24);STW(T2);_MOVM([SP,6+24],[T2],4,2);
-	LDW(R7);STW(R8);
+	MOVW(R7,R8);
 	_SP(2);STW(T2);_MOVM([SP,-8+24],[T2],8,2);
 	CALLI('canonrect');
 	label('.42');
@@ -140,18 +140,16 @@ def code10():
 	_MOVM('.59',[SP,-36+68],4,2);
 	_MOVM('.60',[SP,-16+68],16,2);
 	_SP(-40+68);STW(R8);
-	MOVIW(-10,R9);
-	MOVIW(-10,R10);
-	LDW(R10);_STLW(4);
+	LDNI(-10);STW(R9);
+	STW(R10);
 	CALLI('makepoint');
 	_SP(-44+68);STW(R8);
 	_SP(2);STW(T2);_MOVM([SP,-36+68],[T2],4,2);
 	_SP(6);STW(T2);_MOVM([SP,-40+68],[T2],4,2);
 	CALLI('addpoint');
 	_SP(-48+68);STW(R8);
-	MOVQW(10,R9);
-	MOVQW(10,R10);
-	LDW(R10);_STLW(4);
+	LDI(10);STW(R9);
+	STW(R10);
 	CALLI('makepoint');
 	_SP(-52+68);STW(R8);
 	_SP(2);STW(T2);_MOVM([SP,-32+68],[T2],4,2);
@@ -168,7 +166,6 @@ def code10():
 	LDW(R7);_SHLI(2);STW(R23);
 	_SP(-16+68);ADDW(R23);DEEKA(R9);
 	_SP(-14+68);ADDW(R23);DEEKA(R10);
-	LDW(R10);_STLW(4);
 	CALLI('makepoint');
 	LDWI('.65');STW(R8);
 	_STLW(0);

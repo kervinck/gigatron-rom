@@ -1,6 +1,14 @@
 
 
 def scope():
+    
+    # ------------------------------------------------------------
+    # LOW LEVEL SCREEN ACCESS
+    # ------------------------------------------------------------
+    # These functions do not know about the console
+    # state and simply access the screen at the provided address.
+    # ------------------------------------------------------------
+
     ctrlBits_v5 = 0x1f8
     videoModeB = 0xa   # contain bankinfo on patched rom
     videoModeC = 0xb   # >= 0xfc on patched rom
@@ -154,7 +162,57 @@ def scope():
                   ('CODE', '_console_clear', code_clear),
                   ('PLACE', '_console_clear', 0x0200, 0x7fff) ] )
 
-    
+
+    # ------------------------------------------------------------
+    # HELPERS FOR CONSOLE_PRINT
+    # ------------------------------------------------------------
+    # Updated for high resolution screen
+    # ------------------------------------------------------------
+
+    # -- char *_console_addr(void)
+
+    # Function _console_addr() returns the screen address of the cursor.
+    # If the cursor is outside the screen it tries wrapping or scrolling.
+    # Return zero if still outside the screen.
+    # Warning: depends on the layout of console_state and console_info
+
+    def code_addr(hires = True):
+        nohop()
+        label('_console_addr')
+        PUSH()
+        LD(v('console_state')+3);STW(R8)                # cx
+        LDWI(v('console_info')+2);DEEK();               # ncolumns
+        SUBW(R8);_BGT('.nw')
+        LD(v('console_state')+5);_BEQ('.nw');           # wrapx
+        INC(v('console_state')+2)                       # cy++
+        LDI(0);ST(v('console_state')+3)                 # cx=0
+        label('.nw')
+        LD(v('console_state')+2);STW(R8)                # cy
+        LDWI(v('console_info')+0);DEEK();               # nlines
+        SUBW(R8);_BGT('.nh')
+        LD(v('console_state')+4);_BEQ('.ret0');         # wrapy
+        _CALLJ('_console_scroll')                       # spill!
+        label('.nh')
+        LDWI(v('console_info')+4);STW(R9)               # offset
+        LD(v('console_state')+3);STW(R8)                # cx
+        LDWI(v('console_info')+2);DEEK()                # ncolumns
+        SUBW(R8);_BLE('.ret0')
+        LDW(R8);LSLW();ADDW(R8)                         # times 6 for std
+        if not hires: LSLW()                            # times 3 for hires
+        STW(R10)
+        LD(v('console_state')+2);ADDW(R9)               # cy + offset
+        PEEK();INC(vACH);PEEK();ST(R10+1)               # page
+        LDW(R10);tryhop(2);POP();RET()
+        label('.ret0')
+        LDI(0);tryhop(2);POP();RET()
+
+    module(name='cons_addr.s',
+           code=[ ('EXPORT', '_console_addr'),
+                  ('IMPORT', '_console_scroll'),
+                  ('IMPORT', 'console_state'),
+                  ('IMPORT', 'console_info'),
+                  ('CODE', '_console_addr', code_addr) ] )
+
 scope()
 
 # Local Variables:

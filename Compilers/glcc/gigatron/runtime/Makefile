@@ -9,6 +9,7 @@ B=${TOP}${BUILDDIR}/
 G=${TOP}gigatron/
 GLCC=${B}glcc
 GTSIM=${B}gtsim
+TFLAGS=
 
 all: FORCE
 
@@ -28,7 +29,7 @@ ${B}tst/%.xx1: ${B}tst/%.gt1
 
 ${B}tst/%.gt1: tst/%.c FORCE
 	@test -d ${B}tst || mkdir ${B}tst
-	${GLCC} -map=sim -rom=${ROM} -DROM=${ROM} -o $@ $<
+	${GLCC} -map=sim -rom=${ROM} ${TFLAGS} -o $@ $<
 
 .PRECIOUS: ${B}tst/%.gt1
 

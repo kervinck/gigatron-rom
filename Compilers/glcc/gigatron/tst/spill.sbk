@@ -11,7 +11,7 @@ def code0():
 def code1():
 	label('f');
 	_PROLOGUE(8,0,0x80); # save=R7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	CALLI('f');STW(R23);
 	STW(B0);_STLW(-2+8,src=R23);LDW(B0)  #genspill
 	CALLI('f');STW(R22);
@@ -23,7 +23,7 @@ def code1():
 def code2():
 	label('f2');
 	_PROLOGUE(8,0,0xc0); # save=R6-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	CALLI('f');STW(R23);
 	STW(B0);_STLW(-2+8,src=R23);LDW(B0)  #genspill
 	LDW(R7);_BEQ('.5');
@@ -41,8 +41,8 @@ def code2():
 def code3():
 	label('f3');
 	_PROLOGUE(32,0,0xff); # save=R0-7
-	LDW(R8);STW(R7);
-	LDW(R9);STW(R6);
+	MOVW(R8,R7);
+	MOVW(R9,R6);
 	LDI(0);STW(R5);
 	STW(R4);
 	STW(R3);
@@ -53,7 +53,7 @@ def code3():
 	_STLW(-4+32);
 	_STLW(-6+32);
 	_STLW(-8+32);
-	LDW(R6);STW(R23);
+	MOVW(R6,R23);
 	STW(B0);_STLW(-12+32,src=R23);LDW(B0)  #genspill
 	ADDIV(2,R6);
 	LDW(R7);_BEQ('.9');

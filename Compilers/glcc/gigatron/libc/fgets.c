@@ -4,7 +4,7 @@ char *fgets(char *s, int sz, FILE *fp)
 {
 	register int c;
 	register char *p = s;
-	while (p < s + sz - 1 && ((c = getc(fp)) != EOF)) {
+	while (p < s + sz - 1 && ((c = fgetc(fp)) != EOF)) {
 		*p++ = c;
 		if (c == '\n')
 			break;

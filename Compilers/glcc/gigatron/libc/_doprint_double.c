@@ -5,7 +5,7 @@
 
 #include "_doprint.h"
 
-void _doprint_double_imp(doprint_t *dd, doprintspec_t *spec, __va_list *ap)
+void _doprint_double_imp(doprintspec_t *spec, __va_list *ap)
 {
 	char buffer[64];
 	double x = va_arg(*ap, double);
@@ -17,5 +17,5 @@ void _doprint_double_imp(doprint_t *dd, doprintspec_t *spec, __va_list *ap)
 		prec = 6;
 	s = dtoa(x, buffer, spec->conv | 0x20, prec);
 	spec->flags = f & ~DPR_PREC;
-	_doprint_num(dd, spec, 129, s);
+	_doprint_num(spec, 129, s);
 }

@@ -775,6 +775,17 @@ def label(sym, val=None, hop=None):
         the_module.label(sym, v(val) if val != None else the_pc)
 
 @vasm
+def pragma_option(opt):
+    assert type(opt) == str
+    if not opt in args.opts:
+        args.opts.append(opt)
+@vasm
+def pragma_lib(fn):
+    assert type(fn) == str
+    if not fn in args.l:
+        args.l.append(fn)
+
+@vasm
 def ST(d):
     emit_op("ST", check_zp(d))
 @vasm
@@ -924,34 +935,13 @@ def CMPHU(d):
         emit_op("CMPHU_v5", check_zp(d))
 
 # cpu 7 opcodes (with cpu 6 aliases when known)
+# interface-dev order.
 @vasm
-def MOVQB(imm,d):
+def NEGV(d):
     if args.cpu == 6:
-        tryhop(3);emit(0x16, check_zp(imm), check_zp(d))
+        tryhop(3);emit(0x2f,check_zp(d),0x17)
     else:
-        emit_op("MOVQB_v7", check_zp(d), check_zp(imm))
-@vasm
-def MOVQW(imm,d):
-    if args.cpu == 6:
-        tryhop(3);emit(0x4d, check_zp(imm), check_zp(d))
-    else:
-        emit_op("MOVQW_v7", check_zp(d), check_zp(imm))
-@vasm
-def POKEQ(d):
-    if args.cpu == 6:
-        tryhop(2);emit(0x25, check_zp(d)) # aka POKEI
-    else:
-        emit_op("POKEQ_v7", check_zp(d))
-@vasm
-def DOKEQ(d):
-    emit_op("DOKEQ_v7", check_zp(d))
-@vasm
-def DOKEI(d):
-    d = int(v(d))
-    if args.cpu == 6:
-        tryhop(3);emit(0x77, (d>>8)&0xff, d&0xff)
-    else:
-        emit_op("DOKEI_v7", (d>>8)&0xff, d&0xff)
+        emit_op("NEGV_v7", check_zp(d))
 @vasm
 def POKEA(d):
     if args.cpu == 6:
@@ -965,35 +955,11 @@ def DOKEA(d):
     else:
         emit_op("DOKEA_v7", check_zp(d))
 @vasm
-def DEEKV(d):
-    if args.cpu == 6:
-        tryhop(2);emit(0x3b, check_zp(d))
-    else:
-        emit_op("DEEKV_v7", check_zp(d))
-@vasm
-def PEEKV(d):
-    if args.cpu == 6:
-        tryhop(2);emit(0x5b, check_zp(d))
-    else:
-        emit_op("PEEKV_v7", check_zp(d))
-@vasm
 def DEEKA(d):
     if args.cpu == 6:
         tryhop(2);emit(0x6f, check_zp(d))
     else:
         emit_op("DEEKA_v7", check_zp(d))
-@vasm
-def PEEKA(d):
-    if args.cpu == 6:
-        tryhop(2);emit(0x67, check_zp(d))
-    else:
-        emit_op("PEEKA_v7", check_zp(d))
-@vasm
-def LDNI(d):
-    if args.cpu == 6:
-        tryhop(2);emit(0x9c, check_zp(-d))
-    else:
-        emit_op("LDNI_v7", check_zp(d ^ 0xff00))
 @vasm
 def JEQ(d):
     tryhop(3); d=int(v(d));
@@ -1001,6 +967,105 @@ def JEQ(d):
         emit(0xbb, lo(d-2), hi(d))
     else:
         emit_op("JEQ_v7", lo(d-2), hi(d))
+@vasm
+def DEEKV(d):
+    if args.cpu == 6:
+        tryhop(2);emit(0x3b, check_zp(d))
+    else:
+        emit_op("DEEKV_v7", check_zp(d))
+@vasm
+def DOKEQ(d):
+    emit_op("DOKEQ_v7", check_zp(d))
+@vasm
+def POKEQ(d):
+    if args.cpu == 6:
+        tryhop(2);emit(0x25, check_zp(d)) # aka POKEI
+    else:
+        emit_op("POKEQ_v7", check_zp(d))
+@vasm
+def MOVQB(imm,d):
+    if args.cpu == 6:
+        tryhop(3);emit(0x16, check_zp(imm), check_zp(d))
+    else:
+        emit_op("MOVQB_v7", check_zp(d), check_zp(imm))
+@vasm
+def MOVQW(imm,d):
+    if args.cpu == 6:
+        tryhop(3);emit(0x4d, check_zp(imm), check_zp(d))
+    else:
+        emit_op("MOVQW_v7", check_zp(d), check_zp(imm))
+@vasm
+def JGT(d):
+    tryhop(3); d=int(v(d));
+    if args.cpu == 6:
+        emit(0xc1, lo(d-2), hi(d))
+    else:
+        emit_op("JGT_v7", lo(d-2), hi(d))
+@vasm
+def JLT(d):
+    tryhop(3); d=int(v(d));
+    if args.cpu == 6:
+        emit(0xbf, lo(d-2), hi(d))
+    else:
+        emit_op("JLT_v7", lo(d-2), hi(d))
+@vasm
+def JGE(d):
+    tryhop(3); d=int(v(d));
+    if args.cpu == 6:
+        emit(0xc5, lo(d-2), hi(d))
+    else:
+        emit_op("JGE_v7", lo(d-2), hi(d))
+@vasm
+def JLE(d):
+    tryhop(3); d=int(v(d));
+    if args.cpu == 6:
+        emit(0xc3, lo(d-2), hi(d))
+    else:
+        emit_op("JLE_v7", lo(d-2), hi(d))
+@vasm
+def ADDV(d):
+    emit_op("ADDV_v7", check_zp(d))
+@vasm
+def SUBV(d):
+    emit_op("SUBV_v7", check_zp(d))
+@vasm
+def LDXW(d,imm):
+    emit_op('LDXW_v7', check_zp(d), lo(imm), hi(imm))
+@vasm
+def STXW(d,imm):
+    emit_op('STXW_v7', check_zp(d), lo(imm), hi(imm))
+@vasm
+def LDSB(d):
+    emit_op('LDSB_v7', check_zp(d))
+@vasm
+def INCV(d):
+    if args.cpu == 6:
+        tryhop(3);emit(0x2f, check_zp(d), 0x6a)
+    else:
+        emit_op("INCV_v7", check_zp(d))
+@vasm
+def JNE(d):
+    tryhop(3); d=int(v(d));
+    if args.cpu == 6:
+        emit(0xbd, lo(d-2), hi(d))
+    else:
+        emit_op("JNE_v7", lo(d-2), hi(d))
+@vasm
+def LDNI(d):
+    if args.cpu == 6:
+        tryhop(2);emit(0x9c, check_zp(-d))
+    else:
+        emit_op("LDNI_v7", check_zp(d ^ 0xff00))
+@vasm
+def MULQ(kod):
+    emit_op('MULQ_v7', check_zp(kod))
+@vasm
+def MOVIW(d,x):
+    d=int(v(d))
+    emit_op('MOVIW_v7', check_zp(x), hi(d), lo(d))
+@vasm
+def MOVW(s,d):
+    emit_op('MOVW_v7', check_zp(d), check_zp(s))
 @vasm
 def CMPWS(d):
     emit_op("CMPWS_v7", check_zp(d))
@@ -1014,102 +1079,17 @@ def CMPIS(d):
 def CMPIU(d):
     emit_op("CMPIU_v7", check_zp(d))
 @vasm
-def JNE(d):
-    tryhop(3); d=int(v(d));
+def PEEKV(d):
     if args.cpu == 6:
-        emit(0xbd, lo(d-2), hi(d))
+        tryhop(2);emit(0x5b, check_zp(d))
     else:
-        emit_op("JNE_v7", lo(d-2), hi(d))
+        emit_op("PEEKV_v7", check_zp(d))
 @vasm
-def JLT(d):
-    tryhop(3); d=int(v(d));
+def PEEKA(d):
     if args.cpu == 6:
-        emit(0xbf, lo(d-2), hi(d))
+        tryhop(2);emit(0x67, check_zp(d))
     else:
-        emit_op("JLT_v7", lo(d-2), hi(d))
-@vasm
-def JGT(d):
-    tryhop(3); d=int(v(d));
-    if args.cpu == 6:
-        emit(0xc1, lo(d-2), hi(d))
-    else:
-        emit_op("JGT_v7", lo(d-2), hi(d))
-@vasm
-def JLE(d):
-    tryhop(3); d=int(v(d));
-    if args.cpu == 6:
-        emit(0xc3, lo(d-2), hi(d))
-    else:
-        emit_op("JLE_v7", lo(d-2), hi(d))
-@vasm
-def JGE(d):
-    tryhop(3); d=int(v(d));
-    if args.cpu == 6:
-        emit(0xc5, lo(d-2), hi(d))
-    else:
-        emit_op("JGE_v7", lo(d-2), hi(d))
-@vasm
-def MOVIW(d,x):
-    d=int(v(d))
-    emit_op('MOVIW_v7', check_zp(x), hi(d), lo(d))
-@vasm
-def MULQ(kod):
-    emit_op('MULQ_v7', check_zp(kod))
-@vasm
-def MOVL(s,d):
-    if args.cpu == 6:
-        tryhop(4);emit(0xc7, check_zp(d), 0xcd, check_zp(s))
-    else:
-        emit_op("MOVL_v7", check_zp(d), check_zp(s))
-@vasm
-def MOVF(s,d):
-    if args.cpu == 6:
-        tryhop(4);emit(0xc7, check_zp(d), 0xd0, check_zp(s))
-    else:
-        emit_op("MOVF_v7", check_zp(d), check_zp(s))
-@vasm
-def COPY():
-    emit_op("COPY_v7")
-@vasm
-def COPYN(n):
-    n = check_zp(n)
-    if args.cpu == 6:
-        LDW(T3);tryhop(3);emit(0x2f,n,0xcd);STW(T3)
-    else:
-        emit_op("COPYN_v7", n)
-@vasm
-def NEGV(d):
-    if args.cpu == 6:
-        tryhop(3);emit(0x2f,check_zp(d),0x17)
-    else:
-        emit_op("NEGV_v7", check_zp(d))
-@vasm
-def MULW(d):
-    emit_op("MULW_v7", check_zp(d))
-@vasm
-def RDIVU(d):
-    emit_op("RDIVU_v7", check_zp(d))
-@vasm
-def RDIVS(d):
-    emit_op("RDIVS_v7", check_zp(d))
-@vasm
-def INCV(d):
-    if args.cpu == 6:
-        tryhop(3);emit(0x2f, check_zp(d), 0x6a)
-    else:
-        emit_op("INCV_v7", check_zp(d))
-@vasm
-def ADDV(d):
-    emit_op("ADDV_v7", check_zp(d))
-@vasm
-def SUBV(d):
-    emit_op("SUBV_v7", check_zp(d))
-@vasm
-def ADDIV(i,d):
-    emit_op("ADDIV_v7", check_zp(i), check_zp(d))
-@vasm
-def SUBIV(i,d):
-    emit_op("SUBIV_v7", check_zp(i), check_zp(d))
+        emit_op("PEEKA_v7", check_zp(d))
 @vasm
 def ADDL():
     if args.cpu == 6:
@@ -1118,7 +1098,7 @@ def ADDL():
         emit_op("ADDL_v7")
 @vasm
 def ADDX():
-    emit_op("ADDX_v7")
+    error(f"Opcode ADDX is deprecated")
 @vasm
 def SUBL():
     if args.cpu == 6:
@@ -1217,20 +1197,49 @@ def LDFAC():
 def LDFARG():
     emit_op('LDFARG_v7')
 @vasm
-def PUSHV(d):
-    emit_op('PUSHV_v7', check_zp(d))
+def RDIVS(d):
+    emit_op("RDIVS_v7", check_zp(d))
 @vasm
-def POPV(d):
-    emit_op('POPV_v7', check_zp(d))
+def RDIVU(d):
+    emit_op("RDIVU_v7", check_zp(d))
 @vasm
-def LDXW(d,imm):
-    emit_op('LDXW_v7', check_zp(d), lo(imm), hi(imm))
+def MULW(d):
+    emit_op("MULW_v7", check_zp(d))
 @vasm
-def STXW(d,imm):
-    emit_op('STXW_v7', check_zp(d), lo(imm), hi(imm))
+def DOKEI(d):
+    d = int(v(d))
+    if args.cpu == 6:
+        tryhop(3);emit(0x77, (d>>8)&0xff, d&0xff)
+    else:
+        emit_op("DOKEI_v7", (d>>8)&0xff, d&0xff)
 @vasm
-def LDSB(d):
-    emit_op('LDSB_v7', check_zp(d))
+def ADDIV(i,d):
+    emit_op("ADDIV_v7", check_zp(i), check_zp(d))
+@vasm
+def SUBIV(i,d):
+    emit_op("SUBIV_v7", check_zp(i), check_zp(d))
+@vasm
+def COPY():
+    emit_op("COPY_v7")
+@vasm
+def COPYN(n):
+    n = check_zp(n)
+    if args.cpu == 6:
+        LDW(T3);tryhop(3);emit(0x2f,n,0xcd);STW(T3)
+    else:
+        emit_op("COPYN_v7", n)
+@vasm
+def MOVL(s,d):
+    if args.cpu == 6:
+        tryhop(4);emit(0xc7, check_zp(d), 0xcd, check_zp(s))
+    else:
+        emit_op("MOVL_v7", check_zp(d), check_zp(s))
+@vasm
+def MOVF(s,d):
+    if args.cpu == 6:
+        tryhop(4);emit(0xc7, check_zp(d), 0xd0, check_zp(s))
+    else:
+        emit_op("MOVF_v7", check_zp(d), check_zp(s))
 
 # pseudo instructions used by the compiler
 @vasm
@@ -1309,8 +1318,6 @@ def _ALLOC(d):
        - Emits ALLOC, ADDIV, SUBIV or a _SP based solution.
        - May trash vAC.'''
     d = int(v(d))
-    if d & 3:
-        warning("Unaligned stack can cause serious trouble")
     if args.cpu >= 7:
         if SP == vSP and d >= -128 and d < 128:
             ALLOC(d)
@@ -1329,7 +1336,7 @@ def _LDLW(off):
     off = int(v(off))
     if args.cpu >= 7 and SP == vSP and is_zeropage(off):
         LDLW(off)
-    elif args.cpu > 7:
+    elif args.cpu >= 7:
         LDXW(SP,off)
     else:
         _SP(off);DEEK()
@@ -1891,6 +1898,8 @@ def _MOVF(s,d): # was _FMOV
             COPYN(5)
         else:
             maycross=False
+            extern('_@_fcopy_')
+            extern('_@_fcopync_')
             if d == [vAC]:
                 STW(T2)
                 maycross = True
@@ -1904,10 +1913,8 @@ def _MOVF(s,d): # was _FMOV
                 _LDI(s); STW(T0)
                 maycross = maycross or (int(s) & 0xfc == 0xfc)
             if maycross:
-                extern('_@_fcopy_')       # [T0..T0+5) --> [T2..]
-                _CALLJ('_@_fcopy_')
+                _CALLJ('_@_fcopy_')       # [T0..T0+5) --> [T2..]
             else:
-                extern('_@_fcopync_')     # [T0..T0+5) --> [T2..]
                 _CALLJ('_@_fcopync_')     # without page crossing!
 @vasm
 def _FADD():
@@ -1984,7 +1991,7 @@ def _CALLJ(d):
 @vasm
 def _PROLOGUE(framesize,maxargoffset,mask):
     '''Function prologue'''
-    tryhop(2);LDW(vLR);STW(B0)
+    tryhop(4);LDW(vLR);STW(B0)
     if args.cpu >= 7:
         _ALLOC(-framesize)
         if maxargoffset == 0:
@@ -2111,6 +2118,7 @@ def get_rominfo(roms, rom):
                 fatal(f"roms.json: rom '{rom}' inherits from an unknown rom")
             else:
                 rj = get_rominfo(roms, ri['inherits'])
+                rj.pop('info')
                 for k in rj:
                     if k not in ri:
                         ri[k] = rj[k]
@@ -2423,7 +2431,7 @@ def assemble_code_fragments(m, placed=False, absolute=False):
             if not the_segment:
                 short_function = False
                 hops_enabled = True
-                lfss = args.lfss or 32
+                lfss = args.lfss or 64
                 the_segment = find_code_segment(min(lfss, 256))
                 if not the_segment:
                     raise Stop(f"cannot fit code fragment '{frag.name}'")
@@ -2764,11 +2772,15 @@ def glink(argv):
         parser.add_argument('-o', type=str, default='a.gt1', metavar='GT1FILE',
                             help='select the output filename (default: a.gt1)')
         parser.add_argument('-cpu', "--cpu", type=int, action='store',
-                            help='select the target cpu version: 4, 5, 6.')
-        parser.add_argument('-rom', "--rom", type=str, action='store', default='v5a',
-                            help='select the target rom version: v4, v5a (default: v5a).')
+                            help=''''select the target vCPU: 4, 5, 6, 7,
+                                     defaulting to the value implied by the -rom option.''')
+        parser.add_argument('-rom', "--rom", type=str, action='store', default='v6',
+                            help='''select the target rom version as defined in roms.json,
+                                    including v4, v5a, v6, dev7 (default v6)''')
         parser.add_argument('-map', "--map", type=str, action='store',
-                            help='select a linker map')
+                            help='''select the linker map defined in the map<MAP> directory,
+                                    including 32k, 64k, and sim (default 32k). Use option --info
+                                    to get information about the selected map.''')
         parser.add_argument('-info', "--info", action='store_true',
                             help='describe the selected map, cpu, rom')
         parser.add_argument('-V', "--version", action='store_true',
@@ -2793,6 +2805,8 @@ def glink(argv):
                             help='enter a symbol as undefined and require it to be resolved by the link')
         parser.add_argument('--onload', type=str, action='append', dest='onload', metavar='SYM',
                             help='define an early initialization function')
+        parser.add_argument('--option', type=str, action='append', dest='opts', metavar='OPT',
+                            help='defines an option string that can be leveraged by libraries')
         parser.add_argument('--short-function-size-threshold', dest='sfst',
                             metavar='SIZE', type=int, action='store',
                             help='attempts to fit functions smaller than this threshold into a single page.')
@@ -2834,6 +2848,7 @@ def glink(argv):
         args.l = args.l or []
         args.L = args.L or []
         args.r = args.r or []
+        args.opts = args.opts or []
         args.onload = args.onload or []
         read_map(args.map, sm[1:])
         args.L.append(os.path.join(lccdir,f"cpu{args.cpu}"))
@@ -2846,14 +2861,24 @@ def glink(argv):
         elif args.info:
             print('================= ROM INFO')
             if rominfo and romtype and romcpu:
-                print(f"  Rom '{args.rom}' (romType={hex(romtype)}) implements cpu {romcpu}")
-                print(f"  Keys: {[k for k in rominfo if k not in ('cpu', 'romType')]}")
+                if 'info' in rominfo:
+                    print(f"  Option '-rom={args.rom}' {rominfo['info']}")
+                print(f"  - cpu = {romcpu}")
+                print(f"  - romTypeValue = {hex(romtype)}")
+                for k in rominfo:
+                    if k not in ('cpu', 'romType', 'info'):
+                        v = rominfo[k]
+                        if not isinstance(v,dict):
+                            print(f"  - {k} = {v}")
+                        else:
+                            print(f"  - {k} = {'{...}'}")
             else:
                 print(f" No information found on rom '{args.rom}'")
             print()
             print('================= CPU INFO')
             if args.cpu == 7:
-                print('  vCPU 7 comes with the DEV7 roms and adds new opcodes to vCPU 5.')
+                print('  vCPU 7 comes with the DEV7 roms and adds new opcodes to vCPU 5.\n'
+                      ' See https://github.com/lb3361/gigatron-rom/blob/master/Docs/vCPU7.md.')
             elif args.cpu == 6:
                 print('  vCPU 6 comes with at67'"'"'s ROMvX0 and contains many new opcodes\n'
                       ' whose encoding might change from release to release. vCPU 6 is not\n'

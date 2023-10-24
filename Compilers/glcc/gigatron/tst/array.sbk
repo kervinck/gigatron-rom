@@ -8,14 +8,14 @@ def code0():
 	label('.2');
 	MOVQW(0,R7);
 	label('.6');
-	LDWI('x');STW(R23);
+	MOVIW('x',R23);
 	LDW(R6);_SHLI(3);ADDW(R23);ADDW(R7);ADDW(R7);STW(R23);
 	LDW(R6);_MULI(1000);ADDW(R7);DOKE(R23);
 	label('.7');
 	INCV(R7);
 	LDI(4);_CMPWS(R7);_BGT('.6');
 	LDWI('y');ADDW(R6);ADDW(R6);STW(R23);
-	LDWI('x');STW(R22);
+	MOVIW('x',R22);
 	LDW(R6);_SHLI(3);ADDW(R22);DOKE(R23);
 	label('.3');
 	INCV(R6);
@@ -30,7 +30,7 @@ def code0():
 	MOVQW(0,R7);
 	label('.14');
 	LDW(R7);LSLW();STW(R23);
-	LDWI('x');STW(R22);
+	MOVIW('x',R22);
 	LDW(R6);_SHLI(3);ADDW(R22);ADDW(R23);DEEKA(R22);
 	LDW(R23);ADDW(R5);DOKEA(R22);
 	label('.15');
@@ -57,7 +57,7 @@ def code1():
 	label('.23');
 	LDWI('.27');STW(R8);
 	_STLW(0);
-	LDWI('x');STW(R23);
+	MOVIW('x',R23);
 	LDW(R6);_SHLI(3);ADDW(R23);ADDW(R7);ADDW(R7);DEEKA(R9);
 	LDW(R9);_STLW(2);
 	CALLI('printf');
@@ -95,8 +95,8 @@ def code1():
 def code2():
 	label('g');
 	_PROLOGUE(16,4,0xf0); # save=R4-7
-	LDW(R8);STW(R7);
-	LDW(R9);STW(R6);
+	MOVW(R8,R7);
+	MOVW(R9,R6);
 	MOVQW(0,R4);
 	label('.38');
 	MOVQW(0,R5);

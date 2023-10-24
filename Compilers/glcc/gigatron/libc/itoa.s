@@ -34,11 +34,14 @@ def scope():
     def code_itoa():
         label('itoa')
         PUSH();
-        LDI(0);SUBW(R8);_BGT('.neg')
+        LDW(R8);_BLT('.neg')
         _CALLJ('utoa')
         tryhop(2);POP();RET()
         label('.neg')
-        STW(R8)
+        if args.cpu >= 6:
+            NEGV(R8)
+        else:
+            LDI(0);SUBW(R8);STW(R8)
         _CALLJ('utoa')
         SUBI(1);STW(R9);LDI(45);POKE(R9);
         LDW(R9)

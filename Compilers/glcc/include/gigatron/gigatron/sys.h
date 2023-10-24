@@ -11,7 +11,7 @@ enum {
 	romTypeValue_ROMv3  = 0x28,
 	romTypeValue_ROMv4  = 0x38,
 	romTypeValue_ROMv5a = 0x40,
-	romTypeValue_ROMv5  = 0x40, /* ??? */
+	romTypeValue_ROMv6  = 0x48,
 	romTypeValue_DEVROM = 0xf8
 };
 

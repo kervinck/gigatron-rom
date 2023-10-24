@@ -1,6 +1,6 @@
 ROM=dev7
 MAP=128k
-GLCC=glcc
+GLCC=../../build/glcc
 PYTHON=python3
 PGMS=mscp.gt1
 OBJS=mscp.o core.o

@@ -2,8 +2,9 @@
 
 int fputc(int c, register FILE *fp)
 {
-	if (! _schkwrite(fp))
-		if (fp->_v->write(fp, (const char*)&c, 1) > 0)
+	register writall_t fptr;
+	if ((fptr = _schkwrite(fp)))
+		if (fptr((const char*)&c, 1, fp) == 1)
 			return c;
 	return EOF;
 }

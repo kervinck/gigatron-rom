@@ -93,11 +93,6 @@ extern double _p1evl(double x, double *coeff, int n);
 
 /* ---- Stdio ---- */
 
-
-/* This function is called before main() to initialize the _iob[]. 
-   The default version hooks the console to stdin/stdout/stderr. */
-extern void _iob_setup(void);
-
 /* Low-level open function called by fopen/freopen. The default
    version always returns -1 and sets errno to ENOTSUP.  Should be
    called with fp->_flag containing the desired read/write mode
@@ -139,24 +134,30 @@ extern char *dtoa(double x, char *buf, char format, int prec);
 
 /* ---- Misc ---- */
 
-/* Calls srand(int) using the gigatron entropy generator */
+/* Calls srand(int) using the gigatron entropy generator.
+   Using srand(0) has the same effect. */
 extern void _srand(void);
 
 /* Scans memory region [s,s+n) and return a pointer to the first byte 
    equal to either c0 or c1. Return zero if not found. 
    This is fast when there is a SYS call. */
 extern void *_memchr2(const void *s, char c0, char c1, size_t n);
+extern void *__memchr2(const void *s, int c0c1, size_t n);
 
 /* Scans memory region [s,s+n) in bank given by bits 6 and 7 of bank.
    Return a pointer to the first byte equal to either c0 or c1.
    Return zero if not found. This is fast when there is a SYS call. */
 extern void *_memchr2ext(char bank, const void *s, char c0, char c1, size_t n);
+extern void *__memchr2ext(char bank, const void *s, int c0c1, size_t n);
 
 /* Copy a block of memory [src,src+n) to [dst,dst+n) across memory banks.
    The destination bank is given by bits 6 and 7 of argument banks,
    and the source bank is given by bits 5 and 4.
    Returns zero when no expansion. */
 extern void *_memcpyext(char banks, void *dst, const void* src, size_t n);
+
+/* Same as strtok but uses the last argument as context */
+extern char *_strtok(char *str, const char *delim, char **ps);
 
 /* Swap two memory blocks of size n. */
 extern void _memswp(void *a, void *b, size_t n);

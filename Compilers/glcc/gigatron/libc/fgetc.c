@@ -1,16 +1,15 @@
 #include "_stdio.h"
 
 int fgetc(register FILE *fp) {
-	register int r;
-	char c;
-	if (_schkread(fp)) {
-		return EOF;
+	static char c;
+	register int r = fp->_flag;
+	register read_t fptr;
+	if ((fptr = _schkread(fp))) {
+		if (r & _IOUNGET) {
+			fp->_flag = r ^ _IOUNGET;
+			return fp->_unget;
+		} else if (fptr(fp, &c, 1) > 0)
+			return c;
 	}
-	if ((r = fp->_flag) & _IOUNGET) {
-		fp->_flag = r ^ _IOUNGET;
-		return fp->_unget;
-	}
-	if ((r = fp->_v->read(fp, &c, 1)) <= 0)
-		return _serror(fp, (r) ? EIO : EOF);
-	return c;
+	return EOF;
 }

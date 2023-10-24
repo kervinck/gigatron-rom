@@ -29,6 +29,7 @@ static List maplist;	/* list of struct map *'s */
 static List filelist;	/* list of file names */
 static Symbol funclist;	/* list of struct func *'s */
 static Symbol afunc;	/* current function's struct func */
+static Type ctype;      /* count/coord type (at least 4 bytes) */
 
 /* bbpad - emit space, if necessary, to make size%align == 0; return new size */
 static int bbpad(int size, int align) {
@@ -57,8 +58,8 @@ static void bbcall(Symbol yycounts, Coordinate *cp, Tree *e) {
 		u.be.x = cp->x;
 		u.be.y = cp->y;
 	}
-	(*IR->defconst)(U, unsignedtype->size, (v.u = u.coord, v));
-	bbpad(2*voidptype->size + unsignedtype->size, p->type->align);	
+	(*IR->defconst)(U, ctype->size, (v.u = u.coord, v));
+	bbpad(2*voidptype->size + ctype->size, p->type->align);	
 	if (caller == 0) {
 		caller = mksymbol(EXTERN, "_caller", ptr(voidptype));
 		caller->defined = 0;
@@ -79,8 +80,9 @@ static void bbcall(Symbol yycounts, Coordinate *cp, Tree *e) {
 /* bbentry - return tree for _prologue(&afunc, &YYlink)' */
 static void bbentry(Symbol yylink, Symbol f, void *ignore) {
 	static Symbol prologue;
+	int csize = 3 + ctype->size / voidptype->size;
 
-	afunc = genident(STATIC, array(voidptype, 4, 0), GLOBAL);
+	afunc = genident(STATIC, array(voidptype, csize, 0), GLOBAL);
 	if (prologue == 0) {
 		prologue = mksymbol(EXTERN, "_prologue", ftype(inttype, voidptype, voidptype, NULL));
 		prologue->defined = 0;
@@ -135,8 +137,8 @@ static void bbfunc(Symbol yylink, Symbol f, void *ignore) {
 		u.be.y = f->u.f.pt.y;
 		u.be.index = bbfile(f->u.f.pt.file);
 	}
-	(*IR->defconst)(U, unsignedtype->size, (v.u = u.coord, v));
-	bbpad(3*voidptype->size + unsignedtype->size, afunc->type->align);
+	(*IR->defconst)(U, ctype->size, (v.u = u.coord, v));
+	bbpad(3*voidptype->size + ctype->size, afunc->type->align);
 	funclist = afunc;
 }
 
@@ -163,7 +165,7 @@ static void bbincr(Symbol yycounts, Coordinate *cp, Tree *e) {
 		mp->u[mp->size++].be.index = bbfile(cp->file);
 	}
 	t = incr('+', rvalue((*optree['+'])(ADD, pointer(idtree(yycounts)),
-		consttree(npoints++, inttype))), consttree(1, inttype));
+		consttree(npoints++, inttype))), consttree(1, ctype));
 	if (*e)
 		*e = tree(RIGHT, (*e)->type, t, *e);
 	else
@@ -182,7 +184,7 @@ static void bbvars(Symbol yylink, void *ignore, void *ignore2) {
 	if (YYcounts) {
 		if (n <= 0)
 			n = 1;
-		YYcounts->type = array(inttype, n, 0);
+		YYcounts->type = array(ctype, n, 0);
 		defglobal(YYcounts, BSS);
 		(*IR->space)(YYcounts->type->size);
 	}
@@ -191,14 +193,14 @@ static void bbvars(Symbol yylink, void *ignore, void *ignore2) {
 	for (p = ltov(&filelist, PERM); *p; p++)
 		defpointer((*p)->u.c.loc);
 	defpointer(NULL);
-	coords = genident(STATIC, array(unsignedtype, n, 0), GLOBAL);
+	coords = genident(STATIC, array(ctype, n, 0), GLOBAL);
 	defglobal(coords, LIT);
 	for (i = n, mp = ltov(&maplist, PERM); *mp; i -= (*mp)->size, mp++)
 		for (j = 0; j < (*mp)->size; j++)
-			(*IR->defconst)(U, unsignedtype->size, (v.u = (*mp)->u[j].coord, v));
+			(*IR->defconst)(U, ctype->size, (v.u = (*mp)->u[j].coord, v));
 	if (i > 0)
 		(*IR->space)(i*coords->type->type->size);
-	(*IR->defconst)(U, unsignedtype->size, (v.u = 0, v));
+	(*IR->defconst)(U, ctype->size, (v.u = 0, v));
 	defglobal(yylink, DATA);
 	defpointer(NULL);
 	(*IR->defconst)(U, inttype->size, (v.u = n, v));
@@ -222,8 +224,12 @@ void profInit(char *arg) {
 		attach((Apply)bbexit,  YYlink, &events.returns);
 		attach((Apply)bbfunc,  YYlink, &events.exit);
 		attach((Apply)bbvars,  YYlink, &events.end);
+		if (! ctype)
+			ctype = unsignedtype;
+		if (ctype->size < 4)
+			ctype = unsignedlong;
 		if (strcmp(arg, "-b") == 0) {
-			YYcounts = genident(STATIC, array(inttype, 0, 0), GLOBAL);
+			YYcounts = genident(STATIC, array(ctype, 0, 0), GLOBAL);
 			maplist = append(allocate(sizeof (struct map), PERM), maplist);
 			((struct map *)maplist->x)->size = 0;
 			attach((Apply)bbcall, YYcounts, &events.calls);

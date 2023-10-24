@@ -640,7 +640,7 @@ static Node prune(Node forest) {
 }
 static Node visit(Node p, int listed) {
 	extern int addrlCSE;
-	if (p)
+	if (p) {
 		if (p->syms[2])
 			p = tmpnode(p);
 		else if (p->count <= 1 && !iscall(p->op)
@@ -672,7 +672,8 @@ static Node visit(Node p, int listed) {
 			tail = &(*tail)->link;
 			if (!listed)
 				p = tmpnode(p);
-		};
+		}
+	}
 	return p;
 }
 static Node tmpnode(Node p) {

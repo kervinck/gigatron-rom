@@ -9,8 +9,8 @@ def map_describe():
 
  Option '--short-function-size-threshold=256' has the effect of using
  high memory for all functions that fit in a page but do not fit in a
- video memory hole. Option '--long-function-segment-size=128' has the
- effect of moving all long functions in high memory, minimizing the
+ video memory hole. Option '--long-function-segment-size=256' has the
+ effect of moving long functions in high memory, minimizing the
  need to hop from page to page inside the same function. Function
  placement can be seen with glink option '-d' or glcc option '-Wl-d'.
  Overlay 'hionly' can be used to place all the code in the high

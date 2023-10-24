@@ -46,9 +46,9 @@ def scope():
             LD(B0);ANDI(0x1f);LSRXA()
             RET()
             label('.s1')
-            MOVQB(0x80,LAX);NEGX()
+            MOVQB(0x80,LAX);NEGX()   # NOTVL(LAC) in fact
             LD(B0);ANDI(0x1f);LSRXA()
-            MOVQB(0x80,LAX);NEGX()
+            MOVQB(0x80,LAX);NEGX()   # NOTVL(LAC) in fact
             RET()
         else:
             label('_@_lshrs')

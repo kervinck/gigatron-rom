@@ -6,15 +6,19 @@ static long seed;
 
 void srand(register unsigned int x)
 {
-	init = 1;
-	seed = x;
-	rand();
-	rand();
+	if (x) {
+		init = 1;
+		seed = x;
+		rand();
+		rand();
+	} else {
+		init = 0;
+	}
 }
 
 void _srand(void)
 {
-	srand(SYS_Random());
+	seed = SYS_Random();
 }
 
 int rand(void)

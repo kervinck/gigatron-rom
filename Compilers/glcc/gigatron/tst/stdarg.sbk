@@ -12,19 +12,19 @@ def code0():
 def code1():
 	label('main');
 	_PROLOGUE(52,50,0x0); # save=None
-	LDWI('.2');STW(R8);
+	MOVIW('.2',R8);
 	CALLI('print');
-	LDWI('.3');STW(R8);
+	MOVIW('.3',R8);
 	LDWI('.4');STW(R9);
 	_STLW(2);
 	CALLI('print');
-	LDWI('.5');STW(R8);
+	MOVIW('.5',R8);
 	LDI(3);STW(R9);
 	_STLW(2);
 	LDI(10);STW(R10);
 	_STLW(4);
 	CALLI('print');
-	LDWI('.6');STW(R8);
+	MOVIW('.6',R8);
 	LDWI('.7');STW(R9);
 	_STLW(2);
 	LDWI('.8');STW(R10);
@@ -34,7 +34,7 @@ def code1():
 	LDI(10);STW(R12);
 	_STLW(8);
 	CALLI('print');
-	LDWI('.9');STW(R8);
+	MOVIW('.9',R8);
 	LDWI('.7');STW(R9);
 	_STLW(2);
 	LDWI('.8');STW(R10);
@@ -44,7 +44,7 @@ def code1():
 	LDI(10);STW(R14);
 	_STLW(12);
 	CALLI('print');
-	LDWI('.11');STW(R8);
+	MOVIW('.11',R8);
 	_SP(2);STW(T2);_MOVM('x',[T2],8,2);
 	_SP(10);STW(T2);_MOVM('x',[T2],8,2);
 	_SP(18);STW(T2);_MOVM('x',[T2],8,2);
@@ -77,7 +77,7 @@ def code2():
 	LDW(R6);XORI(119);_BEQ('.38');
 	_BRA('.20');
 	label('.23');
-	LDWI(0xfffe);STW(R23);
+	MOVIW(0xfffe,R23);
 	LDI(9);ADDW(R7);ANDW(R23);STW(R7);
 	STW(R23);
 	_SP(-8+24);STW(T2);LDNI(-8);ADDW(R23);_MOVM([vAC],[T2],8,2);
@@ -96,7 +96,7 @@ def code2():
 	label('.30');
 	LDWI('.31');STW(R8);
 	_STLW(0);
-	LDWI(0xfffe);STW(R23);
+	MOVIW(0xfffe,R23);
 	LDI(3);ADDW(R7);ANDW(R23);STW(R7);
 	STW(R23);
 	LDNI(-2);ADDW(R23);PEEK();STW(R9);
@@ -106,7 +106,7 @@ def code2():
 	label('.34');
 	LDWI('.35');STW(R8);
 	_STLW(0);
-	LDWI(0xfffe);STW(R23);
+	MOVIW(0xfffe,R23);
 	LDI(3);ADDW(R7);ANDW(R23);STW(R7);
 	STW(R23);
 	LDNI(-2);ADDW(R23);DEEKA(R9);
@@ -116,7 +116,7 @@ def code2():
 	label('.38');
 	LDWI('.39');STW(R8);
 	_STLW(0);
-	LDWI(0xfffe);STW(R23);
+	MOVIW(0xfffe,R23);
 	LDI(3);ADDW(R7);ANDW(R23);STW(R7);
 	STW(R23);
 	LDNI(-2);ADDW(R23);DEEKA(R9);
@@ -126,7 +126,7 @@ def code2():
 	label('.42');
 	LDWI('.43');STW(R8);
 	_STLW(0);
-	LDWI(0xfffe);STW(R23);
+	MOVIW(0xfffe,R23);
 	LDI(3);ADDW(R7);ANDW(R23);STW(R7);
 	STW(R23);
 	LDNI(-2);ADDW(R23);DEEKA(R9);

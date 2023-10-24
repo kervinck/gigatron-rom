@@ -7,12 +7,21 @@
    to cover common use cases and to ensure forward and backward
    compatibility. */
 
+/* ==== Pragmas ====
 
-/* Declaration attributes  ---
+   The following pragmas are supported:
 
-   The syntax `__attribute__(LIST)`, where `LIST` is a comma-separated
-   list of tuples `(ATTRNAMES[,ARG1[,ARG2]])`, can be used in both
-   global definition and extern declarations. The `__attribute__`
+   * #pragma glcc option("OPTION")
+     Passes argument --option=OPTION to the linker.
+   * #pragma glcc lib("LIB")
+     Passes argument -lLIB to the linker.
+
+
+   ==== Declaration attributes ====
+
+   The syntax `__attribute__((LIST))`, where `LIST` is a
+   comma-separated list of identifiers optionally followed by a comma
+   separated list of argumentds in parentheses. The `__attribute__`
    keyword can appear in the declaration specifier (in which case it
    applies to all the declared symbols) or after each declarator (in
    which case it only applies to one symbol).
@@ -22,24 +31,28 @@
 
    * `__attribute__((nohop))`
      Variable cannot cross a page boundary.
-   * `__attribute__((org,ADDRESS))`
+   * `__attribute__((org(ADDRESS)))
      Variable must be allocated at the specified address
-   * `__attribute__((place,AMIN,AMAX))`
+   * `__attribute__((place(AMIN,AMAX)))`
      Variable must be allocated between addresses `AMIN` and `AMAX`.
 
    Two attributes are recognized on extern declarations:
 
-   * `__attribute__((weak))`
-     External variable with weak linkage.
-     If no module defines this variable, its address will be zero.
-   * `__attribute__((org,ADDRESS))`
-     Placed external variable. In the current compilation unit,
-     this variable is assumed to exist at address `ADDRESS`.
+   * `__attribute__((alias(STRING)))`
+     Define an external variable that references the linker symbol
+     `STRING` instead of a symbol whose name is equal to the variable
+     name. When `STRING` starts with prefix "__glink_weak_", this is a
+     weak reference.
+   * `__attribute__((org(ADDRESS)))`
+     Define an external variable assumed in the current compilation
+     unit to be located at absolute address `ADDRESS`.
+
+
+   ==== Attribute macros ====
 
    The following definitions are provided as convenience
    and also to protect programs against possible changes
    in attribute syntax or semantics: */
-
 
 /*  `__nohop` --
     Mark a variable or a function that should
@@ -55,7 +68,7 @@
    Example:
    | void somebankingwork(int args) __lomem { ... } */
 
-#define __lomem __attribute__((place,0x0200,0x07ff))
+#define __lomem __attribute__((place(0x0200,0x07ff)))
 
 /* `__himem` --
    Mark a variable or a function that should be allocated
@@ -64,15 +77,18 @@
    Example:
    | struct foo array[20][20] __himem; */
 
-#define __himem __attribute__((place,0x8000,0xffff))
+#define __himem __attribute__((place(0x8000,0xffff)))
+
+/* `__weakref(x)` --
+   Causes an external variable to be a weak reference to linker symbol
+   `s`.  If no module defines this variable, no compilation error will
+   be reported, and the address of the variable will be set to
+   zero. */
+#define __weakref(x) __attribute__((alias("__glink_weak_" x)))
 
 /* `__weak` --
-   Mark an external variable with weak linkage.
-   If no module defines this variable, no compilation
-   error will be reported, and the address of the variable
-   will be set to zero. */
-
-#define __weak  __attribute__((weak))
+   Deprecated. */
+#define __weak  __attribute__((alias("__glink_weak_%s")))
 
 /* `__at(ADDRESS)` --
    Indicate that a variable lives at a fixed address.
@@ -84,7 +100,7 @@
    Example:
    | extern unsigned char ctrlBits __at(0x1f8); */
 
-#define __at(x) __attribute__((org,x))
+#define __at(x) __attribute__((org(x)))
 
 
 /* Note that the keywords `__near` and `__far` are not attributes

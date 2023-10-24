@@ -495,6 +495,7 @@ extern void swtoseg(int);
 extern void input_init(int, char *[]);
 extern void fillbuf(void);
 extern void nextline(void);
+extern void register_pragma(const char *id, int (*handler)(void));
 
 extern int getchr(void);
 extern int gettok(void);
@@ -588,7 +589,7 @@ extern void outtype(Type, FILE *);
 extern void printdecl (Symbol p, Type ty);
 extern void printproto(Symbol p, Symbol args[]);
 extern char *typestring(Type ty, char *id);
-extern Field fieldref(const char *name, Type ty);
+extern Field fieldref(const char *name, Type ty, int *poffset);
 extern Type array(Type, int, int);
 extern Type atop(Type);
 extern Type btot(int, int);

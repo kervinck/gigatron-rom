@@ -1,4 +1,19 @@
 
+
+GLCC_RELEASE_2.3
+
+- Faster fp
+- Better use of MOV instructions on dev7
+- Support for MOVW instruction on dev7
+- Better handling of source code with CRLF line termination
+- New <conio.h> interface.
+- Choice of low level input routines via <gigatron/kbget.h>
+- Choice of low level input routines via <gigatron/print.h>
+- New linker option --option=STRING (see above include files)
+- Decoupled stdio implementation takes less space in typical cases.
+- Attribute syntax is closer to gcc's
+- Pragmas glcc option and glcc lib
+
 GLCC_RELEASE_2.2
 
 - Stdio no longer buffers (like avr libc)

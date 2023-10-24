@@ -7,13 +7,6 @@
 #include "_stdlib.h"
 #include "_stdio.h"
 
-static void _doscan_init(register doscan_t *dd, FILE *fp)
-{
-	memset(dd, 0, sizeof(*dd));
-	dd->fp = fp;
-	dd->c = fgetc(fp);
-}
-
 int _doscan_next(register doscan_t *dd)
 {
 	dd->c = fgetc(dd->fp);
@@ -131,14 +124,16 @@ const char *parseset(register const char *fmt, register char *set)
 int _doscan(register FILE *fp, register const char *fmt, register __va_list ap)
 {
 	unsigned int l, f;
-	doscan_t ddd;
+	doscan_t doscan;
 	char set[32];
-	register doscan_t *dd = &ddd;
+	register doscan_t *dd = &doscan;
 	register void *p;
 	register int scnt;
 	register int c;
 
-	_doscan_init(dd, fp);
+	memset(dd, 0, sizeof(doscan_t));
+	dd->fp = fp;
+	dd->c = fgetc(fp);
 	for (; c = *fmt; fmt++) {
 		if (isspace(c)) {
 			spc(dd);

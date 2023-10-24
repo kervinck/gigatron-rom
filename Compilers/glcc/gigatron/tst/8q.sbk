@@ -7,8 +7,8 @@ def code0():
 	MOVQW(0,R7);
 	label('.2');
 	LDW(R7);LSLW();STW(R23);
-	LDWI('down');ADDW(R23);DOKEQ(1);
-	LDWI('up');ADDW(R23);DOKEQ(1);
+	LDI(1);STXW(R23,'down');
+	STXW(R23,'up');
 	label('.3');
 	INCV(R7);
 	LDI(15);_CMPWS(R7);_BGT('.2');
@@ -28,15 +28,15 @@ def code0():
 def code1():
 	label('queens');
 	_PROLOGUE(8,2,0xc0); # save=R6-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVQW(0,R6);
 	label('.11');
 	LDWI('rows');ADDW(R6);ADDW(R6);DEEK();_BEQ('.15');
 	LDW(R6);SUBW(R7);LSLW();LDXW(vAC,v('up')+14);_BEQ('.15');
 	LDW(R6);ADDW(R7);LSLW();LDXW(vAC,'down');_BEQ('.15');
-	LDWI('down');STW(R23);
+	MOVIW('down',R23);
 	LDW(R6);ADDW(R7);LSLW();ADDW(R23);DOKEQ(0);
-	LDWI(v('up')+14);STW(R23);
+	MOVIW(v('up')+14,R23);
 	LDW(R6);SUBW(R7);LSLW();ADDW(R23);DOKEQ(0);
 	LDWI('rows');ADDW(R6);ADDW(R6);DOKEQ(0);
 	LDWI('x');ADDW(R7);ADDW(R7);DOKEA(R6);
@@ -47,9 +47,9 @@ def code1():
 	LDI(1);ADDW(R7);STW(R8);
 	CALLI('queens');
 	label('.20');
-	LDWI('down');STW(R23);
+	MOVIW('down',R23);
 	LDW(R6);ADDW(R7);LSLW();ADDW(R23);DOKEQ(1);
-	LDWI(v('up')+14);STW(R23);
+	MOVIW(v('up')+14,R23);
 	LDW(R6);SUBW(R7);LSLW();ADDW(R23);DOKEQ(1);
 	LDWI('rows');ADDW(R6);ADDW(R6);DOKEQ(1);
 	label('.15');

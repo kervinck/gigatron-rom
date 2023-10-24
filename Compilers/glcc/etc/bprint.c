@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 	if (i < argc) {
 		int nf = i < argc - 1 ? 1 : 0;
 		for ( ; i < argc; i++, nf ? nf++ : 0)
-			if (p = findfile(string(argv[i])))
+			if ((p = findfile(string(argv[i]))))
 				(*f)(p, nf);
 			else
 				fprintf(stderr, "%s: no data for `%s'\n", progname, argv[i]);
@@ -93,7 +93,7 @@ void *alloc(unsigned n) {
 void emitdata(char *file) {
 	FILE *fp;
 
-	if (fp = fopen(file, "w")) {
+	if ((fp = fopen(file, "w"))) {
 		struct file *p;
 		for (p = filelist; p; p = p->link) {
 			int i;
@@ -101,7 +101,7 @@ void emitdata(char *file) {
 			struct caller *r;
 			fprintf(fp, "1\n%s\n", p->name);
 			for (i = 0, q = p->funcs; q; i++, q = q->link)
-				if (r = q->callers)
+				if ((r = q->callers))
 					for (i--; r; r = r->link)
 						i++;
 			fprintf(fp, "%d\n", i);
@@ -132,7 +132,7 @@ FILE *openfile(char *name) {
 		for (i = 0; dirs[i]; i++) {
 			char buf[200];
 			sprintf(buf, "%s/%s", dirs[i], name);
-			if (fp = fopen(buf, "r"))
+			if ((fp = fopen(buf, "r")))
 				return fp;
 		}
 	return fopen(name, "r");

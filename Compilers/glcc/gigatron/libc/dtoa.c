@@ -9,7 +9,7 @@
 extern int _utwoa(int);
 extern char *_uftoa(double,char*);
 
-#if 0
+#ifdef DEBUG_DTOA
 # define DBG(x) printf x
 #else
 # define DBG(x)
@@ -38,21 +38,21 @@ char *dtoa(double x, char *buf, register char fmt, register int prec)
 		nd = 10;
 	else if (x < _fone)
 		nd = 1;
-	DBG(("| frexp -> %.2f exp=%d nd=%d\n", x, tmp, nd));
+	DBG(("| frexp -> %.0f exp=%d nd=%d\n", x - halfm, tmp, nd));
 	/* Position period */
 	per = 1;
 	exp = tmp + nd - per;
 	if (fmt == 'g' && prec - 1 > 0)
 		prec -= 1;
-	if (fmt == 'f' || fmt != 'e' && exp +4 >= 0 && exp - prec <= 0) {
-		if ((per = per + exp) <= 0 && (fmt != 'f'))
+	if (fmt == 'f' || fmt != 'e' && exp + 4 >= 0 && exp - prec <= 0) {
+		if ((per = per + exp) != 1 && (fmt != 'f'))
 			prec = prec - per + 1;
 		exp = 0;
 	}
 	DBG(("| exp=%d per=%d prec=%d nd=%d\n", exp, per, prec, nd));
 	/* Truncate */
 	if (per + prec - nd < 0) {
-		x = _ldexp10(x, per + prec - nd) + halfm;
+		x = _ldexp10(x - halfm, per + prec - nd) + halfm;
 		nd = per + prec;
 		DBG(("| trunc: nd=%d\n", nd));
 	}
@@ -62,8 +62,8 @@ char *dtoa(double x, char *buf, register char fmt, register int prec)
 	DBG(("| digits=[%s]\n", s));
 	if (s[nd] != 0) {
 		/* Carry propagation during rounding got us an extra digit */
-		if (fmt == 'e' || fmt != 'f' && per != 1) {
-			lbuf[nd] = 0;
+		if (fmt == 'e' || fmt != 'f' && exp != 0) {
+			s[nd] = 0;
 			exp += 1;
 		} else
 			per += 1;

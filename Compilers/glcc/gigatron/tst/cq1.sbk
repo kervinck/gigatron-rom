@@ -50,7 +50,7 @@ def code3():
 	LDW(R8);_STLW(0);
 	LDWI('.2');ADDW(R7);ADDW(R7);DEEK();CALL(vAC);STW(R23);
 	LDWI(v('.3')+32);DOKEA(R23);
-	LDWI(v('.3')+34);STW(R23);
+	MOVIW(v('.3')+34,R23);
 	LDWI(v('.3')+32);DEEKA(R22);
 	LDWI(v('.3')+34);DEEK();ADDW(R22);DOKE(R23);
 	LDWI(v('.3')+24);DEEK();_BEQ('.17');
@@ -92,13 +92,13 @@ def code5():
 def code6():
 	label('s22');
 	_PROLOGUE(24,4,0xf8); # save=R3-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVQW(0,R4);
 	MOVIW('.30',R6);
 	LDI(36);ADDW(R7);STW(R5);
 	label('.31');
 	label('.32');
-	LDW(R5);STW(R23);
+	MOVW(R5,R23);
 	INCV(R5);
 	LDW(R6);
 	INCV(R6);
@@ -191,14 +191,14 @@ def code9():
 def code10():
 	label('s241');
 	_PROLOGUE(488,4,0xf8); # save=R3-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	LDI(0);STW(R3);
 	_STLW(-470+488);
 	MOVIW('.44',R5);
 	LDI(36);ADDW(R7);STW(R4);
 	label('.46');
 	label('.47');
-	LDW(R4);STW(R23);
+	MOVW(R4,R23);
 	INCV(R4);
 	LDW(R5);
 	INCV(R5);
@@ -247,14 +247,14 @@ def code10():
 	label('.61');
 	MOVQW(0,R6);
 	label('.65');
-	LDWI('.45');STW(R23);
+	MOVIW('.45',R23);
 	LDW(R6);_STLS(LAC);LDW(R6);_SHLI(2);ADDW(R23);_MOVL(LAC,[vAC]);
 	label('.66');
 	INCV(R6);
 	LDI(17);_CMPWS(R6);_BGT('.65');
 	MOVQW(18,R6);
 	label('.69');
-	LDWI('.45');STW(R23);
+	MOVIW('.45',R23);
 	LDW(R6);_SHLI(2);ADDW(R23);STW(R23);
 	STW(B0);_STLW(-472+488,src=R23);LDW(B0)  #genspill
 	_MOVL([vAC],L8);
@@ -439,13 +439,13 @@ def code13():
 def code14():
 	label('s243');
 	_PROLOGUE(272,4,0xf0); # save=R4-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVQW(0,R4);
 	MOVIW('.244',R6);
 	LDI(36);ADDW(R7);STW(R5);
 	label('.245');
 	label('.246');
-	LDW(R5);STW(R23);
+	MOVW(R5,R23);
 	INCV(R5);
 	LDW(R6);
 	INCV(R6);
@@ -598,7 +598,7 @@ def code15():
 def code16():
 	label('sumof');
 	PUSH();
-	LDW(R8);STW(R17);
+	MOVW(R8,R17);
 	LDI(0);STW(R19);
 	STW(R18);
 	label('.359');
@@ -624,12 +624,12 @@ def code18():
 def code19():
 	label('s244');
 	_PROLOGUE(60,4,0xfc); # save=R2-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVIW('.365',R5);
 	LDI(36);ADDW(R7);STW(R4);
 	label('.366');
 	label('.367');
-	LDW(R4);STW(R23);
+	MOVW(R4,R23);
 	INCV(R4);
 	LDW(R5);
 	INCV(R5);
@@ -693,12 +693,12 @@ def code21():
 def code22():
 	label('s25');
 	_PROLOGUE(24,4,0xff); # save=R0-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVIW('.394',R3);
 	LDI(36);ADDW(R7);STW(R2);
 	label('.395');
 	label('.396');
-	LDW(R2);STW(R23);
+	MOVW(R2,R23);
 	INCV(R2);
 	LDW(R3);
 	INCV(R3);
@@ -706,7 +706,7 @@ def code22():
 	POKE(R23);
 	LD(vAC);_BNE('.395');
 	MOVQW(0,R1);
-	MOVIW('.398',R5);
+	LDWI('.398');STW(R5);
 	LDI(1);ADDW(R5);PEEK();STW(R23);
 	PEEKV(R5);XORW(R23);_BNE('.402');
 	LDI(2);ADDW(R5);PEEK();STW(R22);
@@ -742,8 +742,8 @@ def code22():
 	CALLI('printf');
 	label('.413');
 	label('.409');
-	MOVIW('.415',R5);
-	PEEKV(R5);XORI(10);_BNE('.423');
+	LDWI('.415');STW(R5);
+	PEEK();XORI(10);_BNE('.423');
 	LDI(1);ADDW(R5);PEEK();XORI(9);_BNE('.423');
 	LDI(2);ADDW(R5);PEEK();XORI(8);_BNE('.423');
 	LDI(3);ADDW(R5);PEEK();XORI(13);_BNE('.423');
@@ -760,8 +760,8 @@ def code22():
 	CALLI('printf');
 	label('.424');
 	label('.416');
-	MOVIW('.426',R4);
-	MOVIW('.426',R5);
+	LDWI('.426');STW(R4);
+	STW(R5);
 	LDI(0);STW(R0);
 	STW(R6);
 	_BRA('.430');
@@ -811,12 +811,12 @@ def code25():
 def code26():
 	label('s26');
 	_PROLOGUE(48,10,0xff); # save=R0-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVIW('.438',R2);
 	LDI(36);ADDW(R7);STW(R1);
 	label('.441');
 	label('.442');
-	LDW(R1);STW(R23);
+	MOVW(R1,R23);
 	INCV(R1);
 	LDW(R2);
 	INCV(R2);
@@ -941,13 +941,13 @@ def code28():
 def code29():
 	label('s4');
 	_PROLOGUE(32,4,0xfe); # save=R1-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVQW(0,R1);
 	MOVIW('.470',R3);
 	LDI(36);ADDW(R7);STW(R2);
 	label('.471');
 	label('.472');
-	LDW(R2);STW(R23);
+	MOVW(R2,R23);
 	INCV(R2);
 	LDW(R3);
 	INCV(R3);
@@ -957,7 +957,7 @@ def code29():
 	MOVQW(0,R6);
 	label('.474');
 	LDW(R6);STW(R8);
-	LDW(R8);_STLW(0);
+	_STLW(0);
 	CALLI('svtest');STW(R23);
 	STW(B0);_STLW(-10+32,src=R23);LDW(B0)  #genspill
 	CALLI('zero');STW(R22);
@@ -1133,13 +1133,13 @@ def code42():
 def code43():
 	label('s61');
 	_PROLOGUE(48,4,0xff); # save=R0-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVIW('.517',R4);
 	LDI(36);ADDW(R7);STW(R3);
 	MOVQW(0,R2);
 	label('.524');
 	label('.525');
-	LDW(R3);STW(R23);
+	MOVW(R3,R23);
 	INCV(R3);
 	LDW(R4);
 	INCV(R4);
@@ -1225,13 +1225,13 @@ def code45():
 def code46():
 	label('s626');
 	_PROLOGUE(104,4,0xff); # save=R0-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVIW('.559',R1);
 	LDI(36);ADDW(R7);STW(R0);
 	LDI(0);_STLW(-72+104);
 	label('.560');
 	label('.561');
-	LDW(R0);STW(R23);
+	MOVW(R0,R23);
 	INCV(R0);
 	LDW(R1);
 	INCV(R1);
@@ -1454,13 +1454,13 @@ def code49():
 def code50():
 	label('s71');
 	_PROLOGUE(40,4,0xf8); # save=R3-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVIW('.686',R6);
 	LDI(36);ADDW(R7);STW(R5);
 	MOVQW(0,R4);
 	label('.688');
 	label('.689');
-	LDW(R5);STW(R23);
+	MOVW(R5,R23);
 	INCV(R5);
 	LDW(R6);
 	INCV(R6);
@@ -1489,7 +1489,7 @@ def code50():
 	label('.698');
 	label('.696');
 	LDWI(1942);_STLW(-10+40);
-	STW(R23);
+	MOVIW(1942,R23);
 	_LDLW(-10+40);XORW(R23);_BNE('.706');
 	_LDLW(-10+40);STW(R23);
 	_LDLW(-10+40);XORW(R23);_BEQ('.701');
@@ -1520,7 +1520,7 @@ def code50():
 	LDI(3);_STLW(-22+40);
 	_SP(-22+40);_STLW(-24+40);
 	LDW(R3);STW(R8);
-	LDW(R8);_STLW(0);
+	_STLW(0);
 	_LDLW(-24+40);STW(R9);
 	LDW(R9);_STLW(2);
 	CALLI('clobber');
@@ -1588,7 +1588,7 @@ def code54():
 def code55():
 	label('s715');
 	_PROLOGUE(24,6,0xf8); # save=R3-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	LDI(0);_STLW(-6+24);
 	_STLW(-2+24);
 	MOVIW('.728',R6);
@@ -1596,7 +1596,7 @@ def code55():
 	LDI(0);STW(R3);
 	label('.729');
 	label('.730');
-	LDW(R5);STW(R23);
+	MOVW(R5,R23);
 	INCV(R5);
 	LDW(R6);
 	INCV(R6);
@@ -1661,13 +1661,13 @@ def code58():
 def code59():
 	label('s72');
 	_PROLOGUE(44,4,0xff); # save=R0-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVIW('.743',R5);
 	LDI(36);ADDW(R7);STW(R4);
 	MOVQW(0,R2);
 	label('.744');
 	label('.745');
-	LDW(R4);STW(R23);
+	MOVW(R4,R23);
 	INCV(R4);
 	LDW(R5);
 	INCV(R5);
@@ -1833,7 +1833,7 @@ def code61():
 def code62():
 	label('s757');
 	_PROLOGUE(84,4,0xff); # save=R0-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	LDWI('.819');_STLW(-42+84);
 	LDI(36);ADDW(R7);_STLW(-44+84);
 	LDI(0);_STLW(-46+84);
@@ -1848,8 +1848,8 @@ def code62():
 	LD(vAC);_BNE('.820');
 	LDI(40);_STLW(-48+84);
 	STW(R23);
-	LDWI(1280);STW(R22);
-	LDW(R23);_SHLI(3);_SHLI(2);XORW(R22);_BNE('.825');
+	MOVIW(1280,R22);
+	_SHLI(3);_SHLI(2);XORW(R22);_BNE('.825');
 	LDW(R23);_SHRIS(3);_SHRIS(2);XORI(1);_BEQ('.823');
 	label('.825');
 	_LDLW(-46+84);ADDI(1);_STLW(-46+84);
@@ -1865,7 +1865,7 @@ def code62():
 	_STLW(-36+84);
 	_BRA('.831');
 	label('.828');
-	MOVQW(1,R0);
+	LDI(1);STW(R0);
 	LDXW(R7,8);SUBI(1);STW(R23);
 	LDW(R0);_SHL(R23);_STLW(-34+84);
 	LDI(0);_STLW(-38+84);
@@ -2075,7 +2075,7 @@ def code65():
 def code66():
 	label('s7813');
 	_PROLOGUE(52,4,0xff); # save=R0-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVIW('.924',R1);
 	LDI(36);ADDW(R7);STW(R0);
 	LDI(0);STW(R5);
@@ -2083,7 +2083,7 @@ def code66():
 	LDI(30);ADDW(R7);DEEKA(R6);
 	label('.925');
 	label('.926');
-	LDW(R0);STW(R23);
+	MOVW(R0,R23);
 	INCV(R0);
 	LDW(R1);
 	INCV(R1);
@@ -2096,7 +2096,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.930');
 	label('.928');
@@ -2106,7 +2106,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.934');
 	label('.932');
@@ -2116,7 +2116,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.938');
 	label('.936');
@@ -2126,7 +2126,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.942');
 	label('.940');
@@ -2136,7 +2136,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.946');
 	label('.944');
@@ -2146,7 +2146,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.950');
 	label('.948');
@@ -2156,7 +2156,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.954');
 	label('.952');
@@ -2166,7 +2166,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.958');
 	label('.956');
@@ -2176,7 +2176,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.962');
 	label('.960');
@@ -2186,7 +2186,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.966');
 	label('.964');
@@ -2196,7 +2196,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.970');
 	label('.968');
@@ -2206,7 +2206,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.974');
 	label('.972');
@@ -2216,7 +2216,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.978');
 	label('.976');
@@ -2226,7 +2226,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.982');
 	label('.980');
@@ -2236,7 +2236,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.986');
 	label('.984');
@@ -2246,7 +2246,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.990');
 	label('.988');
@@ -2256,7 +2256,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.994');
 	label('.992');
@@ -2266,7 +2266,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.998');
 	label('.996');
@@ -2276,7 +2276,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1002');
 	label('.1000');
@@ -2286,7 +2286,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1006');
 	label('.1004');
@@ -2296,7 +2296,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1010');
 	label('.1008');
@@ -2306,7 +2306,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1014');
 	label('.1012');
@@ -2316,7 +2316,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1018');
 	label('.1016');
@@ -2326,7 +2326,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1022');
 	label('.1020');
@@ -2336,7 +2336,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1026');
 	label('.1024');
@@ -2346,7 +2346,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1030');
 	label('.1028');
@@ -2356,7 +2356,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1034');
 	label('.1032');
@@ -2366,7 +2366,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1038');
 	label('.1036');
@@ -2376,7 +2376,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1042');
 	label('.1040');
@@ -2386,7 +2386,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1046');
 	label('.1044');
@@ -2396,7 +2396,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1050');
 	label('.1048');
@@ -2406,7 +2406,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1054');
 	label('.1052');
@@ -2416,7 +2416,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1058');
 	label('.1056');
@@ -2426,7 +2426,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1062');
 	label('.1060');
@@ -2436,7 +2436,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1066');
 	label('.1064');
@@ -2446,7 +2446,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1070');
 	label('.1068');
@@ -2456,7 +2456,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1074');
 	label('.1072');
@@ -2466,7 +2466,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1078');
 	label('.1076');
@@ -2476,7 +2476,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1082');
 	label('.1080');
@@ -2486,7 +2486,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1086');
 	label('.1084');
@@ -2496,7 +2496,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1090');
 	label('.1088');
@@ -2506,7 +2506,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1094');
 	label('.1092');
@@ -2516,7 +2516,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1098');
 	label('.1096');
@@ -2526,7 +2526,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1102');
 	label('.1100');
@@ -2536,7 +2536,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1106');
 	label('.1104');
@@ -2546,7 +2546,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1110');
 	label('.1108');
@@ -2556,7 +2556,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1114');
 	label('.1112');
@@ -2566,7 +2566,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1118');
 	label('.1116');
@@ -2576,7 +2576,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1122');
 	label('.1120');
@@ -2586,7 +2586,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1126');
 	label('.1124');
@@ -2596,7 +2596,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1130');
 	label('.1128');
@@ -2606,7 +2606,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1134');
 	label('.1132');
@@ -2616,7 +2616,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1138');
 	label('.1136');
@@ -2626,7 +2626,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1142');
 	label('.1140');
@@ -2636,7 +2636,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1146');
 	label('.1144');
@@ -2646,7 +2646,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1150');
 	label('.1148');
@@ -2656,7 +2656,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1154');
 	label('.1152');
@@ -2666,7 +2666,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1158');
 	label('.1156');
@@ -2676,7 +2676,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1162');
 	label('.1160');
@@ -2686,7 +2686,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1166');
 	label('.1164');
@@ -2696,7 +2696,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1170');
 	label('.1168');
@@ -2706,7 +2706,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1174');
 	label('.1172');
@@ -2716,7 +2716,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1178');
 	label('.1176');
@@ -2726,7 +2726,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1182');
 	label('.1180');
@@ -2736,7 +2736,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1186');
 	label('.1184');
@@ -2746,7 +2746,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1190');
 	label('.1188');
@@ -2756,7 +2756,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1194');
 	label('.1192');
@@ -2766,7 +2766,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1198');
 	label('.1196');
@@ -2776,7 +2776,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1202');
 	label('.1200');
@@ -2786,7 +2786,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1206');
 	label('.1204');
@@ -2796,7 +2796,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1210');
 	label('.1208');
@@ -2806,7 +2806,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1214');
 	label('.1212');
@@ -2816,7 +2816,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1218');
 	label('.1216');
@@ -2826,7 +2826,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1222');
 	label('.1220');
@@ -2836,7 +2836,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1226');
 	label('.1224');
@@ -2853,7 +2853,7 @@ def code66():
 	LDI(0);STW(R5);
 	STW(R3);
 	STW(R4);
-	
+	STW(vAC);
 	INCV(R4);
 	_BEQ('.1233');
 	LDW(R3);
@@ -2871,7 +2871,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1237');
 	label('.1235');
@@ -2881,7 +2881,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1241');
 	label('.1239');
@@ -2891,7 +2891,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1245');
 	label('.1243');
@@ -2911,7 +2911,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1252');
 	label('.1250');
@@ -2921,7 +2921,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1256');
 	label('.1254');
@@ -2931,7 +2931,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1260');
 	label('.1258');
@@ -2951,7 +2951,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1267');
 	label('.1265');
@@ -2961,7 +2961,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1271');
 	label('.1269');
@@ -2971,7 +2971,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1275');
 	label('.1273');
@@ -2991,7 +2991,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1282');
 	label('.1280');
@@ -3001,7 +3001,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1286');
 	label('.1284');
@@ -3011,7 +3011,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1290');
 	label('.1288');
@@ -3028,7 +3028,7 @@ def code66():
 	LDI(0);STW(R5);
 	STW(R3);
 	STW(R4);
-	
+	STW(vAC);
 	INCV(R4);
 	_BNE('.1299');
 	LDW(R3);_BEQ('.1297');
@@ -3045,7 +3045,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1302');
 	label('.1300');
@@ -3055,7 +3055,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1306');
 	label('.1304');
@@ -3065,7 +3065,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1310');
 	label('.1308');
@@ -3086,7 +3086,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1318');
 	label('.1316');
@@ -3096,7 +3096,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1322');
 	label('.1320');
@@ -3106,7 +3106,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1326');
 	label('.1324');
@@ -3129,7 +3129,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1334');
 	label('.1332');
@@ -3139,7 +3139,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1338');
 	label('.1336');
@@ -3149,7 +3149,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1342');
 	label('.1340');
@@ -3170,7 +3170,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1350');
 	label('.1348');
@@ -3180,7 +3180,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1354');
 	label('.1352');
@@ -3190,7 +3190,7 @@ def code66():
 	LDWI('.922');STW(R8);
 	_STLW(0);
 	LDW(R5);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	label('.1358');
 	label('.1356');
@@ -3294,7 +3294,7 @@ def code70():
 def code71():
 	label('s81');
 	_PROLOGUE(40,6,0xff); # save=R0-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	LDI(0);_STLW(-14+40);
 	_STLW(-8+40);
 	_STLW(-10+40);
@@ -3833,13 +3833,13 @@ def code77():
 def code78():
 	label('s84');
 	_PROLOGUE(156,6,0xfe); # save=R1-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVIW('.1555',R3);
 	LDI(36);ADDW(R7);STW(R2);
 	MOVQW(0,R1);
 	label('.1556');
 	label('.1557');
-	LDW(R2);STW(R23);
+	MOVW(R2,R23);
 	INCV(R2);
 	LDW(R3);
 	INCV(R3);
@@ -3907,7 +3907,7 @@ def code78():
 	label('.1584');
 	MOVQW(0,R6);
 	label('.1588');
-	LDWI('.1553');STW(R23);
+	MOVIW('.1553',R23);
 	LDW(R4);_MULI(70);ADDW(R23);STW(R23);
 	LDW(R5);_MULI(14);ADDW(R23);ADDW(R6);ADDW(R6);STW(R23);
 	LDW(R5);_MULI(7);STW(R22);
@@ -3932,16 +3932,16 @@ def code78():
 	_STLW(4);
 	CALLI('array');STW(R23);
 	STW(B0);_STLW(-132+156,src=R23);LDW(B0)  #genspill
-	LDWI('.1553');STW(R22);
+	MOVIW('.1553',R22);
 	LDW(R4);_MULI(70);ADDW(R22);STW(R8);
 	LDW(R8);_STLW(0);
-	MOVQW(35,R9);
-	LDW(R9);_STLW(2);
-	MOVQW(35,R10);
-	LDW(R10);_STLW(4);
+	LDI(35);STW(R9);
+	_STLW(2);
+	STW(R10);
+	_STLW(4);
 	CALLI('array');STW(R22);
 	STW(B0);_STLW(-134+156,src=R22);LDW(B0)  #genspill
-	LDWI('.1553');STW(R23);
+	MOVIW('.1553',R23);
 	LDW(R4);_MULI(70);ADDW(R23);STW(R23);
 	LDW(R5);_MULI(14);ADDW(R23);STW(R8);
 	LDW(R8);_STLW(0);
@@ -3950,7 +3950,7 @@ def code78():
 	LDI(49);STW(R10);
 	_STLW(4);
 	CALLI('array');STW(R23);
-	LDWI('.1553');STW(R22);
+	MOVIW('.1553',R22);
 	LDW(R4);_MULI(70);ADDW(R22);STW(R22);
 	LDW(R5);_MULI(14);ADDW(R22);ADDW(R6);ADDW(R6);DEEKA(R22);
 	_LDLW(-132+156);STW(B0);_LDLW(-134+156);STW(T0);LDW(B0);ADDW(T0);ADDW(R23);ADDW(R22);SUBI(52);_BEQ('.1592');
@@ -3994,9 +3994,8 @@ def code80():
 def code81():
 	label('fip');
 	PUSH();
-	LDWI('.1604');STW(R23);
-	LDW(R8);DOKE(R23);
-	LDW(R23);
+	LDWI('.1604');DOKEA(R8);
+	
 	label('.1603');
 	tryhop(2);POP();RET()
 # ======== ('CODE', 'glork', code82)
@@ -4035,13 +4034,13 @@ def code86():
 def code87():
 	label('s85');
 	_PROLOGUE(276,8,0xf8); # save=R3-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVIW('.1608',R5);
 	LDI(36);ADDW(R7);STW(R4);
 	MOVQW(0,R3);
 	label('.1621');
 	label('.1622');
-	LDW(R4);STW(R23);
+	MOVW(R4,R23);
 	INCV(R4);
 	LDW(R5);
 	INCV(R5);
@@ -4103,7 +4102,7 @@ def code87():
 	_SHLI(14);_SHRIS(14);_SHLI(13);_SHRIS(13);_SHLI(3);ANDI(56);STW(R22);
 	LDWI(0xffc7);ANDW(R23);ORW(R22);_STLW(-168+276);
 	_SHLI(10);_SHRIS(13);XORI(3);_BEQ('.1655');
-	LDNI(-1);STW(R23);
+	MOVIW(-1,R23);
 	_LDLW(-168+276);_SHLI(10);_SHRIS(13);XORW(R23);_BNE('.1657');
 	LDXW(R7,26);_BEQ('.1658');
 	LDWI('.1661');STW(R8);
@@ -4257,7 +4256,7 @@ def code96():
 def code97():
 	label('s86');
 	_PROLOGUE(28,4,0xff); # save=R0-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	LDWI('.1693');DEEK();SUBI(-(-2));_STLW(-4+28);
 	CALLI('one');STW(R23);
 	_LDLW(-4+28);ADDW(R23);ADDW(R23);STW(R6);
@@ -4266,7 +4265,7 @@ def code97():
 	LDI(0);_STLW(-2+28);
 	label('.1700');
 	label('.1701');
-	LDW(R0);STW(R23);
+	MOVW(R0,R23);
 	INCV(R0);
 	LDW(R1);
 	INCV(R1);
@@ -4332,7 +4331,7 @@ def code97():
 	LDW(R4);_MULI(15);STW(R22);
 	LDWI('.1697');ADDW(R22);ADDW(R23);_MOVF([vAC],FAC);
 	LDWI('.1698');ADDW(R22);ADDW(R23);_FCMP();_BNE('.1735');
-	LDWI('.1696');STW(R23);
+	MOVIW('.1696',R23);
 	LDW(R3);_MULI(5);ADDW(R23);_FCMP();_BEQ('.1733');
 	label('.1735');
 	MOVQW(1,R2);
@@ -4356,7 +4355,7 @@ def code97():
 	LDI(0);STW(R2);
 	STW(R5);
 	label('.1740');
-	LDWI('.1699');STW(R23);
+	MOVIW('.1699',R23);
 	LDI(1);ADDW(R5);_STLS(LAC);_FCVI();LDW(R5);_MULI(15);ADDW(R23);_FCMP();_BEQ('.1744');
 	MOVQW(1,R2);
 	label('.1744');
@@ -4396,13 +4395,13 @@ def code100():
 def code101():
 	label('s88');
 	_PROLOGUE(28,4,0xf8); # save=R3-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVIW('.1753',R6);
 	LDI(36);ADDW(R7);STW(R5);
 	MOVQW(0,R4);
 	label('.1755');
 	label('.1756');
-	LDW(R5);STW(R23);
+	MOVW(R5,R23);
 	INCV(R5);
 	LDW(R6);
 	INCV(R6);
@@ -4419,7 +4418,7 @@ def code101():
 	label('.1760');
 	INCV(R4);
 	label('.1758');
-	LDWI('metricp');STW(R23);
+	MOVIW('metricp',R23);
 	_SP(-12+28);DOKE(R23);
 	LDI(2);_STLW(-12+28);
 	DEEKV(R23);DOKEQ(3);
@@ -4465,13 +4464,13 @@ def code103():
 def code104():
 	label('s9');
 	_PROLOGUE(28,4,0xff); # save=R0-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	MOVIW('.1774',R4);
 	LDI(36);ADDW(R7);STW(R3);
 	MOVQW(0,R2);
 	label('.1775');
 	label('.1776');
-	LDW(R3);STW(R23);
+	MOVW(R3,R23);
 	INCV(R3);
 	LDW(R4);
 	INCV(R4);

@@ -20,7 +20,7 @@ typedef __va_list va_list;
   ((size_t)&(((struct{char c; mode m;}*)(0))->m))
 
 #define __va_arg_ptr(list, mode, n)\
-	&((list=(__va_list)(((size_t)list+(sizeof(mode)+(n)))&~(n)))[-(int)sizeof(mode)])
+  &((list=(__va_list)(((size_t)list+(sizeof(mode)+(n)))&~(n)))[-(int)sizeof(mode)])
 
 #define va_start(list, start)\
   ((void)((list)=(__va_list)&((&start)[1])))
@@ -29,6 +29,9 @@ typedef __va_list va_list;
   (*(mode*)((__typecode(mode)==5 && sizeof(mode)==1) ? __va_arg_ptr(list,int,1U) : \
             (__typecode(mode)==6 && sizeof(mode)==1) ? __va_arg_ptr(list,unsigned,1U) : \
             (__va_arg_ptr(list,mode,__va_alignof(mode)-1)) ))
+
+#define va_copy(dest, src)\
+  do { dest = src; } while(0)
 
 #define va_end(list)\
   ((void) 0)

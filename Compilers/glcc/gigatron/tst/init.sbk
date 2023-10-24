@@ -122,7 +122,7 @@ def code6():
 def code7():
 	label('g');
 	_PROLOGUE(12,4,0xc0); # save=R6-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	_BRA('.30');
 	label('.27');
 	MOVQW(0,R6);

@@ -64,17 +64,17 @@ def code2():
 def code3():
 	label('sort');
 	_PROLOGUE(12,6,0xc0); # save=R6-7
-	LDW(R8);STW(R7);
-	LDW(R9);STW(R6);
+	MOVW(R8,R7);
+	MOVW(R9,R6);
 	LDWI('xx');DOKEA(R7);
 	LDW(R7);STW(R8);
-	LDW(R8);_STLW(0);
+	_STLW(0);
 	LDI(0);STW(R9);
 	_STLW(2);
 	SUBIV(1,R6);
 	LDW(R6);
 	STW(R10);
-	LDW(R10);_STLW(4);
+	_STLW(4);
 	CALLI('quick');
 	LDI(0);
 	label('.11');
@@ -83,28 +83,28 @@ def code3():
 def code4():
 	label('quick');
 	_PROLOGUE(16,6,0xf0); # save=R4-7
-	LDW(R8);STW(R7);
-	LDW(R9);STW(R6);
+	MOVW(R8,R7);
+	MOVW(R9,R6);
 	LDW(R10);STW(R5);
 	LDW(R6);_CMPWS(R5);_BLT('.13');
 	LDI(0);
 	_BRA('.12');
 	label('.13');
 	LDW(R7);STW(R8);
-	LDW(R8);_STLW(0);
+	_STLW(0);
 	LDW(R6);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	LDW(R5);STW(R10);
-	LDW(R10);_STLW(4);
+	_STLW(4);
 	CALLI('partition');
 	STW(R4);
-	LDW(R7);STW(R8);
-	LDW(R6);STW(R9);
-	LDW(R4);SUBI(1);STW(R10);
+	MOVW(R7,R8);
+	MOVW(R6,R9);
+	SUBI(1);STW(R10);
 	CALLI('quick');
-	LDW(R7);STW(R8);
+	MOVW(R7,R8);
 	LDI(1);ADDW(R4);STW(R9);
-	LDW(R5);STW(R10);
+	MOVW(R5,R10);
 	CALLI('quick');
 	LDI(0);
 	label('.12');
@@ -113,9 +113,9 @@ def code4():
 def code5():
 	label('partition');
 	_PROLOGUE(16,4,0xf8); # save=R3-7
-	LDW(R8);STW(R7);
-	LDW(R9);STW(R6);
-	LDW(R10);STW(R5);
+	MOVW(R8,R7);
+	MOVW(R9,R6);
+	MOVW(R10,R5);
 	INCV(R5);
 	LDW(R6);STW(R3);
 	LSLW();ADDW(R7);DEEKA(R4);
@@ -154,8 +154,8 @@ def code5():
 def code6():
 	label('exchange');
 	_PROLOGUE(16,6,0xc0); # save=R6-7
-	LDW(R8);STW(R7);
-	LDW(R9);STW(R6);
+	MOVW(R8,R7);
+	MOVW(R9,R6);
 	LDWI('.28');STW(R8);
 	_STLW(0);
 	LDWI('xx');DEEKA(R23);

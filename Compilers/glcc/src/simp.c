@@ -259,13 +259,14 @@ Tree simplify(int op, Type ty, Tree l, Tree r) {
 			break;
 		case CVF+F: {
 			float d;
-			if (l->op == CNST+F)
+			if (l->op == CNST+F) {
 				if (l->u.v.d < ty->u.sym->u.limits.min.d)
 					d = ty->u.sym->u.limits.min.d;
 				else if (l->u.v.d > ty->u.sym->u.limits.max.d)
 					d = ty->u.sym->u.limits.max.d;
 				else
 					d = l->u.v.d;
+			}
 			xcvtcnst(F,l->u.v.d,ty,d,(long double)d);
 			break;
 			}

@@ -210,7 +210,8 @@ void statement(int loop, Swtch swp, int lev) {
 
 	}
 	if (kind[t] != IF && kind[t] != ID
-	&& t != '}' && t != EOI) {
+	    && kind[t] != CHAR && kind[t] != STATIC
+	    && t != '}' && t != EOI) {
 		static char stop[] = { IF, ID, '}', 0 };
 		error("illegal statement termination\n");
 		skipto(0, stop);

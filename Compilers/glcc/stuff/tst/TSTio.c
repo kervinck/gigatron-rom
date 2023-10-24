@@ -9,7 +9,7 @@ int main()
 {
 	int c;
 	char buf[8];
-	fputs("Hello World!\n\n", stdout);
+	fputs("Hello World!\n\a\n", stdout);
 	while ((c = getchar()) != EOF)
 		{
 			fputs("Read [", stdout);

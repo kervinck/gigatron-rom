@@ -5,25 +5,6 @@
 
 #include "_doprint.h"
 
-void _doprint_putc(register doprint_t *dp, int c, register size_t cnt)
-{
-	dp->cnt += cnt;
-	while (cnt) {
-		dp->f(dp->closure, (char*)&c, 1);
-		cnt -= 1;
-	}
-}
-
-void _doprint_puts(register doprint_t *dp, register const char *s, register size_t cnt)
-{
-	register const char *e;
-	if (e = memchr(s, 0, cnt))
-		cnt = e - s;
-	dp->cnt += cnt;
-	dp->f(dp->closure, s, cnt);
-}
-
-
 static const char *parsespec(const char *s, doprintspec_t *spec, va_list *ap)
 {
 	static char fl[] = " + #0 - ";
@@ -76,12 +57,15 @@ static const char *parsespec(const char *s, doprintspec_t *spec, va_list *ap)
 			break;
 		c = *++s;
 	}
+	/* Ptr printing */
+	if (c == 'p')
+		f |= DPR_ALT;
 	spec->flags = f;
 	spec->conv = c;
 	return s;
 }
 
-static void do_str(doprint_t *dd, doprintspec_t *spec, const char *s, size_t l)
+static void do_str(doprintspec_t *spec, const char *s, size_t l)
 {
 	register const char *p;
 	register int f = spec->flags;
@@ -96,10 +80,10 @@ static void do_str(doprint_t *dd, doprintspec_t *spec, const char *s, size_t l)
 	if (f & DPR_WIDTH)
 		b = spec->width - l;
 	if (b > 0 && !(f & DPR_LEFTJ))
-		_doprint_putc(dd, ' ', b);
-	_doprint_puts(dd, s, l);
+		_doprint_putc(' ', b);
+	_doprint_puts(s, l);
 	if (b > 0 && (f & DPR_LEFTJ))
-		_doprint_putc(dd, ' ', b);
+		_doprint_putc(' ', b);
 }
 
 
@@ -113,12 +97,13 @@ static void upcase(char *s)
 	}
 }
 
-void _doprint_num(register doprint_t *dd,  register doprintspec_t *spec,
+void _doprint_num(register doprintspec_t *spec,
 		  register int b, register char *s)
 {
 	register int l, z;
 	register int f = spec->flags;
 	register char *p = "";
+	register int plen;
 
 	if (*s == '-') {
 		p = "-";
@@ -139,35 +124,34 @@ void _doprint_num(register doprint_t *dd,  register doprintspec_t *spec,
 		} else if (b == 16)
 			p = "0x";
 	}
-	b = strlen(p);
-	l = strlen(s) + b;
+	plen = strlen(p);
+	l = strlen(s);
 	z = 0;
 	if (f & DPR_PREC) {
-		if ((z = spec->prec - l + b) < 0)
+		if ((z = spec->prec - l) < 0)
 			z = 0;
 	} else if (f & DPR_ZEROJ) {
-		if ((z = spec->width - l) < 0)
+		if ((z = spec->width - l - plen) < 0)
 			z = 0;
 	}
-	l = l + z;
-	b = spec->width - l;
-	if (_isupper(spec->conv)) {
+	b = spec->width - l - plen - z;
+	if (spec->conv - 'a' < 0) {
 		upcase(s);
 		if (p[1]=='x')
 			p = "0X";
 	}
 	if (b > 0 && !(f & DPR_LEFTJ))
-		_doprint_putc(dd, ' ', b);
-	if (p[0])
-		_doprint_puts(dd, p, 4);
+		_doprint_putc(' ', b);
+	if (plen)
+		_doprint_puts(p, plen);
 	if (z > 0)
-		_doprint_putc(dd, '0', z);
-	_doprint_puts(dd, s, l);
+		_doprint_putc('0', z);
+	_doprint_puts(s, l);
 	if (b > 0 && (f & DPR_LEFTJ))
-		_doprint_putc(dd, ' ', b);
+		_doprint_putc(' ', b);
 }
 
-static void do_int(register doprint_t *dd,  register doprintspec_t *spec,
+static void do_int(register doprintspec_t *spec,
 		   register int b, register unsigned int x)
 {
 	char buffer[8];
@@ -177,7 +161,7 @@ static void do_int(register doprint_t *dd,  register doprintspec_t *spec,
 		s = itoa(x, buffer, 10);
 	} else
 		s = utoa(x, buffer, b);
-	_doprint_num(dd, spec, b, s);
+	_doprint_num(spec, b, s);
 }
 
 
@@ -206,7 +190,7 @@ static int _doprint_conv_info(int c)
 }
 
 
-int _doprint(register doprint_t *dd, register const char *fmt, __va_list ap)
+int _doprint_c89(register const char *fmt, __va_list ap)
 {
 	doprintspec_t spobj;
 	register doprintspec_t *spec = &spobj;
@@ -215,17 +199,18 @@ int _doprint(register doprint_t *dd, register const char *fmt, __va_list ap)
 	register const char *s;
 	char tmp;
 	/* loop */
+	_doprint_dst.cnt = 0;
 	for(; *fmt; fmt = s) {
 		s = fmt;
 		while((c = *s) && c != '%')
 			s += 1;
 		if (s != fmt) {
-		pfmt:   _doprint_puts(dd, fmt, s-fmt);
+		pfmt:   _doprint_puts(fmt, s-fmt);
 			continue;
 		}
 		if (s[1] == '%') {
-			s += 1;
-			fmt += 1;
+			fmt = fmt + 1;
+			s = fmt + 1;
 			goto pfmt;
 		}
 		memset(spec, 0, sizeof(*spec));
@@ -233,23 +218,23 @@ int _doprint(register doprint_t *dd, register const char *fmt, __va_list ap)
 		if (! (c = _doprint_conv_info(*s++)))
 			goto pfmt;
 		if ((spec->flags & DPR_LONG) && (c & 0x1e)) {
-			_doprint_long(dd, spec, c, &ap);
+			_doprint_long(spec, c, &ap);
 		} else if (c == 129) {
-			_doprint_double(dd, spec, &ap);
+			_doprint_double(spec, &ap);
 		} else {
 			i = va_arg(ap, unsigned int);
 			if (c == 32) {
 				tmp = (char)i;
-				do_str(dd, spec, (const char*)&tmp, 1);
+				do_str(spec, (const char*)&tmp, 1);
 			} else if (c == 64) {
-				do_str(dd, spec, (const char*)i, 0);
+				do_str(spec, (const char*)i, 0);
 			} else if (c == 96) {
-				*(int*)i = dd->cnt;
+				*(int*)i = _doprint_dst.cnt;
 			} else {
-				do_int(dd, spec, c, i);
+				do_int(spec, c, i);
 			}
 		}
 	}
-	return dd->cnt;
+	return _doprint_dst.cnt;
 }
 

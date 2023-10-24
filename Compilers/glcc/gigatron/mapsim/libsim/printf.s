@@ -1,6 +1,6 @@
 
 def scope():
-
+  if not 'USE_LIBC_PRINTF' in args.opts:
     def code0():
         nohop()
         label('printf')

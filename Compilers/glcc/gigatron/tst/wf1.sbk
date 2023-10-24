@@ -29,11 +29,11 @@ def code0():
 def code1():
 	label('err');
 	_PROLOGUE(8,4,0x80); # save=R7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	LDWI('.6');STW(R8);
 	_STLW(0);
 	LDW(R7);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('printf');
 	LDI(1);STW(R8);
 	_STLW(0);
@@ -45,18 +45,18 @@ def code1():
 def code2():
 	label('getword');
 	_PROLOGUE(12,2,0xe0); # save=R5-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	label('.8');
 	label('.9');
 	CALLI('getchar');STW(R23);
 	STW(R6);
 	LDNI(-1);XORW(R23);_BEQ('.11');
 	LDW(R6);STW(R8);
-	LDW(R8);_STLW(0);
+	_STLW(0);
 	CALLI('isletter');
 	_BEQ('.8');
 	label('.11');
-	LDW(R7);STW(R5);
+	MOVW(R7,R5);
 	_BRA('.15');
 	label('.12');
 	LDW(R5);STW(R23);
@@ -67,7 +67,7 @@ def code2():
 	STW(R6);
 	label('.15');
 	LDW(R6);STW(R8);
-	LDW(R8);_STLW(0);
+	_STLW(0);
 	CALLI('isletter');
 	STW(R6);
 	_BNE('.12');
@@ -99,24 +99,24 @@ def code3():
 def code4():
 	label('lookup');
 	_PROLOGUE(12,4,0xc0); # save=R6-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	LDW(R9);STW(R6);
 	DEEK();_BEQ('.24');
 	LDW(R7);STW(R8);
-	LDW(R8);_STLW(0);
+	_STLW(0);
 	DEEKV(R6);ADDI(6);DEEKA(R9);
 	LDW(R9);_STLW(2);
 	CALLI('strcmp');
 	_STLW(-2+12);
 	_BGE('.26');
-	LDW(R7);STW(R8);
+	MOVW(R7,R8);
 	DEEKV(R6);ADDI(2);STW(R9);
 	CALLI('lookup');
 	
 	_BRA('.23');
 	label('.26');
 	_LDLW(-2+12);_BLE('.28');
-	LDW(R7);STW(R8);
+	MOVW(R7,R8);
 	DEEKV(R6);ADDI(4);STW(R9);
 	CALLI('lookup');
 	
@@ -127,35 +127,35 @@ def code4():
 	label('.24');
 	LDWI('next');DEEKA(R23);
 	LDWI(2000);_CMPWS(R23);_BGT('.30');
-	LDWI('.32');STW(R8);
+	MOVIW('.32',R8);
 	CALLI('err');
 	label('.30');
-	LDWI('words');STW(R23);
+	MOVIW('words',R23);
 	LDWI('next');DEEK();_SHLI(3);ADDW(R23);DOKEQ(0);
 	LDWI('next');DEEK();_SHLI(3);STW(R23);
-	LDWI(v('words')+4);ADDW(R23);DOKEQ(0);
-	LDWI(v('words')+2);ADDW(R23);DOKEQ(0);
+	LDI(0);STXW(R23,v('words')+4);
+	STXW(R23,v('words')+2);
 	LDW(R7);STW(R8);
-	LDW(R8);_STLW(0);
+	_STLW(0);
 	CALLI('strlen');
 	ADDI(1);STW(R8);
 	LDW(R8);_STLW(0);
 	CALLI('malloc');STW(R23);
-	LDWI(v('words')+6);STW(R22);
+	MOVIW(v('words')+6,R22);
 	LDWI('next');DEEK();_SHLI(3);ADDW(R22);DOKEA(R23);
 	LDWI('next');DEEK();_SHLI(3);LDXW(vAC,v('words')+6);_BNE('.36');
-	LDWI('.39');STW(R8);
+	MOVIW('.39',R8);
 	CALLI('err');
 	label('.36');
 	LDWI('next');DEEK();_SHLI(3);LDXW(vAC,v('words')+6);STW(R8);
 	LDW(R8);_STLW(0);
 	LDW(R7);STW(R9);
-	LDW(R9);_STLW(2);
+	_STLW(2);
 	CALLI('strcpy');
 	LDWI('next');STW(R23);
-	DEEK();STW(R22);
-	ADDI(1);DOKE(R23);
-	LDWI('words');STW(R23);
+	DEEKA(R22);
+	LDW(R22);ADDI(1);DOKE(R23);
+	MOVIW('words',R23);
 	LDW(R22);_SHLI(3);ADDW(R23);
 	DOKE(R6);
 	
