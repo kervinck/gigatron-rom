@@ -550,8 +550,15 @@ Idioms and coding tricks
 a b- [if>=0 ...]        if a >= b ... But this breaks in case of overflow!
                         (For example consider a = 30000 and b = -5000)
 
-a b^ [if<0 b else a b-] Checking if the operands are of opposite sign first
-[if>=0 ...]             makes the comparison safe from overflow.
+a b^ [if<0 b 1| else a b-] Checking if the operands are of opposite sign first
+[if>=0 ...]                makes the comparison safe from overflow.
+
+[def ... ret] fAddr=    Defining function whose address is saved into var fAddr
+fAddr!                  Calling said function with CALL (v4 method)
+
+[def _fSym=* ... ret]   Defining a function whose address is given by symbol fSym
+\fSym!                  Calling said function with CALLI (v5 and above)
+
 
 --------------
 SYS extensions
@@ -590,10 +597,31 @@ Added in ROM v3:
 0c80    SYS_Sprite6y_v3_64      Draw sprite upside down
 0cc0    SYS_Sprite6xy_v3_64     Draw sprite mirrored and upside down
 
+Added in ROM v4:
+
+0b09    SYS_ExpanderControl_v4_40       Set register in I/O and RAM expander
+0b0c    SYS_Run6502_v4_80               Execute MOS 6502 code until BRK
+0b0f    SYS_ResetWaveforms_v4_50        Setup sound tables in page 7
+0b12    SYS_ShuffleNoise_v4_46          Shuffle noise table in page 7
+0b15    SYS_SpiExchangeBytes_v4_134     Send and receive bytes
+
+Added in ROM v5a:
+
+00ef    SYS_ReadRomDir_v5_80            Navigate ROM directory
+
+Added in ROM v6:
+
+009e    SYS_Multiply_s16_v6_66          16 bits multiplication (from at67)
+00a1    SYS_Divide_s16_v6_80            15 bits unsigned division (from at67)
+00e6    SYS_ScanMemory_v6_50            Search byte in memory region
+00e9    SYS_CopyMemory_v6_80            Copy memory region
+00ec    SYS_CopyMemoryExt_v6_100        Copy memory across RAM extension banks
+0b18    SYS_ReceiveSerial1_v6_32        Receive byte on input port (for the loader)
+
 Application specific SYS calls in ROM v1 that are -not- part of the ABI:
 
 SYS_Read3_40                    (Pictures)
-SYS_LoaderProcessInput_48       (Loader)
+SYS_LoaderProcessInput_48       (Loader, renamed SYS_ReceiveSerial1)
 SYS_LoaderNextByteIn_32         (Loader)
 SYS_LoaderPayloadCopy_34        (Loader)
 SYS_RacerUpdateVideoX_40        (Racer)

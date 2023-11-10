@@ -1,0 +1,88 @@
+
+The RAM & IO expansion board plugs into the 32K SRAM location and is
+controlled by executing an originally meaningless native STORE
+instruction whose bus bits obtain data from the RAM. On a normal
+Gigatron, such an instruction is illegal because attempts to read and
+write the RAM at the same time.  This results in writing a random byte
+at the specified location.  The expansion board detect this condition
+interprets instead the address as a 16 bits command word.
+
+    +-----------------------+-----------------------+---------------+
+    |       Operation       |         Mode          |      Bus      |
+    |-------+-------+-------+-------+-------+-------+-------+-------+
+    |  IR7  |  IR6  |  IR5  |  IR4  |  IR3  |  IR2  |  IR1  |  IR0  |
+    +-----------------------+-----------------------+---------------+
+  0 |                       |        D              |      / /      |
+  1 |                       |        X              |    CTRL: 01   |
+  2 | / / / / / / / / / / / |        Y,D            |      / /      |
+  3 |                       |        Y,X            |      / /      |
+  4 |                       |        / /            +---------------+
+  5 +-----------------------+        / /            |               |
+  6 |      CTRL: 110        |        / /            | / / / / / / / |
+  7 +-----------------------+        Y,X++          |               |
+    +-----------------------+-----------------------+---------------+
+
+
+The 16 bits of the address issued by the CTRL instruction are
+interpreted as follows:
+
+    +-------------------------+------------------------------+
+    |     high address byte   |       low address byte       |
+    +-------------------------+------------------------------+
+    |  MOSI -- -- -- -- -- -- | B1 B0 CS3 CS2 CS1 CS0 -- SCK |
+    +-------------------------+------------------------------+
+
+       MOSI:    sets the state of the SPI MOSI line
+       B1 B0:   sets the RAM bank accessed at addresses 0x8000-0xffff
+       CSx:     sets the (negative) chip select signal for up to four SPI ports
+       SCK:     sets the state of the SPI clock line
+
+Notes:
+
+* When SCK is set, instructions that read the memory do not return
+  memory values, but return a byte whose four low bits represent the
+  state of the four MISO lines associated with four potential SPI
+  ports. This only happens very briefly during the execution of
+  SYS_SpiExchangeBytes_v4_134.
+
+* Although the original expansion board potentially offers four SPI
+  ports, they rarely can be used simultaneously because few existing
+  SPI devices tri-state their MISO line when CS is disabled. Most
+  existing board only provide two SPI ports and sometimes repurpose
+  CS3 and CS2 to command additional functions. 
+
+* vCPU programs can use SYS_ExpanderControl_v4_40 to execute a CTRL
+  instruction with vAC as argument. This call makes sure that the SCK
+  bit remains zero and mirrors the low address word in location
+  ctrlBits_v5 (0x1f8).
+
+* The ROM initially issues a CTRL command that sets the control bits
+  to 0x7c. This means that the four SPI ports are disabled and
+  that addresses 0x8000-0xffff display bank 1.
+
+
+Pointers:
+
+- Initial board development
+
+   https://forum.gigatron.io/viewtopic.php?t=64&start=90
+
+- Proposed conventions for additional expansion board functions
+
+   https://forum.gigatron.io/viewtopic.php?t=331
+
+- Hans61 recreation of the original 128K board. This board only uses
+  common 74'00 chips and come in two version. The first version offers
+  four SPI that cannot be plugged simultaneously like the original
+  board. The improved version offers two fully functional SPI ports.
+  Both are very easy to build.
+
+   https://forum.gigatron.io/viewtopic.php?p=3694#p3694
+   https://github.com/hans61/Gigatron-TTL/ ... ansion128k
+
+- lb3361 expansion "retro" or "dual drive" 128K board. This board
+  relies on two GAL chips and offers additional features (see doc).
+
+   https://github.com/lb3361/gigatron-lb/tree/main/extension-retro
+   https://forum.gigatron.io/viewtopic.php?t=332
+
