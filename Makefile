@@ -49,7 +49,7 @@ dev.rom: Core/* Apps/*/* Makefile interface.json
 		TicTacGtb=Apps/TicTac/TicTac_v2.gtb\
 		WozMon=Apps/WozMon/WozMon_v2.gcl\
 		Apple1=Apps/Apple-1/Apple-1_v3.gt1\
-		MSBASIC=Apps/MSBASIC/MSBASIC_v1.gt1\
+		MSBASIC=Apps/MSBASIC/MSBASIC.gt1\
 		Loader=Apps/Loader/Loader_v4.gcl\
 		Credits=Apps/Credits/Credits_v4.gt1\
 		Egg=Apps/Horizon/Horizon_c_v2.gt1\
