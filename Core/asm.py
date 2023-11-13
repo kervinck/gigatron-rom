@@ -458,7 +458,7 @@ def enableListing():
   _listing = inspect.currentframe().f_back
   info = inspect.getframeinfo(_listing)
   _listingSource = _readSource(info.filename)
-  _lineno = inspect.getframeinfo(_listing).lineno
+  _lineno = _listing.f_lineno
 
 # Get source lines from last line number up to current
 def _getSourceLines(upto):
@@ -474,8 +474,7 @@ def _getSourceLines(upto):
 # Stop listing source lines (introspection is slow)
 def disableListing():
   global _listing, _lineno
-  info = inspect.getframeinfo(_listing)
-  for lineno in range(_linenos[-1], info.lineno+1):
+  for lineno in range(_linenos[-1], _listing.f_lineno+1):
     source = '%-4d  %s' % (lineno, _listingSource[lineno-1])
     C(source.rstrip(), prefix='') # A bit tricky: stuff in *comments*
   _linenos[-1] = None # Avoid double listing of this line
@@ -483,7 +482,7 @@ def disableListing():
 
 def _emit(opcode, operand):
   global _romSize, _maxRomSize
-  lineno = inspect.getframeinfo(_listing).lineno if has(_listing) else None
+  lineno = _listing.f_lineno if has(_listing) else None
   if _romSize >= _maxRomSize:
       disassembly = disassemble(opcode, operand)
       print('%04x %02x%02x  %s' % (_romSize, opcode, operand, disassembly))
