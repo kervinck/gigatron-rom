@@ -1058,6 +1058,7 @@ _GETIN1=*       #_TXA_                  {Save registers}
                 #_TYA_
                 #_PHA_
 _REDO=*         #_JSR_   ##_WAITKEY
+                #_BMI_   #@_REDO
                 #_JSR_   ##_MAPKEYCODE
                 #_CMPIM_ #7
                 #_BNE_   #@_NOBELL
