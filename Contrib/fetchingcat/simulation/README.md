@@ -7,7 +7,7 @@
 Here I have a simulated digital logic recreation of the gigatron based on the gigatron [schematics](https://cdn.hackaday.io/files/20781889094304/Schematics%202020-03-20.pdf)  
 This simulation runs using [Hneemann's Digital Logic Simulator](https://github.com/hneemann/Digital).  
 This project was used as a map for helping creating the FPGA version, though I found I mostly implemented it without being a chip for chip recreation.  
-This project drew inspirations from monsonite's much more aesthetically pleasing version (changing out parts for one's that layout nicer in the simulator) [here](https://github.com/monsonite/Gigatron-Simulator)  
+This project drew inspirations from monsonite's much more aesthetically pleasing version [here](https://github.com/monsonite/Gigatron-Simulator)  
 
 I worked to try to be as accurate as possible and as such you could use this to help diagnose or just investigate the inner workerings closer.  
 In order to get the VGA output to render correctly I needed to modify the Digital simulator by adding the VGA timings its using.  
