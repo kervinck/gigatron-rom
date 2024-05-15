@@ -424,11 +424,6 @@
       <pos x="-1400" y="900"/>
     </visualElement>
     <visualElement>
-      <elementName>Const</elementName>
-      <elementAttributes/>
-      <pos x="-1480" y="900"/>
-    </visualElement>
-    <visualElement>
       <elementName>Tunnel</elementName>
       <elementAttributes>
         <entry>
@@ -8462,6 +8457,16 @@
       </elementAttributes>
       <pos x="-140" y="-380"/>
     </visualElement>
+    <visualElement>
+      <elementName>Button</elementName>
+      <elementAttributes/>
+      <pos x="-1520" y="900"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Not</elementName>
+      <elementAttributes/>
+      <pos x="-1480" y="900"/>
+    </visualElement>
   </visualElements>
   <wires>
     <wire>
@@ -9617,10 +9622,6 @@
       <p2 x="520" y="2180"/>
     </wire>
     <wire>
-      <p1 x="-1480" y="900"/>
-      <p2 x="-1400" y="900"/>
-    </wire>
-    <wire>
       <p1 x="440" y="900"/>
       <p2 x="920" y="900"/>
     </wire>
@@ -9635,6 +9636,14 @@
     <wire>
       <p1 x="2340" y="900"/>
       <p2 x="2520" y="900"/>
+    </wire>
+    <wire>
+      <p1 x="-1440" y="900"/>
+      <p2 x="-1400" y="900"/>
+    </wire>
+    <wire>
+      <p1 x="-1520" y="900"/>
+      <p2 x="-1480" y="900"/>
     </wire>
     <wire>
       <p1 x="1220" y="900"/>

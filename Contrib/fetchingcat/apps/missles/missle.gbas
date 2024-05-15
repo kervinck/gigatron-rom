@@ -1,0 +1,151 @@
+
+' written by Robert Sanchez
+
+
+_runtimePath_ "../../at67/gbas/runtime"
+_codeRomType_ ROMv2
+
+const MISSLE_COUNT = 5
+
+set FGBG_COLOUR, 0
+cls : mode 3
+
+x = 100
+y = 100
+tmpx = 0
+tmpy = 0
+oldc = 0
+
+
+dim mis_x1%(MISSLE_COUNT)
+dim mis_y1%(MISSLE_COUNT)
+
+dim mis_x2%(MISSLE_COUNT)
+dim mis_y2%(MISSLE_COUNT)
+
+dim mis_dx(MISSLE_COUNT)
+dim mis_dy(MISSLE_COUNT)
+
+dim mis_sx(MISSLE_COUNT)    ' TODO: what is wrong with using this?
+dim mis_e(MISSLE_COUNT)
+
+
+for n=0 to MISSLE_COUNT
+    gosub initMissle
+next n
+
+mystep:
+    gosub handleInput
+
+    for n=0 to MISSLE_COUNT
+        gosub drawMissle
+    next n
+goto mystep
+'end
+
+
+
+initMissle:
+    mis_x1(n) = rnd(159)
+    mis_y1(n) = 1
+
+    mis_x2(n) = rnd(159)
+    mis_y2(n) = 119
+
+    mis_dx(n) = abs(mis_x2(n) - mis_x1(n))
+
+    'if mis_x1(n) < mis_x2(n)
+        'mis_sx(n) = 1
+    'else
+        'mis_sx(n) = -1
+    'endif
+
+    mis_dy(n) = -abs(mis_y2(n) - mis_y1(n))
+
+    mis_e(n) = mis_dx(n) + mis_dy(n)
+
+    return
+
+
+
+'loop:
+drawMissle:
+    'pset mis_x1(n),mis_y1(n),rnd(0) and &h3F
+    pset mis_x1(n),mis_y1(n),&h03
+
+    if (mis_x1(n) = mis_x2(n)) and (mis_y1(n) = mis_y2(n))
+        goto done
+    endif
+
+    e2 = mis_e(n)
+    
+    if e2 >= mis_dy(n)
+        if mis_x1(n) = mis_x2(n)
+            goto done
+        endif
+        mis_e(n) = mis_e(n) + mis_dy(n)
+        
+        ' TODO: hoist this logic out, having problems with that though
+        if mis_x1(n) < mis_x2(n)
+            mis_x1(n) = mis_x1(n) + 1
+        else
+            mis_x1(n) = mis_x1(n) -1
+        endif
+    endif
+
+    if e2 <= mis_dx(n)
+        if mis_y1(n) = mis_y2(n)
+            goto done
+        endif
+        mis_e(n) = mis_e(n) + mis_dx(n)
+        mis_y1(n) = mis_y1(n) + 1
+    endif
+
+    pset mis_x1(n),mis_y1(n),&h3F
+    return
+
+done:
+    gosub initMissle
+    return
+
+
+
+
+handleInput:
+    button = get("BUTTON_STATE")
+    if (button AND &h01)   
+        tmpx = tmpx - 1
+        if tmpx < -1
+            tmpx = 0
+            pset x,y,oldc
+            x = x - 1
+        endif
+    endif
+    if (button AND &h02)
+        tmpx = tmpx + 1
+        if tmpx > 1
+            tmpx = 0
+            pset x,y,oldc
+            x = x + 1
+        endif
+    endif
+    if (button AND &h04)
+        tmpy = tmpy -1
+        if tmpy < -1
+            tmpy = 0
+            pset x,y,oldc
+            y = y - 1
+        endif
+    endif
+    if (button AND &h08)
+        tmpy = tmpy + 1
+        if tmpy > 1
+            tmpy = 0
+            pset x,y,oldc
+            y = y + 1
+        endif
+    endif
+
+    'oldc = peek(((y + 8) LSL 8) + x) ' TODO
+    pset x,y,rnd(0) and &h3F
+    return
