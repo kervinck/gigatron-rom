@@ -48,8 +48,8 @@ games.rom: $(TOPDIR)/Core/* $(TOPDIR)/Apps/*/* Makefile interface.json
 		Main=Apps/MainMenu/MainMenu_games.gcl\
 		Reset=$(TOPDIR)/Core/Reset_v6.gcl
 
-games.run: 
-	DISPLAY=0:0 $(TOPDIR)/../sim/emulator/gtemu ./fpga_games.rom
+#games.run: 
+#	DISPLAY=0:0 $(TOPDIR)/../sim/emulator/gtemu ./fpga_games.rom
 
 
 #-----------------------------------------------------------------------
@@ -65,10 +65,6 @@ dev.rom: $(TOPDIR)/Core/* $(TOPDIR)/Apps/*/* Makefile interface.json
 		Loader=$(TOPDIR)/Apps/Loader/Loader_v4.gcl\
 		Main=Apps/MainMenu/MainMenu_dev.gcl\
 		Reset=$(TOPDIR)/Core/Reset_v6.gcl
-# Main=Apps/Credits/Credits.gt1\
-
-dev.run: 
-	DISPLAY=0:0 ../at67/gtemuAT67
 
 
 export jsEmu=Contrib/PhilThomas/src
