@@ -690,7 +690,7 @@ def writeFlashFile(sourceFile):
 
   # Clarification header emitted once before first instruction
   header = ('//File Format: Hex'\
-            '\n//Device-package: GW1N-9-QFN48'\
+            '\n//Device-package: GW1NR-9-QFN88P-6'\
             '\n')
   
   filename = stem + '.fi'
