@@ -2,9 +2,10 @@
 Verilog implementation of the Gigatron for the Tang Nano 9K FPGA board.
 
 ## Installation
-Download and install the free *GOWIN Programmer Vx.x.x. Education* or *Gowin Vx.x.x.Beta-4 Education* if you want to make changes to the code: https://www.gowinsemi.com/en/support/download_eda/ (Prior registration is required)
+Download and install the free *GOWIN EDA software* here: https://www.gowinsemi.com/en/support/download_eda (Prior registration is required)
+The programmer is appropriate if you just want to flash the Tang Nano without making changes to the code. If you want to make changes, Gowin EDA is needed. The education version is sufficient there.
 
-Note: If you intend run the non-education version of the programs, you need to apply for a license. The education versions are fully sufficient here.
+Note: The non-education version of the programs require a license. 
 
 ## Flashing the Tang Nano
 - Double-click the cell below "Operation" to open the Device configuration dialog.
@@ -24,4 +25,10 @@ Find schematics and Gerber files of the adapter board here: [Schematic](schemati
 ## Building the User Flash File From Source
 The user flash file is basically the Gigatron's rom file, but in a format that's understood by the Gowin Programmer (ending: .fi). Unlike the gigatron's rom file which has a maximum size of 64K, the maximm size of the user flash file is 38K. This is due to the size of the embedded user flash of 608 KBit = 38K 16-bit words.
 If you want to (re)build it, type "make games.rom" in a Linux command shell. I was using WSL/Ubuntu under Windows. Cygwin, MinGW, MSYS etc. do not work (at least not for me) 
+
+## Youtube Video
+More details in the video.
+
+<a href="https://youtu.be/_SiCv_uo2bY"><img src="images/thumbnail.jpg" width="800"></a>
+
 
