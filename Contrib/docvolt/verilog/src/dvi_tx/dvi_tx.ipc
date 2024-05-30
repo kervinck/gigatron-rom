@@ -1,0 +1,16 @@
+[General]
+ipc_version=4
+file=dvi_tx
+module=DVI_TX_Top
+target_device=gw1nr9c-004
+type=dvi_tx
+version=1.0
+
+[Config]
+DISABLE_IO_INSERTION=true
+ELVDS=true
+LANG=0
+RX_CLOCK_IN_FREQUENCY=40
+Synthesis_tool=GowinSynthesis
+TLVDS=false
+USING_EXTERNAL_CLOCK=true
