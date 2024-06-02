@@ -456,7 +456,7 @@ namespace Expression
     
         // In comment if trailing a single quote or if NOT a forward char literal or if trailing a 'REM' sequence
         if((input[index] == '\''  &&  index > int(input.size())-3)  ||  (index <= int(input.size())-3  &&  input[index] == '\''  &&  input[index+2] != '\'')  ||
-           (index <= int(input.size()) - 3  &&  toupper((unsigned char)input[index]) == 'R'  &&  toupper((unsigned char)input[index+1]) == 'E'  &&  toupper((unsigned char)input[index+2]) == 'M'))
+           (index <= int(input.size()) - 3  &&  toupper((unsigned char)input[index]) == 'R'  &&  toupper((unsigned char)input[index+1]) == 'E'  &&  toupper((unsigned char)input[index+2]) == 'M' && (unsigned char)input[index + 3] == ' '))
         {
             output = true;
 
