@@ -1,0 +1,22 @@
+<?xml version="1" encoding="UTF-8"?>
+<!DOCTYPE gowin-fpga-project>
+<Project>
+    <Template>FPGA</Template>
+    <Version>5</Version>
+    <Device name="GW1NR-9C" pn="GW1NR-LV9QN88PC6/I5">gw1nr9c-004</Device>
+    <FileList>
+        <File path="src/alu.v" type="file.verilog" enable="1"/>
+        <File path="src/core.v" type="file.verilog" enable="1"/>
+        <File path="src/cu.v" type="file.verilog" enable="1"/>
+        <File path="src/dvi_tx/dvi_tx.v" type="file.verilog" enable="1"/>
+        <File path="src/gigatron.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_rpll/gowin_rpll.v" type="file.verilog" enable="1"/>
+        <File path="src/gowin_sp/gowin_sp.v" type="file.verilog" enable="1"/>
+        <File path="src/hdmi.v" type="file.verilog" enable="1"/>
+        <File path="src/per.v" type="file.verilog" enable="1"/>
+        <File path="src/prg.v" type="file.verilog" enable="1"/>
+        <File path="src/ram.v" type="file.verilog" enable="1"/>
+        <File path="src/registers.v" type="file.verilog" enable="1"/>
+        <File path="src/gigatron.cst" type="file.cst" enable="1"/>
+    </FileList>
+</Project>
