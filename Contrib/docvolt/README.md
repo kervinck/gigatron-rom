@@ -5,7 +5,9 @@ Verilog implementation of the Gigatron for the Tang Nano 9K FPGA board.
 Download and install the free *GOWIN EDA software* here: https://www.gowinsemi.com/en/support/download_eda (Prior registration is required)
 The programmer is appropriate if you just want to flash the Tang Nano without making changes to the code. If you want to make changes, Gowin EDA is needed. The education version is sufficient there.
 
-Note: The non-education version of the programs require a license. 
+Notes: 
+- The non-education version of the programs require a license. 
+- There is an issue with Gowin Programmer V1.9.9.03. Use V1.9.9.02 instead. Later versions might also work.
 
 ## Flashing the Tang Nano
 - Double-click the cell below "Operation" to open the Device configuration dialog.

@@ -39,6 +39,7 @@ gigatron-rom
        +--- Cwiiis/             Gigatris game
        +--- delpozzo/           VideoPoker game; Tools (CustomFish, sendFile)
        +--- dhkolf/             Fast emulator; Demos (SprPaint, PianoBeep,...)
+       +--- docvolt/            Implementation on Sipeed Tang Nano 9K FPGA board
        +--- flok99/             Simple (and slow) visualizer using SDL2
        +--- gigawalt/           Walter's script
        +--- kervinck/           Ramblings (all work in progress)
