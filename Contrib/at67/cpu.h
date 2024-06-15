@@ -9,7 +9,7 @@
 
 
 #define MAJOR_VERSION "1.0"
-#define MINOR_VERSION "9R"
+#define MINOR_VERSION "10R"
 #define VERSION_STR "gtemuAT67 v" MAJOR_VERSION "." MINOR_VERSION
 #define RUNTIME_VERSION 104 // this must match RUNTIME_VERSION in runtime/util.i
  

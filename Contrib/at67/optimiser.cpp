@@ -886,15 +886,18 @@ RESTART_OPTIMISE:
                             case PokeVarArrayB:
                             case PokeTmpArrayB:
                             {
+                                uint16_t offset = 15; // LD<X> is moved 15 bytes
+
                                 // Save previous line LD<X>, if opcode is not some sort of LD then can't optimise first phase
                                 if(firstLine - 1 < 0) break;
                                 Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
+                                if(savedLD._opcode == "LDWI") offset += 1;
                                 if(savedLD._opcode.find("LD") != std::string::npos)
                                 {
                                     // Discard it's label, (it's no longer needed), and adjust it's address
                                     if(!migrateInternalLabel(i, firstLine - 1, firstLine + 3)) break;
                                     savedLD._internalLabel = "";
-                                    savedLD._address += 15; // LD<X> is moved 15 bytes
+                                    savedLD._address += offset;
 
                                     // Delete previous line LD<X>, first STW and last LDW
                                     linesDeleted = true;
@@ -907,6 +910,13 @@ RESTART_OPTIMISE:
                                     adjustLabelAddresses(i, firstLine - 1, -4);
                                     adjustVasmAddresses(i, firstLine - 1, -4);
                                     firstLine = firstLine - 1;  // points to new first LDW
+
+                                    if(offset != 15)
+                                    {
+                                        // adjust for LDWI
+                                        adjustLabelAddresses(i, firstLine + 6, 1);
+                                        adjustVasmAddresses(i, firstLine + 6, 1);
+                                    }
                                 }
                                 else
                                 {
@@ -934,15 +944,18 @@ RESTART_OPTIMISE:
                             case DokeVarArray:
                             case DokeTmpArray:
                             {
+                                uint16_t offset = 17; // LD<X> is moved 17 bytes
+
                                 // Save previous line LD<X>, if opcode is not some sort of LD then can't optimise first phase
                                 if(firstLine - 1 < 0) break;
                                 Compiler::VasmLine savedLD = Compiler::getCodeLines()[i]._vasm[firstLine - 1];
+                                if(savedLD._opcode == "LDWI") offset += 1;
                                 if(savedLD._opcode.find("LD") != std::string::npos)
                                 {
                                     // Migrate LD<X>'s label to LDWI
                                     if(!migrateInternalLabel(i, firstLine - 1, firstLine + 3)) break;
                                     savedLD._internalLabel = "";
-                                    savedLD._address += 17; // LD<X> is moved 17 bytes
+                                    savedLD._address += offset;
 
                                     // Delete previous line LD<X>, first STW and last LDW
                                     linesDeleted = true;
@@ -955,6 +968,13 @@ RESTART_OPTIMISE:
                                     adjustLabelAddresses(i, firstLine - 1, -4);
                                     adjustVasmAddresses(i, firstLine - 1, -4);
                                     firstLine = firstLine - 1;  // points to new first LDW
+
+                                    if(offset != 17)
+                                    {
+                                        // adjust for LDWI
+                                        adjustLabelAddresses(i, firstLine + 7, 1);
+                                        adjustVasmAddresses(i, firstLine + 7, 1);
+                                    }
                                 }
                                 else
                                 {

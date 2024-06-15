@@ -1,0 +1,14 @@
+<IfModule mod_headers.c>
+Header merge Cache-Control private,max-age=86400,must-revalidate
+<IfModule mod_rewrite.c>
+    RewriteCond "%{HTTP:Accept-encoding}" "gzip"
+    RewriteCond "%{REQUEST_FILENAME}\.gz" -s
+    RewriteRule "^(.*)\.(rom|vhd)"         "$1\.$2\.gz" [QSA]
+    # Serve correct content types, and prevent mod_deflate double gzip.
+    RewriteRule "\.(rom|vhd)\.gz$" "-" [T=application/octet-stream,E=no-gzip:1]
+    # Serve correct encoding type.
+    <FilesMatch "\.(rom|vhd)\.gz$">
+      Header append Content-Encoding gzip
+      Header append Vary Accept-Encoding
+    </FilesMatch>
+</IfModule>

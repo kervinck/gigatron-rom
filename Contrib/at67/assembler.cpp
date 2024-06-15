@@ -348,6 +348,9 @@ namespace Assembler
         {
             // Get bytesize of previous page worth of instructions
             bool foundInstruction = false;
+            
+            if(address < 4) continue;
+
             for(uint16_t addr=address-1; addr>=address-3; --addr)
             {
                 uint8_t size = uint8_t(address - addr); // no instruction is longer than 3 bytes
