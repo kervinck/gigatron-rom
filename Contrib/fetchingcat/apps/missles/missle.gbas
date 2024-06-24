@@ -1,148 +1,221 @@
-
-' written by Robert Sanchez
-
+rem written by robert sanchez
 
 _runtimePath_ "../../at67/gbas/runtime"
+'_runtimePath_ "../runtime"
 _codeRomType_ ROMv2
 
-const MISSLE_COUNT = 5
+const MISSLE_COUNT = 4
+const SLOWDOWN = 20
+const INPUTDELAYCOUNT = 2
 
 set FGBG_COLOUR, 0
 cls : mode 3
 
-x = 100
-y = 100
+x = 80
+y = 60
+
 tmpx = 0
 tmpy = 0
 oldc = 0
+e2 = 100
 
 
-dim mis_x1%(MISSLE_COUNT)
-dim mis_y1%(MISSLE_COUNT)
+dim mis_startx(MISSLE_COUNT+1)
 
-dim mis_x2%(MISSLE_COUNT)
-dim mis_y2%(MISSLE_COUNT)
+dim mis_x1(MISSLE_COUNT+1)
+dim mis_y1(MISSLE_COUNT+1)
 
-dim mis_dx(MISSLE_COUNT)
-dim mis_dy(MISSLE_COUNT)
+dim mis_x2(MISSLE_COUNT+1)
+dim mis_y2(MISSLE_COUNT+1)
 
-dim mis_sx(MISSLE_COUNT)    ' TODO: what is wrong with using this?
-dim mis_e(MISSLE_COUNT)
+dim mis_dx(MISSLE_COUNT+1)
+dim mis_dy(MISSLE_COUNT+1)
+
+dim mis_sx(MISSLE_COUNT+1)
+dim mis_sy(MISSLE_COUNT+1)
+
+dim mis_e(MISSLE_COUNT+1)
+
+dim mis_slow(MISSLE_COUNT+1)
 
 
-for n=0 to MISSLE_COUNT
+bullet_fired = 0
+oldbutton = 0
+button = 0
+inputDelay = INPUTDELAYCOUNT
+
+
+for n=0 to MISSLE_COUNT-1
     gosub initMissle
 next n
 
-mystep:
-    gosub handleInput
+gameloop:
+    if (inputDelay > 0)
+        inputDelay = inputDelay - 1
+    else
+        gosub handleInput
+        inputDelay = INPUTDELAYCOUNT
+    endif
 
     for n=0 to MISSLE_COUNT
         gosub drawMissle
     next n
-goto mystep
-'end
+
+goto gameloop
 
 
 
 initMissle:
-    mis_x1(n) = rnd(159)
-    mis_y1(n) = 1
-
-    mis_x2(n) = rnd(159)
-    mis_y2(n) = 119
+    if (n=MISSLE_COUNT)
+        mis_startx(n) = 80
+        mis_x1(n) = 80
+        mis_y1(n) = 115
+        mis_x2(n) = x
+        mis_y2(n) = y
+    else
+        mis_startx(n) = rnd(159)
+        mis_x1(n) = mis_startx(n)
+        mis_y1(n) = 1
+        mis_x2(n) = rnd(159)
+        mis_y2(n) = 119
+    endif
 
     mis_dx(n) = abs(mis_x2(n) - mis_x1(n))
 
-    'if mis_x1(n) < mis_x2(n)
-        'mis_sx(n) = 1
-    'else
-        'mis_sx(n) = -1
-    'endif
+    if mis_x1(n) < mis_x2(n)
+        mis_sx(n) = 1
+    else
+        mis_sx(n) = -1
+    endif
+
+    if mis_y1(n) < mis_y2(n)
+        mis_sy(n) = 1
+    else
+        mis_sy(n) = -1
+    endif
 
     mis_dy(n) = -abs(mis_y2(n) - mis_y1(n))
 
     mis_e(n) = mis_dx(n) + mis_dy(n)
 
+    mis_slow(n) = SLOWDOWN
+
     return
 
 
 
-'loop:
 drawMissle:
-    'pset mis_x1(n),mis_y1(n),rnd(0) and &h3F
-    pset mis_x1(n),mis_y1(n),&h03
+    if ((n = MISSLE_COUNT) and (bullet_fired = 0))
+        return
+    endif
 
-    if (mis_x1(n) = mis_x2(n)) and (mis_y1(n) = mis_y2(n))
+    mis_slow(n) = mis_slow(n) - 1
+    if ((n < MISSLE_COUNT) and (mis_slow(n) > 0))
+        return
+    else
+        mis_slow(n) = SLOWDOWN
+    endif
+
+    undraw_dx = mis_dx(n)
+    undraw_dy = mis_dy(n)
+    undraw_sx = mis_sx(n)
+    undraw_sy = mis_sy(n)
+
+    if (n = MISSLE_COUNT)
+        c = &h0c
+    else
+        c = &h03
+    endif
+
+    if (mis_y1(n) = mis_y2(n))
         goto done
     endif
 
-    e2 = mis_e(n)
+    poke ((mis_y1(n) + 8) LSL 8) + mis_x1(n), c
+
+    e2 = mis_e(n) + mis_e(n)
     
-    if e2 >= mis_dy(n)
-        if mis_x1(n) = mis_x2(n)
+    if e2 >= undraw_dy
+        if (mis_x1(n) = mis_x2(n))
             goto done
         endif
-        mis_e(n) = mis_e(n) + mis_dy(n)
-        
-        ' TODO: hoist this logic out, having problems with that though
-        if mis_x1(n) < mis_x2(n)
-            mis_x1(n) = mis_x1(n) + 1
-        else
-            mis_x1(n) = mis_x1(n) -1
-        endif
+        mis_e(n) = mis_e(n) + undraw_dy
+        mis_x1(n) = mis_x1(n) + undraw_sx
     endif
 
-    if e2 <= mis_dx(n)
-        if mis_y1(n) = mis_y2(n)
+    if e2 <= undraw_dx
+        if (mis_y1(n) = mis_y2(n))
             goto done
         endif
-        mis_e(n) = mis_e(n) + mis_dx(n)
-        mis_y1(n) = mis_y1(n) + 1
+        mis_e(n) = mis_e(n) + undraw_dx
+        mis_y1(n) = mis_y1(n) + undraw_sy
     endif
 
-    pset mis_x1(n),mis_y1(n),&h3F
+    if (n = MISSLE_COUNT)
+        return
+    endif
+
+    poke ((mis_y1(n) + 8) LSL 8) + mis_x1(n), &h3F
+    
     return
 
 done:
-    gosub initMissle
+    if (n = MISSLE_COUNT)
+        ' explode missle
+        bullet_fired = 0
+        set FG_COLOUR, 0
+        line mis_startx(n), 115, mis_x2(n), mis_y2(n)
+        'set FG_COLOUR, &h3F
+        'circlef mis_x2(n), mis_y2(n), 15
+        for i = 0 to MISSLE_COUNT-1
+            dx = abs(mis_x1(i) - mis_x1(MISSLE_COUNT))
+            dy = abs(mis_y1(i) - mis_y1(MISSLE_COUNT))
+            if ((dx < 10) and (dy < 10))
+                mis_y1(i) = 119
+            endif
+        next i
+    else
+        set FG_COLOUR, 0
+        line mis_startx(n), 1, mis_x2(n), mis_y2(n)
+        gosub initMissle
+    endif
     return
 
 
-
-
 handleInput:
+    oldbutton = button
     button = get("BUTTON_STATE")
     if (button AND &h01)   
-        tmpx = tmpx - 1
-        if tmpx < -1
-            tmpx = 0
-            pset x,y,oldc
+        pset x,y,oldc
+        if (x > 0)
             x = x - 1
         endif
     endif
     if (button AND &h02)
-        tmpx = tmpx + 1
-        if tmpx > 1
-            tmpx = 0
-            pset x,y,oldc
+        pset x,y,oldc
+        if (x<159)
             x = x + 1
         endif
     endif
     if (button AND &h04)
-        tmpy = tmpy -1
-        if tmpy < -1
-            tmpy = 0
-            pset x,y,oldc
+        pset x,y,oldc
+        if (y>0)
             y = y - 1
         endif
     endif
     if (button AND &h08)
-        tmpy = tmpy + 1
-        if tmpy > 1
-            tmpy = 0
-            pset x,y,oldc
+        pset x,y,oldc
+        if (y<119)
             y = y + 1
+        endif
+    endif
+    button = button XOR 255
+
+    if (button AND &h80)
+        if (oldbutton AND &h80) &= 0
+            bullet_fired = 1
+            n = MISSLE_COUNT
+            gosub initMissle
         endif
     endif
 

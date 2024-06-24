@@ -30,7 +30,7 @@
 # 3. The following remote source files that were added to the original project:-
 #
 #    "/data/git/gigatron-rom-fork/Contrib/fetchingcat/fpga/gigatron.vhd"
-#    "/data/git/gigatron-rom-fork/Contrib/fetchingcat/fpga/ROMv5a.coe"
+#    "/data/git/gigatron-rom-fork/Contrib/fetchingcat/fpga/ROMv5m.coe"
 #    "/data/git/gigatron-rom-fork/Contrib/fetchingcat/fpga/Basys3_Master.xdc"
 #    "/data/git/gigatron-rom-fork/Contrib/fetchingcat/fpga/gigatron_tb.vhd"
 #
@@ -53,7 +53,7 @@ proc checkRequiredFiles { origin_dir} {
 
   set files [list \
  "[file normalize "$origin_dir/gigatron.vhd"]"\
- "[file normalize "$origin_dir/ROMv5a.coe"]"\
+ "[file normalize "$origin_dir/ROMv5m.coe"]"\
  "[file normalize "$origin_dir/Basys3_Master.xdc"]"\
  "[file normalize "$origin_dir/gigatron_tb.vhd"]"\
   ]
@@ -182,7 +182,7 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 set obj [get_filesets sources_1]
 set files [list \
  [file normalize "${origin_dir}/gigatron.vhd"] \
- [file normalize "${origin_dir}/ROMv5a.coe"] \
+ [file normalize "${origin_dir}/ROMv5m.coe"] \
 ]
 add_files -norecurse -fileset $obj $files
 
