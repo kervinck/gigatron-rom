@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=640, initial-scale=0.5">
+
+    <title>Gigatron</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.0/slate/bootstrap.min.css" integrity="sha384-A0hm/Pn0Gvk8w7szlEuTOZrIyQCCBNXQF9ccseoCI36nWRfMEAapo5UJ56zLPvPw" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/open-iconic/1.1.1/font/css/open-iconic-bootstrap.min.css" integrity="sha256-BJ/G+e+y7bQdrYkS2RBTyNfBHpA9IuGaPmf9htub5MQ=" crossorigin="anonymous" />
+    <script type="module" src="./main.js"></script>
+
+    <style>
+        kbd {
+            background-color: black;
+        }
+
+        #vga-canvas {
+            background-color: black;
+        }
+
+        .gamepad-btn.pressed {
+            fill: #00f;
+            fill-opacity: 0.5;
+        }
+
+        .gamepad-btn:hover {
+            stroke: gray;
+            stroke-width: 5;
+        }
+
+        .led.led-on {
+            --led-lamp-fill: url(#led-lamp-on);
+            --led-hilight-fill: url(#led-hilight-on);
+        }
+
+        .led.led-off {
+            --led-lamp-fill: url(#led-lamp-off);
+            --led-hilight-fill: url(#led-hilight-off);
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row mt-3">
+            <div class="col">
+                <div class="mx-auto" style="width:640px;">
+                    <!-- LOGO -->
+<!--
+                    <a href="https://gigatron.io">
+						<img src="https://gigatron.io/wp-content/uploads/2018/02/cropped-logo2.png" width="350" height="70">
+					</a>
+
+                    <hr>
+-->
+
+                    <!-- BLINKENLIGHTS -->
+                    <svg xmlns="http://www.w3.org/2000/svg" xlink:xmlns="http://www.w3.org/1999/xlink" width="80" height="24">
+                        <defs>
+                            <linearGradient id="led-lamp-on" x1="50%" x2="50%" y1="0%" y2="100%">
+                                <stop offset="0%" stop-color="#e00"/>
+                                <stop offset="100%" stop-color="#e22"/>
+                            </linearGradient>
+                            <linearGradient id="led-lamp-off" x1="50%" x2="50%" y1="0%" y2="100%">
+                                <stop offset="0%" stop-color="#800"/>
+                                <stop offset="100%" stop-color="#822"/>
+                            </linearGradient>
+                            <linearGradient id="led-hilight-on" x1="50%" x2="50%" y1="0%" y2="100%">
+                                <stop offset="0%" stop-color="#e88"/>
+                                <stop offset="100%" stop-color="#e00"/>
+                            </linearGradient>
+                            <linearGradient id="led-hilight-off" x1="50%" x2="50%" y1="0%" y2="100%">
+                                <stop offset="0%" stop-color="#888"/>
+                                <stop offset="100%" stop-color="#800"/>
+                            </linearGradient>
+                            <g id="led">
+                                <circle cx="0" cy="0" r="8" fill="var(--led-lamp-fill)"/>
+                                <ellipse cx="0" cy="-3.25" rx="5" ry="4" fill="var(--led-hilight-fill)"/>
+                            </g>
+                        </defs>
+                        <use class="led led-0" xlink:href="#led" x="10" y="12"/>
+                        <use class="led led-1" xlink:href="#led" x="30" y="12"/>
+                        <use class="led led-2" xlink:href="#led" x="50" y="12"/>
+                        <use class="led led-3" xlink:href="#led" x="70" y="12"/>
+                    </svg>
+
+                    <!-- VGA -->
+                    <canvas id="vga-canvas" class="border border-white rounded p-1" width="640" height="480"></canvas>
+
+                    <hr>
+
+                    <div class="row">
+                      <div>
+                            <!-- GAMEPAD -->
+                            <svg class="gamepad" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 630 250" width="400" height="180">
+                                <defs>
+                                    <radialGradient id="button-gradient" fx="0.8" fy="0.8">
+                                        <stop offset="5%" stop-color="gray"/>
+                                        <stop offset="100%" stop-color="black"/>
+                                    </radialGradient>
+                                </defs>
+
+                                <g>
+                                    <rect x="0" y="0" width="630" height="250" rx="15" ry="15" stroke="#802020" stroke-width="5" fill="#82332f"/>
+                                    <path d="m 15,30 a 15,15 0 0 1 15,-15 h 180 a 15,15 0 0 1 15,15 v 60 a 15,15 0 0 0 15,15 h 360 a 15,15 0 0 1 15,15 v 100 a 15,15 0 0 1 -15,15 h -570 a 15,15 0 0 1 -15,-15 z" stroke="#f0d0d0" fill="#f7f1db"/>
+                                    <line x1="15" y1="200" x2="615" y2="200" stroke-width="4" stroke="black"/>
+                                    <line x1="15" y1="208" x2="615" y2="208" stroke-width="4" stroke="black"/>
+                                </g>
+
+                                <g transform="translate(102,150)">
+                                    <!-- <rect id="dpad" x="-80" y="-80" width="160" height="160" fill="none"/> -->
+                                    <path d="m-24,-68 a4,4 0 0,1 4,-4 h40 a4,4 0 0,1 4,4 v40 a4,4 0 0,0 4,4 h40 a4,4 0 0,1 4,4 v40 a4,4 0 0,1 -4,4 h-40 a4,4 0 0,0 -4,4 v40 a 4,4 0 0,1 -4,4 h-40 a4,4 0 0,1 -4,-4 v-40 a4,4 0 0,0 -4,-4 h-40 a4,4 0 0,1 -4,-4 v-40 a4,4 0 0,1 4,-4 h40 a4,4 0 0,0 4,-4 z" stroke="#82332f" stroke-width="5" fill="black"/>
+                                    <circle cx="0" cy="0" r="10" fill="url(#button-gradient)"/>
+                                    <g transform="translate(-48,0) rotate(0)">
+                                        <path d="m-15,0 l30,-15 v30 z" fill="#444"/>
+                                        <rect class="gamepad-btn gamepad-btn-left" x="-24" y="-24" width="48" height="48" rx="4" ry="4" fill-opacity="0"/>
+                                    </g>
+                                    <g transform="translate(48,0) rotate(180)">
+                                        <path d="m-15,0 l30,-15 v30 z" fill="#444"/>
+                                        <rect class="gamepad-btn gamepad-btn-right" x="-24" y="-24" width="48" height="48" rx="4" ry="4" fill-opacity="0"/>
+                                    </g>
+                                    <g transform="translate(0,-48) rotate(90)">
+                                        <path d="m-15,0 l30,-15 v30 z" fill="#444"/>
+                                        <rect class="gamepad-btn gamepad-btn-up" x="-24" y="-24" width="48" height="48" rx="4" ry="4" fill-opacity="0"/>
+                                    </g>
+                                    <g transform="translate(0,48) rotate(270)">
+                                        <path d="m-15,0 l30,-15 v30 z" fill="#444"/>
+                                        <rect class="gamepad-btn gamepad-btn-down" x="-24" y="-24" width="48" height="48" rx="4" ry="4" fill-opacity="0"/>
+                                    </g>
+                                </g>
+
+                                <g transform="translate(300,190)">
+                                    <rect x="-100" y="-30" width="200" height="60" rx="30" ry="30" stroke="#82332f" stroke-width="8" fill="#954540"/>
+
+                                    <g transform="translate(-45)">
+                                        <text x="0" y="-40" font-family="sans-serif" font-size="16" text-anchor="middle" fill="black">SELECT</text>
+                                        <rect x="-35" y="-12" width="70" height="24" rx="10" ry="10" fill="#222"/>
+                                        <rect class="gamepad-btn gamepad-btn-select" x="-35" y="-12" width="70" height="24" rx="10" ry="10" fill-opacity="0"/>
+                                    </g>
+
+                                    <g transform="translate(45)">
+                                        <text x="0" y="-40" font-family="sans-serif" font-size="16" text-anchor="middle" fill="black">START</text>
+                                        <rect x="-35" y="-12" width="70" height="24" rx="10" ry="10" fill="#222"/>
+                                        <rect class="gamepad-btn gamepad-btn-start" x="-35" y="-12" width="70" height="24" rx="10" ry="10" fill-opacity="0"/>
+                                    </g>
+                                </g>
+
+                                <g transform="translate(510,200)">
+                                    <g transform="translate(-50)">
+                                        <circle cx="0" cy="0" r="15" fill="black"/>
+                                        <text x="0" y="6" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#f7f1db">A</text>
+                                    </g>
+                                    <circle cx="0" cy="0" r="30" stroke="#82332f" stroke-width="5" fill="url(#button-gradient)"/>
+                                    <circle class="gamepad-btn gamepad-btn-a" cx="0" cy="0" r="30" fill-opacity="0"/>
+                                </g>
+
+                                <g transform="translate(450,135)">
+                                    <g transform="translate(-50)">
+                                        <circle cx="0" cy="0" r="15" fill="black"/>
+                                        <text x="0" y="6" font-family="sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#f7f1db">B</text>
+                                    </g>
+                                    <circle cx="0" cy="0" r="30" stroke="#82332f" stroke-width="5" fill="url(#button-gradient)"/>
+                                    <circle class="gamepad-btn gamepad-btn-b" cx="0" cy="0" r="30" fill-opacity="0"/>
+                                </g>
+
+                                <g transform="translate(570,135)">
+                                    <circle cx="0" cy="0" r="30" stroke="#82332f" stroke-width="5" fill="url(#button-gradient)"/>
+                                    <circle cx="0" cy="0" r="30" fill-opacity="0"/>
+                                </g>
+
+                                <g transform="translate(510,70)">
+                                    <circle cx="0" cy="0" r="30" stroke="#82332f" stroke-width="5" fill="url(#button-gradient)"/>
+                                    <circle cx="0" cy="0" r="30" fill-opacity="0"/>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <div class="col">
+                            <!-- VOLUME -->
+                            <div class="form-row">
+                                <div class="col-sm-10">
+                                    <input id="volume-slider" type="range" class="custom-range"> Volume <label for="volume-slider"></label>
+                                </div>
+                                <div class="col">
+                                    <span id="unmute" class="btn btn-sm btn-danger oi oi-volume-off d-none" style="width:30px;" data-toggle="tooltip" title="Unmute"></span>
+                                    <span id="mute" class="btn btn-sm btn-success oi oi-volume-high" style="width:30px;" data-toggle="tooltip" title="Mute"></span>
+                                </div>
+                            </div>
+
+                            <!-- FILE LOADER -->
+                            <form>
+                                <div class="form-group">
+                                    <div class="custom-file">
+                                        <input id="load-file-input" type="file" class="form-control custom-file-input" accept=".gt1,.gt1x">
+                                        <label class="custom-file-label" for="load-file-input">Load GT1 file</label>
+                                    </div>
+                                </div>
+                            </form>
+                            <!-- VHD LOADER -->
+                            <form>
+                                <div class="form-group">
+                                    <div class="custom-file">
+                                        <input id="load-vhd-input" type="file" class="form-control custom-file-input" accept=".vhd,.img">
+                                        <label class="custom-file-label" for="load-vhd-input">Mount VHD image</label>
+                                    </div>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+
+                    <hr>
+                    <!-- KEYMAP -->
+                    Keyboard shortcuts:
+                    <p>
+                    <dl class="row">
+                        <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">[A] button</span></dt>
+                        <dd class="col-sm-4"><kbd>Delete/End key</kbd></dd>
+
+                        <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">[B] button</span></dt>
+                        <dd class="col-sm-4"><kbd>Insert/Home key</kbd></dd>
+
+                        <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">[Select] button</span></dt>
+                        <dd class="col-sm-4"><kbd>PageDown key</kbd></dd>
+
+                        <dt class="col-sm-2"><span class="badge badge-pill badge-secondary">[Start] button</span></dt>
+                        <dd class="col-sm-4"><kbd>PageUp key</kbd></dd>
+                    </dl>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="error-modal" class="modal fade" role="alert">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4>Error</h4>
+                    <button type="button" class="close" data-dismiss="modal"><span class="oi oi-x"></span></button>
+                </div>
+                <div id="error-modal-body" class="modal-body">
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
