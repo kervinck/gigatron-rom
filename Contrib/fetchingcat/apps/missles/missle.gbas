@@ -1,12 +1,17 @@
+
 rem written by robert sanchez
 
-_runtimePath_ "../../at67/gbas/runtime"
-'_runtimePath_ "../runtime"
-_codeRomType_ ROMv2
+'_runtimePath_ "../../at67/gbas/runtime"
+_runtimePath_ "../runtime"
+_codeRomType_ ROMv3
 
-const MISSLE_COUNT = 4
-const SLOWDOWN = 20
+const MISSLE_COUNT = 5
+const SLOWDOWN = 25
 const INPUTDELAYCOUNT = 2
+const EXPLODESLOWDOWN = 20
+
+const START_PLAYF_Y = 13
+const END_PLAYF_Y = 107
 
 set FGBG_COLOUR, 0
 cls : mode 3
@@ -18,6 +23,10 @@ tmpx = 0
 tmpy = 0
 oldc = 0
 e2 = 100
+
+oldbulletx = 0
+oldbullety = 0
+oldbulletc = 0
 
 
 dim mis_startx(MISSLE_COUNT+1)
@@ -38,16 +47,56 @@ dim mis_e(MISSLE_COUNT+1)
 
 dim mis_slow(MISSLE_COUNT+1)
 
+dim baseheight%(8) = END_PLAYF_Y+5, END_PLAYF_Y+3, END_PLAYF_Y+1, END_PLAYF_Y+3, END_PLAYF_Y+1, END_PLAYF_Y+4, END_PLAYF_Y+3, END_PLAYF_Y+5
+dim basestart%(6) = 19, 34, 49, 104, 119, 134
+
+const MATHHACKCOUNT = 16
+dim mathhack%(MATHHACKCOUNT) = 152, 116, 100, 96, 140, 128, 104, 120, 47, 124, 108, 148, 112, 132, 156, 136
+
 
 bullet_fired = 0
 oldbutton = 0
 button = 0
 inputDelay = INPUTDELAYCOUNT
+score = 0
+bulletcount = 15
+
+explodeCounter = 0
+explodeTrigger = 0
+explodeSlow = 0
 
 
 for n=0 to MISSLE_COUNT-1
     gosub initMissle
 next n
+
+set FG_COLOUR, &h30
+' draw low ground
+rectf 0, END_PLAYF_Y+8, 159, 119
+
+' draw higher peaks at the edge
+rectf 0, END_PLAYF_Y+1, 10, 119
+rectf 149, END_PLAYF_Y+1, 159, 119
+
+' draw the missle launch pad
+rectf 65, END_PLAYF_Y+5, 95, 119
+rectf 70, END_PLAYF_Y+3, 90, 119
+rectf 75, END_PLAYF_Y+1, 85, 119
+
+
+' draw bases
+set FG_COLOUR, &h3F
+for i=0 to 7
+    line 19+i, baseheight(i), 19+i, END_PLAYF_Y+7
+    line 34+i, baseheight(i), 34+i, END_PLAYF_Y+7
+    line 49+i, baseheight(i), 49+i, END_PLAYF_Y+7
+
+    line 104+i, baseheight(i), 104+i, END_PLAYF_Y+7
+    line 119+i, baseheight(i), 119+i, END_PLAYF_Y+7
+    line 134+i, baseheight(i), 134+i, END_PLAYF_Y+7
+next i
+
+gosub drawRemainingBullets
 
 gameloop:
     if (inputDelay > 0)
@@ -69,18 +118,25 @@ initMissle:
     if (n=MISSLE_COUNT)
         mis_startx(n) = 80
         mis_x1(n) = 80
-        mis_y1(n) = 115
+        mis_y1(n) = END_PLAYF_Y
         mis_x2(n) = x
         mis_y2(n) = y
     else
-        mis_startx(n) = rnd(159)
+        mis_startx(n) = rnd(159)  '87
         mis_x1(n) = mis_startx(n)
-        mis_y1(n) = 1
-        mis_x2(n) = rnd(159)
-        mis_y2(n) = 119
+        mis_y1(n) = START_PLAYF_Y '1
+        mis_x2(n) = rnd(159) ' 28
+        mis_y2(n) = END_PLAYF_Y
     endif
 
     mis_dx(n) = abs(mis_x2(n) - mis_x1(n))
+
+    t = mis_dx(n)
+    for i=0 to MATHHACKCOUNT-1
+        if (mathhack(i) = t)
+            goto initMissle
+        endif
+    next i
 
     if mis_x1(n) < mis_x2(n)
         mis_sx(n) = 1
@@ -105,6 +161,23 @@ initMissle:
 
 
 drawMissle:
+    if ((n = MISSLE_COUNT) and (explodeCounter > 0))
+            if (explodeTrigger = 1)
+                explodeTrigger = 0
+                set FG_COLOUR, &h3F
+                circlef mis_x2(n), mis_y2(n), explodeCounter
+                explodeSlow = 2
+            else 
+                if (explodeSlow > 0)
+                    explodeSlow = explodeSlow - 1
+                else
+                    set FG_COLOUR, 0
+                    circlef mis_x2(n), mis_y2(n), explodeCounter
+                    explodeCounter = 0
+                endif
+            endif
+    endif
+
     if ((n = MISSLE_COUNT) and (bullet_fired = 0))
         return
     endif
@@ -121,14 +194,17 @@ drawMissle:
     undraw_sx = mis_sx(n)
     undraw_sy = mis_sy(n)
 
-    if (n = MISSLE_COUNT)
-        c = &h0c
-    else
-        c = &h03
-    endif
-
     if (mis_y1(n) = mis_y2(n))
         goto done
+    endif
+
+    if (n = MISSLE_COUNT)
+        c = &h0c
+        poke ((oldbullety + 8) LSL 8) + oldbulletx, 0
+        oldbulletx = mis_x1(n)
+        oldbullety = mis_y1(n)
+    else
+        c = &h03
     endif
 
     poke ((mis_y1(n) + 8) LSL 8) + mis_x1(n), c
@@ -151,10 +227,6 @@ drawMissle:
         mis_y1(n) = mis_y1(n) + undraw_sy
     endif
 
-    if (n = MISSLE_COUNT)
-        return
-    endif
-
     poke ((mis_y1(n) + 8) LSL 8) + mis_x1(n), &h3F
     
     return
@@ -164,19 +236,29 @@ done:
         ' explode missle
         bullet_fired = 0
         set FG_COLOUR, 0
-        line mis_startx(n), 115, mis_x2(n), mis_y2(n)
-        'set FG_COLOUR, &h3F
-        'circlef mis_x2(n), mis_y2(n), 15
+        line mis_startx(n), END_PLAYF_Y, mis_x2(n), mis_y2(n)
+        explodeCounter = 10
+        explodeTrigger = 1
         for i = 0 to MISSLE_COUNT-1
             dx = abs(mis_x1(i) - mis_x1(MISSLE_COUNT))
             dy = abs(mis_y1(i) - mis_y1(MISSLE_COUNT))
             if ((dx < 10) and (dy < 10))
-                mis_y1(i) = 119
+                mis_y1(i) = END_PLAYF_Y
+                score = score + 25
             endif
         next i
     else
+        set FG_COLOUR, &h3F
+        at 33,2
+        print "              "
+        at 33,2
+        print mis_startx(n);" ";START_PLAYF_Y;" ";mis_x2(n);" ";mis_y2(n) 
+        'print score
+
+        gosub handleMissleCrash
+
         set FG_COLOUR, 0
-        line mis_startx(n), 1, mis_x2(n), mis_y2(n)
+        line mis_startx(n), START_PLAYF_Y, mis_x2(n), mis_y2(n)
         gosub initMissle
     endif
     return
@@ -187,38 +269,81 @@ handleInput:
     button = get("BUTTON_STATE")
     if (button AND &h01)   
         pset x,y,oldc
-        if (x > 0)
+        if (x > 10)
             x = x - 1
         endif
+        oldc = peek(((y + 8) LSL 8) + x)
     endif
     if (button AND &h02)
         pset x,y,oldc
-        if (x<159)
+        if (x<149)
             x = x + 1
         endif
+        oldc = peek(((y + 8) LSL 8) + x)
     endif
     if (button AND &h04)
         pset x,y,oldc
         if (y>0)
             y = y - 1
         endif
+        oldc = peek(((y + 8) LSL 8) + x)
     endif
     if (button AND &h08)
         pset x,y,oldc
-        if (y<119)
+        if (y<END_PLAYF_Y-10)
             y = y + 1
         endif
+        oldc = peek(((y + 8) LSL 8) + x)
     endif
     button = button XOR 255
 
     if (button AND &h80)
         if (oldbutton AND &h80) &= 0
-            bullet_fired = 1
-            n = MISSLE_COUNT
-            gosub initMissle
+            if (bullet_fired = 0)
+                bullet_fired = 1
+                n = MISSLE_COUNT
+                gosub initMissle
+                if (bulletcount > 0)
+                    bulletcount = bulletcount - 1
+                endif
+                gosub drawRemainingBullets
+            endif
         endif
     endif
 
-    'oldc = peek(((y + 8) LSL 8) + x) ' TODO
     pset x,y,rnd(0) and &h3F
+    return
+
+
+handleMissleCrash:
+    for i=0 to 5
+        'line mis_startx(n), START_PLAYF_Y, mis_x2(n), mis_y2(n)
+        if (mis_x2(n) >= basestart(i)) and (mis_x2(n) <= basestart(i) + 7)
+            offset = basestart(i)
+            gosub killBase
+        endif
+    next i
+    return
+
+
+
+killBase:
+    for i=0 to 7
+        set FG_COLOUR, 0
+        line offset+i, END_PLAYF_Y+1, offset+i, END_PLAYF_Y+7
+        set FG_COLOUR, &h3F
+        line offset+i, END_PLAYF_Y+7, offset+i, END_PLAYF_Y+7
+    next i
+    return
+
+
+drawRemainingBullets:
+    set FG_COLOUR, &h3f
+    for i=0 to bulletcount-1
+        line 66+(i+i), END_PLAYF_Y+6, 66+(i+i), END_PLAYF_Y+8
+    next i
+    set FG_COLOUR, &h30
+    for i=bulletcount to 14
+        line 66+(i+i), END_PLAYF_Y+6, 66+(i+i), END_PLAYF_Y+8
+    next i
     return
