@@ -1,4 +1,18 @@
 
+GLCC_RELEASE_2.5
+
+- Bug fixes
+- Slightly faster runtime
+
+GLCC_RELEASE_2.4
+
+- Subtle optimization improvements.
+- Dev7 no longer use runtime code to save/restore registers.
+- Added support for vsave/vrestore/exch and thread demo
+- Eliminated B0/B1 scratch registers (abi change)
+- Faster long multiplication
+- Added support for addhi and cpu flags
+- Fixed memswp
 
 GLCC_RELEASE_2.3
 

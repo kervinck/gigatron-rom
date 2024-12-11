@@ -1,6 +1,8 @@
 def scope():
 
     # LCMPS, LCMPU compare(LAC,[vAC])
+    # Trashes T[01]
+    
     def code0():
         nohop()
         if args.cpu >= 6:

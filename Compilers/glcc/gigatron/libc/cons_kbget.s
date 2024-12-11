@@ -45,7 +45,7 @@ def scope():
   def code_kbgeta():
     nohop()
     label('kbgeta')
-    LDWI('.last');STW(R9)
+    _MOVIW('.last',R9)
     LD('serialRaw');ST(R8)
     label('.last', pc()+1) # next opcode arg
     XORI(0xff);_BEQ('.ret')
@@ -78,9 +78,9 @@ def scope():
     label('.kbd')               # keyboard?
     LD(R19);XORI(255);_BEQ('.btn2')
     LD('kbget.last');XORW(R19);_BEQ('.btn2')
-    _LDSB(R19);_BLE('.btn1')
+    LD(R19);SUBI(0x7f);_BGE('.btn1')
     label('.kbd2')              # typeC?
-    ADDI(1);ANDW(R19);_BEQ('.btn1')
+    LDI(1);ADDW(R19);ANDW(R19);_BEQ('.btn1')
     LDWI(v('.kbd2')+1);_POKEQ(0)
     LDI(255);ST('buttonState')
     LD(R19);RET()
@@ -138,9 +138,8 @@ def scope():
     tryhop(2);POP();RET()
     label('.rpt')
     LD('kbget.last');_BEQ('.ret0')
-    LD('kbget.fc');STW(R20)
-    LD('frameCount');SUBW(R20);_BLT('.ret0')
-    LDI(8);ADDW(R20);ST('kbget.fc');_BRA('.ret1')
+    LD('frameCount');SUBW('kbget.fc');ST(vACH);_BLT('.ret0')
+    LDI(8);ADDW('kbget.fc');ST('kbget.fc');_BRA('.ret1')
 
   def code_kbget_fc():
     label('kbget.fc')

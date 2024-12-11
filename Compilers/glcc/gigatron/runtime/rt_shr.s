@@ -22,17 +22,18 @@ def scope():
            code=[('EXPORT', '__@shrsysfn'),
                  ('CODE', '__@shrsysfn', code0) ] )
 
-    # SHRU: T3<<vAC -> vAC  (unsigned)
+    # SHRU: T3>>vAC -> vAC  (unsigned)
+    # Trashes T5
     def code1():
         tryhop(3)
         label('_@_shru')
-        ST(T2)
-        label('__@shru_t2')
+        ST(T5)
+        label('__@shru_t5')
         PUSH()
-        LD(T2);ANDI(8);_BEQ('.shru7')
+        LD(T5);ANDI(8);_BEQ('.shru7')
         LD(T3+1);STW(T3)
         label('.shru7')
-        LD(T2);ANDI(7);_BEQ('.shru1');
+        LD(T5);ANDI(7);_BEQ('.shru1');
         _CALLI('__@shrsysfn')
         LDW(T3);SYS(52)
         tryhop(2);POP();RET()
@@ -42,53 +43,54 @@ def scope():
 
     module(name='rt_shru.s',
            code=[('EXPORT', '_@_shru'),
-                 ('EXPORT', '__@shru_t2'),
+                 ('EXPORT', '__@shru_t5'),
                  ('IMPORT', '__@shrsysfn'),
                  ('CODE', '_@_shru', code1) ] )
 
-    # SHRS: T3<<vAC -> vAC  (signed)
-    # clobbers T0
+    # SHRS: T3>>vAC -> vAC  (signed)
+    # clobbers T5
     def code2():
        label('_@_shrs')
-       PUSH();ST(T2)
+       PUSH();ST(T5)
        LDW(T3);_BGE('.shrs1')
        _LDI(0xffff);XORW(T3);STW(T3)
-       _CALLJ('__@shru_t2')
+       _CALLJ('__@shru_t5')
        STW(T3);_LDI(0xffff);XORW(T3)
        tryhop(2);POP();RET()
        label('.shrs1')
-       _CALLJ('__@shru_t2')
+       _CALLJ('__@shru_t5')
        label('.shrs2')
        tryhop(2);POP();RET()
 
     module(name='rt_shru.s',
            code=[('EXPORT', '_@_shrs'),
-                 ('IMPORT', '__@shru_t2'),
+                 ('IMPORT', '__@shru_t5'),
                  ('CODE', '_@_shrs', code2) ] )
 
     # SHRU1/SHRS1 : AC <-- AC >> 1 (unsigned)
+    # clobbers T[45]
     def code0():
         nohop()
         label('_@_shru1')
         if args.cpu >= 7:
             MOVIW('SYS_LSRW1_48','sysFn')
         else:
-            STW(T3)
+            STW(T5)
             _MOVIW('SYS_LSRW1_48','sysFn')
-            LDW(T3)
+            LDW(T5)
         SYS(48)
         RET()
         label('_@_shrs1')
         _BGE('_@_shru1')
         if args.cpu >= 7:
-            _MOVIW('SYS_LSRW1_48','sysFn')
-            _MOVIW(0x8000, T2)
+            MOVIW('SYS_LSRW1_48','sysFn')
+            MOVIW(0x8000, T4)
         else:
-            STW(T3)
+            STW(T5)
             _MOVIW('SYS_LSRW1_48','sysFn')
-            _MOVIW(0x8000, T2)
-            LDW(T3)
-        SYS(48); ORW(T2)
+            _MOVIW(0x8000, T4)
+            LDW(T5)
+        SYS(48); ORW(T4)
         RET()
 
     module(name='rt_shr1.s',

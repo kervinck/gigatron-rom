@@ -12,7 +12,12 @@ def map_describe():
 
   Overlay 'nochan' can be used to overwrite the memory areas reserved
   to sound channels 2, 3, and 4. Doing so provides a contiguous memory
-  area from 0x200 to 0x6ff.  ''')
+  area from 0x200 to 0x6ff.
+
+  Overlay 'bare' is meant for small programs that do not use libc,
+  do not need libc's initialization and cleanup. These programs
+  are placed in the low pages (0x200-0x5ff) in priority.
+    ''')
 
 
 # ------------size----addr----step----end---- flags (1=nocode, 2=nodata, 4=noheap)

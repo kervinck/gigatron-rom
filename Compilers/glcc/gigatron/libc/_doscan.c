@@ -20,13 +20,34 @@ static void spc(register doscan_t *dd)
 		_doscan_next(dd);
 }
 
-static int do_str(doscan_t *dd, int conv, int len, char *set, char *p)
+static const char *check_set(const char *fmt, int d)
+{
+	register int neg = 0;
+	register int fnd = 0;
+	register int c;
+	if ((c = *++fmt) == '^') {
+		c = *++fmt;
+		neg = 1;
+	}
+	while(c) {
+		if (c == d)
+			fnd = 1;
+		if ((c = *++fmt) == ']')
+			break;
+	}
+	if (d == 0 || fnd == neg)
+		return fmt;
+	return 0;
+}
+
+
+static int do_str(doscan_t *dd, int conv, int len, const char *set, char *p)
 {
 	register int c;
 	while ((c = dd->c) > 0) {
 		if (len == 0 ||
 		    conv == 's' && isspace(c) ||
-		    conv == '[' && !_bitset_test(set, c) )
+		    conv == '[' && check_set(set, c) )
 			break;
 		if (p) { 
 			*p = c;
@@ -102,30 +123,10 @@ const char *parsespec(const char *fmt, unsigned int *lp, unsigned int *fp)
 	return fmt;
 }
 
-const char *parseset(register const char *fmt, register char *set)
-{
-	register int c;
-	register int neg = 0;
-	_bitset_clear(set, 32);
-	if ((c = *++fmt) == '^') {
-		c = *++fmt;
-		neg = 1;
-	}
-	while (c) {
-		_bitset_set(set, c);
-		if ((c = *++fmt) == ']')
-			break;
-	}
-	if (neg)
-		_bitset_compl(set, 32);
-	return fmt;
-}
-
 int _doscan(register FILE *fp, register const char *fmt, register __va_list ap)
 {
 	unsigned int l, f;
 	doscan_t doscan;
-	char set[32];
 	register doscan_t *dd = &doscan;
 	register void *p;
 	register int scnt;
@@ -157,15 +158,17 @@ int _doscan(register FILE *fp, register const char *fmt, register __va_list ap)
 			spc(dd);
 		scnt = dd->cnt;
 		switch(c) {
-		case '[':
-			fmt = parseset(fmt, set); /* passthru */
-		case 's': case 'c': 
-			l = do_str(dd, c, l, set, p); break;
+		case '[': case 's': case 'c': 
+			l = do_str(dd, c, l, fmt, p);
+			if (c == '[') fmt = check_set(fmt, 0);
+			break;
 		case 'd': case 'i':
 		case 'o': case 'u': case 'x': case 'p':
-			l = do_lng(dd, c, f, p); break;
+			l = do_lng(dd, c, f, p);
+			break;
 		case 'e': case 'f': case 'g':
-			l = _doscan_double(dd, p); break;
+			l = _doscan_double(dd, p);
+			break;
 		}
 		if (dd->cnt > scnt && l) {
 			dd->n += 1;

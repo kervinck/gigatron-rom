@@ -17,7 +17,7 @@ def scope():
             info = rominfo['has_SYS_ScanMemory']
             addr = int(str(info['addr']),0)
             cycs = int(str(info['cycs']),0)
-            LDWI(addr);STW('sysFn')
+            _MOVIW(addr,'sysFn')
             label('.loop')
             LDW(R12);XORW('sysArgs0');_BEQ('.done')
             LD(vACH);_BNE('.s1')
@@ -52,7 +52,7 @@ def scope():
     def code2():
         nohop()
         label('_memchr2');
-        LD(R10);ST(R9+1);LDW(R11);STW(R10)
+        LD(R10);ST(R9+1);_MOVW(R11,R10)
         if args.cpu >= 6:
             JNE('__memchr2')
         else:

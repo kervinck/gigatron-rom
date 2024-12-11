@@ -26,6 +26,7 @@ GFILES=${B}glcc ${B}glink ${B}gt1dump \
        ${B}interface-dev.json ${B}roms.json ${GFILES_W}
 ROMFILES=${wildcard ${G}roms/*.rom}
 ROMS=${patsubst ${G}roms/%.rom,%,${ROMFILES}}
+RUNROM=
 
 ifdef COMSPEC
 E=.exe
@@ -39,6 +40,10 @@ default: all
 
 all: build-dir lcc-all gigatron-all
 	${MAKE} subdirs-all
+	@echo "+----------------------------------+"
+	@echo "|   Compilation ran successfully!  |"
+	@echo "+----------------------------------+"
+
 
 clean: lcc-clean gigatron-clean subdirs-clean build-dir-clean
 
@@ -55,7 +60,7 @@ test: all
 	    printf "+----------------------------------+\n"; \
 	    printf "|  Compiling for rom: %-8s     |\n" $$rom; \
 	    printf "+----------------------------------+\n"; \
-	    ${MAKE} ROM=$$rom glcc-test subdirs-test || exit; \
+	    ${MAKE} ROM=$$rom RUNROM=${RUNROM} glcc-test subdirs-test || exit; \
 	    wc -c ${B}tst/*.gt1 > ${B}tst/sizes-$$rom.txt; \
 	 done
 	@echo "+----------------------------------+"
@@ -89,6 +94,7 @@ subdirs-%: FORCE
 		"LDFLAGS=${LDFLAGS}" \
 		"E=${E}" \
 		"ROM=${ROM}" \
+		"RUNROM=${RUNROM}" \
 		`echo $@ | sed -e 's/^subdirs-//'` || exit; \
 	   done
 
@@ -141,15 +147,19 @@ ${B}glcc.cmd ${B}glink.cmd: FORCE
 	echo '@py -3 "%~dp0\%~n0" %*' > $@
 
 ${B}glccver.py: FORCE
-	if [ -r "${G}glccver.py" ] ; then cp "${G}glccver.py" "$@" ; else\
-	  id=`( test -d .git && which git > /dev/null && git describe --tags )\
-	      || echo 'GLCC-unknown-version'`; echo 'ver="'"$${id}"'"' > "$@" ; fi
+	id=`( test -d .git && which git >/dev/null && \
+              git describe --tags 2>/dev/null || echo no )` ; \
+	if test "$${id}" != no ; then \
+	    echo 'ver="'"$${id}"'"' > "$@" ; \
+	else \
+	    cp "${G}glccver.py" "$@" ; \
+	fi
 
 ${B}%: ${G}%
 	cp $< $@
 
 
-GTSIMR=${GTSIM} -rom ${G}roms/${ROM}.rom
+GTSIMR=${GTSIM} -rom ${or ${RUNROM},${G}roms/${ROM}.rom}
 TSTBK1FILES=$(wildcard ${G}tst/*.1bk)
 TSTBK2FILES=$(wildcard ${G}tst/*.2bk)
 TSTX=${patsubst ${G}tst/%.1bk,${B}tst/%.gt1, ${TSTBK1FILES}}
@@ -163,8 +173,8 @@ glcc-test: ${TSTS} ${TSTO}
 
 ${B}tst/%.s: tst/%.c FORCE
 	@test -d ${B}tst || mkdir ${B}tst
-	-${GLCC} -S -rom=${ROM} -o $@  $< 2>"${B}tst/$(*F).xx2"
-	cmp "${B}tst/$(*F).xx2" "${G}tst/$(*F).2bk"
+	-${GLCC} -S -rom=${ROM} -o $@  $< 2>"${B}tst/$(*F).ss2"
+	cmp "${B}tst/$(*F).ss2" "${G}tst/$(*F).2bk"
 	[ ! -r "${G}tst/$(*F).sbk" ] || cmp $@ "${G}tst/$(*F).sbk"
 
 ${B}tst/%.gt1: tst/%.c FORCE
@@ -175,11 +185,11 @@ ${B}tst/%.xx1: ${B}tst/%.gt1 FORCE
 	${GTSIMR} $< > "$@" < "tst/$(*F).0"
 	cmp $@ ${G}tst/$(*F).1bk
 
+FORCE:
+
 .PRECIOUS: ${B}tst/%.gt1
 
-FORCE: .PHONY
-
-.PHONY:
+.PHONY: FORCE
 
 
 

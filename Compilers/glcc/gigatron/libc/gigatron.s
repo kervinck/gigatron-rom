@@ -30,7 +30,7 @@ def scope():
     def code0():
         nohop()
         label('SYS_Random')
-        _LDI('SYS_Random_34');STW('sysFn')
+        _MOVIW('SYS_Random_34','sysFn')
         SYS(34);RET()
 
     module(name='sys_random.s',
@@ -42,10 +42,10 @@ def scope():
     def code0():
         nohop()
         label('SYS_VDrawBits')
-        _LDI('SYS_VDrawBits_134');STW('sysFn')
-        LDW(R8);STW('sysArgs0')
+        _MOVIW('SYS_VDrawBits_134','sysFn')
+        _MOVW(R8,'sysArgs0')
         LD(R9);ST('sysArgs2')
-        LDW(R10);STW('sysArgs4')
+        _MOVW(R10,'sysArgs4')
         SYS(134);RET()
 
     module(name='sys_vdrawbits.s',
@@ -57,10 +57,10 @@ def scope():
     def code0():
         nohop()
         label('SYS_Exec')
-        _LDI('SYS_Exec_88');STW('sysFn')
-        LDW(R8);STW('sysArgs0')
+        _MOVIW('SYS_Exec_88','sysFn')
+        _MOVW(R8,'sysArgs0')
         _LDI(-1);XORW(R9);_BEQ('.se1')
-        LDW(R9);STW(vLR)
+        _MOVW(R9,vLR)
         label('.se1')
         SYS(88);RET()
 
@@ -68,13 +68,27 @@ def scope():
            code=[('EXPORT', 'SYS_Exec'),
                  ('CODE', 'SYS_Exec', code0) ])
 
+    # ----------------------------------------
+    # void SYS_SetMemory(int count, int val, void *addr);
+    def code0():
+        nohop()
+        label('SYS_SetMemory')
+        _MOVIW('SYS_SetMemory_v2_54','sysFn')
+        LD(R8);ST('sysArgs0')
+        LD(R9);ST('sysArgs1')
+        _MOVW(R10,'sysArgs2')
+        SYS(54);RET()
+
+    module(name='sys_setmemory.s',
+           code=[('EXPORT', 'SYS_SetMemory'),
+                 ('CODE', 'SYS_SetMemory', code0) ])
 
     # ----------------------------------------
     # void SYS_SetMode(int)
     def code0():
         nohop();
         label('SYS_SetMode')
-        _LDI('SYS_SetMode_v2_80');STW('sysFn')
+        _MOVIW('SYS_SetMode_v2_80','sysFn')
         LDW(R8);SYS(80);RET()
 
     module(name='sys_setmode.s',
@@ -87,10 +101,10 @@ def scope():
         nohop()
         label('SYS_ReadRomDir')
         PUSH()
-        _LDI('SYS_ReadRomDir_v5_80');STW('sysFn')
+        _MOVIW('SYS_ReadRomDir_v5_80','sysFn')
         LDW(R8);SYS(80);STW(R8)
-        LDW(R9);STW(T2)
-        LDI('sysArgs0');STW(T3)
+        _MOVW(R9,T2)
+        _MOVIW('sysArgs0',T3)
         label('.loop')
         LDW(T3);DEEK();DOKE(T2)
         LDI(2);ADDW(T2);STW(T2)
@@ -109,7 +123,7 @@ def scope():
     def code0():
         nohop()
         label('SYS_ExpanderControl')
-        _LDI('SYS_ExpanderControl_v4_40');STW('sysFn')
+        _MOVIW('SYS_ExpanderControl_v4_40','sysFn')
         LDW(R8);SYS(40)
         label('.ret')
         RET()
@@ -127,12 +141,12 @@ def scope():
     def code0():
         nohop()
         label('SYS_SpiExchangeBytes')
-        _LDI('SYS_SpiExchangeBytes_v4_134');STW('sysFn')
+        _MOVIW('SYS_SpiExchangeBytes_v4_134','sysFn')
         # sysArgs[0]      Page index start, for both send/receive (in, changed)
         # sysArgs[1]      Memory page for send data (in)
         # sysArgs[2]      Page index stop (in)
         # sysArgs[3]      Memory page for receive data (in)
-        LDW(R9);STW('sysArgs0')
+        _MOVW(R9,'sysArgs0')
         LD(R10);ST('sysArgs2')
         LD(R8+1);ST('sysArgs3')
         SYS(134)
@@ -147,8 +161,8 @@ def scope():
     def code():
         nohop()
         label('SYS_Sprite6')
-        _LDI('SYS_Sprite6_v3_64'); STW('sysFn')
-        LDW(R8);STW('sysArgs0')
+        _MOVIW('SYS_Sprite6_v3_64','sysFn')
+        _MOVW(R8,'sysArgs0')
         LDW(R9);SYS(64)
         RET()
 
@@ -161,8 +175,8 @@ def scope():
     def code():
         nohop()
         label('SYS_Sprite6x')
-        _LDI('SYS_Sprite6x_v3_64'); STW('sysFn')
-        LDW(R8);STW('sysArgs0')
+        _MOVIW('SYS_Sprite6x_v3_64','sysFn')
+        _MOVW(R8,'sysArgs0')
         LDW(R9);SYS(64)
         RET()
 
@@ -175,8 +189,8 @@ def scope():
     def code():
         nohop()
         label('SYS_Sprite6y')
-        _LDI('SYS_Sprite6y_v3_64'); STW('sysFn')
-        LDW(R8);STW('sysArgs0')
+        _MOVIW('SYS_Sprite6y_v3_64','sysFn')
+        _MOV(R8,'sysArgs0')
         LDW(R9);SYS(64)
         RET()
 
@@ -189,8 +203,8 @@ def scope():
     def code():
         nohop()
         label('SYS_Sprite6xy')
-        _LDI('SYS_Sprite6xy_v3_64'); STW('sysFn')
-        LDW(R8);STW('sysArgs0')
+        _MOVIW('SYS_Sprite6xy_v3_64','sysFn')
+        _MOVW(R8,'sysArgs0')
         LDW(R9);SYS(64)
         RET()
 

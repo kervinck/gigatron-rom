@@ -26,9 +26,9 @@ def scope():
     def code_printchars():
         label('_console_printchars')
         tryhop(4);PUSH()
-        _LDI('SYS_VDrawBits_134');STW('sysFn')   # prep sysFn
-        LDW(R8);STW('sysArgs0')                  # move fgbg, freeing R8
-        LDI(0);STW(R12)                          # R12: character counter
+        _MOVIW('SYS_VDrawBits_134','sysFn')      # prep sysFn
+        _MOVW(R8,'sysArgs0')                     # move fgbg, freeing R8
+        _MOVIW(0,R12)                            # R12: character counter
         label('.loop')
         LDW(R10);PEEK();STW(R8)                  # R8: character code
         LDI(1);ADDW(R10);STW(R10)                # next char
@@ -51,11 +51,11 @@ def scope():
         nohop()
         label('_printonechar')
         LDW(R8);LSLW();LSLW();ADDW(R8);ADDW(R13)
-        STW(R13);LUP(0);ST('sysArgs2');SYS(134);INC(R13);INC('sysArgs4')
-        LDW(R13);LUP(0);ST('sysArgs2');SYS(134);INC(R13);INC('sysArgs4')
-        LDW(R13);LUP(0);ST('sysArgs2');SYS(134);INC(R13);INC('sysArgs4')
-        LDW(R13);LUP(0);ST('sysArgs2');SYS(134);INC(R13);INC('sysArgs4')
-        LDW(R13);LUP(0);ST('sysArgs2');SYS(134);INC('sysArgs4')
+        STW(R13);LUP(0);ST('sysArgs2');SYS(134);INC('sysArgs4')
+        LDW(R13);LUP(1);ST('sysArgs2');SYS(134);INC('sysArgs4')
+        LDW(R13);LUP(2);ST('sysArgs2');SYS(134);INC('sysArgs4')
+        LDW(R13);LUP(3);ST('sysArgs2');SYS(134);INC('sysArgs4')
+        LDW(R13);LUP(4);ST('sysArgs2');SYS(134);INC('sysArgs4')
         LDI(0);ST('sysArgs2');SYS(134)
         RET()
 
@@ -72,12 +72,12 @@ def scope():
     def code_clear():
         label('_console_clear')
         PUSH()
-        LDWI('SYS_SetMemory_v2_54');STW('sysFn')
+        _MOVIW('SYS_SetMemory_v2_54','sysFn')
         LDI(160);SUBW(R8);ST(R11)
         LD(R9);ANDI(0x3f);ST('sysArgs1')
         label('.loop')
         LD(R11);ST('sysArgs0')
-        LDW(R8);STW('sysArgs2')
+        _MOVW(R8,'sysArgs2')
         SYS(54)
         INC(R8+1)
         LDW(R10)
@@ -112,7 +112,7 @@ def scope():
         PEEK();INC(vACH);PEEK();ST(R8+1)
         LDI(0);ST(R8)
         LD('console_state');STW(R9)              # bg
-        LDI(8);STW(R10)
+        _MOVIW(8,R10)
         _CALLJ('_console_clear')
         # scroll videotable lines
         LDWI(v('console_info')+4);STW(R10)       # offset
@@ -209,9 +209,9 @@ def scope():
         # - 8 bytes for R4-R7
         # - 2 bytes for vLR
         _PROLOGUE(12,2,0xf0) # save R4-R7
-        LDW(R10);STW(R4)     # zeroterm flag
-        LDW(R8);STW(R7)      # s
-        LDW(R9);STW(R6)      # len
+        _MOVW(R10,R4)     # zeroterm flag
+        _MOVW(R8,R7)      # s
+        _MOVW(R9,R6)      # len
         _MOVIW(0,R5)
         _BRA('.tst1')
         label('.loop')
@@ -245,8 +245,8 @@ def scope():
         label('.print')
         _CALLJ('_console_addr');STW(R9);_BEQ('.add1')
         LDW(v('console_state')+0);STW(R8) # fgbg
-        LDW(R7);STW(R10)
-        LDW(R6);STW(R11)
+        _MOVW(R7,R10)
+        _MOVW(R6,R11)
         _CALLJ('_console_printchars');_BEQ('.add1')
         STW(R8);ADDW(v('console_state')+3)
         ST(v('console_state')+3)          # console_state.cx

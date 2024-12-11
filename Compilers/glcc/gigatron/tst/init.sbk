@@ -160,11 +160,11 @@ def code8():
 	LDWI('.41');STW(R8);
 	_STLW(0);
 	LDW(R7);_MULI(12);STW(R23);
-	LDWI('words');ADDW(R23);DEEKA(R9);
+	LDXW(R23,'words');STW(R9);
 	LDW(R9);_STLW(2);
-	LDWI(v('words')+2);ADDW(R23);DEEKA(R10);
+	LDXW(R23,v('words')+2);STW(R10);
 	LDW(R10);_STLW(4);
-	LDWI(v('words')+4);ADDW(R23);DEEKA(R11);
+	LDXW(R23,v('words')+4);STW(R11);
 	LDW(R11);_STLW(6);
 	LDWI(v('words')+6);ADDW(R23);STW(R12);
 	LDW(R12);_STLW(8);

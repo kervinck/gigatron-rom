@@ -81,16 +81,27 @@ def scope():
     def code_fpi():
         label('_pi')
         bytes(130,73,15,218,162); # 0.785398 * 4
+
+    module(name='_fpi.s',
+           code=[ ('EXPORT', '_pi'),
+                  ('DATA', '_pi', code_fpi, 5, 1) ] )
+
+    def code_fpi2():
         label('_pi_over_2')
         bytes(129,73,15,218,162); # 0.785398 * 2
+
+    module(name='_fpi2.s',
+           code=[ ('EXPORT', '_pi_over_2'),
+                  ('DATA', '_pi_over_2', code_fpi2, 5, 1) ] )
+
+    def code_fpi4():
         label('_pi_over_4')
         bytes(128,73,15,218,162); # 0.785398
         
-    module(name='_fpi.s',
-           code=[ ('EXPORT', '_pi'),
-                  ('EXPORT', '_pi_over_2'),
-                  ('EXPORT', '_pi_over_4'),
-                  ('DATA', '_pi', code_fpi, 15, 1) ] )
+    module(name='_fpi4.s',
+           code=[ ('EXPORT', '_pi_over_4'),
+                  ('DATA', '_pi_over_4', code_fpi4, 5, 1) ] )
+
     
 scope()
 

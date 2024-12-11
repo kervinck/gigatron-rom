@@ -146,7 +146,7 @@ extern unsigned int SYS_Random(void);
 #define has_SYS_Random() 1
 
 /* -- SYS_VDrawBits -- */
-extern void SYS_VDrawBits(int fgbg, char bits, char *address);
+extern void SYS_VDrawBits(int fgbg, int bits, char *address);
 #define has_SYS_VDrawBits() 1
 
 /* -- SYS_Exec
@@ -157,6 +157,10 @@ extern void SYS_Exec(void *romptr, void *vlr);
 /* -- SYS_SetMode */
 extern void SYS_SetMode(int);
 #define has_SYS_SetMode 1
+
+/* -- SYS_SetMemory */
+extern void SYS_SetMemory(int count, int val, void *addr);
+#define has_SYS_SetMemory 1
 
 /* -- SYS_ReadRomDir
    Notes: the name is copied into buf8 */

@@ -54,8 +54,15 @@ def scope():
         def CallWorker():
             _CALLJ('__@divworker')
 
-    # DIVU:  T3/vAC -> vAC
+
+    # ----------------------------------------
+    # DIVU: T3/vAC -> vAC
+    # ----------------------------------------
+
     def code2():
+        """ Computes unsigned T3/vAC into vAC.
+            May raise zdiv signal.
+            Trashes sysArgs[0-7], T[013]. """
         label('_@_divu')
         PUSH()
         _BNE('.divu1')
@@ -98,10 +105,16 @@ def scope():
                   ('IMPORT', '_@_raise_zdiv'),
                   ('EXPORT', '_@_divu') ] + morecode )
 
-    # MODU: T3 % T2 -> AC
-    #  saves T3 / T2 in T1
+
+    # ----------------------------------------
+    # MODU: T3 % vAC -> vAC, T3 / vAC in T1
+    # ----------------------------------------
+
     assert(RV != T1)
+
     def code2():
+        """ Computes unsigned T3%vAC into vAC. Saves quotient in T1
+            May raise zdiv signal. Trashes sysArgs[0-7], T[013]. """
         label('_@_modu')
         PUSH()
         _CALLI('_@_divu')
@@ -114,10 +127,15 @@ def scope():
                   ('EXPORT', '_@_modu'),
                   ('IMPORT', '_@_divu') ] )
 
+    # ----------------------------------------
     # DIVS:  T3/vAC -> vAC
-    # clobbers B0
+    # ----------------------------------------
+
     assert YV != T3
+
     def code2():
+        """ Computes signed T3/vAC into vAC.
+            May raise zdiv signal. Trashes sysArgs[0-7], T[0123]. """
         label('_@_divs')
         PUSH()
         _BNE('.divs0')
@@ -129,29 +147,29 @@ def scope():
         else:
             STW(YV)
             if args.cpu >= 6:
-                MOVQB(0,B0)
+                MOVQB(0,T2)
                 _BGT('.divs1')
-                NEGV(YV);INC(B0)
+                NEGV(YV);INC(T2)
                 label('.divs1')
                 LDW(T3);STW(XV);_BGE('.divs2')
                 NEGV(XV)
             else:
-                LDI(0);ST(B0)
+                LDI(0);ST(T2)
                 LDW(YV);_BGT('.divs1')
-                LDI(0);SUBW(YV);STW(YV);INC(B0)
+                LDI(0);SUBW(YV);STW(YV);INC(T2)
                 label('.divs1')
                 LDW(T3);STW(XV);_BGE('.divs2')
                 LDI(0);SUBW(T3);STW(XV)
-            LD(B0);XORI(3);ST(B0)
+            LD(T2);XORI(3);ST(T2)
             label('.divs2')
             CallWorker()
-            LD(B0);ANDI(2);_BEQ('.divs3')
+            LD(T2);ANDI(2);_BEQ('.divs3')
             if args.cpu >= 6:
                 NEGV(RV)
             else:
                 LDI(0);SUBW(RV);STW(RV)
             label('.divs3')
-            LD(B0);ANDI(1);_BEQ('.divs4')
+            LD(T2);ANDI(1);_BEQ('.divs4')
             if args.cpu >= 6:
                 NEGV(XV)
             else:
@@ -165,12 +183,16 @@ def scope():
                   ('IMPORT', '_@_raise_zdiv'),
                   ('EXPORT', '_@_divs') ] + morecode )
 
-    # MODS: T3 % T2 -> AC
-    #  saves T3 / T2 in T1
-    #  clobbers B0
+    # ----------------------------------------
+    # MODS: T3 % vAC -> AC  T3 / vAC -> T1
+    # ----------------------------------------
+
     assert RV != T1
+
     def code2():
         label('_@_mods')
+        """ Computes signed T3%vAC into vAC. Saves quotient in T1
+            May raise zdiv signal. Trashes sysArgs[0-7], T[0123]. """
         PUSH()
         _CALLI('_@_divs')
         STW(T1)               # quotient

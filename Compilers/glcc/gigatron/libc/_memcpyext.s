@@ -10,7 +10,7 @@ def scope():
         addr = int(str(info['addr']),0)
         cycs = int(str(info['cycs']),0)
         def m_prepCopyMemoryExt():
-            LDWI(addr);STW('sysFn');
+            _MOVIW(addr,'sysFn');
             LDWI(0x1f8);PEEK();_BNE('.ok')
             LDI(0);tryhop(2);POP();RET();label('.ok')
         def m_reduceCopyMemoryExt():

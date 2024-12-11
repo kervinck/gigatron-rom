@@ -9,7 +9,7 @@ def scope():
     def code0():
         nohop()
         label('_@_raise_zdiv')
-        LDWI('.msg');STW(T3)
+        LDWI('.msg');STW(T0)
         LDWI(0x104)
         if SP == vSP:
             POP();JNE('__@raisem')            # preserve vSP long alignment
@@ -33,7 +33,7 @@ def scope():
         label('_fexception')
         PUSH();_MOVF(F8,FAC);
         label('_@_raise_ferr')
-        LDWI('.msg');STW(T3)
+        LDWI('.msg');STW(T0)
         LDWI(0x304)
         if SP == vSP:
             POP();JNE('__@raisem')
@@ -59,8 +59,8 @@ def scope():
         label('_foverflow')
         PUSH();_MOVF(F8,FAC);
         label('_@_raise_fovf')
-        LDWI('errno');STW(T2);LDI(2);POKE(T2);  # set errno=ERANGE on overflow.
-        LDWI('.msg');STW(T3)
+        _MOVIW('errno',T2);LDI(2);POKE(T2);  # set errno=ERANGE on overflow.
+        _MOVIW('.msg',T0)
         LDWI(0x204)
         if SP == vSP:
             POP();JNE('__@raisem')

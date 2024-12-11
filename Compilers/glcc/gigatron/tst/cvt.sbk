@@ -35,9 +35,8 @@ def code0():
 def code1():
 	label('main');
 	_PROLOGUE(4,0,0x0); # save=None
-	LDWI('c');STW(R23);
-	LDI(1);POKE(R23);
-	LDWI('c');PEEK();LDSB(vACL);STW(R23);
+	LDWI('c');POKEQ(1);
+	PEEK();LDSB(vACL);STW(R23);
 	LDWI('s');DOKEA(R23);
 	LDWI('i');DOKEA(R23);
 	LDW(R23);_STLS(LAC);_MOVL(LAC,'l');

@@ -82,11 +82,12 @@ install: FORCE
 TSTCFILES=$(wildcard tst/TST*.c)
 TSTXFILES=${patsubst tst/%.c,${B}tst/%.gt1,${TSTCFILES}}
 TSTOFILES=${patsubst tst/%.c,${B}tst/%.xx1,${TSTCFILES}}
+GTSIMR=${GTSIM} -rom ${or ${RUNROM},${G}roms/${ROM}.rom}
 
 test: ${TSTOFILES}
 
 ${B}tst/%.xx1: ${B}tst/%.gt1
-	-${GTSIM} -rom ${G}roms/${ROM}.rom $< > $@
+	-${GTSIMR} $< > $@
 	cmp $@ tst/$(*F).out
 
 ${B}tst/%.gt1: tst/%.c FORCE

@@ -32,6 +32,10 @@ extern char *concat(char *, char *);
 extern int access(const char *, int);
 
 int option(char *arg) {
+	if (strcmp(arg, "-b") == 0)
+		return 1;
+	if (arg[0]=='-' && arg[1]=='-')
+		arg += 1;
 	if (strncmp(arg, "-lccdir=", 8) == 0) {
 		putenv(concat("LCCDIR=", &arg[8]));
 		cpp[0] = concat(&arg[8], "/cpp");
@@ -44,8 +48,6 @@ int option(char *arg) {
 		ld[2] = concat("-rom=", &arg[5]);
 	} else if (strncmp(arg, "-map=", 5) == 0) {
 		ld[3] = concat("-map=", &arg[5]);
-	} else if (strcmp(arg, "-b") == 0) {
-		return 1;
 	} else
 		return 0;
 	return 1;

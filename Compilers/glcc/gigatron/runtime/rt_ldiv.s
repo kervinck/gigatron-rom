@@ -1,11 +1,12 @@
 
 def scope():
 
-    # Long division using vCPU
+    # Long division helper using vCPU
     #  LAC:  in: dividend  out: remainder
     #  T0T1: in: divisor
     #  T2T3: out: quotient
-    # Clobbers B1
+    # Clobbers sysArgs4
+
     def CallWorker():
         _CALLJ('__@ldivworker')
 
@@ -14,8 +15,8 @@ def scope():
         label('__@ldivworker')
         if args.cpu < 6:
             PUSH()
-        LDW(LAC);STW(T2);LDW(LAC+2);STW(T2+2)
-        LDI(0);ST(B1);STW(LAC);STW(LAC+2)
+        _MOVW(LAC,T2);_MOVW(LAC+2,T2+2)
+        LDI(0);STW(LAC);STW(LAC+2)
         label('.ldiv0')
         if args.cpu >= 7:
             LD(T2+3);ST(LAX);LDI(1);LSLXA()
@@ -48,7 +49,8 @@ def scope():
             _CALLJ('__@lsub_t0t1')
         INC(T2)
         label('.ldiv1')
-        INC(B1);LD(B1);XORI(32);_BNE('.ldiv0')
+        INC(T4)
+        LD(T4);ORI(0xc0);XORI(0xe0);_BNE('.ldiv0')
         if args.cpu < 6:
             tryhop(2);POP()
         RET()
@@ -67,6 +69,7 @@ def scope():
         ORW(T0);_BNE('.ldp1')
         _CALLJ('_@_raise_zdiv')
         label('.ldp1')
+        LDI(0);ST(T4)
         RET()
 
     module(name='rt_ldivprep.s',
@@ -74,13 +77,18 @@ def scope():
                   ('IMPORT', '_@_raise_zdiv'),
                   ('CODE',   '__@ldivprep', code_ldivprep) ] )
 
+    # ----------------------------------------
+    # LDIVU: LAC / [vAC] -> LAC
+    # ----------------------------------------
+
     def code_ldivu():
-        # LDIVU : LAC <- LAC / [vAC]
+        """ Unsigned division LAC / [vAC] -> LAC.
+            Thrashes T[0-5] sysArgs[0-7]."""
         label('_@_ldivu')
         PUSH()
         _CALLI('__@ldivprep')
         CallWorker()
-        LDW(T2);STW(LAC);LDW(T2+2);STW(LAC+2)
+        _MOVW(T2,LAC);_MOVW(T2+2,LAC+2)
         tryhop(2);POP();RET()
 
     module(name='rt_ldivu.s',
@@ -88,11 +96,16 @@ def scope():
                   ('IMPORT', '__@ldivprep'),
                   ('CODE',   '_@_ldivu', code_ldivu),
                   ('IMPORT', '__@ldivworker') ] )
-                  
+
+
+    # ----------------------------------------
+    # LMODU: LAC%[vAC]->vAC, LAC/[vAC]->T0T1
+    # ----------------------------------------
 
     def code_lmodu():
-        # LMODU : LAC <- LAC % [vAC]
-        #        T0T1 <- LAC / [vAC]
+        """ Unsigned modulo LAC % [vAC] -> LAC.
+            Returns quotient in T[01]
+            Thrashes T[0-5] sysArgs[0-7]."""
         label('_@_lmodu')
         PUSH()
         _CALLI('__@ldivprep')
@@ -106,25 +119,28 @@ def scope():
                   ('CODE',   '_@_lmodu', code_lmodu),
                   ('IMPORT', '__@ldivworker') ] )
 
+
+    # ----------------------------------------
+
     def code_ldivsign():
-        # B0 bit 7 : quotient sign
-        # B0 bit 1 : remainder sign
+        # Signed division helper
+        # T4L bit 7 : quotient sign
+        # T4L bit 6 : remainder sign
         label('__@ldivsign')
         PUSH()
-        LDI(0);ST(B0)
         LDW(LAC+2);_BGE('.lds1')
         if args.cpu >= 6:
             NEGVL(LAC)
         else:
             _CALLJ('_@_lneg')
-        LD(B0);XORI(0x81);ST(B0)
+        LD(T4);XORI(0xc0);ST(T4)
         label('.lds1')
         LDW(T0+2);_BGE('.lds2')
         if args.cpu >= 6:
             NEGVL(T0)
         else:
             _CALLJ('__@lneg_t0t1')
-        LD(B0);XORI(0x80);ST(B0)
+        LD(T4);XORI(0x80);ST(T4)
         label('.lds2')
         tryhop(2);POP();RET()
 
@@ -134,15 +150,20 @@ def scope():
                   ('IMPORT', '_@_lneg') if args.cpu < 6 else ('NOP',),
                   ('CODE',   '__@ldivsign', code_ldivsign) ] )
 
+    # ----------------------------------------
+    # LDIVS: LAC / [vAC] -> LAC
+    # ----------------------------------------
+
     def code_ldivs():
-        # LDIVS : LAC <- LAC / [vAC]
+        """ Signed division LAC / [vAC] -> LAC.
+            Thrashes T[0-3] sysArgs[0-7]."""
         label('_@_ldivs')
         PUSH()
         _CALLI('__@ldivprep')
         _CALLJ('__@ldivsign')
         CallWorker()
-        LDW(T2);STW(LAC);LDW(T2+2);STW(LAC+2)
-        LD(B0);ANDI(0x80);_BEQ('.ret')
+        _MOVW(T2,LAC);_MOVW(T2+2,LAC+2)
+        LD(T4);ANDI(0x80);_BEQ('.ret')
         if args.cpu >= 6:
             NEGVL(LAC)
         else:
@@ -158,22 +179,27 @@ def scope():
                   ('CODE',   '_@_ldivs', code_ldivs),
                   ('IMPORT', '__@ldivworker') ] )
 
+    # ----------------------------------------
+    # LMODS: LAC%[vAC]->vAC, LAC/[vAC]->T0T1
+    # ----------------------------------------
+
     def code_lmods():
-        # LMODS : LAC <- LAC % [vAC]
-        #        T0T1 <- LAC / [vAC]
+        """ Signed modulo LAC % [vAC] -> LAC.
+            Returns quotient in T[01]
+            Thrashes T[0-3] sysArgs[0-7]."""
         label('_@_lmods')
         PUSH()
         _CALLI('__@ldivprep')
         _CALLJ('__@ldivsign')
         CallWorker()
-        LDW(T2);STW(T0);LDW(T2+2);STW(T0+2)
-        LD(B0);ANDI(0x80);_BEQ('.lms1')
+        _MOVW(T2,T0);_MOVW(T2+2,T0+2)
+        LD(T4);ANDI(0x80);_BEQ('.lms1')
         if args.cpu >= 6:
             NEGVL(T0)
         else:
             _CALLJ('__@lneg_t0t1')
         label('.lms1')
-        LD(B0);ANDI(0x01);_BEQ('.lms2')
+        LD(T4);ANDI(0x40);_BEQ('.lms2')
         if args.cpu >= 6:
             NEGVL(LAC)
         else:

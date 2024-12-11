@@ -181,14 +181,14 @@ static Type specifier(int *sclass, Attribute *pa) {
 			&& sign == 0 && size == 0) {
 				use(tsym, src);
 				ty = tsym->type;
-				if (isqual(ty)
-				&& ty->size != ty->type->size) {
+				if (isqual(ty) && ty->size != ty->type->size) {
 					ty = unqual(ty);
 					if (isqual(tsym->type))
 						ty = qual(tsym->type->op, ty);
 					tsym->type = ty;
 				}
 				p = &type;
+				merge_attributes(pa, tsym->attr, 1);
 				t = gettok();
 			} else
 				p = NULL;
@@ -276,24 +276,22 @@ static void decl(Symbol (*dcl)(int, char *, Type, Coordinate *, Attribute *)) {
 				warning("missing prototype\n");
 			if (id == NULL)
 				error("missing identifier\n");
-			else if (sclass == TYPEDEF)
-				{
+			else if (sclass == TYPEDEF) {
 					Symbol p = lookup(id, identifiers);
 					if (p && p->scope == level)
 						error("redeclaration of `%s'\n", id);
-					if (attr2)
-						error("invalid use of __attribute__ in type declaration\n");
 					p = install(id, &identifiers, level,
 						level < LOCAL ? PERM : FUNC);
 					p->type = ty1;
 					p->sclass = TYPEDEF;
 					p->src = pos;
-				}
-			else
+					p->attr = attr2;
+			} else {
 				(void)(*dcl)(sclass, id, ty1, &pos, &attr2);
-			for(; attr2; attr2 = attr2->link)
-				if (! attr2->okay)
-					warning("attribute `%s` was ignored\n", attr2->name);
+				for(; attr2; attr2 = attr2->link)
+					if (! attr2->okay)
+						warning("attribute `%s` was ignored\n", attr2->name);
+			}
 			if (t != ',')
 				break;
 			t = gettok();
@@ -1094,7 +1092,9 @@ static Symbol dcllocal(int sclass, char *id, Type ty, Coordinate *pos, Attribute
 		       	warning("declaration of `%s' does not match previous declaration at %w\n", q->name, &q->src);
 
 		       p->u.alias = q; break;
-	case STATIC:   (*IR->defsymbol)(p);
+	case STATIC:   merge_attributes(&(p->attr), *pa, 0);
+		       (*IR->defsymbol)(p);
+		       *pa = p->attr;
 		       initglobal(p, 0);
 		       if (!p->defined) {
 			       if (p->type->size > 0) {

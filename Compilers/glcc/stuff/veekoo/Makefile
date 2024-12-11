@@ -1,11 +1,12 @@
 ROM=dev7
+RUNROM=
 MAP=32k
 B=../../build/
 CC=${B}glcc
-GTSIM=${B}gtsim -rom ../../gigatron/roms/${ROM}.rom
+GTSIM=${B}gtsim -rom ${or ${RUNROM},../../gigatron/roms/${ROM}.rom}
 GTPROF=${B}/../gigatron/mapsim/gtprof
 
-PGMS=ascbrot.gt1 ascjulia.gt1 gfxbrotx.gt1 gfxjuliax.gt1
+PGMS=ascbrot.gt1
 
 all:${PGMS}
 

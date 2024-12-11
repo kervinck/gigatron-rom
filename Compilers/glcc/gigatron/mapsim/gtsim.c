@@ -14,7 +14,6 @@
 # include <fcntl.h>
 # include <signal.h>
 # include <termios.h>
-# undef B0
 #else
 # include <io.h>
 # include <fcntl.h>
@@ -86,7 +85,7 @@ long long t;
 uint8_t pfx;
 uint16_t da;
 long long dt, rt, st;
-long long vt[2];
+long long vt[2], vr;
 
 
 CpuState cpuCycle(const CpuState S)
@@ -191,12 +190,13 @@ void sim(void)
           fprintf(stderr, "(gtsim) Horizontal timing error:"
                   "vgaY %-3d, vgaX %-3d, t=%0.3f\n", vgaY, vgaX, t/6.25e6);
 #if EXTRA_DEBUG
-          for(int i=0; i<48; i+=16) {
-            fprintf(stderr, "\t%04x:", i);
-            for (int j=0; j<16; j++)
-              fprintf(stderr, " %02x", RAM[i+j]);
-            fprintf(stderr, "\n");
-          }
+          { int i,j;
+            for(i=0; i<48; i+=16) {
+              fprintf(stderr, "\t%04x:", i);
+              for (j=0; j<16; j++)
+                fprintf(stderr, " %02x", RAM[i+j]);
+              fprintf(stderr, "\n");
+            } }
 #endif     
         }
         vgaX = 0;
@@ -223,9 +223,13 @@ void sim(void)
       } else if (pfx && (S.PC & 0xff) == 1 && (S.PC >> 8) == (RAM[5]+1)) {
         pfx = RAM[5];
       } else if (S.IR == 0xe1 && S.D == 0x1e) { // jmp(Y,[vReturn])
-        vt[!pfx] -= t;
+        vr = t;
       } else if (S.IR == 0xe0 && S.D == 0xff && S.Y == RAM[5]) {
-        vt[!pfx] += t - 3;
+        if (vr >= 0)
+          vt[!pfx] += t - vr - 3;
+        else
+          rt = t + 7;
+        vr = -1;
       }
       // commit
       S = T;
@@ -312,7 +316,6 @@ unsigned int spbase  = 0x8e;
 #define sysArgs0  (0x24+0)
 #define LAC       (flbase+3)
 #define T0        (t0base)
-#define B0        (b0base)
 #define T2        (t2base)
 #define R0        (regbase+0)
 #define R8        (regbase+16)
@@ -374,8 +377,9 @@ void setup_profile(const char *f)
 
 void debugSysFn(void)
 {
+  int i, c;
   debug("SysFn=$%04x SysArgs=", deek(sysFn));
-  for (int i=0,c='['; i<8; i++, c=' ')
+  for (i=0, c='['; i<8; i++, c=' ')
     debug("%c%02x", c, peek(sysArgs0+i));
   debug("]");
 }
@@ -842,7 +846,7 @@ int disassemble(word addr, char **pm, char *operand)
       switch(peek(addlo(addr,1)))
         {
         case 0x00:  *pm = "ADDL";  return 2;       /* v7 */
-        case 0x02:  *pm = "?ADDX"; return 2;       /* v7 */
+        case 0x02:  *pm = "COPYS"; goto oper8x2;   /* v7 */
         case 0x04:  *pm = "SUBL";  return 2;       /* v7 */
         case 0x06:  *pm = "ANDL";  return 2;       /* v7 */
         case 0x08:  *pm = "ORL";   return 2;       /* v7 */
@@ -862,15 +866,20 @@ int disassemble(word addr, char **pm, char *operand)
         case 0x25:  *pm = "STFAC"; return 2;       /* v7 */
         case 0x27:  *pm = "LDFAC"; return 2;       /* v7 */
         case 0x29:  *pm = "LDFARG";return 2;       /* v7 */
+        case 0x2b:  *pm = "VSAVE"; return 2;       /* v7 */
+        case 0x2d:  *pm = "VRESTORE"; return 2;    /* v7 */
+        case 0x2f:  *pm = "EXCH";  return 2;       /* v7 */
+        case 0x32:  *pm = "LEEKA"; goto operx8;    /* v7 */
+        case 0x34:  *pm = "LOKEA"; goto operx8;    /* v7 */          
         case 0x39:  *pm = "RDIVS"; goto operx8;    /* v7 */
         case 0x3b:  *pm = "RDIVU"; goto operx8;    /* v7 */
         case 0x3d:  *pm = "MULW";  goto operx8;    /* v7 */
         case 0x3f:  *pm = "BEQ";   goto operxbr;
+        case 0x48:  *pm = "RESET"; return 2;       /* v7 */
         case 0x4d:  *pm = "BGT";   goto operxbr;
         case 0x50:  *pm = "BLT";   goto operxbr;
         case 0x53:  *pm = "BGE";   goto operxbr;
         case 0x56:  *pm = "BLE";   goto operxbr;
-        case 0x5c:  *pm = "RESET"; return 2;       /* v7 */
         case 0x62:  *pm = "DOKEI"; goto operx16r;  /* v7 */
         case 0x72:  *pm = "BNE";   goto operxbr;
         case 0x7d:  *pm = "ADDIV"; goto operx8x2;  /* v7 */
@@ -909,6 +918,7 @@ int disassemble(word addr, char **pm, char *operand)
       return 2;
     }
     case 0x18:  *pm = "NEGV";  goto oper8;    /* v7 */
+    case 0x33:  *pm = "ADDHI"; goto oper8;    /* v7 */
     case 0x39:  *pm = "POKEA"; goto oper8;    /* v7 */
     case 0x3b:  *pm = "DOKEA"; goto oper8;    /* v7 */
     case 0x3d:  *pm = "DEEKA"; goto oper8;    /* v7 */
@@ -965,7 +975,7 @@ int disassemble(word addr, char **pm, char *operand)
       sprintf(operand, "$%02x,$%02x", peek(addlo(addr,2)), peek(addlo(addr,1)));
       return 3;
     oper16r8:
-      sprintf(operand, "$$%02x%02x,$%02x", 
+      sprintf(operand, "$%02x%02x,$%02x",
               peek(addlo(addr,2)), peek(addlo(addr,3)), peek(addlo(addr,1)) );
       return 4;
     oper816:
@@ -995,10 +1005,13 @@ void print_trace(CpuState *S)
   fprintf(stderr, " vAC=%04x vLR=%04x SP=%04x", deek(vAC), deek(vLR), deek(SP));
   if (strchr(trace, 's'))
     fprintf(stderr, " vSP=%04x", deek(vSP));
-  if (strchr(trace, 't'))
-    fprintf(stderr, " T[0-3]=%04x %04x %04x %04x B[0-1]=%02x %02x",
-            deek(T0), deek(T0+2), deek(T2), deek(T2+2),
-            peek(B0), peek(B0+1));
+  if (strchr(trace, 't')) {
+    fprintf(stderr, " T[0-3]=%04x %04x %04x %04x",
+            deek(T0), deek(T0+2), deek(T2), deek(T2+2) );
+    if (b0base)
+      fprintf(stderr, " B[0-1]=%02x %02x",
+              peek(b0base), peek(b0base+1) );
+  }
   if (strchr(trace, 'f')) {
     int as = peek(LAC-3);
     int ae = peek(LAC-2);
@@ -1054,7 +1067,9 @@ void next_0x307(CpuState *S)
 
 void garble(uint8_t mem[], int len)
 {
-  for (int i=0; i<len; i++) mem[i] = rand();
+  int i;
+  for (i=0; i<len; i++)
+    mem[i] = rand();
 }
 
 void usage(int exitcode)

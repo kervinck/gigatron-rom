@@ -2,11 +2,11 @@
 ### The rom/ram checking code must work on all cpu
 
 def code0():
+    nohop()
     ### _start()
     label('_start');
-    # ensure stack alignment
-    # create stack headroom for argc and argv
-    LDWI(0xfffc);ANDW(SP);SUBI(4);STW(SP)
+    # ensure stack alignment with space for argc and argv
+    LDI(3);ORW(SP);SUBI(7);STW(SP)
     # call onload functions
     for f in args.onload:
         _CALLJ(f)
@@ -14,38 +14,45 @@ def code0():
     if not args.no_runtime_bss_initialization:
         _CALLJ('_init_bss')
     # call init chain
-    LDWI('__glink_magic_init'); _CALLI('_callchain')
+    _CALLJ('_callchain_init')
     # call main
-    LDI(0); STW(R8); STW(R9); _CALLI('main'); STW(R8)
+    LDI(0); STW(R8); STW(R9); _CALLJ('main'); STW(R8)
     ### exit()
     label('exit')
-    LDW(R8); STW(R0)
+    _MOVW(R8,R0)
     # call fini chain
-    LDWI('__glink_magic_fini'); _CALLI('_callchain')
-    LDW(R0); STW(R8)
+    if args.cpu < 5:
+        _CALLJ('_callchain_fini')
+    else:
+        LDWI('__glink_magic_fini'); CALLI('_callchain')
+    _MOVW(R0,R8)
     ### _exit()
     label('_exit')
-    LDI(0); STW(R9)
+    _MOVIW(0,R9)
     label('_exitm');
-    LDW(R8);STW(R0)
+    _MOVW(R8,R0)
     label('_exitm_msgfunc', pc()+1)
     LDWI(0);_BEQ('.halt')  # _exitm_msgfunc is LDWI's argument here
     CALL(vAC)              # arguments in R8 and R9 are already correct
     # If _exitm_msgfunc is zero or returns
     # we just Flash a pixel with a position indicative of the return code
     label('.halt')
-    LDWI(0x101);PEEK();ADDW(R0);ST(R7);
-    LDWI(0x100);PEEK();ST(R7+1)
+    LDWI(0x100);DEEK();ST(R7+1)
+    LD(vACH);ADDW(R0);ST(R7)
     label('.loop')
-    POKE(R7)
-    ADDI(1)
+    POKE(R7);ADDW(0x80)
     BRA('.loop')
 
 def code1():
     # subroutine to call a chain of init/fini functions
     nohop()
+    if args.cpu < 5:
+        label('_callchain_fini')
+        LDWI('__glink_magic_fini'); _BRA('_callchain')
+    label('_callchain_init')
+    LDWI('__glink_magic_init')
     label('_callchain')
-    DEEK(); STW(R7); LDW(vLR); STW(R6)
+    DEEK(); STW(R7); _MOVW(vLR,R6)
     LDWI(0xBEEF);XORW(R7);_BEQ('.callchaindone')
     LDW(R7);_BRA('.callchaintst')
     label('.callchainloop')
@@ -54,7 +61,7 @@ def code1():
     label('.callchaintst')
     _BNE('.callchainloop')
     label('.callchaindone')
-    LDW(R6); STW(vLR); RET()
+    _MOVW(R6,vLR); RET()
 
 def code2():
     align(2)

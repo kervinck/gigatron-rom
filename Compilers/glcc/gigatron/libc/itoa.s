@@ -10,12 +10,18 @@ def scope():
     def code_utoa():
         label('utoa')
         PUSH()
-        LDI(7);ADDW(R9);STW(R9)
+        if args.cpu >= 7:
+            ADDIV(7,R9)
+        else:
+            LDI(7);ADDW(R9);STW(R9)
         LDI(0);POKE(R9);_BRA('.loop')
         label('_utoa')
         PUSH()
         label('.loop')
-        LDW(R9);SUBI(1);STW(R9)
+        if args.cpu >= 7:
+            SUBIV(1,R9)
+        else:
+            LDW(R9);SUBI(1);STW(R9)
         LDW(R8);_MODU(R10)
         SUBI(10);_BGE('.letter')
         ADDI(48+10);_BRA('.poke')
@@ -55,20 +61,29 @@ def scope():
     def code_ultoa():
         label('ultoa')
         PUSH()
-        LDI(15);ADDW(R10);STW(R10)
+        if args.cpu >= 7:
+            ADDIV(15,R10)
+        else:
+            LDI(15);ADDW(R10);STW(R10)
         LDI(0);POKE(R10);STW(R12)
         _MOVL(L8,LAC);
         label('.loop')
         LDI(R11);_LMODU()
         LDW(LAC);STW(R13)
-        LDW(R10);SUBI(1);STW(R10)
+        if args.cpu >= 7:
+            SUBIV(1,R10)
+        else:
+            LDW(R10);SUBI(1);STW(R10)
         LDW(R13);SUBI(10);_BGE('.letter')
         ADDI(48+10);_BRA('.poke')
         label('.letter')
         ADDI(97);
         label('.poke')
         POKE(R10)
-        LDW(T0);STW(LAC);LDW(T1);STW(LAC+2)
+        if args.cpu >= 6:
+            LDI(T0);LDLAC();LDW(T1)
+        else:
+            LDW(T0);STW(LAC);LDW(T1);STW(LAC+2)
         ORW(T0);_BNE('.loop')
         LDW(R10)
         tryhop(2);POP();RET()
@@ -118,15 +133,21 @@ def scope():
         label('_uftoa')
         PUSH()
         _MOVF(F8,FAC)
-        LDI(10);STW(R10)
+        _MOVIW(10,R10)
         LDW(R11);ADDI(11);STW(R22);ADDI(4);STW(R9)
-        LDI(0);POKE(R9)
+        if args.cpu >= 6:
+            POKEQ(0)
+        else:
+            LDI(0);POKE(R9)
         LDWI('.1e8');_CALLI('_@_fmod');STW(R20)
         LDWI('.1e4');_CALLI('_@_fmod');STW(R19)
         _FTOU()
         LDW(LAC);STW(R8);_CALLJ('_utoa')
         LDW(R19);_CALLI('.sub')
-        LDW(R22);SUBI(4);STW(R22)
+        if args.cpu >= 7:
+            SUBIV(4,R22)
+        else:
+            LDW(R22);SUBI(4);STW(R22)
         LDW(R20)
         tryhop(2)
         POP()

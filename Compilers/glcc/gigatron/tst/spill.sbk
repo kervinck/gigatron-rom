@@ -13,7 +13,7 @@ def code1():
 	_PROLOGUE(8,0,0x80); # save=R7
 	MOVW(R8,R7);
 	CALLI('f');STW(R23);
-	STW(B0);_STLW(-2+8,src=R23);LDW(B0)  #genspill
+	STW(T0);_STLW(-2+8,src=R23);LDW(T0)  #genspill
 	CALLI('f');STW(R22);
 	_LDLW(-2+8);ADDW(R22);STW(R7);
 	LDI(0);
@@ -25,7 +25,7 @@ def code2():
 	_PROLOGUE(8,0,0xc0); # save=R6-7
 	MOVW(R8,R7);
 	CALLI('f');STW(R23);
-	STW(B0);_STLW(-2+8,src=R23);LDW(B0)  #genspill
+	STW(T0);_STLW(-2+8,src=R23);LDW(T0)  #genspill
 	LDW(R7);_BEQ('.5');
 	CALLI('f');
 	STW(R6);
@@ -54,7 +54,7 @@ def code3():
 	_STLW(-6+32);
 	_STLW(-8+32);
 	MOVW(R6,R23);
-	STW(B0);_STLW(-12+32,src=R23);LDW(B0)  #genspill
+	STW(T0);_STLW(-12+32,src=R23);LDW(T0)  #genspill
 	ADDIV(2,R6);
 	LDW(R7);_BEQ('.9');
 	CALLI('f');
@@ -63,7 +63,7 @@ def code3():
 	label('.9');
 	LDI(0);_STLW(-10+32);
 	label('.10');
-	_LDLW(-10+32);STW(B0);_LDLW(-12+32);STW(T0);LDW(B0);DOKE(T0);
+	_LDLW(-10+32);STW(T0);_LDLW(-12+32);STW(T1);LDW(T0);DOKE(T1);
 	LDI(0);
 	label('.7');
 	_EPILOGUE(32,0,0xff,saveAC=True);
@@ -81,7 +81,7 @@ def code4():
 	LDW(R23);_MULI(5);STW(R22);
 	LDWI('a');ADDW(R22);_MOVF([vAC],F10);
 	LDWI('b');ADDW(R22);_MOVF([vAC],F20);
-	STW(B0);_MOVF(F20,[SP,-5+8]);LDW(B0) #genspill
+	STW(T0);_MOVF(F20,[SP,-5+8]);LDW(T0) #genspill
 	_MOVF('.15',F20);
 	_MOVF(F10,FAC);_SP(-5+8);_FADD();LDI(F20);_FCMP();_BEQ('.13');
 	LDW(R23);_BEQ('.13');

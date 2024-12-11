@@ -9,14 +9,17 @@ def scope():
   def code_putch():
     nohop()
     label('putch')
-    LDW(R8);DOKE(SP) # using arg buildup zone
-    LDW(SP);STW(R8)
-    LDI(1);STW(R9)
-    if args.cpu >= 6:
-      JNE('console_print')
-    else:
-      PUSH();_CALLJ('console_print')
-      tryhop(2);POP();RET()
+    PUSH()
+    if SP == vSP:
+      ALLOC(-2) 
+    LDW(R8);DOKE(SP)
+    _MOVW(SP,R8)
+    _MOVIW(1,R9)
+    _CALLJ('console_print')
+    _DEEKV(SP)
+    if SP == vSP:
+      ALLOC(2)
+    tryhop(2);POP();RET()
     
   module(name='putch.s',
          code=[('EXPORT', 'putch'),
@@ -28,7 +31,7 @@ def scope():
   def code_cputs():
     nohop()
     label('cputs')
-    LDWI(0x7fff);STW(R9)
+    _MOVIW(0x7fff,R9)
     if args.cpu >= 6:
       JNE('console_print')
     else:
@@ -111,8 +114,8 @@ def scope():
     nohop()
     label('clrscr')
     label('console_clear_screen')
-    LDI(0);STW(v('console_state')+2)
-    LD(v('console_state')+0);STW(R8)
+    _MOVIW(0,v('console_state')+2)
+    LDW(v('console_state')+0);STW(R8)
     if args.cpu >= 6:
       JGE('_console_reset')
     else:
@@ -135,7 +138,7 @@ def scope():
     PUSH()
     _CALLJ('_console_addr');STW(R8);_BEQ('.ret')
     LD(v('console_state')+0);STW(R9)
-    LDI(8);STW(R10)
+    _MOVIW(8,R10)
     _CALLJ('_console_clear')
     label('.ret')
     tryhop(2);POP();RET()
@@ -156,7 +159,7 @@ def scope():
     PUSH();ALLOC(-2)
     LDW(v('console_state')+2);STLW(0)
     _CALLJ('gotoxy')
-    LDW(R10);STW(R8)
+    _MOVW(R10,R8)
     _CALLJ('cputs')
     LDLW(0);STW(v('console_state')+2)
     ALLOC(2);tryhop(2);POP();RET()
@@ -251,11 +254,11 @@ def scope():
     LDI(0);POKE(R20);LD(R21);_BGT('.ret')
     label('.loop')
     _CALLJ('kbget');_BGE('.ret')
-    LDI(2);STW(R9);_CALLJ('.pcursor')
+    _MOVIW(2,R9);_CALLJ('.pcursor')
     _BRA('.loop')
     label('.ret')
     STLW(2)
-    LDI(3);STW(R9);_CALLJ('.pblank')
+    _MOVIW(3,R9);_CALLJ('.pblank')
     LDLW(2);ALLOC(4)
     tryhop(2);POP();RET()
     label('.pcursor')
@@ -289,11 +292,11 @@ def scope():
     LDI(0);POKE(R20);LD(R21);_BGT('.ret')
     label('.loop')
     _CALLJ('kbget');_BGE('.ret')
-    LDI(2);STW(R9);_CALLJ('.pcursor')
+    _MOVIW(2,R9);_CALLJ('.pcursor')
     _BRA('.loop')
     label('.ret')
     STLW(2)
-    LDI(2);STW(R9);_CALLJ('.pblank')
+    _MOVIW(2,R9);_CALLJ('.pblank')
     LDLW(2);ALLOC(4)
     tryhop(2);POP();RET()
     label('.pcursor')

@@ -34,10 +34,8 @@ def code1():
 	LDWI('rows');ADDW(R6);ADDW(R6);DEEK();_BEQ('.15');
 	LDW(R6);SUBW(R7);LSLW();LDXW(vAC,v('up')+14);_BEQ('.15');
 	LDW(R6);ADDW(R7);LSLW();LDXW(vAC,'down');_BEQ('.15');
-	MOVIW('down',R23);
-	LDW(R6);ADDW(R7);LSLW();ADDW(R23);DOKEQ(0);
-	MOVIW(v('up')+14,R23);
-	LDW(R6);SUBW(R7);LSLW();ADDW(R23);DOKEQ(0);
+	LDW(R6);ADDW(R7);LSLW();ADDWI('down');DOKEQ(0);
+	LDW(R6);SUBW(R7);LSLW();ADDWI(v('up')+14);DOKEQ(0);
 	LDWI('rows');ADDW(R6);ADDW(R6);DOKEQ(0);
 	LDWI('x');ADDW(R7);ADDW(R7);DOKEA(R6);
 	LDW(R7);XORI(7);_BNE('.19');
@@ -47,10 +45,8 @@ def code1():
 	LDI(1);ADDW(R7);STW(R8);
 	CALLI('queens');
 	label('.20');
-	MOVIW('down',R23);
-	LDW(R6);ADDW(R7);LSLW();ADDW(R23);DOKEQ(1);
-	MOVIW(v('up')+14,R23);
-	LDW(R6);SUBW(R7);LSLW();ADDW(R23);DOKEQ(1);
+	LDW(R6);ADDW(R7);LSLW();ADDWI('down');DOKEQ(1);
+	LDW(R6);SUBW(R7);LSLW();ADDWI(v('up')+14);DOKEQ(1);
 	LDWI('rows');ADDW(R6);ADDW(R6);DOKEQ(1);
 	label('.15');
 	label('.12');

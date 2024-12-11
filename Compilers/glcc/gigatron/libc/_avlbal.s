@@ -50,13 +50,13 @@ def scope():
     def code_calc():
         label('.calc')
         PUSH()
-        LDI(0);STW(R15);
+        _MOVIW(0,R15);
         _CALLJ('.geth')
         LDW(R13);SUBW(R15);_BLE('.calc1')
-        LDW(R13);STW(R15)
+        _MOVW(R13,R15)
         label('.calc1')
         LDW(R14);SUBW(R15);_BLE('.calc2')
-        LDW(R14);STW(R15)
+        _MOVW(R14,R15)
         label('.calc2')
         LDI(1);ADDW(R15);DOKE(R10)
         tryhop(2);POP();RET()
@@ -102,7 +102,7 @@ def scope():
         ADDW(R12);STW(R21);DEEK();DOKE(R22)
         LDW(R11);DEEK();DOKE(R21)
         STW(R10);_CALLJ('.calc')
-        LDW(R12);STW(R10);_CALLJ('.calc')
+        _MOVW(R12,R10);_CALLJ('.calc')
         LDW(R12);DOKE(R11)
         tryhop(2);POP();RET()
 

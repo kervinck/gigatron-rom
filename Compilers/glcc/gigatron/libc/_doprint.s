@@ -37,7 +37,7 @@ def scope():
         PUSH();_ALLOC(-6)
         LDWI(v('_doprint_dst'));STW(R23);DEEK();ADDW(R9);DOKE(R23)
         LDWI(v('_doprint_dst')+2);DEEK();STW(R10) # append extra argument
-        LDI(vPC);STW(R23);LDWI(v('_doprint_dst')+4);DEEK();CALL(vAC)
+        LDWI(v('_doprint_dst')+4);DEEK();CALL(vAC)
         _ALLOC(6);POP();RET()
 
     module(name='doprint_puts.s',
@@ -56,8 +56,8 @@ def scope():
         _BRA('.tst')
         label('.loop')
         SUBI(1);STW(R7)
-        LDW(R6);STW(R8)
-        LDI(1);STW(R9)
+        _MOVW(R6,R8)
+        _MOVIW(1,R9)
         LDWI(v('_doprint_dst')+2);DEEK();STW(R10)
         LDWI(v('_doprint_dst')+4);DEEK();CALL(vAC)
         LDW(R7)

@@ -130,8 +130,7 @@ def code4():
 	MOVIW('.32',R8);
 	CALLI('err');
 	label('.30');
-	MOVIW('words',R23);
-	LDWI('next');DEEK();_SHLI(3);ADDW(R23);DOKEQ(0);
+	LDWI('next');DEEK();_SHLI(3);ADDWI('words');DOKEQ(0);
 	LDWI('next');DEEK();_SHLI(3);STW(R23);
 	LDI(0);STXW(R23,v('words')+4);
 	STXW(R23,v('words')+2);
@@ -141,13 +140,12 @@ def code4():
 	ADDI(1);STW(R8);
 	LDW(R8);_STLW(0);
 	CALLI('malloc');STW(R23);
-	MOVIW(v('words')+6,R22);
-	LDWI('next');DEEK();_SHLI(3);ADDW(R22);DOKEA(R23);
+	LDWI('next');DEEK();_SHLI(3);ADDWI(v('words')+6);DOKEA(R23);
 	LDWI('next');DEEK();_SHLI(3);LDXW(vAC,v('words')+6);_BNE('.36');
 	MOVIW('.39',R8);
 	CALLI('err');
 	label('.36');
-	LDWI('next');DEEK();_SHLI(3);LDXW(vAC,v('words')+6);STW(R8);
+	LDWI('next');DEEK();_SHLI(3);ADDWI(v('words')+6);DEEKA(R8);
 	LDW(R8);_STLW(0);
 	LDW(R7);STW(R9);
 	_STLW(2);
@@ -155,8 +153,7 @@ def code4():
 	LDWI('next');STW(R23);
 	DEEKA(R22);
 	LDW(R22);ADDI(1);DOKE(R23);
-	MOVIW('words',R23);
-	LDW(R22);_SHLI(3);ADDW(R23);
+	LDW(R22);_SHLI(3);ADDWI('words');
 	DOKE(R6);
 	
 	label('.23');

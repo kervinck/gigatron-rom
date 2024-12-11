@@ -5,8 +5,8 @@ def scope_copy_op():
     def code0():
         nohop()
         label('memcpy');                            # R8=d, R9=s, R10=l
-        LDW(R8);STW(T2)
-        LDW(R9);STW(T3)
+        _MOVW(R8,T2)
+        _MOVW(R9,T3)
         LDW(R10)
         label('memcpy1')
         COPY()

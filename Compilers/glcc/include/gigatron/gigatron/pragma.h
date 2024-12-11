@@ -33,6 +33,8 @@
      Variable cannot cross a page boundary.
    * `__attribute__((org(ADDRESS)))
      Variable must be allocated at the specified address
+   * `__attribute__((offset(ADDRESS)))
+     Variable must be allocated at page offset ADDRESS&0xff.
    * `__attribute__((place(AMIN,AMAX)))`
      Variable must be allocated between addresses `AMIN` and `AMAX`.
 
@@ -84,10 +86,12 @@
    `s`.  If no module defines this variable, no compilation error will
    be reported, and the address of the variable will be set to
    zero. */
+
 #define __weakref(x) __attribute__((alias("__glink_weak_" x)))
 
 /* `__weak` --
    Deprecated. */
+
 #define __weak  __attribute__((alias("__glink_weak_%s")))
 
 /* `__at(ADDRESS)` --
@@ -103,13 +107,24 @@
 #define __at(x) __attribute__((org(x)))
 
 
-/* Note that the keywords `__near` and `__far` are not attributes
-   but are type qualifiers comparable to `const` or `volatile`.
-   They can be used in typedefs and inside declarators.
-   For instance `int * __near a;` and `int __near *a` are
-   quite different. The first one locates pointer a in page zero,
-   the second one says that pointer a points to integers located
-   in page zero. Such subtleties do not exist for attributes. */
+/* `__offset(ADDRESS)` --
+   Indicates that the variable should be located
+   at an address whose last byte matches ADDRESS.
+   Example:
+   | extern struct vCpuContext_s context __offset(0xe0); */
+
+#define __offset(x) __attribute__((offset(x)))
+
+
+/* Note that the keywords `__near` and `__far` are not attributes but
+   are type qualifiers comparable to `const` or `volatile`.  They can
+   be used in typedefs and inside declarators.  For instance `int *
+   __near a;` and `int __near *a` are quite different. The first one
+   locates pointer a in page zero, the second one says that pointer a
+   points to integers located in page zero. Such subtleties do not
+   exist for attributes.  An attribute, even in a typedef, will be
+   applied to the declared variables regardless of its position in the
+   type specifier or the declarator. */
 
 
 #endif

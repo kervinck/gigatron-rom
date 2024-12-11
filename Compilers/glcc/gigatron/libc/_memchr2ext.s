@@ -8,7 +8,7 @@ def scope():
         addr = int(str(info['addr']),0)
         cycs = int(str(info['cycs']),0)
         def m_prepScanMemoryExt():
-            LDWI(addr);STW('sysFn')
+            _MOVIW(addr,'sysFn')
             LD(R8);ST(R17+1) # R17 = R8 << 8
         def m_ScanMemoryExt():
             # scan memory without page crossings
