@@ -5,29 +5,23 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
-
 entity gigatron is
   Port ( 
          sysclk : in std_logic;
-         VGA_R : out std_logic_vector(3 downto 0);
-         VGA_G : out std_logic_vector(3 downto 0);
-         VGA_B : out std_logic_vector(3 downto 0);
+         VGA_R :  out std_logic_vector(3 downto 0);
+         VGA_G :  out std_logic_vector(3 downto 0);
+         VGA_B :  out std_logic_vector(3 downto 0);
          VGA_HS : out std_logic; 
          VGA_VS : out std_logic;
          
-         LED : out std_logic_vector(15 downto 0));
+         LED : out std_logic_vector(7 downto 0);
+         BTN : in  std_logic_vector(4 downto 0);
+         SW  : in  std_logic_vector(2 downto 0);
+         
+         AUD_SD : out std_logic;
+         AUD_PWM : out std_logic);
+
 end gigatron;
-
-
---        TRUTH TABLE for A and B ALU operands (BA bit order for input)
--- LD  AR 0011
--- XOR AR 0110
--- OR  AR 0111
--- AND AR 0001
--- SUB AR 1100 (using AL too, NOTE AR0 here also carry-in)
---        0101 <-second side of mux
--- ADD AR 0011 (using AL too)
---        0101 <-second side of mux
 
 
 architecture Behavioral of gigatron is
@@ -79,7 +73,6 @@ end component;
     
     signal RAMDIN : std_logic_vector(7 downto 0);
     signal RAMDOUT : std_logic_vector(7 downto 0);
-    
 
     signal DBUS  : std_logic_vector(7 downto 0) := X"00";
     
@@ -146,50 +139,37 @@ begin
     end process;
 
 
-    
     -- real assignment process (write databus tmp value to destination)
     process(clk)
     begin
         RAMDIN <= TMP;
 
         if rising_edge(clk) then
-        if (IR(7 downto 5) /= "111") then
-        case (IR(4 downto 2)) is
-        when "000" =>
-            if IR(7 downto 5) /= "110" then
-            AC <= TMP;
+            if (IR(7 downto 5) /= "111") then
+                case (IR(4 downto 2)) is
+                when "000" | "001" | "010" | "011"  =>
+                    if IR(7 downto 5) /= "110" then
+                        AC <= TMP;
+                    end if;
+                when "100" => --x
+                    X <= TMP;
+                when "101" => --y
+                    Y <= TMP;
+                when "110" => --out
+                    if IR(7 downto 5) /= "110" then
+                        OUTR <= TMP;
+                    end if;
+                when "111" => --out
+                    if IR(7 downto 5) /= "110" then
+                        OUTR <= TMP;
+                    end if;
+                    X <= std_logic_vector(unsigned(X) + 1);
+                when others =>
+                    if IR(7 downto 5) /= "110" then
+                        AC <= TMP;
+                    end if;
+                end case;
             end if;
-        when "001" =>
-            if IR(7 downto 5) /= "110" then
-            AC <= TMP;
-            end if;
-        when "010" =>
-            if IR(7 downto 5) /= "110" then
-            AC <= TMP;
-            end if;
-        when "011" =>
-            if IR(7 downto 5) /= "110" then
-            AC <= TMP;
-            end if;
-        when "100" => --x
-            X <= TMP;
-        when "101" => --y
-            Y <= TMP;
-        when "110" => --out
-            if IR(7 downto 5) /= "110" then
-            OUTR <= TMP;
-            end if;
-        when "111" => --out
-            if IR(7 downto 5) /= "110" then
-            OUTR <= TMP;
-            end if;
-            X <= std_logic_vector(unsigned(X) + 1);
-        when others =>
-            if IR(7 downto 5) /= "110" then
-            AC <= TMP;
-            end if;
-        end case;
-        end if;
         end if;
     end process;
 
@@ -205,6 +185,7 @@ begin
         end if;
     end process;
     
+    -- toggle RAM write on store
     process(DOUT)
     begin
             RAMWE <= "0";
@@ -213,7 +194,7 @@ begin
             end if;
     end process;
 
-    -- select which value to write to data bus 
+    -- select which value to write to target 
     process(DBUS,IR) 
     begin
             PCWE <= '0';
@@ -277,6 +258,7 @@ begin
             end case;
     end process;
     
+    -- update xout for blinken lights
     process(OUTR(6))
     begin
         if rising_edge(OUTR(6)) then
@@ -284,13 +266,18 @@ begin
         end if;
     end process;
     
+    INR <= not (BTN(4) & SW(0) & SW(1) & SW(2) & BTN(0) & BTN(3) & BTN(1) & BTN(2));
     DR <= DOUT(15 downto 8);
     IR <= DOUT(7 downto 0);
+
     VGA_R <= OUTR(1 downto 0) & "00";
     VGA_G <= OUTR(3 downto 2) & "00";
     VGA_B <= OUTR(5 downto 4) & "00";
     VGA_HS <= OUTR(6);
     VGA_VS <= OUTR(7);
-    LED(7 downto 0) <= XOUTR(7 downto 0);
+    LED <= XOUTR;
     
+    AUD_SD <= '1';
+    AUD_PWM <= XOUTR(7) xor XOUTR(6) xor XOUTR(5) xor XOUTR(4);
+        
 end Behavioral;
