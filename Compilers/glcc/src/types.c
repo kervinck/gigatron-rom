@@ -3,7 +3,7 @@
 
 static char rcsid[] = "$Id$";
 
-static Field isfield(const char *, Field);
+static Field isfield(const char *, Field, int *);
 static Type type(int, Type, int, int, void *);
 
 static struct entry {
@@ -315,7 +315,7 @@ Field newfield(char *name, Type ty, Type fty) {
 	if (name == NULL)
 		name = stringd(genlabel(1));
 	for (p = *q; p; q = &p->link, p = *q)
-		if (p->name == name)
+		if (name[0] && p->name == name)
 			error("duplicate field name `%s' in `%t'\n",
 				name, ty);
 	NEW0(p, PERM);
@@ -514,8 +514,8 @@ Field fieldlist(Type ty) {
 }
 
 /* fieldref - find field name of type ty, return entry */
-Field fieldref(const char *name, Type ty) {
-	Field p = isfield(name, unqual(ty)->u.sym->u.s.flist);
+Field fieldref(const char *name, Type ty, int *poffset) {
+	Field p = isfield(name, unqual(ty)->u.sym->u.s.flist, poffset);
 
 	if (p && xref) {
 		Symbol q;
@@ -542,11 +542,21 @@ Type ftype(Type rty, ...) {
 }
 
 /* isfield - if name is a field in flist, return pointer to the field structure */
-static Field isfield(const char *name, Field flist) {
-	for ( ; flist; flist = flist->link)
-		if (flist->name == name)
-			break;
-	return flist;
+static Field isfield(const char *name, Field flist, int *poffset) {
+	int off;
+	Field p, q;
+	for (p = flist ; p; p = p->link) /* direct search */
+		if (p->name == name) {
+			*poffset = p->offset;
+			return p;
+		}
+	for (p = flist ; p; p = p->link) /* anonymous closure */
+		if (!p->name[0] && isstruct(p->type)
+		    && (q = fieldref(name, p->type, &off)) ) {
+			*poffset = p->offset + off;
+			return q;
+		}
+	return 0;
 }
 
 /* outtype - output type ty */

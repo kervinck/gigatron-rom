@@ -1,11 +1,27 @@
 def scope():
 
-    def code_write():
+    def code_setf():
         nohop()
-        label('_sim_write');
+        label('_sim_setf')
+        STW(R16);_BLT('.ret4');_BGT('.ret')
+        XORW(R10);_BEQ('.ret')     # cnt
+        _PEEKV(R8);ORI(8);POKE(R8) # _IOEOF
+        _BRA('.ret')
+        label('.ret4')
+        _PEEKV(R8);ORI(4);POKE(R8) # _IOERR
+        label('.ret')
+        LDW(R16)
+        RET()
+
+    def code_writall():
+        nohop()
+        label('_sim_writall');
+        LDW(R10);STW(R11);LDW(R9);STW(R10) # swap arguments 
+        LDW(R8);STW(R9);LDW(R11);STW(R8)   # for gtsim compatibility
         LDWI('errno');STW('sysArgs0')
         _LDI(0xff02);STW('sysFn')
         SYS(36)
+        PUSH();_CALLI('_sim_setf');POP();
         RET()
 
     def code_read():
@@ -14,6 +30,7 @@ def scope():
         LDWI('errno');STW('sysArgs0')
         _LDI(0xff03);STW('sysFn')
         SYS(36)
+        PUSH();_CALLI('_sim_setf');POP();
         RET()
 
     def code_flush():
@@ -40,14 +57,15 @@ def scope():
     def code_iovec():
         align(2)
         label('_sim_iovec')
+        words('_sim_writall')
         words('_sim_read')
-        words('_sim_write')
         words('_sim_flush')
         words('_sim_lseek')
         
     module(name='_iovec.c',
            code=[ ('EXPORT', '_sim_iovec'),
-                  ('CODE', '_sim_write', code_write),
+                  ('CODE', '_sim_setf', code_setf),
+                  ('CODE', '_sim_writall', code_writall),
                   ('CODE', '_sim_read', code_read),
                   ('CODE', '_sim_flush', code_flush),
                   ('CODE', '_sim_lseek', code_lseek),

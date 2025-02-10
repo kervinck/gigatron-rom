@@ -1,0 +1,11 @@
+00P 
+01PC --option=CTRL_SIMPLE
+02PCS --option=CTRL_SIMPLE --option=PRINTF_SIMPLE
+03C -Dprintf=cprintf
+04CS -Dprintf=cprintf --option=PRINTF_SIMPLE
+05MID -Dprintf=midcprintf
+06MIN -Dprintf=mincprintf
+07CPUTS -DUSE_CPUTS
+08CONS -DUSE_CONSOLE
+09RAW -DUSE_RAWCONSOLE
+10RAWB -DUSE_RAWCONSOLE --no-runtime-bss

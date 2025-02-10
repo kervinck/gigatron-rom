@@ -26,7 +26,7 @@ FILE *freopen(register const char *fname, register const char *mode, register FI
 		errno = EINVAL;
 		return 0;
 	}
-	_fclose(fp);
+	_sclose(fp);
 	fp->_flag = nflag;
 	if (_openf(fp, fname) >= 0) {
 		clearerr(fp);
@@ -38,7 +38,11 @@ FILE *freopen(register const char *fname, register const char *mode, register FI
 
 FILE *fopen(register const char *fname, register const char *mode)
 {
-	return freopen(fname, mode, _sfindiob());
+	register FILE *fp;
+	if ((fp = _sfindiob()))
+		return freopen(fname, mode, fp);
+	errno = ENFILE;
+	return 0;
 }
 
 

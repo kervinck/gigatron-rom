@@ -6,8 +6,12 @@ def code0():
     LDW(R9);_MODS(R10)
     #  _@_mods returns remainder in vAC and quotient in T1
     STW(R21);
-    LDW(T1);DOKE(R8)
-    LDI(2);ADDW(R8);STW(R8);LDW(R21);DOKE(R8)
+    if args.cpu >= 6:
+        LDW(R8);DOKEA(T1)
+        ADDI(2);DOKEA(R21)
+    else:
+        LDW(T1);DOKE(R8)
+        LDI(2);ADDW(R8);STW(R8);LDW(R21);DOKE(R8)
     tryhop(2);POP();RET()
     
 code=[

@@ -82,19 +82,49 @@ static void ident(void) {
 		cp++;
 }
 
-/* pragma - handle #pragma ref id... */
-static void pragma(void) {
-	if ((t = gettok()) == ID && strcmp(token, "ref") == 0)
-		for (;;) {
-			while (*cp == ' ' || *cp == '\t')
-				cp++;
-			if (*cp == '\n' || *cp == 0)
-				break;
-			if ((t = gettok()) == ID && tsym) {
-				tsym->ref++;
-				use(tsym, src);
-			}	
+
+/* pragmas */
+int pragma_do_ref(void) {
+	for (;;) {
+		while (*cp == ' ' || *cp == '\t')
+			cp++;
+		if (*cp == '\n' || *cp == 0)
+			break;
+		if ((t = gettok()) == ID && tsym) {
+			tsym->ref++;
+			use(tsym, src);
 		}
+	}
+	return 1;
+}
+struct pragma_handler {
+	const char *id;
+	int (*handler)(void);
+	struct pragma_handler *link;
+} pragma_handlers = {
+	"ref", pragma_do_ref, &pragma_handlers
+};
+void register_pragma(const char *id, int (*handler)(void))
+{
+	struct pragma_handler *ph;
+	NEW(ph, PERM);
+	ph->id = string(id);
+	ph->handler = handler;
+	ph->link = pragma_handlers.link;
+	pragma_handlers.link = ph;
+}
+static void pragma(void) {
+	struct pragma_handler *ph = &pragma_handlers;
+	if ((t = gettok()) == ID) {
+		do {
+			ph = ph->link;
+			if (!strcmp(token, ph->id)) {
+				if (! ph->handler())
+					warning("Unrecognized construct in #pragma %s\n", ph->id);
+				return;
+			}
+		} while (ph != &pragma_handlers);
+	}
 }
 
 /* resynch - set line number/file name in # n [ "file" ], #pragma, etc. */
@@ -135,12 +165,13 @@ static void resynch(void) {
 	} else if (Aflag >= 2 && *cp != '\n')
 		warning("unrecognized control line\n");
 	while (*cp)
-		if (*cp++ == '\n')
+		if (*cp++ == '\n') {
 			if (cp == limit + 1) {
 				nextline();
 				if (cp == limit)
 					break;
 			} else
 				break;
+		}
 }
 

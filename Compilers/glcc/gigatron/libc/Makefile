@@ -15,6 +15,7 @@ INC=${TOP}include/gigatron/
 G=${TOP}gigatron/
 GLCC=${B}glcc
 GTSIM=${B}gtsim
+TFLAGS=
 E=
 
 SFILES=$(wildcard *.s)
@@ -81,16 +82,17 @@ install: FORCE
 TSTCFILES=$(wildcard tst/TST*.c)
 TSTXFILES=${patsubst tst/%.c,${B}tst/%.gt1,${TSTCFILES}}
 TSTOFILES=${patsubst tst/%.c,${B}tst/%.xx1,${TSTCFILES}}
+GTSIMR=${GTSIM} -rom ${or ${RUNROM},${G}roms/${ROM}.rom}
 
 test: ${TSTOFILES}
 
 ${B}tst/%.xx1: ${B}tst/%.gt1
-	-${GTSIM} -rom ${G}roms/${ROM}.rom $< > $@
+	-${GTSIMR} $< > $@
 	cmp $@ tst/$(*F).out
 
 ${B}tst/%.gt1: tst/%.c FORCE
 	@test -d ${B}tst || mkdir ${B}tst
-	${GLCC} -map=sim -rom=${ROM}  -DROM=${ROM} -o $@ $<
+	${GLCC} -map=sim -rom=${ROM} ${TFLAGS} -o $@ $<
 
 .PRECIOUS: ${B}tst/%.gt1
 

@@ -4,7 +4,7 @@
 #include <gigatron/console.h>
 #include <gigatron/libc.h>
 
-void mincprintf(const char *fmt, ...)
+int mincprintf(const char *fmt, ...)
 {
 	register va_list ap;
 	register const char *f = fmt;
@@ -34,4 +34,5 @@ void mincprintf(const char *fmt, ...)
 		}			
 		console_print(s, l);
 	}
+	return 0;
 }

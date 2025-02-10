@@ -3,7 +3,7 @@ ROM=dev7
 MAP=32k
 CFLAGS=-map=${MAP} -rom=${ROM}
 
-PGMS=TSTconsole.gt1 TSTio.gt1 TSTcontroller.gt1 TSTmemcpyext.gt1 TSTmem.gt1
+PGMS=TSTconsole.gt1 TSTio.gt1 TSTcontroller.gt1 TSTmemcpyext.gt1 TSTmem.gt1 TSTmaze.gt1
 
 all: $(PGMS)
 
@@ -24,3 +24,6 @@ TSTmemcpyext.gt1: TSTmemcpyext.c
 
 TSTmem.gt1: TSTmem.c
 	${CC} -map=32k -rom=${ROM} TSTmem.c -o $@
+
+TSTmaze.gt1: TSTmaze.c
+	${CC} -map=32k -rom=${ROM} TSTmaze.c -o $@ --no-runtime-bss

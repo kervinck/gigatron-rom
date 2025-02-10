@@ -1,10 +1,19 @@
 def scope():
 
+
+    # ----------------------------------------
+    # MUL: T3 * vAC -> vAC
+    # ----------------------------------------
+
+    
     if 'has_SYS_Multiply_s16' in rominfo:
         info = rominfo['has_SYS_Multiply_s16']
         addr = int(str(info['addr']),0)
         cycs = int(str(info['cycs']),0)
         def code1():
+            """ This is the dev7 SYS_Multiply_s16 version of MUL
+                which requires less setup than the old version.
+                Trashes T[01] sysArgs[0-7], sysFn. """
             nohop()
             label('_@_mul')             # T3*vAC -> vAC  (traditional entry point)
             STW('sysArgs2')
@@ -29,6 +38,9 @@ def scope():
         addr = int(str(info['addr']),0)
         cycs = int(str(info['cycs']),0)
         def code1():
+            """ This is the v6 SYS_Multiply_s16 version of MUL
+                which requires more setup than the old version.
+                Trashes sysArgs[0-7], sysFn. """
             nohop()
             label('_@_mul')             # T3*vAC -> vAC  (traditional entry point)
             STW('sysArgs2')
@@ -50,23 +62,26 @@ def scope():
     else:
         # Muliply using vCPU
         def code0():
+            """ This is the vCPU multiplication.
+                Trashes sysArgs[0-7]. """
             nohop()
             label('_@_mul')             # T3*vAC --> vAC
-            STW(T2)
-            # T3: a, T2: b, T1: mask, T0: res
-            LDI(0);STW(T0)
-            LDW(T2);_BEQ('.ret');_BGE('.go')
-            STW(T1);LDW(T3);STW(T2);LDW(T1);STW(T3)
+            _BGE('.mul1');_BEQ('.ret')
+            label('.mul2')
+            STW(T0);LDW(T3);STW(T1);_BNE('.go');RET()
+            label('.mul1')
+            STW(T1);LDW(T3);STW(T0);_BEQ('.ret')
             label('.go')
-            _LDI(0xffff);STW(T1)
+            LDI(0);STW(T4);_LDI(0xffff);STW(T5)
             label('.loop')
-            LDI(0);SUBW(T1);ANDW(T2);_BEQ('.shift')
-            LDW(T3);ADDW(T0);STW(T0)
+            LDI(0);SUBW(T5);ANDW(T1);_BEQ('.shift')
+            LDW(T4);ADDW(T0);STW(T4)
             label('.shift')
-            LDW(T3);LSLW();STW(T3)
-            LDW(T1);LSLW();STW(T1);ANDW(T2);_BNE('.loop')
+            LDW(T0);LSLW();STW(T0)
+            LDW(T5);LSLW();STW(T5);ANDW(T1);_BNE('.loop')
+            LDW(T4)
             label('.ret')
-            LDW(T0);RET()
+            RET()
       
         module(name='rt_mul.s',
                code= [ ('EXPORT', '_@_mul'),

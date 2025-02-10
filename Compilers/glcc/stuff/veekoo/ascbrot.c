@@ -1,18 +1,21 @@
 /*----------------------------------------------------------------------+
  |                                                                      |
- |     ascbrot.c -- demonstrate fractal in text / quick and dirty       |
+ |     ascbrot.c -- demonstrate fractal in text                         |
+ |                                                                      |
+ | Program `ascbrot.c` was originally written by veekoo.                |
+ | Go to https://github.com/veekooFIN/GigatronTTL-Fractals for more.    |
  |                                                                      |
  +----------------------------------------------------------------------*/
  
 // Standard includes
-#include <limits.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <string.h>
-#include <math.h>
-#include <gigatron/console.h>
+#include <conio.h>
+
+#ifndef TIMER
+# define TIMER 1
+#endif
+#if TIMER
+# include <gigatron/libc.h>
+#endif
 
 #define HEIGHT 15
 #define WIDTH 26
@@ -51,15 +54,25 @@ void main(void) {
   int x, y, data;
   float sx, sy;
    
+#if TIMER
+  unsigned int ticks = _clock();
+#endif
+
   for(y = 0; y < HEIGHT; y = y + YSTEP ) {
     for(x = 0; x < WIDTH; x = x + XSTEP ) {
       sx = -0.7 + (SCALE * (WIDTH/2.0 - x) / (WIDTH/2.0))*(-1);
       sy = (SCALE * (HEIGHT/2.0 - y) / (HEIGHT/2.0))*(-0.75);
       data = mandelbrot(sx, sy);
-      console_state.cx = x;
-      console_state.cy = y;
-      console_state.fgbg = (((data-48)*6+1) & 0x3f) << 8;
-      console_print((char*)&data, 1);
+      gotoxy(x+1, y+1);
+      textcolor(((data-48)*6+1) & 0x3f);
+      putch(data);
     }
   }
+#if TIMER
+  ticks = _clock() - ticks;
+  gotoxy(8,8);
+  textcolor(0);
+  textbackground(0x3f);
+  mincprintf(" %d %d/60 seconds ", ticks/60, ticks % 60);
+#endif
 }

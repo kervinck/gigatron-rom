@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ver=`(git diff HEAD^..HEAD -- "$(git rev-parse --show-toplevel)"/gigatron/glccver.py \
+       | grep ^+ver= | sed -e 's/^+ver="\(.*\)".*$/\1/' )`
+
+case "$ver" in
+ GLCC_RELEASE_*):
+   echo 'Creating tag "'"$ver"'.'
+   git tag "$ver" || true
+   ;;
+esac

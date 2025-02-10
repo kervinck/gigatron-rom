@@ -8,24 +8,24 @@
 
 #include "_stdlib.h"
 
-#define _IOB_NUM 5
 
-extern struct _more_iobuf {
-	struct _iobuf _iob[_IOB_NUM];
-	struct _more_iobuf *next;
-} *_more_iob;
+/* _iob.c */
 
-extern int    _schkwrite(FILE*);
-extern int    _schkread(FILE*);
-extern FILE*  _sfindiob(void);
-extern int    _serror(FILE*, int);
-extern int    _sread(FILE*, char*, size_t);
-extern void   _swalk(int(*f)(FILE*));
-extern int    _fclose(FILE*);
-extern size_t _fwrite(FILE*, const char*, size_t);
+#define IOBSIZE 4
 
-#define CONS_BUFSIZE 80
+extern int   _sclose(FILE*);
+extern void  _swalk(int(*)(FILE*));
+extern FILE* _sfindiob(void);
 
-extern struct _iovec _cons_iovec;
+/* _schkwrite.c */
+
+typedef int (*writall_t)(const char*, size_t, FILE*);
+extern writall_t _schkwrite(FILE*);
+
+/* _schkread.c */
+
+typedef int (*read_t)(FILE*, char*, size_t); 
+extern read_t _schkread(FILE*);
+
 
 #endif

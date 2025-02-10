@@ -8,7 +8,10 @@ def scope():
     def code1():
         nohop()
         label('_vIrqHandler')
-        LDI(1);ADDW('_vIrqCounter');STW('_vIrqCounter')
+        if args.cpu >= 6:
+            INCV('_vIrqCounter')
+        else:
+            LDI(1);ADDW('_vIrqCounter');STW('_vIrqCounter')
         label('_vIrqRelay', pc()+1)
         LDWI(0);_BEQ('.h1')
         PUSH();CALL(vAC);POP()

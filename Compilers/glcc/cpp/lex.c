@@ -515,16 +515,26 @@ foldline(Source *s)
 int
 fillbuf(Source *s)
 {
-	int n, nr;
+	int n, nr, i, j;
 
-	nr = INS/8;
+	nr = INS/8 + 1;
 	if ((char *)s->inl+nr > (char *)s->inb+INS)
 		error(FATAL, "Input buffer overflow");
-	if (s->fd==NULL || (n=fread((char *)s->inl, 1, INS/8, s->fd)) <= 0)
+	if (s->fd==NULL || (n=fread((char *)s->inl, 1, nr, s->fd)) <= 0)
 		n = 0;
 	if ((*s->inp&0xff) == EOB) /* sentinel character appears in input */
 		*s->inp = EOFC;
-	s->inl += n;
+
+	if (n == nr)           /* lookahead character for CRLF */
+		ungetc(s->inl[--n], s->fd);
+	for(i=j=0; i<n; i++) { /* convert all line terminations to LF */
+		if (s->inl[i] != '\r')
+			s->inl[j++] = s->inl[i];
+		else if (s->inl[i+1] != '\n')
+			s->inl[j++] = '\n';
+	}
+
+	s->inl += j;
 	s->inl[0] = s->inl[1]= s->inl[2]= s->inl[3] = EOB;
 	if (n==0) {
 		s->inl[0] = s->inl[1]= s->inl[2]= s->inl[3] = EOFC;

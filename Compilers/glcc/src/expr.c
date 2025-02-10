@@ -284,11 +284,12 @@ static Tree postfix(Tree p) {
 			    	Tree q;
 			    	t = gettok();
 			    	q = expr(']');
-			    	if (YYnull)
+			    	if (YYnull) {
 			    		if (isptr(p->type))
 			    			p = nullcheck(p);
 			    		else if (isptr(q->type))
 			    			q = nullcheck(q);
+				}
 			    	p = (*optree['+'])(ADD, pointer(p), pointer(q));
 			    	if (isptr(p->type) && isarray(p->type->type))
 			    		p = retype(p, p->type->type);
@@ -350,11 +351,11 @@ static Tree primary(void) {
 	case FCON: p = tree(mkop(CNST,tsym->type), tsym->type, NULL, NULL);
 		   p->u.v = tsym->u.c.v;
  break;
-	case SCON: if (ischar(tsym->type->type))
-		   	tsym->u.c.v.p = stringn(tsym->u.c.v.p, tsym->type->size);
-		   else
+	case SCON: if (tsym->type->type == widechar)
 		   	tsym->u.c.v.p = memcpy(allocate((tsym->type->size/widechar->size)*sizeof (int), PERM),
 		   		tsym->u.c.v.p, (tsym->type->size/widechar->size)*sizeof (int));
+		   else
+		   	tsym->u.c.v.p = stringn(tsym->u.c.v.p, tsym->type->size);
 		   tsym = constant(tsym->type, tsym->u.c.v); 
 		   if (tsym->u.c.loc == NULL)
 		   	tsym->u.c.loc = genident(STATIC, tsym->type, GLOBAL);
@@ -656,13 +657,14 @@ Tree cast(Tree p, Type type) {
 }
 Tree field(Tree p, const char *name) {
 	Field q;
+	int offset;
 	Type ty1, ty = p->type;
 
 	if (isptr(ty))
 		ty = deref(ty);
 	ty1 = ty;
 	ty = unqual(ty);
-	if ((q = fieldref(name, ty)) != NULL) {
+	if ((q = fieldref(name, ty, &offset)) != NULL) {
 		if (isarray(q->type)) {
 			ty = q->type->type;
 			if (isconst(ty1) && !isconst(ty))
@@ -678,10 +680,10 @@ Tree field(Tree p, const char *name) {
 				ty = qual(VOLATILE, ty);
 			ty = ptr(ty);
 		}
-		if (YYcheck && !isaddrop(p->op) && q->offset > 0)	/* omit */
-			p = nullcall(ty, YYcheck, p, consttree(q->offset, inttype));	/* omit */
+		if (YYcheck && !isaddrop(p->op) && offset > 0)	/* omit */
+			p = nullcall(ty, YYcheck, p, consttree(offset, inttype));	/* omit */
 		else					/* omit */
-		p = simplify(ADD+P, ty, p, consttree(q->offset, signedptr));
+			p = simplify(ADD+P, ty, p, consttree(offset, signedptr));
 
 		if (q->lsb) {
 			p = tree(FIELD, ty->type, rvalue(p), NULL);

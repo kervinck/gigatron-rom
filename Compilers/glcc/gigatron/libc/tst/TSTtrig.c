@@ -48,7 +48,7 @@ void go(double x)
 	printf("x=%+5.1f sin=%+11.8f %s %s cos=%+11.8f",
 	       x, s, mercury(s), mercury(c), c );
 	t = tan(x);
-	printf(" tan=%+12.8e", t);
+	printf(" tan=%+12.7e", t);
 	if (x <= _pi_over_2 && x >= -_pi_over_2)
 		printf(" atan=%+6.4f asin=%+6.4f", atan(t), asin(s));
 	if (x <= _pi && x >= 0)

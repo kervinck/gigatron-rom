@@ -9,10 +9,12 @@ def scope():
     def code0():
         nohop()
         label('_@_raise_zdiv')
-        LDWI('.msg');STW(T3)
+        LDWI('.msg');STW(T0)
         LDWI(0x104)
-        _CALLI('__@raisem')
-        POP();RET()
+        if SP == vSP:
+            POP();JNE('__@raisem')            # preserve vSP long alignment
+        else:
+            _CALLI('__@raisem');POP();RET()
 
     def code0m():
         label('.msg') # "Division by zero"
@@ -31,10 +33,12 @@ def scope():
         label('_fexception')
         PUSH();_MOVF(F8,FAC);
         label('_@_raise_ferr')
-        LDWI('.msg');STW(T3)
+        LDWI('.msg');STW(T0)
         LDWI(0x304)
-        _CALLI('__@raisem')
-        POP();RET()
+        if SP == vSP:
+            POP();JNE('__@raisem')
+        else:
+            _CALLI('__@raisem');POP();RET()
 
     def code1m():
         label('.msg') # "Floating point exception"
@@ -55,11 +59,13 @@ def scope():
         label('_foverflow')
         PUSH();_MOVF(F8,FAC);
         label('_@_raise_fovf')
-        LDWI('errno');STW(T2);LDI(2);POKE(T2);  # set errno=ERANGE on overflow.
-        LDWI('.msg');STW(T3)
+        _MOVIW('errno',T2);LDI(2);POKE(T2);  # set errno=ERANGE on overflow.
+        _MOVIW('.msg',T0)
         LDWI(0x204)
-        _CALLI('__@raisem')
-        POP();RET()
+        if SP == vSP:
+            POP();JNE('__@raisem')
+        else:
+            _CALLI('__@raisem');POP();RET()
 
     def code2m():
         label('.msg') # "Floating point overflow"
@@ -92,11 +98,14 @@ def scope():
     def code_doscan_double():
         nohop()
         label('_doscan_double')
-        PUSH()
-        LDWI('__glink_weak__doscan_double_imp');_BEQ('.ret')
-        CALL(vAC)
+        LDWI('__glink_weak__doscan_double_imp')
+        if args.cpu >= 7:
+            JNE('__glink_weak__doscan_double_imp')
+        else:
+            _BEQ('.ret')
+            PUSH();CALL(vAC);POP()
         label('.ret')
-        POP();RET()
+        RET()
 
     module(name='_doscan_double.s',
            code=[ ('EXPORT', '_doscan_double'),
@@ -106,11 +115,14 @@ def scope():
     def code_doprint_double():
         nohop()
         label('_doprint_double')
-        PUSH()
-        LDWI('__glink_weak__doprint_double_imp');_BEQ('.ret')
-        CALL(vAC)
+        LDWI('__glink_weak__doprint_double_imp')
+        if args.cpu >= 7:
+            JNE('__glink_weak__doprint_double_imp')
+        else:
+            _BEQ('.ret')
+            PUSH();CALL(vAC);POP()
         label('.ret')
-        POP();RET()
+        RET()
 
     module(name='_doprint_double.s',
            code=[ ('EXPORT', '_doprint_double'),
@@ -120,11 +132,14 @@ def scope():
     def code_doprint_long():
         nohop()
         label('_doprint_long')
-        PUSH()
-        LDWI('__glink_weak__doprint_long_imp');_BEQ('.ret')
-        CALL(vAC)
+        LDWI('__glink_weak__doprint_long_imp')
+        if args.cpu >= 7:
+            JNE('__glink_weak__doprint_long_imp')
+        else:
+            _BEQ('.ret')
+            PUSH();CALL(vAC);POP()
         label('.ret')
-        POP();RET()
+        RET()
 
     module(name='_doprint_long.s',
            code=[ ('EXPORT', '_doprint_long'),

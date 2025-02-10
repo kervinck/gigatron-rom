@@ -1,10 +1,13 @@
 
 
-# MAC32X16:  LAC <-- T0T1 * T2 , T0T1 <-- T0T1 << 16  (clobbers T3)
+# Multiplication heler
+# LAC += T0T1 * T2 , T0T1 <<= 16
+# Trashes T4 i.e. sysArgs[45]
+
 def code1():
    label('__@mac32x16')
    PUSH()
-   LDI(1);STW(T3);
+   LDI(1);STW(T4);
    label('.mac2')
    ANDW(T2);_BEQ('.mac3')
    if args.cpu >= 6:
@@ -16,30 +19,45 @@ def code1():
       LSLVL(T0)
    else:
       _CALLJ('__@lshl1_t0t1')
-   LDW(T3);LSLW();STW(T3)
+   LDW(T4);LSLW();STW(T4)
    _BNE('.mac2')
    tryhop(2);POP();RET()
-   
+
+# ----------------------------------------
 # LMUL:   LAC <-- LAC * [vAC]
-# Potentially clobbers B0,B1,T0,T1,T2,T3)
+# ----------------------------------------
+
 def code2():
+   """ Long multiplication LAC * [vAC] -> LAC
+       Thrashes T[0-5] sysArgs[0-7] sysFn"""
    label('_@_lmul')
    if args.cpu >= 7:
-      STW(B0)
-      LDW(LAC);STW(T0);LDW(LAC+2);STW(T0+2)
-      MOVQB(0,LAX);MOVQW(0,LAX+1);MOVQW(0,LAX+3)
-      LDI(3);ADDW(B0);PEEK();MACX();LDI(8);LSLXA()
-      LDI(2);ADDW(B0);PEEK();MACX();LDI(8);LSLXA()
-      LDI(1);ADDW(B0);PEEK();MACX();LDI(8);LSLXA()
-      PEEKV(B0);MACX();LDI(8);LSLXA()
+      STW(T3);ADDI(2);DEEK();MULW(LAC)
+      MOVL(LAC,T0);STW(LAC);LDI(0);ST(LAX)
+      LDI(1);ADDW(T3);PEEK();MACX();LDI(8);LSLXA()
+      PEEKV(T3);MACX();LDI(8);LSLXA()
       RET()
-   else:
+   elif 'has_at67_SYS_Multiply_s16' in rominfo:
+      info = rominfo['has_at67_SYS_Multiply_s16']
+      addr = int(str(info['addr']),0)
+      cycs = int(str(info['cycs']),0)
       PUSH()
-      STW(B0);DEEK();STW(T2);
+      STW(T3);DEEK();STW(T2);
       LDW(LAC);STW(T0);LDW(LAC+2);STW(T0+2);
       LDI(0);STW(LAC);STW(LAC+2);
       _CALLJ('__@mac32x16')
-      LDW(B0);ADDI(2);DEEK();STW(T2);_BEQ('.skip')
+      LDI(2);ADDW(T3);DEEK();STW(T0);_BEQ('.skip')
+      _LDI(addr);STW('sysFn');LDW(LAC+2);STW(T4);LDI(1);STW(T5)
+      SYS(cycs);STW(LAC+2)
+      label('.skip')
+      tryhop(2);POP();RET()
+   else:
+      PUSH()
+      STW(T3);DEEK();STW(T2);
+      LDW(LAC);STW(T0);LDW(LAC+2);STW(T0+2);
+      LDI(0);STW(LAC);STW(LAC+2);
+      _CALLJ('__@mac32x16')
+      LDI(2);ADDW(T3);DEEK();STW(T2);_BEQ('.skip')
       _CALLJ('__@mac32x16')
       label('.skip')
       tryhop(2);POP();RET()

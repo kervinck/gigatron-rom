@@ -46,23 +46,25 @@ typedef long fpos_t;
 #define SEEK_SET     0
 #define TMP_MAX      17576
 
-extern struct _iobuf {
+struct _iobuf {
 	char _flag;		/* flag */
 	char _unget;	        /* ungetc buffer */
 	struct _iovec *_v;	/* vtable */
 	void *_x;		/* more data */
-} _iob[];
+};
 
 struct _iovec {
+	int  (*writall)(const char *buf, size_t cnt, FILE *fp);
 	int  (*read)(FILE *fp, char *buf, size_t cnt);
-	int  (*write)(FILE *fp, const char *buf, size_t cnt);
 	int  (*flush)(FILE *fp, int close);
 	long (*lseek)(FILE *fp, long off, int whence);
 };
 
-#define stderr (&_iob[2])
-#define stdin  (&_iob[0])
-#define stdout (&_iob[1])
+extern struct _iobuf _iob0, _iob1, _iob2, _iob[];
+
+#define stderr (&_iob2)
+#define stdin  (&_iob0)
+#define stdout (&_iob1)
 
 extern int remove(const char *);
 extern int rename(const char *, const char *);
@@ -78,10 +80,12 @@ extern int fprintf(FILE *, const char *, ...);
 extern int fscanf(FILE *, const char *, ...);
 extern int printf(const char *, ...);
 extern int scanf(const char *, ...);
+extern int snprintf(char *, size_t, const char *, ...);
 extern int sprintf(char *, const char *, ...);
 extern int sscanf(const char *, const char *, ...);
 extern int vfprintf(FILE *, const char *, __va_list);
 extern int vprintf(const char *, __va_list);
+extern int vsnprintf(char *, size_t, const char *, __va_list);
 extern int vsprintf(char *, const char *, __va_list);
 extern int fgetc(FILE *);
 extern char *fgets(char *, int, FILE *);

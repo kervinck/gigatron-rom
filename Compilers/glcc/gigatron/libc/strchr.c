@@ -4,8 +4,8 @@
 char *
 strchr(register const char *p, register int ch)
 {
-	const char *q = _memchr2(p, ch, 0, 0xffffu);
-	if (q && *q)
+	const char *q;
+	if (( q = __memchr2(p, (char)ch, 0xffffu)) && (*q))
 		return (char*)q;
 	return 0;
 }

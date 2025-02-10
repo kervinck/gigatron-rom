@@ -9,24 +9,20 @@
 */
 
 
-static wchar_t ctow(register char c)
+static wchar_t ctow(register int c)
 {
 	if ((c & 0xfc) == 0x80)
-		return 0x2190u + (c & 3);
+		c = 0x2190u + (c & 3);
 	return c;
 }
 
 static int wtoc(register wchar_t w)
 {
-	if (w >> 8) {
-		if ((w & 0xfffcU) == 0x2190)
-			return 0x80 | (w & 0x03);
+	if ((w & 0xfffcU) == 0x2190)
+		return 0x80 | (w & 0x03);
+	if ((w & 0xff00U) || ((w & 0xfc) == 0x80))
 		return -1;
-	} else {
-		if ((w & 0xfc) == 0x80)
-			return -1;
-		return w;
-	}
+	return w;
 }
 
 int mblen(register const char *s, register size_t n)

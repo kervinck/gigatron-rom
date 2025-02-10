@@ -4,12 +4,13 @@ char *gets(char *s)
 {
 	register int c;
 	register char *p = s;
-	while ((c = getchar()) != EOF && c != '\n')
+	register FILE *fp = stdin;
+	while ((c = fgetc(fp)) != EOF && c != '\n')
 		*p++ = c;
 	*p = 0;
-	if (ferror(stdin))
+	if (ferror(fp))
 		return 0;
-	if (feof(stdin) && p == s)
+	if (feof(fp) && p == s)
 		return 0;
 	return s;
 }

@@ -53,13 +53,13 @@ def code3():
 	LDWI(v('y')+2);DEEKA(R11);
 	LDW(R11);_STLW(6);
 	CALLI('printf');
-	LDWI(v('x')+4);STW(R23);
-	LDWI(4095);STW(R22);
-	LDWI(0xf000);STW(R21);
+	MOVIW(v('x')+4,R23);
+	MOVIW(4095,R22);
+	MOVIW(0xf000,R21);
 	LDWI('i');DEEK();_SHLI(12);_SHRIS(12);_SHLI(12);ANDW(R21);STW(R21);
 	DEEKV(R23);ANDW(R22);ORW(R21);DOKE(R23);
-	LDWI(v('x')+6);STW(R23);
-	LDWI(0xff8f);STW(R22);
+	MOVIW(v('x')+6,R23);
+	MOVIW(0xff8f,R22);
 	DEEKV(R23);ANDW(R22);DOKE(R23);
 	LDWI('.4');STW(R8);
 	_STLW(0);
@@ -76,8 +76,8 @@ def code3():
 	LDWI(v('x')+7);PEEK();STW(R14);
 	LDW(R14);_STLW(12);
 	CALLI('printf');
-	LDWI('y');STW(R23);
-	LDWI(0xfffc);STW(R22);
+	MOVIW('y',R23);
+	MOVIW(0xfffc,R22);
 	DEEKV(R23);ANDW(R22);ORI(2);DOKE(R23);
 	LDWI('i');DEEKA(R23);
 	LDWI(v('y')+2);DOKEA(R23);
@@ -102,9 +102,9 @@ def code4():
 	label('f1');
 	_PROLOGUE(12,6,0x80); # save=R7
 	LDW(R8);STW(R7);
-	LDWI(0xffc3);STW(R23);
-	DEEKV(R7);ANDW(R23);DOKE(R7);
-	LDWI(0xfffc);STW(R23);
+	MOVIW(0xffc3,R23);
+	DEEK();ANDW(R23);DOKE(R7);
+	MOVIW(0xfffc,R23);
 	LDI(0);ANDI(3);ANDI(3);STW(R22);
 	DEEKV(R7);ANDW(R23);ORW(R22);DOKE(R7);
 	DEEKV(R7);ANDI(60);_BEQ('.22');
@@ -129,19 +129,19 @@ def code4():
 def code5():
 	label('f2');
 	_PROLOGUE(8,2,0xc0); # save=R6-7
-	LDW(R8);STW(R7);
+	MOVW(R8,R7);
 	LDWI('i');DEEK();_BNE('.28');
 	MOVQW(1,R6);
 	_BRA('.29');
 	label('.28');
 	MOVQW(0,R6);
 	label('.29');
-	LDWI(0xfffc);STW(R23);
+	MOVIW(0xfffc,R23);
 	LDW(R6);ANDI(3);ANDI(3);STW(R22);
 	DEEKV(R7);ANDW(R23);ORW(R22);DOKE(R7);
-	LDW(R7);STW(R8);
+	MOVW(R7,R8);
 	CALLI('f1');
-	LDWI(0xffc3);STW(R23);
+	MOVIW(0xffc3,R23);
 	LDI(0);ANDI(15);_SHLI(2);ANDI(60);STW(R22);
 	DEEKV(R7);ANDW(R23);ORW(R22);DOKE(R7);
 	LDI(0);

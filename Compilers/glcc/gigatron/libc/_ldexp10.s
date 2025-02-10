@@ -1,56 +1,36 @@
 
 def scope():
 
-    bigstep = 16
-    bigcst = '.1e16'
-    
-    def code_ldexpcst():
-        label('.1e16')
-        bytes(182,14,27,201,191); # 1e+16
-    
-    def code_ldexp10n():
-        label('.neg0')
-        LDW(R11);ADDI(bigstep);_BGE('.neg2')
-        STW(R11);LDWI(bigcst);_FDIV()
-        _FSGN();_BNE('.neg0')
-        tryhop(2);POP();RET()
-        label('.neg2')
-        LDI(0);SUBW(R11)
-        STW(R11);_BEQ('.ret')
-        _MOVF(FAC,F8)
-        _MOVF('_fone', FAC)
-        _CALLJ('.posf')
-        LDI(F8);_FDIVR()
-        label('.ret')
-        tryhop(2);POP();RET()
-
     def code_ldexp10():
         label('_ldexp10')
         PUSH()
         _MOVF(F8,FAC)
-        LDW(R11);_BGE('.pos0')
-        _CALLJ('.neg0') # no return
+        LDW(R11);_BLT('.neg0')
+        SUBI(128);_BLT('.pos0')
+        LDWI(1000);_BRA('.pos1')
         label('.pos0')
-        LDW(R11);SUBI(bigstep);_BLE('.pos2')
-        STW(R11);LDWI(bigcst);_FMUL()
-        _BRA('.pos0')
-        label('.posf')
-        PUSH();LDW(R11)
+        LDW(R11);_CALLI('_@_fscald')
         label('.pos1')
-        SUBI(1);STW(R11);
-        _CALLJ('_@_fmul10')
-        label('.pos2')
-        LDW(R11);_BGT('.pos1')
-        _CALLJ('_@_rndfac')
+        _FSCALB()
+        tryhop(2);POP();RET()
+        label('.neg0')
+        ADDI(128);_BGT('.neg1')
+        _CALLJ('_@_clrfac')
+        tryhop(2);POP();RET()
+        label('.neg1')
+        _MOVF('_fone',FAC);
+        LDI(0);SUBW(R11);_CALLI('_@_fscald')
+        STW(R12)
+        LDI(F8);_FDIVR()
+        LDI(0);SUBW(R12);_FSCALB()
         tryhop(2);POP();RET()
 
     module(name='_ldexp10',
            code=[ ('EXPORT', '_ldexp10'),
-                  ('IMPORT', '_@_fmul10'),
-                  ('IMPORT', '_@_rndfac'),
+                  ('IMPORT', '_@_fscald'),
+                  ('IMPORT', '_@_fscalb'),
+                  ('IMPORT', '_@_clrfac'),
                   ('IMPORT', '_fone'),
-                  ('DATA', '_ldexpcst', code_ldexpcst, 0, 1),
-                  ('CODE', '_ldexp10n', code_ldexp10n), 
                   ('CODE', '_ldexp10', code_ldexp10) ] )
 
     def code_frexp10():

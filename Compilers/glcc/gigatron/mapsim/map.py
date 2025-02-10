@@ -66,7 +66,7 @@ def map_modules(romtype):
         LDI(FAS);ST('sysArgs0')
         LDI(T0); ST('sysArgs1')
         LDI(T2); ST('sysArgs2')
-        LDI(B0); ST('sysArgs3')
+        LDI(0);  ST('sysArgs3') # no B0/B1
         LDI(SP); ST('sysArgs4')
         LDI(R0); SYS(40)
         # init stack pointer

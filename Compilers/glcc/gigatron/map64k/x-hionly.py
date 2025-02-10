@@ -10,4 +10,5 @@ segments = [ (0x0060, 0x08a0, 0x0100, 0x80a0, 7),
              (0x0100, 0x8100, None,   None,   0),
              (0x79c0, 0x8240, None,   None,   0) ]
 
-
+# Use new segments for long functions
+args.lfss = 256

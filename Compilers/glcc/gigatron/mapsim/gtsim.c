@@ -9,9 +9,11 @@
 #include <errno.h>
 
 #ifndef WIN32
+# define UNIX 1
 # include <unistd.h>
 # include <fcntl.h>
 # include <signal.h>
+# include <termios.h>
 #else
 # include <io.h>
 # include <fcntl.h>
@@ -83,7 +85,7 @@ long long t;
 uint8_t pfx;
 uint16_t da;
 long long dt, rt, st;
-long long vt[2];
+long long vt[2], vr;
 
 
 CpuState cpuCycle(const CpuState S)
@@ -188,12 +190,13 @@ void sim(void)
           fprintf(stderr, "(gtsim) Horizontal timing error:"
                   "vgaY %-3d, vgaX %-3d, t=%0.3f\n", vgaY, vgaX, t/6.25e6);
 #if EXTRA_DEBUG
-          for(int i=0; i<48; i+=16) {
-            fprintf(stderr, "\t%04x:", i);
-            for (int j=0; j<16; j++)
-              fprintf(stderr, " %02x", RAM[i+j]);
-            fprintf(stderr, "\n");
-          }
+          { int i,j;
+            for(i=0; i<48; i+=16) {
+              fprintf(stderr, "\t%04x:", i);
+              for (j=0; j<16; j++)
+                fprintf(stderr, " %02x", RAM[i+j]);
+              fprintf(stderr, "\n");
+            } }
 #endif     
         }
         vgaX = 0;
@@ -220,9 +223,13 @@ void sim(void)
       } else if (pfx && (S.PC & 0xff) == 1 && (S.PC >> 8) == (RAM[5]+1)) {
         pfx = RAM[5];
       } else if (S.IR == 0xe1 && S.D == 0x1e) { // jmp(Y,[vReturn])
-        vt[!pfx] -= t;
+        vr = t;
       } else if (S.IR == 0xe0 && S.D == 0xff && S.Y == RAM[5]) {
-        vt[!pfx] += t - 3;
+        if (vr >= 0)
+          vt[!pfx] += t - vr - 3;
+        else
+          rt = t + 7;
+        vr = -1;
       }
       // commit
       S = T;
@@ -309,7 +316,6 @@ unsigned int spbase  = 0x8e;
 #define sysArgs0  (0x24+0)
 #define LAC       (flbase+3)
 #define T0        (t0base)
-#define B0        (b0base)
 #define T2        (t2base)
 #define R0        (regbase+0)
 #define R8        (regbase+16)
@@ -371,8 +377,9 @@ void setup_profile(const char *f)
 
 void debugSysFn(void)
 {
+  int i, c;
   debug("SysFn=$%04x SysArgs=", deek(sysFn));
-  for (int i=0,c='['; i<8; i++, c=' ')
+  for (i=0, c='['; i<8; i++, c=' ')
     debug("%c%02x", c, peek(sysArgs0+i));
   debug("]");
 }
@@ -535,16 +542,17 @@ void sys_printf(void)
 #define G_EPERM     9
 #define G_ENOTSUP  10
 
-void sys_io_write(void)
+void sys_io_writall(void)
 {
   int flg = deek(deek(R8) + G_IOBUF_FLAG_OFFSET);
-  int fd = deek(deek(R8) + G_IOBUF_FILE_OFFSET);
+  int fd  = deek(deek(R8) + G_IOBUF_FILE_OFFSET);
   int buf = deek(R9);
   int cnt = deek(R10);
   int ret = 0;
+  int tot = 0;
   int err = 0;
   /* Validate */
-  if (fd < 0 || (flg & 2) == 0)
+  if (fd < 0 || (flg & 2) == 0)  /* _IOWRITE */
     err = G_EINVAL;
   if (buf + cnt >= 0x10000)
     cnt = 0x10000 - buf;
@@ -554,14 +562,18 @@ void sys_io_write(void)
   if (err == 0) {
     if (fd <= 2)
       fflush(stdout);
-    if ((ret = write(fd, RAM+buf, cnt)) <= 0)
-      err = G_EIO;
+    while (cnt > 0) {
+      if ((ret = write(fd, RAM+buf, cnt)) <= 0)
+        err = G_EIO;
+      tot += ret;
+      cnt -= ret;
+    }
   }
   if (err) {
     doke(deek(sysArgs0), err);
     doke(vAC, -1);
   } else {
-    doke(vAC, ret);
+    doke(vAC, tot);
   }
   return;
 }
@@ -576,7 +588,7 @@ void sys_io_read(void)
   int err = 0;
 
   /* Validate */
-  if (fd < 0 || (flg & 1) == 0)
+  if (fd < 0 || (flg & 1) == 0) /* _IOREAD */
     err = EINVAL;
   if (buf + cnt >= 0x10000)
     cnt = 0x10000 - buf;
@@ -584,10 +596,25 @@ void sys_io_read(void)
     err = G_EINVAL;
   /* READ */
   if (err == 0) {
+#ifdef UNIX
+    struct termios told, tnew;
+    if (isatty(fd)) {
+      tcgetattr(fd, &told);
+      if (! (flg & 0x40)) {     /* _IOFBF */
+        tnew = told;
+        cfmakeraw(&tnew);
+        tcsetattr(fd, TCSAFLUSH, &tnew);
+      }
+    }
+#endif
     if (fd <= 2)
       fflush(stdout);
     if ((ret = read(fd, RAM+buf, cnt)) < 0)
       err = G_EIO;
+#ifdef UNIX
+    if (isatty(fd))
+      tcsetattr(fd, TCSANOW, &told);
+#endif
   }
   /* Return */
   if (err) {
@@ -719,7 +746,7 @@ void sys_0x3b4(CpuState *S)
         case 0xffff: sys_regbase(); break;
         case 0xff00: sys_exit(); break;
         case 0xff01: sys_printf(); break;
-        case 0xff02: sys_io_write(); break;
+        case 0xff02: sys_io_writall(); break;
         case 0xff03: sys_io_read(); break;
         case 0xff04: sys_io_lseek(); break;
         case 0xff05: sys_io_flush(); break;
@@ -819,7 +846,7 @@ int disassemble(word addr, char **pm, char *operand)
       switch(peek(addlo(addr,1)))
         {
         case 0x00:  *pm = "ADDL";  return 2;       /* v7 */
-        case 0x02:  *pm = "ADDX";  return 2;       /* v7 */
+        case 0x02:  *pm = "COPYS"; goto oper8x2;   /* v7 */
         case 0x04:  *pm = "SUBL";  return 2;       /* v7 */
         case 0x06:  *pm = "ANDL";  return 2;       /* v7 */
         case 0x08:  *pm = "ORL";   return 2;       /* v7 */
@@ -839,16 +866,20 @@ int disassemble(word addr, char **pm, char *operand)
         case 0x25:  *pm = "STFAC"; return 2;       /* v7 */
         case 0x27:  *pm = "LDFAC"; return 2;       /* v7 */
         case 0x29:  *pm = "LDFARG";return 2;       /* v7 */
-        case 0x37:  *pm = "NEGV";  goto operx8;    /* v7 */
+        case 0x2b:  *pm = "VSAVE"; return 2;       /* v7 */
+        case 0x2d:  *pm = "VRESTORE"; return 2;    /* v7 */
+        case 0x2f:  *pm = "EXCH";  return 2;       /* v7 */
+        case 0x32:  *pm = "LEEKA"; goto operx8;    /* v7 */
+        case 0x34:  *pm = "LOKEA"; goto operx8;    /* v7 */          
         case 0x39:  *pm = "RDIVS"; goto operx8;    /* v7 */
         case 0x3b:  *pm = "RDIVU"; goto operx8;    /* v7 */
         case 0x3d:  *pm = "MULW";  goto operx8;    /* v7 */
         case 0x3f:  *pm = "BEQ";   goto operxbr;
+        case 0x48:  *pm = "RESET"; return 2;       /* v7 */
         case 0x4d:  *pm = "BGT";   goto operxbr;
         case 0x50:  *pm = "BLT";   goto operxbr;
         case 0x53:  *pm = "BGE";   goto operxbr;
         case 0x56:  *pm = "BLE";   goto operxbr;
-        case 0x5c:  *pm = "RESET"; return 2;       /* v7 */
         case 0x62:  *pm = "DOKEI"; goto operx16r;  /* v7 */
         case 0x72:  *pm = "BNE";   goto operxbr;
         case 0x7d:  *pm = "ADDIV"; goto operx8x2;  /* v7 */
@@ -886,7 +917,8 @@ int disassemble(word addr, char **pm, char *operand)
         *pm = (b > 0) ? "S??" : "HALT";
       return 2;
     }
-    case 0x1c:  *pm = "POPV";  goto oper8;    /* v7 */
+    case 0x18:  *pm = "NEGV";  goto oper8;    /* v7 */
+    case 0x33:  *pm = "ADDHI"; goto oper8;    /* v7 */
     case 0x39:  *pm = "POKEA"; goto oper8;    /* v7 */
     case 0x3b:  *pm = "DOKEA"; goto oper8;    /* v7 */
     case 0x3d:  *pm = "DEEKA"; goto oper8;    /* v7 */
@@ -910,11 +942,13 @@ int disassemble(word addr, char **pm, char *operand)
     case 0x78:  *pm = "LDNI";  goto oper8n;   /* v7 */
     case 0x7d:  *pm = "MULQ";  goto oper8;    /* v7 */
     case 0xb1:  *pm = "MOVIW"; goto oper16r8; /* v7 */
+    case 0xbb:  *pm = "MOVW";  goto oper8x2r; /* v7 */
     case 0xd3:  *pm = "CMPWS"; goto oper8;    /* v7 */
     case 0xd6:  *pm = "CMPWU"; goto oper8;    /* v7 */
     case 0xd9:  *pm = "CMPIS"; goto oper8;    /* v7 */
     case 0xdb:  *pm = "CMPIU"; goto oper8;    /* v7 */
     case 0xdd:  *pm = "PEEKV"; goto oper8;    /* v7 */
+    case 0xe1:  *pm = "PEEKA"; goto oper8;    /* v7 */
     default:    *pm = "???";   goto unknown;
     oper8:
       sprintf(operand, "$%02x", peek(addlo(addr,1)));
@@ -941,7 +975,7 @@ int disassemble(word addr, char **pm, char *operand)
       sprintf(operand, "$%02x,$%02x", peek(addlo(addr,2)), peek(addlo(addr,1)));
       return 3;
     oper16r8:
-      sprintf(operand, "$$%02x%02x,$%02x", 
+      sprintf(operand, "$%02x%02x,$%02x",
               peek(addlo(addr,2)), peek(addlo(addr,3)), peek(addlo(addr,1)) );
       return 4;
     oper816:
@@ -971,10 +1005,13 @@ void print_trace(CpuState *S)
   fprintf(stderr, " vAC=%04x vLR=%04x SP=%04x", deek(vAC), deek(vLR), deek(SP));
   if (strchr(trace, 's'))
     fprintf(stderr, " vSP=%04x", deek(vSP));
-  if (strchr(trace, 't'))
-    fprintf(stderr, " T[0-3]=%04x %04x %04x %04x B[0-1]=%02x %02x",
-            deek(T0), deek(T0+2), deek(T2), deek(T2+2),
-            peek(B0), peek(B0+1));
+  if (strchr(trace, 't')) {
+    fprintf(stderr, " T[0-3]=%04x %04x %04x %04x",
+            deek(T0), deek(T0+2), deek(T2), deek(T2+2) );
+    if (b0base)
+      fprintf(stderr, " B[0-1]=%02x %02x",
+              peek(b0base), peek(b0base+1) );
+  }
   if (strchr(trace, 'f')) {
     int as = peek(LAC-3);
     int ae = peek(LAC-2);
@@ -1030,7 +1067,9 @@ void next_0x307(CpuState *S)
 
 void garble(uint8_t mem[], int len)
 {
-  for (int i=0; i<len; i++) mem[i] = rand();
+  int i;
+  for (i=0; i<len; i++)
+    mem[i] = rand();
 }
 
 void usage(int exitcode)
@@ -1043,84 +1082,102 @@ void usage(int exitcode)
             "instead of the main menu.\n"
             "\n"
             "Options:\n"
-            "  -v: print debug messages\n"
-            "  -rom romfile: load rom from <romfile>\n"
-            "  -f: enable file system access\n"
-            "  -nogt1: do not override main menu and run forever\n"
-            "  -nogarble: do not garble memory to ensure repeatable runs\n"
-            "  -vmode v: set video mode 0,1,2,3,1975\n"
-            "  -t<letters>: trace VCPU execution\n"
-            "  -prof fn: writes profiling information into file <fn>\n");
+            "  -v              print debug messages\n"
+            "  -rom=<romfile>  load rom from <romfile>\n"
+            "  -f              enable file system access\n"
+            "  -nogt1          do not override main menu and run forever\n"
+            "  -nogarble       do not garble memory to ensure repeatable runs\n"
+            "  -vmode=<mode>   set video mode 0,1,2,3,1975\n"
+            "  -t<letters>     trace VCPU execution\n"
+            "  -prof=<fn>      writes profiling information into file <fn>\n");
     
   }
   exit(exitcode);
 }
 
+
+int optind;
+char *optarg;
+
+int optargcmp(int argc, char *argv[], const char *opt)
+{
+  int l = strlen(opt);
+  char *arg = argv[optind];
+  if (! strncmp(arg, opt, l)) {
+    if (arg[l] == '=') {
+      optarg = arg + l + 1;
+      return 0;
+    } else if (! arg[l]) {
+      if (1 + optind >= argc)
+        fatal("Missing argument for option %s\n", opt);
+      optarg = argv[++optind];
+      return 0;
+    }
+  }
+  return -1;
+}
+
 int main(int argc, char *argv[])
 {
   // Parse options
-  for (int i=1; i<argc; i++)
+  for (optind=1; optind<argc; optind++)
     {
-      if (!strcmp(argv[i],"-h"))
+      char *arg = argv[optind];
+      if (!strcmp(arg,"-h"))
         {
           usage(EXIT_SUCCESS);
         }
-      else if (! strcmp(argv[i], "-nogt1"))
+      else if (! strcmp(arg, "-nogt1"))
         {
           nogt1 = 1;
         }
-      else if (! strcmp(argv[i], "-nogarble"))
+      else if (! strcmp(arg, "-nogarble"))
         {
           nogarble = 1;
         }
-      else if (! strcmp(argv[i], "-v"))
+      else if (! strcmp(arg, "-v"))
         {
           verbose = 1;
         }
-      else if (! strncmp(argv[i], "-t", 2))
+      else if (! strncmp(arg, "-t", 2))
         {
-          trace = argv[i]+2;
+          trace = arg+2;
         }
-      else if (! strcmp(argv[i], "-f"))
+      else if (! strcmp(arg, "-f"))
         {
           okopen = 1;
         }
-      else if (! strcmp(argv[i], "-prof"))
+      else if (! optargcmp(argc, argv, "-prof"))
         {
-          if (i+1 >= argc)
-            fatal("Missing argument for option -prof\n");
           if (prof)
             fatal("Duplicate option -prof\n");
-          setup_profile(argv[++i]);
+          setup_profile(optarg);
         }
-      else if (! strcmp(argv[i], "-rom"))
+      else if (! optargcmp(argc, argv, "-rom"))
         {
-          if (i+1 >= argc)
-            fatal("Missing argument for option -rom\n");
           if (rom)
             fatal("Duplicate option -rom\n");
-          rom = argv[++i];
+          rom = optarg;
         }
-      else if (! strcmp(argv[i],"-vmode"))
+      else if (! optargcmp(argc, argv, "-vmode"))
         {
-          if (i+1 >= argc)
-            fatal("Missing argument for option -vmode\n");
-          char *s = argv[++i], *e = 0;
+          char *s = optarg;
+          char *e = 0;
           vmode = strtol(s, &e, 0);
           if (e == s || *e)
             fatal("Invalid value '%s' for option -vmode\n", s);
           if (vmode!= 1975 && (vmode < 0 || vmode > 3))
             fatal("Invalid value '%s' for option -vmode\n", s);
         }
-      else if (argv[i][0] == '-')
+      else if (arg[0] == '-')
         {
-          fatal("Unrecognized option %s\n", argv[i]);
+          fatal("Unrecognized option %s\n", arg);
         }
       else
         {
           if (gt1)
             usage(EXIT_FAILURE);
-          gt1 = argv[i];
+          gt1 = arg;
         }
     }
   if (! gt1 && ! nogt1)

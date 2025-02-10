@@ -1,0 +1,40 @@
+=== string = "12 13 14" ===
+fmt=" %s%n" r=1 buf="12", n=2
+fmt=" %5s%n" r=1 buf="12", n=2
+fmt=" %5c%n" r=1 buf="12 13", n=5
+fmt=" %8[acbd]%n" r=0 buf="", n=5
+fmt=" %8[^ ]%n" r=1 buf="12", n=2
+fmt=" %d %u %x%n" r=3 i0=12 i1=13 i2=20, n=8
+fmt=" %i %u %x%n" r=3 i0=12 i1=13 i2=20, n=8
+fmt="%d %u %x%n" r=3 i0=12 i1=13 i2=20, n=8
+fmt=" %ld %ld %lf%n" r=3 l0=12 l1=13 d2=14.0000 n=8
+=== string = " -12 -13 -14.3" ===
+fmt=" %s%n" r=1 buf="-12", n=4
+fmt=" %5s%n" r=1 buf="-12", n=4
+fmt=" %5c%n" r=1 buf="-12 -", n=6
+fmt=" %8[acbd]%n" r=0 buf="", n=6
+fmt=" %8[^ ]%n" r=1 buf="-12", n=4
+fmt=" %d %u %x%n" r=3 i0=-12 i1=-13 i2=-20, n=12
+fmt=" %i %u %x%n" r=3 i0=-12 i1=-13 i2=-20, n=12
+fmt="%d %u %x%n" r=3 i0=-12 i1=-13 i2=-20, n=12
+fmt=" %ld %ld %lf%n" r=3 l0=-12 l1=-13 d2=-14.3000 n=14
+=== string = "0x1234, rest" ===
+fmt=" %s%n" r=1 buf="0x1234,", n=7
+fmt=" %5s%n" r=1 buf="0x123", n=5
+fmt=" %5c%n" r=1 buf="0x123", n=5
+fmt=" %8[acbd]%n" r=0 buf="", n=5
+fmt=" %8[^ ]%n" r=1 buf="0x1234,", n=7
+fmt=" %d %u %x%n" r=1 i0=0 i1=-13 i2=-20, n=7
+fmt=" %i %u %x%n" r=1 i0=4660 i1=-13 i2=-20, n=7
+fmt="%d %u %x%n" r=1 i0=0 i1=-13 i2=-20, n=7
+fmt=" %ld %ld %lf%n" r=1 l0=0 l1=-13 d2=-1.0000 n=7
+=== string = "  abcdefghijklmnopqrstuvwxyz" ===
+fmt=" %s%n" r=1 buf="abcdefghijklmnopqrstuvwxyz", n=28
+fmt=" %5s%n" r=1 buf="abcde", n=7
+fmt=" %5c%n" r=1 buf="abcde", n=7
+fmt=" %8[acbd]%n" r=1 buf="abcd", n=6
+fmt=" %8[^ ]%n" r=1 buf="abcdefgh", n=10
+fmt=" %d %u %x%n" r=0 i0=0 i1=-13 i2=-20, n=10
+fmt=" %i %u %x%n" r=0 i0=0 i1=-13 i2=-20, n=10
+fmt="%d %u %x%n" r=0 i0=0 i1=-13 i2=-20, n=10
+fmt=" %ld %ld %lf%n" r=0 l0=0 l1=-13 d2=-1.0000 n=10

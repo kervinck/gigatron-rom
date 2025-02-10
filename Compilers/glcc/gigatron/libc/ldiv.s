@@ -5,12 +5,16 @@ def code0():
     label('ldiv')
     PUSH();
     _MOVL(L9,LAC);LDI(L11);_LMODS()
-    # save quotient
-    LDW(T0);DOKE(R8);
-    LDI(2);ADDW(R8);STW(T3);LDW(T1);DOKE(T3);
-    # save remainder
-    LDI(4);ADDW(R8);STW(T3);LDW(LAC);DOKE(T3);
-    LDI(6);ADDW(R8);STW(T3);LDW(LAC+2);DOKE(T3);
+    if args.cpu >= 6:
+        LDW(R8);DOKEA(T0);ADDI(2);DOKEA(T1)
+        ADDI(2);STLAC()
+    else:
+        # save quotient
+        LDW(T0);DOKE(R8);
+        LDI(2);ADDW(R8);STW(T3);LDW(T1);DOKE(T3);
+        # save remainder
+        LDI(4);ADDW(R8);STW(T3);LDW(LAC);DOKE(T3);
+        LDI(6);ADDW(R8);STW(T3);LDW(LAC+2);DOKE(T3);
     # return
     tryhop(2);POP();RET()
     

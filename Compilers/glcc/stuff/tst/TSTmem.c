@@ -19,7 +19,7 @@ int  memsize;
 void probe_ram()
 {
 	has_expander = (ctrlBits_v5 != 0);
-	has_512krom =  (videoModeB ^ 0xfc ==0xfc);
+	has_512krom =  (videoModeB & 0xfc == 0xfc);
 	has_64k =      (memSize == 0);
 
 	// double check expander (reset memory detection bug)

@@ -103,7 +103,7 @@ add_executable(gtsim
 # --- Stage binary directory to make glcc usable
 
 set(gigatron_targets
-  glcc glink glink.py gtprof
+  glcc glink glink.py gt1dump gtprof
   interface.json interface-dev.json roms.json)
 
 foreach(fn ${gigatron_targets})
@@ -331,7 +331,7 @@ else()
   file(RELATIVE_PATH bin_to_lib "/${glcc_install_bindir}" "/${glcc_install_libdir}")
   install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory
             \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${glcc_install_bindir}\")")
-  foreach(pgm glcc glink gtsim gtprof)
+  foreach(pgm glcc glink gtsim gtprof gt1dump)
     set(output "\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${glcc_install_bindir}/${pgm}")
     install(CODE "message(STATUS \"Creating symlink: ${output}\")
                   execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink

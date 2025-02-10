@@ -12,7 +12,12 @@ def map_describe():
 
   Overlay 'nochan' can be used to overwrite the memory areas reserved
   to sound channels 2, 3, and 4. Doing so provides a contiguous memory
-  area from 0x200 to 0x6ff.  ''')
+  area from 0x200 to 0x6ff.
+
+  Overlay 'bare' is meant for small programs that do not use libc,
+  do not need libc's initialization and cleanup. These programs
+  are placed in the low pages (0x200-0x5ff) in priority.
+    ''')
 
 
 # ------------size----addr----step----end---- flags (1=nocode, 2=nodata, 4=noheap)
@@ -22,6 +27,7 @@ segments = [ (0x0060, 0x08a0, 0x0100, 0x80a0, 0),
 
 initsp = 0x6fc
 minram = 0x80
+nochan = False
 
 def map_segments():
     '''
@@ -68,6 +74,9 @@ def map_modules(romtype):
             LD('memSize');BNE('.err')
         else:
             LD('memSize');SUBI(1);ANDI(0xff);SUBI(minram-1);BLT('.err')
+        # Clears channel mask
+        if nochan:
+            LD('channelMask_v4');ANDI(0xf8);ST('channelMask_v4')
         # Call _start
         LDWI(v(args.e));CALL(vAC)
         # Run sanitized version of Marcel's smallest program when machine check fails

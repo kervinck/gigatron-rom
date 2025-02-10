@@ -8,7 +8,7 @@ def scope():
         nohop()
         label('memset');                            # R8=d, R9=v, R10=l
         LDW(R8);STW(R21);STW('sysArgs2')
-        LDWI('SYS_SetMemory_v2_54');STW('sysFn')    # prep sys
+        _MOVIW('SYS_SetMemory_v2_54','sysFn')       # prep sys
         LD(R9);ST('sysArgs1')
         label('.loop')
         LD(R8);ST(R20);LDI(255);ST(R20+1)           # R20 is minus count to end of block

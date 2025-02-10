@@ -6,20 +6,16 @@ size_t _fread(register FILE *fp, register char *buf, register size_t sz)
 {
 	register int n;
 	register size_t nread = 0;
-	register int (*read)(FILE*,char*,size_t) = fp->_v->read;
-	if (! _schkread(fp))
-		return 0;
-	while (nread < sz) {
+	register read_t fptr;
+	
+	if ((fptr = _schkread(fp)) && (sz > 0)) {
 		if ((n = fp->_flag) & _IOUNGET) {
 			fp->_flag = n ^ _IOUNGET;
 			*buf = fp->_unget;
 			nread += 1;
-		} else if ((n = (*read)(fp, buf + nread, sz - nread)) > 0) {
-			nread += n;
-		} else {
-			_serror(fp, (n) ? EIO : EOF);
-			break;
 		}
+		while ((nread < sz) && (n = fptr(fp, buf+nread, sz-nread)) > 0)
+			nread += n;
 	}
 	return nread;
 }

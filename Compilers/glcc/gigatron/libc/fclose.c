@@ -8,7 +8,7 @@ int fclose(FILE *fp)
 		errno = EINVAL;
 		return -1;
 	}
-	r = _fclose(fp);
+	r = _sclose(fp);
 	fp->_flag = 0;
 	return r;
 }

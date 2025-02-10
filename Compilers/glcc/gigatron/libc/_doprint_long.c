@@ -5,7 +5,7 @@
 
 #include "_doprint.h"
 
-void _doprint_long_imp(doprint_t *dd, doprintspec_t *spec, int b, __va_list *ap)
+void _doprint_long_imp(doprintspec_t *spec, int b, __va_list *ap)
 {
 	char buffer[16];
 	register char *s;
@@ -14,5 +14,5 @@ void _doprint_long_imp(doprint_t *dd, doprintspec_t *spec, int b, __va_list *ap)
 		s = ltoa(x, buffer, 10);
 	} else
 		s = ultoa(x, buffer, b);
-	_doprint_num(dd, spec, b, s);
+	_doprint_num(spec, b, s);
 }

@@ -4,7 +4,10 @@ def code0():
     label('abs')
     LDW(R8)
     _BGE('.ret')
-    LDI(0);SUBW(R8)
+    if args.cpu >= 6:
+        NEGV(vAC)
+    else:
+        LDI(0);SUBW(R8)
     label('.ret')
     RET()
     

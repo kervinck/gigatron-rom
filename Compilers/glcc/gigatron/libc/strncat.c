@@ -4,7 +4,7 @@
 char *
 strncat(register char *dst, register const char *src, register size_t n)
 {
-	register char *e = _memchr2(dst, 0, 0, 0xffffu);
+	register char *e = __memchr2(dst, 0, 0xffffu);
 	register int l = strlen(src);
 	if (l > n)
 		l = n;

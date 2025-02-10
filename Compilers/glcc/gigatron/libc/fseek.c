@@ -20,12 +20,10 @@ long int ftell(FILE *fp)
 
 int fseek(FILE *fp, long int off, int whence)
 {
-	if (_schkseek(fp))
+	if (_schkseek(fp) || fp->_v->lseek(fp, off, whence) < 0)
 		return EOF;
-	if (fp->_v->lseek(fp, off, whence) <= 0)
-		return _serror(fp, EOF);
 	fp->_flag &= 0xff ^ _IOEOF ^ _IOUNGET;
-	return 0;
+	return 0; 
 }
 
 void rewind(FILE *fp)

@@ -114,7 +114,7 @@ if usage:
     print("Usage: glcc {...options_or_files...}", file=sys.stderr)
     print("  Besides the lcc options listed later, glcc recognizes", file=sys.stderr)
     print("  -map=MAP  to select a memory map (default 32k)", file=sys.stderr)
-    print("  -rom=ROM  to select a rom (default v5a)", file=sys.stderr)
+    print("  -rom=ROM  to select a rom (default v6)", file=sys.stderr)
     print("  -rom=CPU  to select a target cpu (default to rom's)", file=sys.stderr)
     print("  -info     gives information about the selected map, cpu, and rom", file=sys.stderr)
     print("  -V        reports the glcc version", file=sys.stderr)

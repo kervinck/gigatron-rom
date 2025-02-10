@@ -303,6 +303,22 @@ int gettok(void) {
 					error("invalid hexadecimal constant `%S'\n", token, (char *)rcp-token);
 				cp = rcp;
 				tsym = icon(n, overflow, 16);
+			} else if (*token == '0' && (*rcp == 'b' || *rcp == 'B')) {
+				int d, overflow = 0;
+				while (*++rcp) {
+					if (*rcp == '0' || *rcp == '1')
+						d = *rcp - '0';
+					else
+						break;
+					if (n&~(~0UL >> 1))
+						overflow = 1;
+					else
+						n = (n<<1) + d;
+				}
+				if ((char *)rcp - token <= 2)
+					error("invalid binary constant `%S'\n", token, (char *)rcp-token);
+				cp = rcp;
+				tsym = icon(n, overflow, 16);
 			} else if (*token == '0') {
 				int err = 0, overflow = 0;
 				for ( ; map[*rcp]&DIGIT; rcp++) {
@@ -739,11 +755,12 @@ int gettok(void) {
 			}			
 			goto id;
 		default:
-			if ((map[cp[-1]]&BLANK) == 0)
+			if ((map[cp[-1]]&BLANK) == 0) {
 				if (cp[-1] < ' ' || cp[-1] >= 0177)
 					error("illegal character `\\0%o'\n", cp[-1]);
 				else
 					error("illegal character `%c'\n", cp[-1]);
+			}
 		}
 	}
 }

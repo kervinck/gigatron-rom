@@ -6,7 +6,7 @@ static char *outs(const char *str, FILE *f, char *bp) {
 	if (f)
 		fputs(str, f);
 	else
-		while (*bp = *str++)
+		while ((*bp = *str++))
 			bp++;
 	return bp;
 }
@@ -83,8 +83,7 @@ void vfprint(FILE *f, char *bp, const char *fmt, va_list ap) {
 				  	format[1] = *fmt;
 				  	sprintf(buf, format, va_arg(ap, double));
 				  	bp = outs(buf, f, bp);
-				  }
-; break;
+				  } break;
 			case 's': bp = outs(va_arg(ap, char *), f, bp); break;
 			case 'p': {
 				void *p = va_arg(ap, void *);
@@ -96,10 +95,11 @@ void vfprint(FILE *f, char *bp, const char *fmt, va_list ap) {
 			case 'c': if (f) fputc(va_arg(ap, int), f); else *bp++ = va_arg(ap, int); break;
 			case 'S': { char *s = va_arg(ap, char *);
 				    int n = va_arg(ap, int);
-				    if (s)
+				    if (s) {
 				    	for ( ; n-- > 0; s++)
 				    		if (f) (void)putc(*s, f); else *bp++ = *s;
- } break;
+				    }
+			          } break;
 			case 'k': { int t = va_arg(ap, int);
 				    static char *tokens[] = {
 #define xx(a,b,c,d,e,f,g) g,
@@ -108,22 +108,22 @@ void vfprint(FILE *f, char *bp, const char *fmt, va_list ap) {
 				    };
 				    assert(tokens[t&0177]);
 				    bp = outs(tokens[t&0177], f, bp);
- } break;
+			          } break;
 			case 't': { Type ty = va_arg(ap, Type);
 				    assert(f);
 				    outtype(ty ? ty : voidtype, f);
- } break;
+			          } break;
 			case 'w': { Coordinate *p = va_arg(ap, Coordinate *);
 				    if (p->file && *p->file) {
 				    	bp = outs(p->file, f, bp);
 				    	bp = outs(":", f, bp);
 				    }
 				    bp = outd(p->y, f, bp);
- } break;
+			          } break;
 			case 'I': { int n = va_arg(ap, int);
 				    while (--n >= 0)
 				    	if (f) (void)putc(' ', f); else *bp++ = ' ';
- } break;
+			          } break;
 			default:  if (f) (void)putc(*fmt, f); else *bp++ = *fmt; break;
 			}
 		else if (f)
