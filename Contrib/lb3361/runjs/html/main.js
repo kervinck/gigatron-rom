@@ -35,7 +35,9 @@ $(function() {
     let volumeSlider = $('#volume-slider');
     let vgaCanvas = $('#vga-canvas');
     let loadFileInput = $('#load-file-input');
-    let loadVhdInput = $('#load-vhd-input');
+    let vhdLabel = $('#vhd-label');
+    let mountButton = $('#mount');
+    let unmountButton = $('#unmount');    
 
     /** Trigger a keydown/keyup event in response to a mousedown/mouseup event
      * @param {JQuery} $button
@@ -182,6 +184,17 @@ $(function() {
         $([muteButton, unmuteButton]).toggleClass('d-none');
     });
 
+    mountButton.click(function() {
+        spi.vhdmounted = true;
+        spi.setvhdlabel();
+    });
+
+    unmountButton.click(function() {
+        spi.vhdmounted = false;
+        spi.setvhdlabel();
+    });
+
+    
     volumeSlider.val(100 * audio.volume);
     volumeSlider.on('input', function(event) {
         let target = event.target;
@@ -213,6 +226,27 @@ $(function() {
             });
     }
 
+    function loadRomFile(file) {
+        gamepad.stop();
+        spi.stop();
+        loader.loadRom(file)
+            .pipe(finalize(() => {
+                gamepad.start();
+                spi.start();
+            }))
+            .subscribe({
+                error: (error) => showError($(`\
+                <p>\
+                    Could not load ROM from <code>${file.name}</code>\
+                </p>\
+                <hr>\
+                <p class="alert alert-danger">\
+                    <span class="oi oi-warning"></span> ${error.message}\
+                </p>`)),
+            });
+    }        
+
+    
     loadFileInput
         .on('click', (event) => {
             loadFileInput.closest('form').get(0).reset();
@@ -221,22 +255,16 @@ $(function() {
             let target = event.target;
             if (target.files.length != 0) {
                 let file = target.files[0];
-                loadGt1(file);
+                let name = file.name.toLowerCase()
+                if (name.endsWith('.rom')) {
+                    loadRomFile(file)
+                } else if (name.endsWith('.vhd')) {
+                    spi.loadvhdfile(file);
+                } else {
+                    loadGt1(file);
+                }
             }
         });
-
-    loadVhdInput
-        .on('click', (event) => {
-            loadVhdInput.closest('form').get(0).reset();
-        })
-        .on('change', (event) => {
-            let target = event.target;
-            if (target.files.length != 0) {
-                let file = target.files[0];
-                spi.loadvhdfile(file);
-            }
-        });
-
     
     $(document)
         .on('dragenter', (event) => {
@@ -256,11 +284,15 @@ $(function() {
                 if (files.length != 0) {
                     event.preventDefault();
                     event.stopPropagation();
-                    let fn = files[0].name.toLowerCase()
-                    if (fn.endsWith('.gt1')) {
-                        loadGt1(files[0])
-                    } else if (fn.endsWith('.vhd') || fn.endsWith('.img')) {
-                        spi.loadvhdfile(files[0])
+                    let file = files[0];
+                    let name = file.name.toLowerCase()
+                    if (name.endsWith('.rom')) {
+                        loadRomFile(file);
+                    } else if (name.endsWith('.vhd')) {
+                        spi.loadvhdfile(file);
+                        setVhdLabel();
+                    } else {
+                        loadGt1(file);
                     }
                 }
             }
@@ -314,9 +346,7 @@ $(function() {
         gamepad.stop();
     }
 
-    /** load the ROM image
-     * @param {string} url
-     */
+    /** load the ROM image from url */
     function loadRom(url) {
         var req = new XMLHttpRequest();
         req.open('GET', url);

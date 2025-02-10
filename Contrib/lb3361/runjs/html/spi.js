@@ -55,6 +55,7 @@ export class Spi {
         /* sd stuff */
         this.vhd = 0;
         this.vhdlen = 0;
+        this.vhdmounted = true;
         this.buffer = new Uint8Array(520);
         this.idle = 1;
         this.action = 0;
@@ -95,6 +96,34 @@ export class Spi {
         }
     }
 
+    setvhdlabel() {
+        let vhdLabel = $('#vhd-label');
+        let mountButton = $('#mount');
+        let unmountButton = $('#unmount');    
+        if (vhdLabel) {
+            let msg = "no SDcard"
+            if (this.vhdlen > 0) {
+                let sz = this.vhdlen / 1024 / 1024;
+                msg = `SDcard ${sz}M`;
+                if (this.vhdmounted) {
+                    msg = msg + " (mounted)";
+                } else {
+                    msg = msg + " (not mounted)";
+                }
+            }
+            vhdLabel.text(msg);
+        }
+        if (mountButton && unmountButton) {
+            if (this.vhdmounted && this.vhdlen > 0) {
+                unmountButton.removeClass('d-none');
+                mountButton.addClass('d-none');
+            } else {
+                unmountButton.addClass('d-none');
+                mountButton.removeClass('d-none');
+            }
+        }
+    }
+
     loadvhdurl(url) {
         let req = new XMLHttpRequest();
         req.open('GET', url);
@@ -103,11 +132,11 @@ export class Spi {
         req.onload = (event) => {
             if (req.status == 200) {
                 let vhd = new Uint8Array(req.response);
-                if (vhd.length > 0) {
-                    this.vhd = vhd;
-                    this.vhdlen = vhd.length;
-                    this.serial += 1;
-                }
+                this.vhd = vhd;
+                this.vhdlen = vhd.length;
+                this.vhdmounted = (vhd.length > 0);
+                this.serial += 1;
+                this.setvhdlabel();
             }
         };
         req.onerror = (event) => {
@@ -120,11 +149,11 @@ export class Spi {
         let reader = new FileReader();
         reader.onload = (event) => {
             let vhd = new Uint8Array(reader.result);
-            if (vhd.length > 0) {
-                this.vhd = vhd;
-                this.vhdlen = vhd.length;
-                this.serial += 1;
-            }
+            this.vhd = vhd;
+            this.vhdlen = vhd.length;
+            this.vhdmounted = (vhd.length > 0);
+            this.serial += 1;
+            this.setvhdlabel();
         };
         reader.onerror = (event) => {
             console.log("error while reading vhd from", file);
@@ -194,7 +223,7 @@ export class Spi {
         let a = this.action;
         switch(a) {
         case ACTION_WAIT:
-            if (mosi == 0xff || this.vhdlen <= 0) { return 0xff; }
+            if (mosi == 0xff || this.vhdlen <= 0 || !this.vhdmounted) { return 0xff; }
             break;
         case ACTION_RECV:
             this.buffer[this.count] = mosi;
@@ -300,7 +329,7 @@ export class Spi {
         }
         switch(cmd) {
         case 128+41: // ACMD41: APP_SEND_OP_COND
-            if (this.vhdlen == 0) {
+            if (this.vhdlen == 0 || !this.vhdmounted) {
                 this.set_send_r1_state(CTX_CMD, 4 + this.idle)
             } else {
                 this.idle = 0;
@@ -321,7 +350,7 @@ export class Spi {
             break;
         case 8:  // CMD8: SEND_IF_COND
             buffer[0] = this.idle;
-            if (this.vhdlen == 0) {
+            if (this.vhdlen == 0 || !this.vhdmounted) {
                 this.set_send_r1_state(CTX_CMD, 4 + idle);
             } else {
                 this.set_send_state(CTX_CMD, 5);

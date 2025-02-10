@@ -197,24 +197,22 @@
                             </div>
 
                             <!-- FILE LOADER -->
-                            <form>
-                                <div class="form-group">
+                            <form class="form-row">
+                              <div class="col form-group">
                                     <div class="custom-file">
-                                        <input id="load-file-input" type="file" class="form-control custom-file-input" accept=".gt1,.gt1x">
-                                        <label class="custom-file-label" for="load-file-input">Load GT1 file</label>
+                                        <input id="load-file-input" type="file" class="form-control custom-file-input" accept=".gt1,.gt1x,.vhd,.rom">
+                                        <label class="custom-file-label" for="load-file-input">*.gt1|*.rom|*.vhd</label>
+                                        <label for="load-file-input">Load program, rom, or disk image</label>
                                     </div>
-                                </div>
+                              </div>
+                              <div class="col-sm-10">
+                                <label id="vhd-label">no disk</label>
+                              </div>
+                              <div class="col">
+                                <span id="unmount" class="btn btn-sm btn-success oi oi-eject d-none" style="width:30px;" data-toggle="tooltip" title="Unmount"></span>
+                                <span id="mount" class="btn btn-sm btn-danger oi oi-reload" style="width:30px;" data-toggle="tooltip" title="Mount"></span>
+                              </div>
                             </form>
-                            <!-- VHD LOADER -->
-                            <form>
-                                <div class="form-group">
-                                    <div class="custom-file">
-                                        <input id="load-vhd-input" type="file" class="form-control custom-file-input" accept=".vhd,.img">
-                                        <label class="custom-file-label" for="load-vhd-input">Mount VHD image</label>
-                                    </div>
-                                </div>
-                            </form>
-
                         </div>
                     </div>
 
