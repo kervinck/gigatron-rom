@@ -112,7 +112,7 @@ def scope():
                   ('PLACE', '_printonechar', 0x0200, 0x7fff) ] )
 
     
-    # -- void _console_clear(char *addr, char clr, int nl)
+    # -- void _console_clear(char *addr, char clr, char nl)
     # Clears from addr to the end of line with color clr.
     # Repeats for nl successive lines.
 
@@ -129,10 +129,11 @@ def scope():
         LDWI(0x8000);ORW(R8);STW('sysArgs2')
         SYS(54)
         INC(R8+1)
-        LDW(R10)
-        SUBI(1);
-        STW(R10);
-        _BNE('.loop')
+        if args.cpu >= 6:
+            DBNE(R10,'.loop')
+        else:
+            LDW(R10);SUBI(1);STW(R10);
+            _BNE('.loop')
         CALLI('_cons_restore_saved_bank')
         tryhop(2);POP();RET()
 

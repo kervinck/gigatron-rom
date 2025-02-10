@@ -482,6 +482,7 @@ void sys_printf(void)
           else
             {
               int i = 0;
+              int star = 0;
               char conv = 0;
               char lng = 0;
               char spec[64];
@@ -494,13 +495,19 @@ void sys_printf(void)
                     lng = spec[i] = fmt[i];
                   else if (strchr("#0- +0123456789.hlLjzZtq", fmt[i]))
                     spec[i] = fmt[i];
+                  else if (fmt[i] == '*')
+                    { spec[i] = fmt[i]; star++; }
                   else 
                     { conv = spec[i] = fmt[i]; break; }
                 }
               if (i+1 < sizeof(spec))
                 {
                   spec[i+1] = 0;
-                  if (strchr("eEfFgGaA", conv))
+                  if (star == 1 && strchr("sS", conv))
+                    { ap = (ap+1)&~1; n += printf(spec, deek(ap), &RAM[deek(ap+2)]); ap += 4; }
+                  else if (star)
+                    { n += printf("{{unsup:%s}}", spec); }
+                  else if (strchr("eEfFgGaA", conv))
                     { n += printf(spec, feek(ap)); ap += 5; }
                   else if (strchr("sS", conv))
                     { ap = (ap+1)&~1; n += printf(spec, &RAM[deek(ap)]); ap += 2; }
@@ -846,7 +853,7 @@ int disassemble(word addr, char **pm, char *operand)
       switch(peek(addlo(addr,1)))
         {
         case 0x00:  *pm = "ADDL";  return 2;       /* v7 */
-        case 0x02:  *pm = "COPYS"; goto oper8x2;   /* v7 */
+        case 0x02:  *pm = "COPYS"; goto operx8x2;  /* v7 */
         case 0x04:  *pm = "SUBL";  return 2;       /* v7 */
         case 0x06:  *pm = "ANDL";  return 2;       /* v7 */
         case 0x08:  *pm = "ORL";   return 2;       /* v7 */
@@ -875,28 +882,30 @@ int disassemble(word addr, char **pm, char *operand)
         case 0x3b:  *pm = "RDIVU"; goto operx8;    /* v7 */
         case 0x3d:  *pm = "MULW";  goto operx8;    /* v7 */
         case 0x3f:  *pm = "BEQ";   goto operxbr;
-        case 0x48:  *pm = "RESET"; return 2;       /* v7 */
+        case 0x48:  *pm = "BLIT";  return 2;       /* v7 */
+        case 0x4a:  *pm = "FILL";  return 2;       /* v7 */
         case 0x4d:  *pm = "BGT";   goto operxbr;
         case 0x50:  *pm = "BLT";   goto operxbr;
         case 0x53:  *pm = "BGE";   goto operxbr;
         case 0x56:  *pm = "BLE";   goto operxbr;
-        case 0x62:  *pm = "DOKEI"; goto operx16r;  /* v7 */
+        case 0x63:  *pm = "DOKEI"; goto operx16r;  /* v7 */
         case 0x72:  *pm = "BNE";   goto operxbr;
-        case 0x7d:  *pm = "ADDIV"; goto operx8x2;  /* v7 */
-        case 0x9c:  *pm = "SUBIV"; goto operx8x2;  /* v7 */
+        case 0x7d:  *pm = "RESET"; return 2;       /* v7 */
         case 0xcb:  *pm = "COPY";  return 2;       /* v7 */
         case 0xcf:  *pm = "COPYN"; goto operx8;    /* v7 */
+        case 0xd1:  *pm = "EXBA";  goto operx8;    /* v7 */
+        case 0xd3:  *pm = "NOTVL"; goto operx8;    /* v7 */
         case 0xdb:  *pm = "MOVL";  goto operx8x2r; /* v7 */
         case 0xdd:  *pm = "MOVF";  goto operx8x2r; /* v7 */
         default:    *pm = "???";   goto unknown;
         operx8:
           sprintf(operand, "$%02x", peek(addlo(addr,2)));
           return 3;
-        operx8x2:
-          sprintf(operand, "$%02x, $%02x", peek(addlo(addr,2)), peek(addlo(addr,3)));
-          return 4;
         operx8x2r:
           sprintf(operand, "$%02x, $%02x", peek(addlo(addr,3)), peek(addlo(addr,2)));
+          return 4;
+        operx8x2:
+          sprintf(operand, "$%02x, $%02x", peek(addlo(addr,2)), peek(addlo(addr,3)));
           return 4;
         operxbr:
           sprintf(operand, "$%04x", (addr&0xff00)|((peek(addlo(addr,2))+2)&0xff));
@@ -939,10 +948,11 @@ int disassemble(word addr, char **pm, char *operand)
     case 0x6e:  *pm = "LDSB";  goto oper8;    /* v7 */
     case 0x70:  *pm = "INCV";  goto oper8;    /* v7 */
     case 0x72:  *pm = "JNE";   goto oper16p2; /* v7 */
-    case 0x78:  *pm = "LDNI";  goto oper8n;   /* v7 */
+    case 0x7a:  *pm = "DBNE";  goto operdbne; /* v7 */
     case 0x7d:  *pm = "MULQ";  goto oper8;    /* v7 */
     case 0xb1:  *pm = "MOVIW"; goto oper16r8; /* v7 */
     case 0xbb:  *pm = "MOVW";  goto oper8x2r; /* v7 */
+    case 0xc6:  *pm = "ADDSV"; goto oper8x2r; /* v7 */
     case 0xd3:  *pm = "CMPWS"; goto oper8;    /* v7 */
     case 0xd6:  *pm = "CMPWU"; goto oper8;    /* v7 */
     case 0xd9:  *pm = "CMPIS"; goto oper8;    /* v7 */
@@ -952,9 +962,6 @@ int disassemble(word addr, char **pm, char *operand)
     default:    *pm = "???";   goto unknown;
     oper8:
       sprintf(operand, "$%02x", peek(addlo(addr,1)));
-      return 2;
-    oper8n:
-      sprintf(operand, "$ff%02x", peek(addlo(addr,1)));
       return 2;
     oper16:
       sprintf(operand, "$%04x", deek(addlo(addr,1)));
@@ -982,6 +989,9 @@ int disassemble(word addr, char **pm, char *operand)
       sprintf(operand, "$%02x,$%02x%02x", peek(addlo(addr,1)),
               peek(addlo(addr,3)), peek(addlo(addr,2)));
       return 4;
+    operdbne:
+      sprintf(operand, "$%02x,$%04x", peek(addlo(addr,1)), (addr&0xff00)|((peek(addlo(addr,2))+2)&0xff));
+      return 3;
     unknown:
       sprintf(operand, "%02x%02x%02x%02x", peek(addlo(addr,0)), peek(addlo(addr,1)),
               peek(addlo(addr,2)), peek(addlo(addr,3)));

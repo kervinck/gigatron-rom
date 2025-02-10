@@ -55,7 +55,7 @@ def code3():
 	_STLW(-8+32);
 	MOVW(R6,R23);
 	STW(T0);_STLW(-12+32,src=R23);LDW(T0)  #genspill
-	ADDIV(2,R6);
+	ADDSV(2,R6);
 	LDW(R7);_BEQ('.9');
 	CALLI('f');
 	_STLW(-10+32);

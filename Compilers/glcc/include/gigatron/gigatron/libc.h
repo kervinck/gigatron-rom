@@ -76,12 +76,13 @@ extern double _pi, _pi_over_2, _pi_over_4;
 extern double _fexception(double defval);
 extern double _foverflow(double defval);
 
-/* Multiplies x by 10^n. */
-extern double _ldexp10(double x, int n);
+/* Multiply x by 10^n. */
+extern double _ldexp10p(const double *x, int n);
 
-/* Returns a double y and an exponent exp such that x = y * 10^exp,
-   with y as large as possible while keeping an exact integer part. */
-extern double _frexp10(double x, int *pexp);
+/* Return an exponent exp and patches x to ensure that:
+   - x * 10^exp on return is equal to the old value of x
+   - x on return has the highest magnitude that fits in an unsigned long. */
+extern int _frexp10p(double *x);
 
 /* Like the C99 function remquo but with fmod-style remainder. */
 extern double _fmodquo(double x, double y, int *quo);
@@ -112,24 +113,38 @@ extern int  _bitset_test(char *set, unsigned int i);
 
 /* Using these functions help avoiding the bulky printf */
 
-/* Functions to convert integers to strings. The buffer should be
-   eight bytes long for ints and sixteen bytes for longs. Radix should
-   be in range 8 to 36. Smaller radix might overflow the buffer.  Note
-   that the return value is not usually equal to buffer because the
-   digits are generated backwards and stored from the end of the
-   buffer marching towards the beginning. */
+/* Functions to convert integers to strings. Variable <bufend> points
+   to the last byte of a long enough buffer, which will be overwritten
+   by the zero terminator. The generated digits will be stored backwards
+   and the returned value will be smaller than <bufend>. */
 
-extern char *itoa(int value, char *buf8, int radix);
-extern char *utoa(unsigned int value, char *buf8, int radix);
-extern char *ltoa(long value, char *buf16, int radix);
-extern char *ultoa(unsigned long value, char *buf16, int radix);
+extern char *_itoa(int value, char *bufend, int radix);
+extern char *_utoa(unsigned int value, char *bufend, int radix);
+extern char *_ltoa(long value, char *bufend, int radix);
+extern char *_ultoa(unsigned long value, char *bufend, int radix);
+
+/* Compat */
+
+#define itoa(v,b,r)  _itoa((v),(b)+7,r)
+#define utoa(v,b,r)  _utoa((v),(b)+7,r)
+#define ltoa(v,b,r)  _ltoa((v),(b)+15,r)
+#define ultoa(v,b,r) _ultoa((v),(b)+15,r)
 
 /* Function to convert doubles to strings using the 'e', 'f', or 'g'
    style of the printf function. The buffer should be large enough for
    the required precision and number. Using the 'f' style with 
    large numbers can generate long strings. */
 
-extern char *dtoa(double x, char *buf, char format, int prec);
+extern char *dtoa(double x, char *buf, int format, int prec);
+
+
+/* Converts a number in range 0 to 99 into decimal,
+   two ascii digits packed in the returned integer.
+   This is a compact self-contained function. */
+
+extern int _utwoa(int);
+
+
 
 
 /* ---- Misc ---- */

@@ -44,13 +44,13 @@ def code1():
 # ======== ('CODE', 'getword', code2)
 def code2():
 	label('getword');
-	_PROLOGUE(12,2,0xe0); # save=R5-7
+	_PROLOGUE(12,4,0xe0); # save=R5-7
 	MOVW(R8,R7);
 	label('.8');
 	label('.9');
 	CALLI('getchar');STW(R23);
 	STW(R6);
-	LDNI(-1);XORW(R23);_BEQ('.11');
+	LDWI(-1);XORW(R23);_BEQ('.11');
 	LDW(R6);STW(R8);
 	_STLW(0);
 	CALLI('isletter');
@@ -78,14 +78,14 @@ def code2():
 	label('.16');
 	LDI(0);
 	label('.7');
-	_EPILOGUE(12,2,0xe0,saveAC=True);
+	_EPILOGUE(12,4,0xe0,saveAC=True);
 # ======== ('CODE', 'isletter', code3)
 def code3():
 	label('isletter');
 	PUSH();
 	LDI(65);_CMPWS(R8);_BGT('.19');
 	LDI(90);_CMPWS(R8);_BLT('.19');
-	ADDIV(32,R8);
+	ADDSV(32,R8);
 	label('.19');
 	LDI(97);_CMPWS(R8);_BGT('.21');
 	LDI(122);_CMPWS(R8);_BLT('.21');
@@ -161,7 +161,7 @@ def code4():
 # ======== ('CODE', 'tprint', code5)
 def code5():
 	label('tprint');
-	_PROLOGUE(12,6,0x80); # save=R7
+	_PROLOGUE(12,8,0x80); # save=R7
 	LDW(R8);STW(R7);
 	_BEQ('.42');
 	LDI(2);ADDW(R7);DEEKA(R8);
@@ -178,7 +178,7 @@ def code5():
 	label('.42');
 	LDI(0);
 	label('.41');
-	_EPILOGUE(12,6,0x80,saveAC=True);
+	_EPILOGUE(12,8,0x80,saveAC=True);
 # ======== ('CODE', 'strcmp', code6)
 def code6():
 	label('strcmp');
@@ -196,7 +196,7 @@ def code6():
 	PEEKV(R9);STW(R23);
 	PEEKV(R8);XORW(R23);_BEQ('.46');
 	PEEKV(R8);_BNE('.51');
-	LDNI(-1);
+	LDWI(-1);
 	_BRA('.45');
 	label('.51');
 	PEEKV(R9);_BNE('.53');

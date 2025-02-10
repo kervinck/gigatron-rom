@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.16)
 project(glcc)
 enable_language(C)
 
+include(CheckLibraryExists)
 
 # --- Default to RelWithDebInfo
 
@@ -84,6 +85,10 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU")
   target_compile_options(rcc PRIVATE "-Wno-psabi")
 endif()
 
+CHECK_LIBRARY_EXISTS(m floor "" HAVE_LIB_M)
+if (HAVE_LIB_M)
+   target_link_libraries(rcc PUBLIC m)
+endif (HAVE_LIB_M)
 
 # --- Compile lcc
 

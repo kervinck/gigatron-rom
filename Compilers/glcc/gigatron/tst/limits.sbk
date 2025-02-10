@@ -3,7 +3,7 @@
 # ======== ('CODE', 'main', code0)
 def code0():
 	label('main');
-	_PROLOGUE(16,12,0x0); # save=None
+	_PROLOGUE(16,14,0x0); # save=None
 	LDWI('.2');STW(R8);
 	_STLW(0);
 	LDI(255);STW(R9);
@@ -78,7 +78,7 @@ def code0():
 	CALLI('printf');
 	LDWI('.14');STW(R8);
 	_STLW(0);
-	LDNI(-128);STW(R9);
+	LDWI(-128);STW(R9);
 	_STLW(2);
 	STW(R10);
 	_STLW(4);
@@ -107,7 +107,7 @@ def code0():
 	CALLI('printf');
 	LDI(0);
 	label('.1');
-	_EPILOGUE(16,12,0x0,saveAC=True);
+	_EPILOGUE(16,14,0x0,saveAC=True);
 # ======== ('DATA', '.18', code1, 0, 4)
 def code1():
 	align(4);

@@ -63,6 +63,7 @@
 		"may_work_with_map128k" : 1,
 		"has_SYS_Multiply_s16" :        { "addr" : "0x9e", "cycs" : 34  },
 		"has_SYS_Divide_u16" :          { "addr" : "0xa1", "cycs" : 34  },
+		"has_SYS_DoubleDabble" :        { "addr" : "0xe0", "cycs" : 34  },
 		"info" : "compiles for lb3361's DEV7ROMs"
 	      }
 }

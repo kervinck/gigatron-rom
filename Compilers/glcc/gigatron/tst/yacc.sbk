@@ -13,11 +13,11 @@ def code1():
 # ======== ('CODE', 'yylex', code2)
 def code2():
 	label('yylex');
-	_PROLOGUE(12,6,0x80); # save=R7
+	_PROLOGUE(12,8,0x80); # save=R7
 	_BRA('.3');
 	label('.2');
 	label('.5');
-	LDNI(-1);_CMPWS(R7);_BGT('.6');
+	LDWI(-1);_CMPWS(R7);_BGT('.6');
 	LDI(4);_CMPWS(R7);_BLT('.6');
 	LDWI(v('.17')+2);ADDW(R7);ADDW(R7);DEEK();CALL(vAC);
 	label('.8');
@@ -47,7 +47,7 @@ def code2():
 	_BGE('.2');
 	LDI(0);
 	label('.1');
-	_EPILOGUE(12,6,0x80,saveAC=True);
+	_EPILOGUE(12,8,0x80,saveAC=True);
 # ======== ('DATA', '.17', code3, 0, 2)
 def code3():
 	align(2);
@@ -524,7 +524,7 @@ def code14():
 	LDW(R23);STW(R7);
 	LDWI('yyestate');DOKEA(R23);
 	LDWI('yyprevious');DEEK();XORI(10);_BNE('.40');
-	ADDIV(6,R7);
+	ADDSV(6,R7);
 	label('.40');
 	label('.42');
 	DEEKV(R7);STW(R5);
@@ -580,7 +580,7 @@ def code14():
 	PEEKV(R5);_MULI(6);ADDWI('yysvec');XORW(R7);_BNE('.63');
 	MOVIW('yysvec',R23);
 	LDI(1);ADDW(R5);PEEK();_MULI(6);ADDW(R23);XORW(R23);_BNE('.66');
-	SUBIV(-(-1),R4);
+	ADDSV(-1,R4);
 	MOVW(R4,R23);
 	LDWI('yytchar');STW(R22);
 	PEEKV(R23);DOKE(R22);
@@ -595,7 +595,7 @@ def code14():
 	_BRA('.90');
 	label('.66');
 	MOVW(R6,R23);
-	ADDIV(2,R6);
+	ADDSV(2,R6);
 	LDI(1);ADDW(R5);PEEK();_MULI(6);ADDWI('yysvec');
 	STW(R7);
 	DOKE(R23);
@@ -611,7 +611,7 @@ def code14():
 	PEEKV(R5);_MULI(6);ADDWI('yysvec');XORW(R7);_BNE('.73');
 	MOVIW('yysvec',R23);
 	LDI(1);ADDW(R5);PEEK();_MULI(6);ADDW(R23);XORW(R23);_BNE('.75');
-	SUBIV(-(-1),R4);
+	ADDSV(-1,R4);
 	MOVW(R4,R23);
 	LDWI('yytchar');STW(R22);
 	PEEKV(R23);DOKE(R22);
@@ -626,7 +626,7 @@ def code14():
 	_BRA('.90');
 	label('.75');
 	MOVW(R6,R23);
-	ADDIV(2,R6);
+	ADDSV(2,R6);
 	LDI(1);ADDW(R5);PEEK();_MULI(6);ADDWI('yysvec');
 	STW(R7);
 	DOKE(R23);
@@ -637,7 +637,7 @@ def code14():
 	PEEKV(R5);_MULI(6);ADDWI('yysvec');XORW(R7);_BNE('.79');
 	MOVIW('yysvec',R23);
 	LDI(1);ADDW(R5);PEEK();_MULI(6);ADDW(R23);XORW(R23);_BNE('.81');
-	SUBIV(-(-1),R4);
+	ADDSV(-1,R4);
 	MOVW(R4,R23);
 	LDWI('yytchar');STW(R22);
 	PEEKV(R23);DOKE(R22);
@@ -652,7 +652,7 @@ def code14():
 	_BRA('.90');
 	label('.81');
 	MOVW(R6,R23);
-	ADDIV(2,R6);
+	ADDSV(2,R6);
 	LDI(1);ADDW(R5);PEEK();_MULI(6);ADDWI('yysvec');
 	STW(R7);
 	DOKE(R23);
@@ -668,7 +668,7 @@ def code14():
 	LDWI('yycrank');XORW(R23);_BEQ('.85');
 	_BRA('.61');
 	label('.85');
-	SUBIV(-(-1),R4);
+	ADDSV(-1,R4);
 	MOVW(R4,R23);
 	LDWI('yytchar');STW(R22);
 	PEEKV(R23);DOKE(R22);
@@ -683,7 +683,7 @@ def code14():
 	_BRA('.90');
 	label('.89');
 	LDW(R4);
-	SUBIV(-(-1),R4);
+	ADDSV(-1,R4);
 	POKEQ(0);
 	DEEKV(R6);STW(R23);
 	_BEQ('.92');
@@ -696,9 +696,9 @@ def code14():
 	LDWI('yyfnd');DEEK();DEEK();ADDWI('yyextra');PEEK();_BEQ('.94');
 	_BRA('.97');
 	label('.96');
-	SUBIV(-(-2),R6);
+	ADDSV(-2,R6);
 	MOVW(R4,R23);
-	SUBIV(-(-1),R4);
+	ADDSV(-1,R4);
 	LDWI('yytchar');STW(R22);
 	PEEKV(R23);DOKE(R22);
 	DEEKV(R22);XORI(10);_BNE('.99');
@@ -744,7 +744,7 @@ def code14():
 	LDWI('yytchar');DEEK();POKE(R22);
 	label('.90');
 	LDW(R6);STW(R23);
-	SUBIV(-(-2),R6);
+	ADDSV(-2,R6);
 	LDWI('yylstate');_CMPWU(R23);_BLT('.89');
 	LDWI('yytext');PEEK();_BNE('.104');
 	LDWI('yysptr');DOKEI('yysbuf');
@@ -802,7 +802,7 @@ def code15():
 	_BRA('.117');
 	label('.120');
 	LDW(R8);
-	ADDIV(2,R8);
+	ADDSV(2,R8);
 	DEEK();XORW(R9);_BNE('.123');
 	LDI(1);
 	_BRA('.117');
@@ -815,7 +815,7 @@ def code15():
 # ======== ('CODE', 'yyinput', code16)
 def code16():
 	label('yyinput');
-	_PROLOGUE(12,2,0xe0); # save=R5-7
+	_PROLOGUE(12,4,0xe0); # save=R5-7
 	LDWI('yysptr');DEEKA(R23);
 	LDWI('yysbuf');_CMPWU(R23);_BGE('.133');
 	LDWI('yysptr');STW(R23);
@@ -837,7 +837,7 @@ def code16():
 	label('.131');
 	LDWI('yytchar');DEEKA(R6);
 	label('.132');
-	LDNI(-1);XORW(R6);_BNE('.129');
+	LDWI(-1);XORW(R6);_BNE('.129');
 	MOVQW(0,R7);
 	_BRA('.130');
 	label('.129');
@@ -845,7 +845,7 @@ def code16():
 	label('.130');
 	LDW(R7);
 	label('.125');
-	_EPILOGUE(12,2,0xe0,saveAC=True);
+	_EPILOGUE(12,4,0xe0,saveAC=True);
 # ======== ('CODE', 'yyoutput', code17)
 def code17():
 	label('yyoutput');
@@ -1322,7 +1322,7 @@ def code32():
 	_SP(-302+324);STW(R5);
 	MOVIW(v('yyv')-2,R3);
 	label('.145');
-	ADDIV(2,R5);
+	ADDSV(2,R5);
 	MOVW(R5,R23);
 	_SP(-2+324);_CMPWU(R23);_BGE('.146');
 	MOVIW('.149',R8);
@@ -1331,7 +1331,7 @@ def code32():
 	_BRA('.142');
 	label('.146');
 	LDW(R6);DOKE(R5);
-	ADDIV(2,R3);
+	ADDSV(2,R3);
 	LDWI('yyval');DEEK();DOKE(R3);
 	label('.150');
 	LDWI('yypact');ADDW(R6);ADDW(R6);DEEKA(R4);
@@ -1368,7 +1368,7 @@ def code32():
 	label('.153');
 	LDWI('yydef');ADDW(R6);ADDW(R6);DEEKA(R23);
 	LDW(R23);STW(R4);
-	LDNI(-2);XORW(R23);_BNE('.165');
+	LDWI(-2);XORW(R23);_BNE('.165');
 	LDWI('yychar');DEEK();_BGE('.167');
 	CALLI('yylex');STW(R23);
 	LDWI('yychar');DOKEA(R23);
@@ -1380,7 +1380,7 @@ def code32():
 	_BRA('.174');
 	label('.171');
 	label('.172');
-	ADDIV(4,R2);
+	ADDSV(4,R2);
 	label('.174');
 	MOVIW(-1,R23);
 	DEEKV(R2);XORW(R23);_BNE('.171');
@@ -1392,7 +1392,7 @@ def code32():
 	_BRA('.177');
 	label('.178');
 	label('.176');
-	ADDIV(4,R2);
+	ADDSV(4,R2);
 	LDW(R2);
 	DEEK();_BGE('.175');
 	label('.177');
@@ -1427,8 +1427,8 @@ def code32():
 	_BRA('.145');
 	label('.194');
 	DEEKV(R5);LSLW();ADDWI('yypact');DEEKA(R4);
-	LDNI(-2);ADDV(R5);
-	ADDV(R3);
+	ADDSV(-2,R5);
+	ADDSV(-2,R3);
 	label('.192');
 	_SP(-300+324);_CMPWU(R5);_BLE('.191');
 	label('.196');

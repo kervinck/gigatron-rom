@@ -87,6 +87,8 @@ def scope():
     #    The COPYN alternative also trashes sysArgs[2-7]
     def code4():
         nohop()
+        if args.cpu >= 6:
+            warning("cpu6: use COPYN instead of _@_wcopy")
         label('_@_wcopy')
         _DEEKV(T3);DOKE(T2)
         LDI(2);ADDW(T2);STW(T2)

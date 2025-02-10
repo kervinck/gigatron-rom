@@ -193,6 +193,16 @@ static Type specifier(int *sclass, Attribute *pa) {
 			} else
 				p = NULL;
 			break;
+		case TYPEOF:
+			t = gettok();
+			if (t == '(') {
+				t = gettok();
+				Tree q = expr(')');
+				ty = q->type;
+				p = &type;
+			} else
+				expect('(');
+			break;
 		default: p = NULL;
 		}
 		if (p == NULL)

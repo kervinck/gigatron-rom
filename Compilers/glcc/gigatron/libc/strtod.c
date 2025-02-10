@@ -101,7 +101,7 @@ int _strtod_decode(strtod_t *d, double *px)
 		e = e + d->e1;
 	_raise_code = 0;
 	_raise_disposition = RAISE_SETS_CODE;
-	x = _ldexp10(x, e);
+	x = _ldexp10p(&x, e);
 	if (_raise_code) {
 		x = HUGE_VAL;
 		errno = ERANGE;

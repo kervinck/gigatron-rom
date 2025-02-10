@@ -1,4 +1,12 @@
 
+- Adapted for dev7 backward incompatible changes
+- Added gigatron/idioms.h
+- Support for opcodes FILL and BLIT
+- Redesigned binary to ascii routines 
+- Improved fp and shift routines
+- Fixed minor stdio console bug
+- Better runtime for ROMv4.
+
 GLCC_RELEASE_2.5
 
 - Bug fixes

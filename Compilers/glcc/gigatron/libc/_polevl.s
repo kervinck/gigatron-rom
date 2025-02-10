@@ -18,8 +18,14 @@ def scope():
         label('.polevl1')
         LDI(F8);_FMUL();LDW(R11);_FADD()
         label('.polevl2')
-        LDW(R11);ADDI(5);STW(R11)
-        LD(R12);SUBI(1);ST(R12);_BNE('.polevl1')
+        if args.cpu >= 7:
+            ADDSV(5,R11)
+        else:
+            LDW(R11);ADDI(5);STW(R11)
+        if args.cpu >= 6:
+            DBNE(R12,'.polevl1')
+        else:
+            LD(R12);SUBI(1);ST(R12);_BNE('.polevl1')
         tryhop(2);POP();RET()
 
     module(name='_polevl.s',

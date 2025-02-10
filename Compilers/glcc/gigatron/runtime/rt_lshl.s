@@ -13,10 +13,10 @@ def scope():
             LSLVL(LAC)
             warning('cpu6: use LSLVL instead of _@_lshl1')
         else:
-            LDW(LAC);_BLT('.l1')
-            LSLW();STW(LAC);LDW(LAC+2);LSLW();STW(LAC+2);RET()
+            LDW(LAC+2);LSLW();STW(LAC+2)
+            LDW(LAC);_BGE('.l1');INC(LAC+2)
             label('.l1')
-            LSLW();STW(LAC);LDW(LAC+2);LSLW();ORI(1);STW(LAC+2)
+            LSLW();STW(LAC)
         RET()
 
     module(name='rt_lshl1.s',
@@ -36,10 +36,10 @@ def scope():
             LSLVL(T0)
             warning('cpu6: use LSLVL instead of _@_lshl1')
         else:
-            LDW(T0);_BLT('.lsl1')
-            LSLW();STW(T0);LDW(T0+2);LSLW();STW(T0+2);RET()
-            label('.lsl1')
-            LSLW();STW(T0);LDW(T0+2);LSLW();ORI(1);STW(T0+2)
+            LDW(T1);LSLW();STW(T1)
+            LDW(T0);_BGE('.l1');INC(T1)
+            label('.l1')
+            LSLW();STW(T0)
         RET()
 
     module(name='rt_lshl1t0t1.s',

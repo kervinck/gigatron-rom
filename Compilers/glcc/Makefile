@@ -12,6 +12,7 @@ G=${TOP}gigatron/
 TARGET=gigatron
 CFLAGS=-g -Wno-abi
 LDFLAGS=-g
+EXTRALIBS=-lm
 PYTHON=python3
 HOSTFILE=${TOP}etc/gigatron-lcc.c
 GLCC=${B}glcc
@@ -81,6 +82,7 @@ lcc-%: FORCE
                 "TARGET=${TARGET}" \
 		"CFLAGS=${CFLAGS}" \
 		"LDFLAGS=${LDFLAGS}" \
+		"EXTRALIBS=${EXTRALIBS}" \
 		"E=${E}" \
 		`echo $@ | sed -e 's/^lcc-//'`
 
@@ -172,6 +174,12 @@ endif
 glcc-test: ${TSTS} ${TSTO}
 
 ${B}tst/%.s: tst/%.c FORCE
+	@test -d ${B}tst || mkdir ${B}tst
+	-${GLCC} -S -rom=${ROM} -o $@  $< 2>"${B}tst/$(*F).ss2"
+	cmp "${B}tst/$(*F).ss2" "${G}tst/$(*F).2bk"
+	[ ! -r "${G}tst/$(*F).sbk" ] || cmp $@ "${G}tst/$(*F).sbk"
+
+${B}tst/%.s: ${G}tst/%.c FORCE
 	@test -d ${B}tst || mkdir ${B}tst
 	-${GLCC} -S -rom=${ROM} -o $@  $< 2>"${B}tst/$(*F).ss2"
 	cmp "${B}tst/$(*F).ss2" "${G}tst/$(*F).2bk"

@@ -43,9 +43,9 @@ def code1():
 module(name='setjmp.s',
        code=[ ('EXPORT', 'setjmp'),
               ('EXPORT', 'longjmp'),
+              ('IMPORT', '_@_wcopy') if args.cpu < 6 else ('NOP',),
               ('CODE', 'setjmp', code0),
-              ('CODE', 'longjmp', code1),
-              ('IMPORT', '_@_wcopy') ])
+              ('CODE', 'longjmp', code1) ])
 
 # Local Variables:
 # mode: python

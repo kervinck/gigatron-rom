@@ -62,7 +62,7 @@ def code2():
 # ======== ('CODE', 'makerect', code3)
 def code3():
 	label('makerect');
-	_PROLOGUE(24,10,0x80); # save=R7
+	_PROLOGUE(24,12,0x80); # save=R7
 	MOVW(R8,R7);
 	_SP(-8+24);STW(T2);_MOVM([SP,2+24],[T2],4,2);
 	_SP(-4+24);STW(T2);_MOVM([SP,6+24],[T2],4,2);
@@ -70,7 +70,7 @@ def code3():
 	_SP(2);STW(T2);_MOVM([SP,-8+24],[T2],8,2);
 	CALLI('canonrect');
 	label('.42');
-	_EPILOGUE(24,10,0x80);
+	_EPILOGUE(24,12,0x80);
 # ======== ('CODE', 'ptinrect', code4)
 def code4():
 	label('ptinrect');
@@ -98,7 +98,7 @@ def code5():
 # ======== ('CODE', 'odd', code6)
 def code6():
 	label('odd');
-	_PROLOGUE(12,4,0x0); # save=None
+	_PROLOGUE(12,6,0x0); # save=None
 	_SP(-3+12);STW(T2);_MOVM([SP,0+12],[T2],3,1);
 	LDWI('.56');STW(R8);
 	_STLW(0);
@@ -107,7 +107,7 @@ def code6():
 	CALLI('printf');
 	LDI(0);
 	label('.55');
-	_EPILOGUE(12,4,0x0,saveAC=True);
+	_EPILOGUE(12,6,0x0,saveAC=True);
 # ======== ('DATA', '.58', code7, 0, 2)
 def code7():
 	align(2);
@@ -140,7 +140,7 @@ def code10():
 	_MOVM('.59',[SP,-36+68],4,2);
 	_MOVM('.60',[SP,-16+68],16,2);
 	_SP(-40+68);STW(R8);
-	LDNI(-10);STW(R9);
+	LDWI(-10);STW(R9);
 	STW(R10);
 	CALLI('makepoint');
 	_SP(-44+68);STW(R8);

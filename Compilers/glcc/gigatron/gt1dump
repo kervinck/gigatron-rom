@@ -101,8 +101,9 @@ opcodes = [
     0x4d: ('JGT',  'J'), 0x50: ('JLT',  'J'), 0x53: ('JGE',  'J'),
     0x56: ('JLE',  'J'), 0x66: ('ADDV',  1),  0x68: ('SUBV',  1),
     0x6a: ('LDXW', 'X'), 0x6c: ('STXW', 'X'), 0x6e: ('LDSB',  1),
-    0x70: ('INCV',  1),  0x72: ('JNE',  'J'), 0x78: ('LDNI', 'N'),
-    0x7d: ('MULQ',  1),  0xb1: ('MOVIW','K'), 0xbb: ('MOVW', 'M'),
+    0x70: ('INCV',  1),  0x72: ('JNE',  'J'),
+    0x7a: ('DBNE', 'E'), 0x7d: ('MULQ',  1),
+    0xb1: ('MOVIW','K'), 0xbb: ('MOVW', 'M'), 0xc6: ('ADDSV','D'),
     0xd3: ('CMPWS', 1),  0xd6: ('CMPWU', 1),  0xd9: ('CMPIS', 1),
     0xdb: ('CMPIU', 1),  0xdd: ('PEEKV', 1),  0xe1: ('PEEKA', 1)
   },
@@ -182,13 +183,15 @@ opcodes35 = {
   0x18: ('LSRXA', 0),  0x1a: ('RORX',    0),  0x1c: ('MACX',  0),
   0x1e: ('LDLAC', 0),  0x20: ('STLAC',   0),  0x23: ('INCVL', 1),
   0x25: ('STFAC', 0),  0x27: ('LDFAC',   0),  0x29: ('LDFARG',0),
-  0x2b: ('VSAVE', 0),  0x2d: ('VRESTORE',0),  0x2f: ('EXCH', 0),
+  0x2b: ('VSAVE', 0),  0x2d: ('VRESTORE',0),
   0x32: ('LEEKA', 1),  0x34: ('LOKEA',   1),
   0x38: ('RDIVS', 1),  0x3b: ('RDIVU',   1),  0x3d: ('MULW',  1),
-  0x3f: ('BEQ',   1),  0x4d: ('BGT',     1),  0x50: ('BLT',   1),
-  0x53: ('BGE',   1),  0x56: ('BLE',     1),  0x5c: ('RESET', 0),
-  0x62: ('DOKEI','I'), 0x72: ('BNE',     1),  0x7d: ('ADDIV','T'),
-  0x9c: ('SUBIV','T'), 0xcb: ('COPY',    0),  0xcf: ('COPYN', 1),
+  0x3f: ('BEQ',   1),  0x48: ('BLIT',    0),  0x4a: ('FILL',  0),
+  0x4d: ('BGT',   1),  0x50: ('BLT',     1),
+  0x53: ('BGE',   1),  0x56: ('BLE',     1),
+  0x63: ('DOKEI','I'), 0x72: ('BNE',     1),  0x7d: ('RESET', 0),
+  0xcb: ('COPY',  0),  0xcf: ('COPYN',   1),
+  0xd1: ('EXBA',  1),  0xd3: ('NOTVL',   1),
   0xdb: ('MOVL', 'M'), 0xdd: ('MOVF',   'M'),
 }
 
@@ -208,17 +211,20 @@ insTypes = {
         lambda asm: asm[:-7] + zpSym(asm[-2:]) + ",$" + asm[-6:-2] ),
   'K': (3, # MOVIW
         lambda asm: asm[:-6] + asm[-4:-2] + asm[-6:-4] + "," + zpSym(asm[-2:]) ),
-  'T': (2, # ADDIV SUBIV
+  'D': (2, # ADDSV
+	lambda asm: asm[:-4] + asm[-4:-2] + "," + zpSym(asm[-2:]) ),
+  'T': (2, # COPYS
         lambda asm: asm[:-4] + asm[-2:] + "," + zpSym(asm[-4:-2]) ),
   'I': (2, # DOKEI
         lambda asm: asm[:-4] + asm[-2:] + asm[-4:-2] ),
-  'N': (1, # LDNI
-        lambda asm: asm[:-3] + ("-$%02x" % (256 - int(asm[-2:],16))) ),
+  'E': (2, # DBNE
+        lambda asm: asm[:-7] + zpSym((int(asm[-2:],16) - 2) & 0xff) +
+            (",$%s" % asm[-4:-2]) + ("%02x" % ((int(asm[-6:-4],16) + 2) & 0xff)) ),
   'S': (1, # SYS
         lambda asm: insSys(asm) ),
 }
 
-bccInsVcpu = ['BNE', 'BEQ', 'BGT', 'BLT', 'BGE', 'BLE', 'BRA', 'DEF']
+bccInsVcpu = ['BNE', 'BEQ', 'BGT', 'BLT', 'BGE', 'BLE', 'BRA', 'DEF', 'DBNE']
 
 bccIns6502 = ['BNE', 'BEQ', 'BCC', 'BCS', 'BVC', 'BVS', 'BMI', 'BPL']
 
@@ -227,8 +233,8 @@ def zpMode(ins):
   if ins in ['LD', 'LDW', 'STW', 'ST',
              'INC', 'ADDW', 'SUBW', 'CALL', 'ADDV', 'SUBV'
              'POKE', 'DOKE', 'ANDW', 'ORW',
-             'INCV', 'INCVL', 'NEGV', 'NEGVL', 'LSLVL',
-             'DOKEA', 'POKEA', 'DEEKA', 'PEEKA', 'DEEKV', 'PEEKV'
+             'INCV', 'INCVL', 'NEGV', 'NEGVL', 'LSLVL', 'NOTVL',
+             'DOKEA', 'POKEA', 'DEEKA', 'PEEKA', 'DEEKV', 'PEEKV',
              'XORW', 'CMPHS', 'CMPHU', 'CMPWS', 'CMPWU']:
     return True
   # v6502 instructions that work on zero page

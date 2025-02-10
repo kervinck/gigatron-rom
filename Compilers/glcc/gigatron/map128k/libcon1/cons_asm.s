@@ -55,8 +55,8 @@ def scope():
         label('.loop')
         LDW(R10);PEEK();STW(R8)                  # R8: character code
         LDI(1);ADDW(R10);STW(R10)                # next char
-        LDWI(0x8000);ORW(R9);STW('sysArgs4')     # destination address
-        LDW(R9);ADDI(6);STW(R9);                 # next address
+        LDW(R9);STW('sysArgs4')                  # destination address
+        ADDI(6);STW(R9);                         # next address
         LD(vACL);SUBI(0xA0);_BGT('.ret')         # beyond screen?
         _LDI('font32up');STW(R13)                # R13: font address
         LDW(R8);SUBI(32);_BLT('.ret'  )          # c<32
@@ -74,7 +74,7 @@ def scope():
         nohop()
         label('_printonechar')
         PUSH()
-        LDW(R9);CALLI('_cons_set_bank')
+        CALLI('_cons_set_bank')
         LDW(R8);LSLW();LSLW();ADDW(R8);ADDW(R13)
         STW(R13);LUP(0);ST('sysArgs2');SYS(134);INC('sysArgs4')
         LDW(R13);LUP(1);ST('sysArgs2');SYS(134);INC('sysArgs4')
@@ -96,7 +96,7 @@ def scope():
                   ('PLACE', '_printonechar', 0x0200, 0x7fff) ] )
 
     
-    # -- void _console_clear(char *addr, char clr, int nl)
+    # -- void _console_clear(char *addr, char clr, char nl)
     # Clears from addr to the end of line with color clr.
     # Repeats for nl successive lines.
 
@@ -104,19 +104,28 @@ def scope():
         label('_console_clear')
         PUSH()
         CALLI('_cons_save_current_bank')
-        LDI(160);SUBW(R8);ST(R11)
-        LD(R9);ANDI(0x3f);ST('sysArgs1')
-        LDWI('SYS_SetMemory_v2_54');STW('sysFn')
-        label('.loop')
-        LDW(R8);CALLI('_cons_set_bank')
-        LD(R11);ST('sysArgs0')
-        LDWI(0x8000);ORW(R8);STW('sysArgs2')
-        SYS(54)
-        INC(R8+1)
-        LDW(R10)
-        SUBI(1);
-        STW(R10);
-        _BNE('.loop')
+        if args.cpu >= 7:
+            CALLI('_cons_set_bank')
+            LD(R9);ANDI(0x3f);STW(T3)
+            LDI(160);SUBW(R8);ST(R11)
+            LDW(R8);STW(T2)
+            LD(R10);ST(R11+1);LDW(R11)
+            FILL()
+        else:
+            CALLI('_cons_set_bank')
+            _MOVIW('SYS_SetMemory_v2_54','sysFn')
+            LDI(160);SUBW(R8);ST(R11)
+            LD(R9);ANDI(0x3f);ST('sysArgs1')
+            label('.loop')
+            LD(R11);ST('sysArgs0')
+            LDWI(0x8000);ORW(R8);STW('sysArgs2')
+            SYS(54)
+            INC(R8+1)
+            if args.cpu >= 6:
+                DBNE(R10,'.loop')
+            else:
+                LDW(R10);SUBI(1);STW(R10)
+                _BNE('.loop')
         CALLI('_cons_restore_saved_bank')
         tryhop(2);POP();RET()
 

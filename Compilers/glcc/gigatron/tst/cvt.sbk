@@ -3,7 +3,7 @@
 # ======== ('CODE', 'print', code0)
 def code0():
 	label('print');
-	_PROLOGUE(44,40,0x0); # save=None
+	_PROLOGUE(44,42,0x0); # save=None
 	LDWI('.2');STW(R8);
 	_STLW(0);
 	LDWI('c');PEEK();LDSB(vACL);STW(R9);
@@ -30,7 +30,7 @@ def code0():
 	_MOVF(F21,[SP,34]);
 	CALLI('printf');
 	label('.1');
-	_EPILOGUE(44,40,0x0);
+	_EPILOGUE(44,42,0x0);
 # ======== ('CODE', 'main', code1)
 def code1():
 	label('main');

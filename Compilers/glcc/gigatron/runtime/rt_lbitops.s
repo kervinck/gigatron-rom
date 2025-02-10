@@ -3,8 +3,12 @@ def scope():
     def code0():
         nohop()
         label('_@_lcom')
-        _LDI(0xffff);XORW(LAC);STW(LAC)
-        _LDI(0xffff);XORW(LAC+2);STW(LAC+2)
+        if args.cpu >= 6:
+            NOTVL(LAC)
+            warning("cpu6: should use NOTVL instead of _@_lcom")
+        else:
+            _LDI(0xffff);XORW(LAC);STW(LAC)
+            _LDI(0xffff);XORW(LAC+2);STW(LAC+2)
         RET()
 
     module(name='rt_lcom.s',

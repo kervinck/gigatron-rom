@@ -104,7 +104,7 @@ def scope():
         # .idle:
         #   clk += frameCount; frameCount=0
         label('.idle')
-        MOVQW('frameCount',T2);LDI(0);EXCH()
+        LDI('frameCount');EXBA(0)
         CALLI('_gt_adjclock');STLAC()
         #
         # _gt_irq:
@@ -147,7 +147,7 @@ def scope():
         label('_gt_sched')
         LDW('_gt_ct');STW(T0);LD(vACH);VSAVE()
         LDW(T0);XORI(0xe2^0xaa);DOKEI(v('.ret')-2)
-        MOVQW('frameCount',T2);LDNI(0xff00);EXCH()
+        LDI('frameCount');EXBA(0);ADDHI(0xff)
         CALLI('_gt_adjclock');STLAC()
         CALL(T3)
         CALLI('_gt_irq')
@@ -369,7 +369,7 @@ def scope():
         label('.m1')
         PUSH();CALLI('gt_join');POP()  # same code as join!
         label('gt_mutex_lock')
-        MOVW(R8,T2);LDI(1);EXCH();_BNE('.m1')
+        LDW(R8);EXBA(1);_BNE('.m1')
         RET()
 
     module(name='gt_mutex_lock.s',
@@ -380,8 +380,8 @@ def scope():
     def code_mutex_trylock():
         nohop()
         label('gt_mutex_trylock')
-        MOVW(R8,T2);LDI(1);EXCH();_BEQ('.m1')
-        LDNI(-1)
+        LDW(R8);EXBA(1);_BNE('.m1')
+        LDWI(-1)
         label('.m1')
         RET()
 

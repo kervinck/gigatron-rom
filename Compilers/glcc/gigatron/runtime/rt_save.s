@@ -51,20 +51,13 @@ def scope():
                     DEEKA(R0+i+i);ADDI(2)
                 label(rtrnname(8))
                 DEEKA(vLR)
-            elif args.cpu >= 5:
+            else:
                 for i in range(0,8):
                     label(rtrnname(i))
                     STW(T3);DEEK();STW(R0+i+i)
                     LDI(2);ADDW(T3)
                 label(rtrnname(8))
                 DEEK();STW(vLR)
-            else:
-                for i in range(0,8):
-                    label(rtrnname(i))
-                    LDW(T3);DEEK();STW(R0+i+i)
-                    LDI(2);ADDW(T3);STW(T3)
-                label(rtrnname(8))
-                LDW(T3);DEEK();STW(vLR)
             # return
             if args.cpu >= 7:
                 LDW(T0);ADDV(SP)
