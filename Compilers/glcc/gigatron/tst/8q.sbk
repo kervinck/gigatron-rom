@@ -3,7 +3,7 @@
 # ======== ('CODE', 'main', code0)
 def code0():
 	label('main');
-	_PROLOGUE(8,2,0x80); # save=R7
+	_PROLOGUE(8,4,0x80); # save=R7
 	MOVQW(0,R7);
 	label('.2');
 	LDW(R7);LSLW();STW(R23);
@@ -23,7 +23,7 @@ def code0():
 	CALLI('queens');
 	LDI(0);
 	label('.1');
-	_EPILOGUE(8,2,0x80,saveAC=True);
+	_EPILOGUE(8,4,0x80,saveAC=True);
 # ======== ('CODE', 'queens', code1)
 def code1():
 	label('queens');

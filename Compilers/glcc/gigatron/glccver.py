@@ -1,1 +1,1 @@
-ver="GLCC_RELEASE_2.5"
+ver="GLCC_RELEASE_2.6"

@@ -753,6 +753,17 @@ int gettok(void) {
 				cp = rcp + 12;
 				return ATTRIBUTE;
 			}			
+			if (rcp[0] == '_'
+			&&  rcp[1] == 't'
+			&&  rcp[2] == 'y'
+			&&  rcp[3] == 'p'
+			&&  rcp[4] == 'e'
+			&&  rcp[5] == 'o'
+			&&  rcp[6] == 'f'
+			&& !(map[rcp[7]]&(DIGIT|LETTER))) {
+				cp = rcp + 7;
+				return TYPEOF;
+			}
 			goto id;
 		default:
 			if ((map[cp[-1]]&BLANK) == 0) {

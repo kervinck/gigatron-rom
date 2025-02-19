@@ -4,29 +4,34 @@ def scope():
     # memset(d,v,l)
 
     def code0():
-        '''version that uses Sys_SetMemory_v2_54'''
+        '''version that uses either FILL or Sys_SetMemory_v2_54'''
         nohop()
         label('memset');                            # R8=d, R9=v, R10=l
-        LDW(R8);STW(R21);STW('sysArgs2')
-        _MOVIW('SYS_SetMemory_v2_54','sysFn')       # prep sys
-        LD(R9);ST('sysArgs1')
-        label('.loop')
-        LD(R8);ST(R20);LDI(255);ST(R20+1)           # R20 is minus count to end of block
-        LDW(R10);_BGT('.memset2')
-        _BEQ('.done')                               # a) len is zero
-        ADDW(R20);_BRA('.memset4')                  # b) len is larger than 0x8000
-        label('.memset2')
-        ADDW(R20);_BLE('.memset5')                  # c) len is smaller than -R20
-        label('.memset4')
-        STW(R10)                                    # d) len is larger than -R20
-        LDI(0);SUBW(R20);STW(R20);ST('sysArgs0');SYS(54)
-        LDW(R8);ADDW(R20);STW(R8);STW('sysArgs2')
-        _BRA('.loop')
-        label('.memset5')
-        LDW(R10);ST('sysArgs0');SYS(54)
+        LDW(R8);STW(T2);ADDW(R10);STW(R20)
+        if args.cpu >= 7:
+            LD(R9);STW(T3);_BRA('.test')
+            label('.loop')
+            LDI(0);SUBW(T2);MOVQB(1,vACH);FILL()
+            MOVQB(0,T2);INC(T2+1)
+            label('.test')
+            LDW(T2);XORW(R20);_BEQ('.done')
+            LD(vACH);_BNE('.loop')
+            LDW(R20);SUBW(T2);INC(vACH);FILL()
+        else:
+            LD(R9);ST('sysArgs1')
+            _MOVIW('SYS_SetMemory_v2_54','sysFn')
+            _BRA('.test')
+            label('.loop')
+            LDI(0);SUBW(T2);ST('sysArgs0')
+            LDI(0);ST(T2);INC(T2+1)
+            SYS(54)
+            label('.test')
+            LDW(T2);STW('sysArgs2');XORW(R20);_BEQ('.done')
+            LD(vACH);_BNE('.loop')
+            LDW(R20);SUBW(T2);ST('sysArgs0')
+            SYS(54)
         label('.done')
-        LDW(R21)
-        RET()
+        LDW(R8);RET()
 
 
     return [('EXPORT', 'memset'),

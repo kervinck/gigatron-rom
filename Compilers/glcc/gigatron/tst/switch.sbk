@@ -256,7 +256,7 @@ def code7():
 # ======== ('CODE', 'h', code8)
 def code8():
 	label('h');
-	_PROLOGUE(12,4,0xc0); # save=R6-7
+	_PROLOGUE(12,6,0xc0); # save=R6-7
 	MOVQW(0,R6);
 	LDWI('.76');STW(R8);
 	_STLW(0);
@@ -395,7 +395,7 @@ def code8():
 	CALLI('printf');
 	LDI(0);
 	label('.75');
-	_EPILOGUE(12,4,0xc0,saveAC=True);
+	_EPILOGUE(12,6,0xc0,saveAC=True);
 # ======== ('CODE', 'big', code9)
 def code9():
 	label('big');
@@ -447,7 +447,7 @@ def code9():
 # ======== ('CODE', 'limit', code10)
 def code10():
 	label('limit');
-	_PROLOGUE(8,2,0x80); # save=R7
+	_PROLOGUE(8,4,0x80); # save=R7
 	MOVIW(-32768,R7);
 	label('.125');
 	MOVIW(-32768,R23);
@@ -526,11 +526,11 @@ def code10():
 	CALLI('printf');
 	label('.148');
 	label('.144');
-	SUBIV(1,R7);
+	ADDSV(-1,R7);
 	LDWI(32762);_CMPWS(R7);_BLE('.143');
 	LDI(0);
 	label('.124');
-	_EPILOGUE(8,2,0x80,saveAC=True);
+	_EPILOGUE(8,4,0x80,saveAC=True);
 # ======== ('DATA', '.142', code11, 0, 2)
 def code11():
 	align(2);

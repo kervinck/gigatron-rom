@@ -18,7 +18,7 @@ def code2():
 # ======== ('CODE', 'main', code3)
 def code3():
 	label('main');
-	_PROLOGUE(12,6,0x80); # save=R7
+	_PROLOGUE(12,8,0x80); # save=R7
 	LDWI(v('.3')+24);DOKEQ(1);
 	LDWI(v('.3')+26);DOKEQ(1);
 	LDWI(v('.3')+28);DOKEQ(1);
@@ -59,7 +59,7 @@ def code3():
 	label('.24');
 	LDI(0);
 	label('.1');
-	_EPILOGUE(12,6,0x80,saveAC=True);
+	_EPILOGUE(12,8,0x80,saveAC=True);
 # ======== ('DATA', '.29', code4, 0, 1)
 def code4():
 	label('.29');
@@ -78,7 +78,7 @@ def code6():
 # ======== ('CODE', 's714', code7)
 def code7():
 	label('s714');
-	_PROLOGUE(64,4,0xff); # save=R0-7
+	_PROLOGUE(64,6,0xff); # save=R0-7
 	MOVW(R8,R7);
 	LDWI('.31');_STLW(-36+64);
 	LDI(36);ADDW(R7);_STLW(-38+64);
@@ -5389,7 +5389,7 @@ def code7():
 	label('.1637');
 	_LDLW(-40+64);
 	label('.28');
-	_EPILOGUE(64,4,0xff,saveAC=True);
+	_EPILOGUE(64,6,0xff,saveAC=True);
 # ======== ('COMMON', 'rfs', code8, 8, 1)
 def code8():
 	label('rfs');

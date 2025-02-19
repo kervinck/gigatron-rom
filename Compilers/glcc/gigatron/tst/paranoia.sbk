@@ -64,7 +64,7 @@ def code14():
 # ======== ('CODE', 'sigfpe', code15)
 def code15():
 	label('sigfpe');
-	_PROLOGUE(8,4,0x0); # save=None
+	_PROLOGUE(8,6,0x0); # save=None
 	MOVIW('fpecount',R23);
 	DEEKV(R23);ADDI(1);DOKE(R23);
 	MOVIW('.2',R8);
@@ -82,7 +82,7 @@ def code15():
 	label('.3');
 	CALLI('abort');
 	label('.1');
-	_EPILOGUE(8,4,0x0);
+	_EPILOGUE(8,6,0x0);
 # ======== ('DATA', '.756', code16, 0, 2)
 def code16():
 	align(2);
@@ -94,7 +94,7 @@ def code16():
 # ======== ('CODE', 'main', code17)
 def code17():
 	label('main');
-	_PROLOGUE(132,18,0xff); # save=R0-7
+	_PROLOGUE(132,20,0xff); # save=R0-7
 	_MOVF('.6','Zero');
 	_MOVF('.7','One');
 	_MOVF('One',F21);
@@ -3246,7 +3246,7 @@ def code17():
 	CALLI('printf');
 	LDI(0);
 	label('.5');
-	_EPILOGUE(132,18,0xff,saveAC=True);
+	_EPILOGUE(132,20,0xff,saveAC=True);
 # ======== ('DATA', '.569', code18, 0, 2)
 def code18():
 	align(2);
@@ -3279,7 +3279,7 @@ def code20():
 # ======== ('CODE', 'Pause', code21)
 def code21():
 	label('Pause');
-	_PROLOGUE(8,4,0x0); # save=None
+	_PROLOGUE(8,6,0x0); # save=None
 	MOVIW('.826',R8);
 	LDWI('Milestone');DEEKA(R9);
 	LDW(R9);_STLW(2);
@@ -3294,7 +3294,7 @@ def code21():
 	DEEKV(R23);ADDI(1);DOKE(R23);
 	LDI(0);
 	label('.825');
-	_EPILOGUE(8,4,0x0,saveAC=True);
+	_EPILOGUE(8,6,0x0,saveAC=True);
 # ======== ('CODE', 'TstCond', code22)
 def code22():
 	label('TstCond');
@@ -3358,7 +3358,7 @@ def code25():
 # ======== ('CODE', 'SqXMinX', code26)
 def code26():
 	label('SqXMinX');
-	_PROLOGUE(36,18,0xf0); # save=R4-7
+	_PROLOGUE(36,20,0xf0); # save=R4-7
 	MOVW(R8,R7);
 	_MOVF('X',F21);
 	_MOVF(F21,FAC);LDWI('BInvrse');_FMUL();_MOVF(FAC,F4);
@@ -3392,7 +3392,7 @@ def code26():
 	label('.841');
 	LDI(0);
 	label('.840');
-	_EPILOGUE(36,18,0xf0,saveAC=True);
+	_EPILOGUE(36,20,0xf0,saveAC=True);
 # ======== ('CODE', 'NewD', code27)
 def code27():
 	label('NewD');
@@ -3460,7 +3460,7 @@ def code28():
 # ======== ('CODE', 'IsYeqX', code29)
 def code29():
 	label('IsYeqX');
-	_PROLOGUE(16,12,0x0); # save=None
+	_PROLOGUE(16,14,0x0); # save=None
 	_MOVF('Y',FAC);LDWI('X');_FCMP();_BEQ('.860');
 	LDWI('N');DEEK();_BGT('.862');
 	_MOVF('Zero',FAC);
@@ -3498,7 +3498,7 @@ def code29():
 	label('.860');
 	LDI(0);
 	label('.859');
-	_EPILOGUE(16,12,0x0,saveAC=True);
+	_EPILOGUE(16,14,0x0,saveAC=True);
 # ======== ('CODE', 'SR3980', code30)
 def code30():
 	label('SR3980');
@@ -3528,7 +3528,7 @@ def code30():
 # ======== ('CODE', 'PrintIfNPositive', code31)
 def code31():
 	label('PrintIfNPositive');
-	_PROLOGUE(8,4,0x0); # save=None
+	_PROLOGUE(8,6,0x0); # save=None
 	LDWI('N');DEEK();_BLE('.879');
 	MOVIW('.881',R8);
 	LDWI('N');DEEKA(R9);
@@ -3537,11 +3537,11 @@ def code31():
 	label('.879');
 	LDI(0);
 	label('.878');
-	_EPILOGUE(8,4,0x0,saveAC=True);
+	_EPILOGUE(8,6,0x0,saveAC=True);
 # ======== ('CODE', 'TstPtUf', code32)
 def code32():
 	label('TstPtUf');
-	_PROLOGUE(12,8,0x0); # save=None
+	_PROLOGUE(12,10,0x0); # save=None
 	LDWI('N');DOKEQ(0);
 	_MOVF('Z',FAC);LDWI('Zero');_FCMP();_BEQ('.883');
 	MOVIW('.885',R8);
@@ -3653,7 +3653,7 @@ def code32():
 	label('.883');
 	LDI(0);
 	label('.882');
-	_EPILOGUE(12,8,0x0,saveAC=True);
+	_EPILOGUE(12,10,0x0,saveAC=True);
 # ======== ('CODE', 'notify', code33)
 def code33():
 	label('notify');
@@ -3677,7 +3677,7 @@ def code34():
 	label('.930');
 	MOVIW('.933',R8);
 	LDW(R7);
-	ADDIV(2,R7);
+	ADDSV(2,R7);
 	DEEK();STW(R9);
 	LDW(R9);_STLW(2);
 	CALLI('printf');

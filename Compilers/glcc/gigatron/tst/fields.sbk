@@ -100,7 +100,7 @@ def code3():
 # ======== ('CODE', 'f1', code4)
 def code4():
 	label('f1');
-	_PROLOGUE(12,6,0x80); # save=R7
+	_PROLOGUE(12,8,0x80); # save=R7
 	LDW(R8);STW(R7);
 	MOVIW(0xffc3,R23);
 	DEEK();ANDW(R23);DOKE(R7);
@@ -124,7 +124,7 @@ def code4():
 	CALLI('printf');
 	LDI(0);
 	label('.21');
-	_EPILOGUE(12,6,0x80,saveAC=True);
+	_EPILOGUE(12,8,0x80,saveAC=True);
 # ======== ('CODE', 'f2', code5)
 def code5():
 	label('f2');

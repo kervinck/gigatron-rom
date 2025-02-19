@@ -8,7 +8,7 @@ static int _flush(register FILE *fp)
 	if (fp && fp->_flag) {
 		fp->_flag &= 0xff ^ _IOUNGET;
 		if (fptr = fp->_v->flush)
-			return fptr(fp, 1);
+			return fptr(fp, 0);
 	}
 	return 0;
 }

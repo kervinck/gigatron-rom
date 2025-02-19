@@ -42,8 +42,10 @@ extern __near struct console_state_s {
 extern int console_print(const char *s, unsigned int len);
 
 /* Works like console_print but prints exactly len characters
-   regardless of the presence of a null character. */
-extern int console_writall(const char *s, unsigned int len);
+   regardless of the presence of a null character. Note that
+   the third argument is not used but must be nonzero, otherwise
+   this function works exactly like console_print. */
+extern int console_writall(const char *s, unsigned int len, void *nonzero);
 
 /* Reset the video tables and clear the screen. */
 extern void console_clear_screen(void);
@@ -101,7 +103,7 @@ extern int _console_printchars(int fgbg, const char *addr, const char *s, int le
 
 /* Clear with color clr from screen address addr to the end of the row.
    Repeats for nl successive lines. */
-extern void _console_clear(char *addr, int clr, int nl);
+extern void _console_clear(char *addr, int clr, char nl);
 
 /* Handle additional control characters in _console_print().
    Override this function to implement more control characters.

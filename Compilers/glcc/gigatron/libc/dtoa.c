@@ -6,8 +6,9 @@
 #include <gigatron/libc.h>
 
 /* Helpers defined in itoa.s */
-extern int _utwoa(int);
-extern char *_uftoa(double,char*);
+extern char * _ftoa(double *x, char *bufend);
+extern int _rnda(char *s, char *r);
+
 
 #ifdef DEBUG_DTOA
 # define DBG(x) printf x
@@ -15,59 +16,54 @@ extern char *_uftoa(double,char*);
 # define DBG(x)
 #endif
 
-static const double halfm = (2.0 - DBL_EPSILON) / 4.0;
-static const double billion = 1e9;
-
-char *dtoa(double x, char *buf, register char fmt, register int prec)
+char *dtoa(double x, char *buf, register int fmt, register int prec)
 {
-	int tmp;
 	char lbuf[16];
 	register int exp, nd, per;
-	register char *q = buf;
-	register char *s;
+	register char *s, *q = buf;
 	(void) &x;
 
-	if (x < _fzero) {
+	if (((char*)&x)[1] & 0x80) {
+		((char*)&x)[1] &= 0x7f;
 		*q = '-';
 		q++;
 	}
 	/* Decode */
-	x = _frexp10(fabs(x), &tmp) + halfm;
-	nd = 9;
-	if (x >= billion)
-		nd = 10;
-	else if (x < _fone)
-		nd = 1;
-	DBG(("| frexp -> %.0f exp=%d nd=%d\n", x - halfm, tmp, nd));
+	exp = _frexp10p(&x);
+	DBG(("| frexp -> %.0f exp=%d\n", x, exp));
+	s = _ftoa(&x, lbuf+15);
+	nd = lbuf + 15 - s;
+	DBG(("| ftoa -> nd=%d s=[%.*s\\x%02x]\n", nd, nd, s, lbuf[15]));
 	/* Position period */
 	per = 1;
-	exp = tmp + nd - per;
+	exp = exp + nd - per;
 	if (fmt == 'g' && prec - 1 > 0)
 		prec -= 1;
 	if (fmt == 'f' || fmt != 'e' && exp + 4 >= 0 && exp - prec <= 0) {
-		if ((per = per + exp) != 1 && (fmt != 'f'))
-			prec = prec - per + 1;
+		per = per + exp;
 		exp = 0;
+		if (fmt != 'f')
+			prec += 1 - per;
 	}
 	DBG(("| exp=%d per=%d prec=%d nd=%d\n", exp, per, prec, nd));
 	/* Truncate */
-	if (per + prec - nd < 0) {
-		x = _ldexp10(x - halfm, per + prec - nd) + halfm;
+	if (per + prec < 0)
+		nd = 0;
+	else if (per + prec - nd < 0)
 		nd = per + prec;
-		DBG(("| trunc: nd=%d\n", nd));
-	}
-	/* Extract digits */
-	//s = ultoa((long)x, lbuf, 10);
-	s = _uftoa(x, lbuf);
-	DBG(("| digits=[%s]\n", s));
-	if (s[nd] != 0) {
+	DBG(("| trunc: nd=%d ", nd));
+	if (_rnda(s, s+nd)) {
 		/* Carry propagation during rounding got us an extra digit */
+		s -= 1;
+		DBG((" s=[%s]\n", s));
 		if (fmt == 'e' || fmt != 'f' && exp != 0) {
 			s[nd] = 0;
 			exp += 1;
 		} else
 			per += 1;
 		DBG(("| carry adjustment: digits=[%s] exp=%d per=%d\n", s, exp, per));
+	} else {
+		DBG((" s=[%s]\n", s));
 	}
 	/* Output digits */
 	if ((nd = 1 - per) < 0)

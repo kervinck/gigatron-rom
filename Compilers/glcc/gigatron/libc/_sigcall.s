@@ -46,7 +46,7 @@ def code0():
 
 module(name='_sigcall.s',
        code=[ ('IMPORT', '_sigcall'),
-              ('IMPORT', '_@_wcopy'),
+              ('IMPORT', '_@_wcopy') if args.cpu < 6 else ('NOP',),
               ('EXPORT', '_raise_emits_signal'),
               ('CODE', '_raise_emits_signal', code0) ] )
 

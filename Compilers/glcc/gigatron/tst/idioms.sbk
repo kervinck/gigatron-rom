@@ -1,0 +1,464 @@
+#VCPUv7
+
+# ======== ('CODE', 'lo1', code0)
+def code0():
+	label('lo1');
+	PUSH();
+	LD(R8);
+	label('.1');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'lo2', code1)
+def code1():
+	label('lo2');
+	PUSH();
+	LD(R8);
+	label('.2');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'lo3', code2)
+def code2():
+	label('lo3');
+	PUSH();
+	LD(R8);
+	label('.3');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'hi1', code3)
+def code3():
+	label('hi1');
+	PUSH();
+	LD(v(R8)+1);
+	label('.4');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'hi2', code4)
+def code4():
+	label('hi2');
+	PUSH();
+	LD(v(R8)+1);
+	label('.5');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'hi3', code5)
+def code5():
+	label('hi3');
+	PUSH();
+	LD(v(R8)+1);
+	label('.6');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'mkw1', code6)
+def code6():
+	label('mkw1');
+	_PROLOGUE(8,2,0xc0); # save=R6-7
+	MOVW(R8,R7);
+	LDW(R9);STW(R6);
+	ST(R8);LD(R7);ST(v(R8)+1);
+	CALLI('fw');
+	label('.7');
+	_EPILOGUE(8,2,0xc0);
+# ======== ('CODE', 'mkp1', code7)
+def code7():
+	label('mkp1');
+	_PROLOGUE(8,2,0xc0); # save=R6-7
+	MOVW(R8,R7);
+	LDW(R9);STW(R6);
+	LDW(R7);ST(R8);LD(R6);ST(v(R8)+1);
+	CALLI('fp');
+	label('.8');
+	_EPILOGUE(8,2,0xc0);
+# ======== ('CODE', 'mkw2', code8)
+def code8():
+	label('mkw2');
+	_PROLOGUE(8,2,0xc0); # save=R6-7
+	MOVW(R8,R7);
+	LDW(R9);STW(R6);
+	ST(R8);LDI(2);ADDW(R7);ST(v(R8)+1);
+	CALLI('fw');
+	label('.9');
+	_EPILOGUE(8,2,0xc0);
+# ======== ('CODE', 'mkp2', code9)
+def code9():
+	label('mkp2');
+	_PROLOGUE(8,2,0xc0); # save=R6-7
+	MOVW(R8,R7);
+	LDW(R9);STW(R6);
+	LDW(R7);ST(R8);LDI(2);ADDW(R6);ST(v(R8)+1);
+	CALLI('fp');
+	label('.10');
+	_EPILOGUE(8,2,0xc0);
+# ======== ('CODE', 'msw1', code10)
+def code10():
+	label('msw1');
+	_PROLOGUE(8,2,0xc0); # save=R6-7
+	MOVW(R8,R7);
+	LDW(R9);STW(R6);
+	ST(R8);LD(v(R7)+1);ST(v(R8)+1);
+	CALLI('fw');
+	label('.11');
+	_EPILOGUE(8,2,0xc0);
+# ======== ('CODE', 'msp1', code11)
+def code11():
+	label('msp1');
+	_PROLOGUE(8,2,0xc0); # save=R6-7
+	MOVW(R8,R7);
+	LDW(R9);STW(R6);
+	LDW(R7);ST(R8);LD(v(R6)+1);ST(v(R8)+1);
+	CALLI('fp');
+	label('.12');
+	_EPILOGUE(8,2,0xc0);
+# ======== ('CODE', 'msw2', code12)
+def code12():
+	label('msw2');
+	_PROLOGUE(8,2,0xc0); # save=R6-7
+	MOVW(R8,R7);
+	LDW(R9);STW(R6);
+	LD(R6);ST(R8);LDI(2);ADDW(R7);LD(vACH);ST(v(R8)+1);
+	CALLI('fw');
+	label('.13');
+	_EPILOGUE(8,2,0xc0);
+# ======== ('CODE', 'msp2', code13)
+def code13():
+	label('msp2');
+	_PROLOGUE(8,2,0xc0); # save=R6-7
+	MOVW(R8,R7);
+	LDW(R9);STW(R6);
+	LD(R7);ST(R8);LDI(2);ADDW(R6);LD(vACH);ST(v(R8)+1);
+	CALLI('fp');
+	label('.14');
+	_EPILOGUE(8,2,0xc0);
+# ======== ('CODE', 'cl1', code14)
+def code14():
+	label('cl1');
+	PUSH();
+	label('.16');
+	LDW(R9);ST(R8);
+	label('.17');
+	LDW(R8);
+	label('.15');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'ch1', code15)
+def code15():
+	label('ch1');
+	PUSH();
+	label('.20');
+	LD(v(R9)+1);ST(v(R8)+1);
+	label('.21');
+	LDW(R8);
+	label('.19');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'cpl1', code16)
+def code16():
+	label('cpl1');
+	PUSH();
+	label('.24');
+	LDW(R9);ST(R8);
+	label('.25');
+	LDW(R8);
+	label('.23');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'cph1', code17)
+def code17():
+	label('cph1');
+	PUSH();
+	label('.28');
+	LD(v(R9)+1);ST(v(R8)+1);
+	label('.29');
+	LDW(R8);
+	label('.27');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'sl1', code18)
+def code18():
+	label('sl1');
+	PUSH();
+	label('.32');
+	LDW(R9);ST(R8);
+	label('.33');
+	LDW(R8);
+	label('.31');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'sh1', code19)
+def code19():
+	label('sh1');
+	PUSH();
+	label('.36');
+	LDW(R9);ST(v(R8)+1);
+	label('.37');
+	LDW(R8);
+	label('.35');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'spl1', code20)
+def code20():
+	label('spl1');
+	PUSH();
+	label('.40');
+	LDW(R9);ST(R8);
+	label('.41');
+	LDW(R8);
+	label('.39');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'sph1', code21)
+def code21():
+	label('sph1');
+	PUSH();
+	label('.44');
+	LDW(R9);ST(v(R8)+1);
+	label('.45');
+	LDW(R8);
+	label('.43');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'mkw1c', code22)
+def code22():
+	label('mkw1c');
+	_PROLOGUE(8,4,0x80); # save=R7
+	LDW(R8);STW(R7);
+	ST(v(R8)+1);MOVQB(0,R8);
+	CALLI('fw');
+	label('.47');
+	_EPILOGUE(8,4,0x80);
+# ======== ('CODE', 'mkw2c', code23)
+def code23():
+	label('mkw2c');
+	_PROLOGUE(8,4,0x80); # save=R7
+	LDW(R9);STW(R7);
+	LD(R7);STW(R8);
+	CALLI('fw');
+	label('.48');
+	_EPILOGUE(8,4,0x80);
+# ======== ('CODE', 'mkw1d', code24)
+def code24():
+	label('mkw1d');
+	_PROLOGUE(8,4,0x80); # save=R7
+	LDW(R8);STW(R7);
+	LD(R7);ST(v(R8)+1);MOVQB(1,R8);
+	CALLI('fw');
+	label('.49');
+	_EPILOGUE(8,4,0x80);
+# ======== ('CODE', 'mkw2d', code25)
+def code25():
+	label('mkw2d');
+	_PROLOGUE(8,4,0x80); # save=R7
+	LDW(R9);STW(R7);
+	LD(R7);ADDHI(hi(256));STW(R8);
+	CALLI('fw');
+	label('.50');
+	_EPILOGUE(8,4,0x80);
+# ======== ('CODE', 'msw1c', code26)
+def code26():
+	label('msw1c');
+	_PROLOGUE(8,4,0x80); # save=R7
+	LDW(R8);STW(R7);
+	MOVQB(0,vAC);STW(R8);
+	CALLI('fw');
+	label('.51');
+	_EPILOGUE(8,4,0x80);
+# ======== ('CODE', 'msw2c', code27)
+def code27():
+	label('msw2c');
+	_PROLOGUE(8,4,0x80); # save=R7
+	LDW(R9);STW(R7);
+	LD(R7);STW(R8);
+	CALLI('fw');
+	label('.52');
+	_EPILOGUE(8,4,0x80);
+# ======== ('CODE', 'msw1d', code28)
+def code28():
+	label('msw1d');
+	_PROLOGUE(8,4,0x80); # save=R7
+	LDW(R8);STW(R7);
+	LD(v(R7)+1);ST(v(R8)+1);MOVQB(1,R8);
+	CALLI('fw');
+	label('.53');
+	_EPILOGUE(8,4,0x80);
+# ======== ('CODE', 'msw2d', code29)
+def code29():
+	label('msw2d');
+	_PROLOGUE(8,4,0x80); # save=R7
+	LDW(R9);STW(R7);
+	LD(R7);ADDHI(hi(256));STW(R8);
+	CALLI('fw');
+	label('.54');
+	_EPILOGUE(8,4,0x80);
+# ======== ('CODE', 'msw1e', code30)
+def code30():
+	label('msw1e');
+	_PROLOGUE(8,4,0x80); # save=R7
+	LDW(R9);STW(R7);
+	LD(v(R7)+1);ST(v(R8)+1);MOVQB(1,R8);
+	CALLI('fw');
+	label('.55');
+	_EPILOGUE(8,4,0x80);
+# ======== ('CODE', 'msw2e', code31)
+def code31():
+	label('msw2e');
+	_PROLOGUE(8,4,0x80); # save=R7
+	LDW(R8);STW(R7);
+	LD(R7);ADDHI(hi(256));STW(R8);
+	CALLI('fw');
+	label('.56');
+	_EPILOGUE(8,4,0x80);
+# ======== ('CODE', 'cl1c', code32)
+def code32():
+	label('cl1c');
+	PUSH();
+	label('.58');
+	MOVQB(0,R8);
+	label('.59');
+	LDW(R8);
+	label('.57');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'ch1c', code33)
+def code33():
+	label('ch1c');
+	PUSH();
+	label('.62');
+	MOVQB(0,v(R8)+1);
+	label('.63');
+	LDW(R8);
+	label('.61');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'sl1c', code34)
+def code34():
+	label('sl1c');
+	PUSH();
+	label('.66');
+	MOVQB(0,R8);
+	label('.67');
+	LDW(R8);
+	label('.65');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'sh1c', code35)
+def code35():
+	label('sh1c');
+	PUSH();
+	label('.70');
+	MOVQB(0,v(R8)+1);
+	label('.71');
+	LDW(R8);
+	label('.69');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'cl1d', code36)
+def code36():
+	label('cl1d');
+	PUSH();
+	label('.74');
+	MOVQB(1,R8);
+	label('.75');
+	LDW(R8);
+	label('.73');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'ch1d', code37)
+def code37():
+	label('ch1d');
+	PUSH();
+	label('.78');
+	MOVQB(hi(256),v(R8)+1);
+	label('.79');
+	LDW(R8);
+	label('.77');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'sl1d', code38)
+def code38():
+	label('sl1d');
+	PUSH();
+	label('.82');
+	MOVQB(1,R8);
+	label('.83');
+	LDW(R8);
+	label('.81');
+	tryhop(2);POP();RET()
+# ======== ('CODE', 'sh1d', code39)
+def code39():
+	label('sh1d');
+	PUSH();
+	label('.86');
+	MOVQB(hi(256),v(R8)+1);
+	label('.87');
+	LDW(R8);
+	label('.85');
+	tryhop(2);POP();RET()
+# ======== (epilog)
+code=[
+	('EXPORT', 'lo1'),
+	('CODE', 'lo1', code0),
+	('EXPORT', 'lo2'),
+	('CODE', 'lo2', code1),
+	('EXPORT', 'lo3'),
+	('CODE', 'lo3', code2),
+	('EXPORT', 'hi1'),
+	('CODE', 'hi1', code3),
+	('EXPORT', 'hi2'),
+	('CODE', 'hi2', code4),
+	('EXPORT', 'hi3'),
+	('CODE', 'hi3', code5),
+	('EXPORT', 'mkw1'),
+	('CODE', 'mkw1', code6),
+	('EXPORT', 'mkp1'),
+	('CODE', 'mkp1', code7),
+	('EXPORT', 'mkw2'),
+	('CODE', 'mkw2', code8),
+	('EXPORT', 'mkp2'),
+	('CODE', 'mkp2', code9),
+	('EXPORT', 'msw1'),
+	('CODE', 'msw1', code10),
+	('EXPORT', 'msp1'),
+	('CODE', 'msp1', code11),
+	('EXPORT', 'msw2'),
+	('CODE', 'msw2', code12),
+	('EXPORT', 'msp2'),
+	('CODE', 'msp2', code13),
+	('EXPORT', 'cl1'),
+	('CODE', 'cl1', code14),
+	('EXPORT', 'ch1'),
+	('CODE', 'ch1', code15),
+	('EXPORT', 'cpl1'),
+	('CODE', 'cpl1', code16),
+	('EXPORT', 'cph1'),
+	('CODE', 'cph1', code17),
+	('EXPORT', 'sl1'),
+	('CODE', 'sl1', code18),
+	('EXPORT', 'sh1'),
+	('CODE', 'sh1', code19),
+	('EXPORT', 'spl1'),
+	('CODE', 'spl1', code20),
+	('EXPORT', 'sph1'),
+	('CODE', 'sph1', code21),
+	('EXPORT', 'mkw1c'),
+	('CODE', 'mkw1c', code22),
+	('EXPORT', 'mkw2c'),
+	('CODE', 'mkw2c', code23),
+	('EXPORT', 'mkw1d'),
+	('CODE', 'mkw1d', code24),
+	('EXPORT', 'mkw2d'),
+	('CODE', 'mkw2d', code25),
+	('EXPORT', 'msw1c'),
+	('CODE', 'msw1c', code26),
+	('EXPORT', 'msw2c'),
+	('CODE', 'msw2c', code27),
+	('EXPORT', 'msw1d'),
+	('CODE', 'msw1d', code28),
+	('EXPORT', 'msw2d'),
+	('CODE', 'msw2d', code29),
+	('EXPORT', 'msw1e'),
+	('CODE', 'msw1e', code30),
+	('EXPORT', 'msw2e'),
+	('CODE', 'msw2e', code31),
+	('EXPORT', 'cl1c'),
+	('CODE', 'cl1c', code32),
+	('EXPORT', 'ch1c'),
+	('CODE', 'ch1c', code33),
+	('EXPORT', 'sl1c'),
+	('CODE', 'sl1c', code34),
+	('EXPORT', 'sh1c'),
+	('CODE', 'sh1c', code35),
+	('EXPORT', 'cl1d'),
+	('CODE', 'cl1d', code36),
+	('EXPORT', 'ch1d'),
+	('CODE', 'ch1d', code37),
+	('EXPORT', 'sl1d'),
+	('CODE', 'sl1d', code38),
+	('EXPORT', 'sh1d'),
+	('CODE', 'sh1d', code39),
+	('IMPORT', 'fp'),
+	('IMPORT', 'fw') ]
+module(code=code, name='gigatron/tst/idioms.c', cpu=7);
+
+# Local Variables:
+# mode: python
+# indent-tabs-mode: t
+# End:

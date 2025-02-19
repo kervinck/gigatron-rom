@@ -60,7 +60,7 @@ def code3():
 # ======== ('CODE', 'main', code4)
 def code4():
 	label('main');
-	_PROLOGUE(12,4,0xc0); # save=R6-7
+	_PROLOGUE(12,6,0xc0); # save=R6-7
 	MOVQW(0,R6);
 	_BRA('.8');
 	label('.5');
@@ -89,7 +89,7 @@ def code4():
 	CALLI('g');
 	LDI(0);
 	label('.4');
-	_EPILOGUE(12,4,0xc0,saveAC=True);
+	_EPILOGUE(12,6,0xc0,saveAC=True);
 # ======== ('DATA', '.16', code5, 0, 2)
 def code5():
 	align(2);
@@ -112,7 +112,7 @@ def code6():
 	LDW(R9);_STLW(2);
 	CALLI('printf');
 	label('.22');
-	ADDIV(2,R7);
+	ADDSV(2,R7);
 	label('.24');
 	DEEKV(R7);_BNE('.21');
 	LDI(0);
@@ -121,7 +121,7 @@ def code6():
 # ======== ('CODE', 'g', code7)
 def code7():
 	label('g');
-	_PROLOGUE(12,4,0xc0); # save=R6-7
+	_PROLOGUE(12,6,0xc0); # save=R6-7
 	MOVW(R8,R7);
 	_BRA('.30');
 	label('.27');
@@ -143,17 +143,17 @@ def code7():
 	LDW(R9);_STLW(2);
 	CALLI('printf');
 	label('.28');
-	ADDIV(12,R7);
+	ADDSV(12,R7);
 	label('.30');
 	DEEKV(R7);_BNE('.27');
 	CALLI('h');
 	LDI(0);
 	label('.26');
-	_EPILOGUE(12,4,0xc0,saveAC=True);
+	_EPILOGUE(12,6,0xc0,saveAC=True);
 # ======== ('CODE', 'h', code8)
 def code8():
 	label('h');
-	_PROLOGUE(16,10,0x80); # save=R7
+	_PROLOGUE(16,12,0x80); # save=R7
 	MOVQW(0,R7);
 	_BRA('.40');
 	label('.37');
@@ -175,7 +175,7 @@ def code8():
 	LDI(5);_CMPWU(R7);_BGT('.37');
 	LDI(0);
 	label('.36');
-	_EPILOGUE(16,10,0x80,saveAC=True);
+	_EPILOGUE(16,12,0x80,saveAC=True);
 # ======== ('DATA', '.41', code9, 0, 1)
 def code9():
 	label('.41');
