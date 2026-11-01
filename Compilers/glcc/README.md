@@ -3,7 +3,7 @@
 # GLCC  2.0
 
 
-This LCC--derived compiler and C library targets the [Gigatron](http://gigatron.io) VCPU.
+This LCC--derived compiler and C library targets the [Gigatron](http://gigatronttl.eu) VCPU.
 It keeps many of the ideas of the previous attempt to port LCC to the
 Gigatron (pgavlin's).  For instance it outputs assembly code that can be parsed by
 Python and it features a linker writen in Python that can directly
@@ -196,7 +196,7 @@ Chocolatey (https://community.chocolatey.org/packages/make).
   You can then start the Git for Windows SDK shell, clone the Gigatron LCC repository,
   and use the `make` method discussed above. A precompiled version with installation 
   and usage instructions can be found in the forum 
-  post https://forum.gigatron.io/viewtopic.php?p=2484#p2484.
+  post https://forum.gigatronttl.eu/viewtopic.php?p=2484#p2484.
   
 * A second option is to use the CMake approach with any supported toolchain.
   For this you need to create a build directory and run the CMake program
