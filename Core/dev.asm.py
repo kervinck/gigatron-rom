@@ -3315,43 +3315,50 @@ label('.sysSs#20')
 ld([sysArgs+1],Y)               #20 Synchronized with vBlank
 ld([Y,X])                       #21 Copy next bit
 anda([sysArgs+2])               #22
-bne(pc()+3)                     #23
-bra(pc()+3)                     #24
-ld(7*2)                         #25
-ld(9*2)                         #25
-st([videoPulse])                #26
-ld([sysArgs+2])                 #27 Rotate input bit
-adda(AC)                        #28
-bne(pc()+3)                     #29
-bra(pc()+2)                     #30
-ld(1)                           #31
-st([sysArgs+2])                 #31,32 (must be idempotent)
-anda(1)                         #33 Optionally increment pointer
-adda([sysArgs+0])               #34
-st([sysArgs+0],X)               #35
-ld([sysArgs+3])                 #36 Frame counter
-suba(1)                         #37
-beq('.sysSs#40')                #38
-ld(hi('REENTER'),Y)             #39
-st([sysArgs+3])                 #40
-ld([serialRaw])                 #41 Test for anything being sent back
-xora(255)                       #42
-beq('.sysSs#45')                #43
-st([vAC])                       #44 Abort after key press with non-zero error
-st([vAC+1])                     #45
-jmp(Y,'REENTER')                #46
-ld(-50/2)                       #47
-label('.sysSs#45')
-ld([vPC])                       #45 Continue sending bits
-suba(2)                         #46
-st([vPC])                       #47
-jmp(Y,'REENTER')                #48
-ld(-52/2)                       #49
-label('.sysSs#40')
-st([vAC])                       #40 Stop sending bits, no error
-st([vAC+1])                     #41
-jmp(Y,'REENTER')                #42
-ld(-46/2)                       #43
+bne('.sysSs#25')                #23
+ld(IN,X)                        #24 bit 0: LONG then SHORT
+ld(IN,X)                        #25
+bra('.sysSs#28')                #26
+ld(7*2)                         #27
+label('.sysSs#25')
+nop()                           #25 bit 1: SHORT then LONG
+ld(9*2)                         #26
+ld(IN,X)                        #27
+label('.sysSs#28')
+ld(IN,X)                        #28
+st([videoPulse])                #29
+ld([sysArgs+2])                 #30 Rotate input bit
+adda(AC)                        #31
+bne(pc()+3)                     #32
+bra(pc()+2)                     #33
+ld(1)                           #34
+st([sysArgs+2])                 #34,35 (must be idempotent)
+anda(1)                         #36 Optionally increment pointer
+adda([sysArgs+0])               #37
+st([sysArgs+0],X)               #38
+ld([sysArgs+3])                 #39 Frame counter
+suba(1)                         #40
+beq('.sysSs#43')                #41
+ld(hi('NEXTY'),Y)               #42
+st([sysArgs+3])                 #43
+ld([serialRaw])                 #44 Test for anything being sent back
+xora(255)                       #45
+beq('.sysSs#48')                #46
+st([vAC])                       #47 Abort after key press with non-zero error
+st([vAC+1])                     #48
+jmp(Y,'NEXTY')                  #49
+ld(-52/2)                       #50
+label('.sysSs#48')
+ld([vPC])                       #48 Continue sending bits
+suba(2)                         #49
+st([vPC])                       #50
+jmp(Y,'NEXTY')                  #51
+ld(-54/2)                       #52
+label('.sysSs#43')
+st([vAC])                       #43 Stop sending bits, no error
+st([vAC+1])                     #44
+jmp(Y,'NEXTY')                  #45
+ld(-48/2)                       #46
 
 # SYS_ReceiveSerialByte implementation
 label('sys_ReceiveSerial1')
